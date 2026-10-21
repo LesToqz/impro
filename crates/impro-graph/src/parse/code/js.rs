@@ -73,11 +73,12 @@ impl<'a> Cursor<'a> {
 
 /// `from "x"` tail after the binding clause of an import/export.
 fn from_clause(c: &mut Cursor<'_>) -> Option<String> {
-    for _ in 0..4096 {
+    for _ in 0..64 {
         c.skip_trivia();
         match c.s.get(c.i)? {
             b'{' => {
-                let close = memchr::memchr(b'}', &c.s[c.i..])?;
+                let window = &c.s[c.i..c.s.len().min(c.i + 4096)];
+                let close = memchr::memchr(b'}', window)?;
                 c.i += close + 1;
             }
             b'*' | b',' => c.i += 1,

@@ -49,9 +49,70 @@ pub(crate) struct RawLink<'a> {
     pub autolink: bool,
 }
 
+/// Longest destination or title considered; longer ones are not links. This
+/// keeps adversarial input (a megabyte of `[a](`) linear.
+const MAX_SPAN: usize = 2048;
+
+/// Remembers the last "first byte matching `pred` at or after here" answer so
+/// runs of `[` do not rescan the same text. Queries must not move backwards.
+struct StopCache {
+    pred: fn(u8) -> bool,
+    from: usize,
+    at: Option<usize>,
+    primed: bool,
+}
+
+impl StopCache {
+    fn new(pred: fn(u8) -> bool) -> Self {
+        StopCache {
+            pred,
+            from: 0,
+            at: None,
+            primed: false,
+        }
+    }
+
+    fn find(&mut self, bytes: &[u8], from: usize) -> Option<usize> {
+        let valid = self.primed
+            && from >= self.from
+            && match self.at {
+                Some(at) => from <= at,
+                None => true,
+            };
+        if !valid {
+            let rest = &bytes[from.min(bytes.len())..];
+            self.at = rest.iter().position(|b| (self.pred)(*b)).map(|i| i + from);
+            self.from = from;
+            self.primed = true;
+        }
+        self.at
+    }
+}
+
+/// The three searches a Markdown link needs.
+struct Caches {
+    /// `]` or a line break (end of link text).
+    text_end: StopCache,
+    /// ASCII whitespace or `)` (end of a bare destination).
+    dest_end: StopCache,
+    /// `>` (end of an angle destination).
+    angle_end: StopCache,
+}
+
+impl Caches {
+    fn new() -> Self {
+        Caches {
+            text_end: StopCache::new(|b| b == b']' || b == b'\n'),
+            dest_end: StopCache::new(|b| b == b')' || b == b' ' || (b'\t'..=b'\r').contains(&b)),
+            angle_end: StopCache::new(|b| b == b'>'),
+        }
+    }
+}
+
 fn skip_ws(s: &str, mut i: usize) -> usize {
+    let limit = i + MAX_SPAN;
     for c in s[i..].chars() {
-        if !c.is_whitespace() {
+        if !c.is_whitespace() || i >= limit {
             break;
         }
         i += c.len_utf8();
@@ -64,7 +125,8 @@ fn close_paren(s: &str, dest_end: usize) -> Option<usize> {
     let bytes = s.as_bytes();
     let ws = skip_ws(s, dest_end);
     if ws > dest_end && matches!(bytes.get(ws), Some(b'"') | Some(b'\'')) {
-        let line_end = memchr::memchr(b'\n', &bytes[ws + 1..]).map_or(bytes.len(), |i| ws + 1 + i);
+        let window = &bytes[ws + 1..bytes.len().min(ws + 1 + MAX_SPAN)];
+        let line_end = memchr::memchr(b'\n', window).map_or(ws + 1 + window.len(), |i| ws + 1 + i);
         let mut q = ws + 1;
         while q < line_end {
             if matches!(bytes[q], b'"' | b'\'') {
@@ -80,30 +142,33 @@ fn close_paren(s: &str, dest_end: usize) -> Option<usize> {
 }
 
 /// `[label](dest "title")` starting at the `[` at `open`.
-fn markdown_link(s: &str, open: usize) -> Option<(usize, &str, &str)> {
+fn markdown_link<'a>(
+    s: &'a str,
+    open: usize,
+    caches: &mut Caches,
+) -> Option<(usize, &'a str, &'a str)> {
     let bytes = s.as_bytes();
-    let stop = memchr::memchr2(b']', b'\n', &bytes[open + 1..])? + open + 1;
+    let stop = caches.text_end.find(bytes, open + 1)?;
     if bytes[stop] != b']' || bytes.get(stop + 1) != Some(&b'(') {
         return None;
     }
     let label = &s[open + 1..stop];
     let dest_start = skip_ws(s, stop + 2);
     if bytes.get(dest_start) == Some(&b'<') {
-        if let Some(rel) = memchr::memchr(b'>', &bytes[dest_start + 1..]) {
-            let gt = dest_start + 1 + rel;
-            if gt > dest_start + 1 {
+        if let Some(gt) = caches.angle_end.find(bytes, dest_start + 1) {
+            if gt > dest_start + 1 && gt - dest_start <= MAX_SPAN {
                 if let Some(end) = close_paren(s, gt + 1) {
                     return Some((end, label, &s[dest_start..gt + 1]));
                 }
             }
         }
     }
-    let mut j = dest_start;
-    for c in s[dest_start..].chars() {
-        if c.is_whitespace() || c == ')' {
-            break;
-        }
-        j += c.len_utf8();
+    let j = caches
+        .dest_end
+        .find(bytes, dest_start)
+        .unwrap_or(bytes.len());
+    if j - dest_start > MAX_SPAN {
+        return None;
     }
     if j == dest_start {
         return None;
@@ -116,6 +181,7 @@ pub(crate) fn scan<'a>(masked: &'a str, mut emit: impl FnMut(RawLink<'a>)) {
     let bytes = masked.as_bytes();
     let mut pos = 0;
     let mut cursor = 0; // end of the previous match
+    let mut caches = Caches::new();
     while let Some(off) = memchr::memchr2(b'[', b'<', &bytes[pos..]) {
         let at = pos + off;
         pos = at + 1;
@@ -146,8 +212,7 @@ pub(crate) fn scan<'a>(masked: &'a str, mut emit: impl FnMut(RawLink<'a>)) {
         let start = if embed { at - 1 } else { at };
         // [[wiki]]
         if bytes.get(at + 1) == Some(&b'[') {
-            if let Some(rel) = memchr::memchr2(b']', b'\n', &bytes[at + 2..]) {
-                let q = at + 2 + rel;
+            if let Some(q) = caches.text_end.find(bytes, at + 2) {
                 if bytes[q] == b']' && q > at + 2 && bytes.get(q + 1) == Some(&b']') {
                     emit(RawLink {
                         start,
@@ -164,7 +229,7 @@ pub(crate) fn scan<'a>(masked: &'a str, mut emit: impl FnMut(RawLink<'a>)) {
                 }
             }
         }
-        if let Some((end, label, dest)) = markdown_link(masked, at) {
+        if let Some((end, label, dest)) = markdown_link(masked, at, &mut caches) {
             emit(RawLink {
                 start,
                 end,

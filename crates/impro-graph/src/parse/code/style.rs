@@ -77,7 +77,7 @@ pub fn css_imports(text: &str, line_comments: bool) -> Vec<CodeRef> {
                     if let Some((spec, end)) = quoted(text, k) {
                         push(spec, start, &mut out);
                         k = skip_ws(s, end);
-                    } else if text[k..].len() >= 4 && text[k..k + 4].eq_ignore_ascii_case("url(") {
+                    } else if s.len() >= k + 4 && s[k..k + 4].eq_ignore_ascii_case(b"url(") {
                         if let Some((spec, end)) = url_arg(text, k + 4) {
                             push(spec, start, &mut out);
                             k = end;
@@ -95,8 +95,8 @@ pub fn css_imports(text: &str, line_comments: bool) -> Vec<CodeRef> {
                 i = k.max(i);
             }
             b'u' | b'U'
-                if text[i..].len() >= 4
-                    && text[i..i + 4].eq_ignore_ascii_case("url(")
+                if s.len() >= i + 4
+                    && s[i..i + 4].eq_ignore_ascii_case(b"url(")
                     && (i == 0 || !is_word(s[i - 1])) =>
             {
                 if let Some((spec, end)) = url_arg(text, i + 4) {
@@ -122,10 +122,10 @@ pub fn html_refs(text: &str) -> Vec<CodeRef> {
             i = memchr::memmem::find(&s[i + 4..], b"-->").map_or(s.len(), |n| i + 4 + n + 3);
             continue;
         }
-        let rest = &text[i..];
-        let attr = if rest.len() >= 3 && rest[..3].eq_ignore_ascii_case("src") {
+        let rest = &s[i..];
+        let attr = if rest.len() >= 3 && rest[..3].eq_ignore_ascii_case(b"src") {
             3
-        } else if rest.len() >= 4 && rest[..4].eq_ignore_ascii_case("href") {
+        } else if rest.len() >= 4 && rest[..4].eq_ignore_ascii_case(b"href") {
             4
         } else {
             0

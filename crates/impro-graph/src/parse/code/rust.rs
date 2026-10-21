@@ -169,12 +169,19 @@ impl<'a> Lexer<'a> {
 const MAX_USE_PATHS: usize = 256;
 
 /// Parses one use tree below `prefix`, pushing each full path found.
+const MAX_USE_DEPTH: usize = 16;
+
 fn use_tree<'a>(
     lx: &mut Lexer<'a>,
     first: Option<(Tok<'a>, u32)>,
     prefix: &mut Vec<&'a str>,
     out: &mut Vec<String>,
+    nesting: usize,
 ) -> Option<(Tok<'a>, u32)> {
+    if nesting > MAX_USE_DEPTH {
+        // absurdly deep groups: give up on this subtree, the caller skips a token
+        return first;
+    }
     let depth = prefix.len();
     let mut tok = first;
     // leading `::`
@@ -202,10 +209,13 @@ fn use_tree<'a>(
                         break;
                     }
                     let before = prefix.len();
-                    inner = use_tree(lx, inner, prefix, out);
+                    inner = use_tree(lx, inner, prefix, out, nesting + 1);
                     prefix.truncate(before);
-                    if let Some((Tok::Comma, _)) = inner {
-                        inner = lx.next();
+                    match inner {
+                        Some((Tok::Close, _)) | None => {}
+                        // a comma separates entries; anything else is
+                        // garbage that must be skipped to guarantee progress
+                        _ => inner = lx.next(),
                     }
                 }
                 tok = lx.next();
@@ -262,7 +272,7 @@ pub fn imports(text: &str) -> Vec<CodeRef> {
                 let first = lx.next();
                 let mut paths = Vec::new();
                 let mut prefix = Vec::new();
-                let after = use_tree(&mut lx, first, &mut prefix, &mut paths);
+                let after = use_tree(&mut lx, first, &mut prefix, &mut paths, 0);
                 for p in paths {
                     let head = p.split("::").next().unwrap_or("");
                     if matches!(head, "crate" | "self" | "super") {
@@ -320,6 +330,14 @@ mod tests {
         let t = "// mod no;\n/* /* nested */ mod no2; */\nfn f<'a>(x: &'a str) -> char { let _ = \"mod no3;\"; let _ = r#\"mod no4;\"#; 'x' }\nmod real;\n";
         assert_eq!(specs(t), [("real".to_string(), CodeKind::RustMod)]);
         assert_eq!(imports(t)[0].line, 4);
+    }
+
+    #[test]
+    fn garbage_inside_use_groups_terminates() {
+        assert!(specs("use {mod ~").is_empty());
+        assert!(specs("use crate::{a ~ b, c").len() <= 3);
+        assert!(specs("use {{{{{{").is_empty());
+        assert!(specs("use ::{,,,}").is_empty());
     }
 
     #[test]
