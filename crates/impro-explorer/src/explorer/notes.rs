@@ -3,7 +3,7 @@ use super::*;
 use crate::pool::{self, Lane};
 use gio::prelude::*;
 use impro_core::notes;
-use impro_ui::motion::{self, AnimateOptions};
+use impro_ui::motion::{self, AnimateOptions, StateFader};
 use std::time::Duration;
 
 /// Quiet period before external notes changes refresh the explorer.
