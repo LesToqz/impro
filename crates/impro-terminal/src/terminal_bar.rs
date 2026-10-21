@@ -262,10 +262,11 @@ impl PaneHeader {
     }
     pub fn set_number(&self, position: usize) {
         self.number.set(position);
+        let shell_name = self.shell_name.borrow().clone();
         self.label.set_text(&match self.kind.as_str() {
             "graph" => "Graph view".into(),
             "gitgraph" => "Git graph".into(),
-            _ => format!("{}{position}", self.shell_name.borrow()),
+            _ => format!("{shell_name}{position}"),
         });
     }
     pub fn set_active(&self, value: bool) {

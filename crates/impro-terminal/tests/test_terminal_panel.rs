@@ -637,3 +637,54 @@ fn test_gitgraph_animation_releases_limit_and_shuts_down_immediately() {
         assert_eq!(calls.get(), 1);
     });
 }
+#[test]
+fn test_reentrant_parent_signals_respect_limit_and_destroy() {
+    run(|| {
+        let d = Dock::new(false, 0);
+        d.panel.set_max_panes(1);
+        let nested = Rc::new(Cell::new(None));
+        let result = nested.clone();
+        let weak = d.panel.downgrade();
+        let view = gtk::Entry::new();
+        view.connect_parent_set(move |view, _| {
+            if view.parent().is_some() {
+                if let Some(p) = weak.upgrade() {
+                    result.set(Some(p.new_terminal()));
+                }
+            }
+        });
+        assert!(d.panel.add_graph(Some(view.upcast_ref())));
+        assert_eq!(nested.get(), Some(false));
+        assert_eq!(d.panel.pane_count(), 1);
+        d.panel.close_current();
+        d.panel.set_max_panes(6);
+        let unique = Rc::new(Cell::new(None));
+        let result = unique.clone();
+        let weak = d.panel.downgrade();
+        let view = gtk::Entry::new();
+        view.connect_parent_set(move |view, _| {
+            if view.parent().is_some() {
+                if let Some(p) = weak.upgrade() {
+                    result.set(Some(p.add_graph(Some(gtk::Entry::new().upcast_ref()))));
+                }
+            }
+        });
+        assert!(d.panel.add_graph(Some(view.upcast_ref())));
+        assert_eq!(unique.get(), Some(false));
+        assert_eq!(d.panel.graph_count(), 1);
+        d.panel.close_current();
+        let weak = d.panel.downgrade();
+        let view = gtk::Entry::new();
+        view.connect_parent_set(move |view, _| {
+            if view.parent().is_some() {
+                if let Some(p) = weak.upgrade() {
+                    unsafe {
+                        p.destroy();
+                    }
+                }
+            }
+        });
+        assert!(!d.panel.add_graph(Some(view.upcast_ref())));
+        assert_eq!(d.panel.pane_count(), 0);
+    });
+}

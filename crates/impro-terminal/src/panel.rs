@@ -58,6 +58,37 @@ pub fn safe_cwd(path: impl AsRef<Path>) -> PathBuf {
     "/".into()
 }
 
+// Reserve admission before constructing widgets that can emit user signals.
+struct Admission<'a> {
+    panel: &'a TerminalPanel,
+    kind: Option<String>,
+}
+impl<'a> Admission<'a> {
+    fn new(panel: &'a TerminalPanel, kind: Option<&str>) -> Self {
+        panel.imp().pending.set(panel.imp().pending.get() + 1);
+        let kind = kind.map(str::to_string);
+        if let Some(kind) = &kind {
+            panel.imp().pending_custom.borrow_mut().push(kind.clone());
+        }
+        Self { panel, kind }
+    }
+}
+impl Drop for Admission<'_> {
+    fn drop(&mut self) {
+        self.panel
+            .imp()
+            .pending
+            .set(self.panel.imp().pending.get().saturating_sub(1));
+        if let Some(kind) = &self.kind {
+            self.panel
+                .imp()
+                .pending_custom
+                .borrow_mut()
+                .retain(|k| k != kind);
+        }
+    }
+}
+
 /// Stable pane identity and widget handles. Closed handles may outlive their widgets.
 /// Keep a weak widget reference when checking whether a killed pane was released.
 pub struct Pane {
@@ -128,6 +159,8 @@ mod imp {
         pub destroyed: Cell<bool>,
         pub stacked: Cell<bool>,
         pub max_panes: Cell<usize>,
+        pub pending: Cell<usize>,
+        pub pending_custom: RefCell<Vec<String>>,
         pub cwd: RefCell<PathBuf>,
         pub shell: RefCell<String>,
         pub kinds: RefCell<Vec<String>>,
@@ -160,6 +193,8 @@ mod imp {
                 destroyed: Cell::new(false),
                 stacked: Cell::new(false),
                 max_panes: Cell::new(DEFAULT_MAX_PANES),
+                pending: Cell::new(0),
+                pending_custom: RefCell::new(Vec::new()),
                 cwd: RefCell::new(PathBuf::from("/")),
                 shell: RefCell::new(String::new()),
                 kinds: RefCell::new(vec!["terminal".into(), "graph".into(), "gitgraph".into()]),
@@ -374,7 +409,7 @@ impl TerminalPanel {
         self.imp().max_panes.get()
     }
     pub fn is_full(&self) -> bool {
-        self.pane_count() >= self.max_panes()
+        self.pane_count() + self.imp().pending.get() >= self.max_panes()
     }
     pub fn set_max_panes(&self, count: usize) {
         let count = count.clamp(1, 8);
@@ -473,6 +508,9 @@ impl TerminalPanel {
         if self.imp().destroyed.get() || !self.allow_kind(kind) {
             return false;
         }
+        if self.imp().pending_custom.borrow().iter().any(|k| k == kind) {
+            return false;
+        }
         if self.focus_existing_kind(kind) {
             return false;
         }
@@ -485,6 +523,7 @@ impl TerminalPanel {
         if self.imp().destroyed.get() || self.is_full() {
             return false;
         }
+        let admission = Admission::new(self, Some(kind));
         let header = PaneHeader::new("", kind);
         let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
         content.pack_start(view, true, true, 0);
@@ -528,8 +567,7 @@ impl TerminalPanel {
             None
         });
         self.wire_focus(view, &pane);
-        self.insert_pane(pane);
-        true
+        self.insert_pane(pane, admission)
     }
     fn next_id(&self) -> u64 {
         let id = self.imp().next_id.get();
@@ -546,6 +584,7 @@ impl TerminalPanel {
         if self.imp().destroyed.get() || self.is_full() {
             return false;
         }
+        let admission = Admission::new(self, None);
         let shell = self.imp().shell.borrow().clone();
         let label_shell = if shell.is_empty() {
             std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".into())
@@ -664,14 +703,14 @@ impl TerminalPanel {
             glib::Propagation::Stop
         });
         self.wire_focus(&terminal, &pane);
-        self.insert_pane(pane.clone());
-        if !pane.is_closed() && !self.imp().destroyed.get() {
+        let inserted = self.insert_pane(pane.clone(), admission);
+        if inserted && !pane.is_closed() && !self.imp().destroyed.get() {
             let cwd = self.imp().cwd.borrow().clone();
             let startup = crate::startup::Startup::new(self, &pane, shell, cwd);
             *pane.startup.borrow_mut() = Some(startup.clone());
             startup.begin();
         }
-        true
+        inserted
     }
     fn wire_focus(&self, widget: &impl IsA<gtk::Widget>, pane: &Rc<Pane>) {
         let weak = self.downgrade();
@@ -695,7 +734,21 @@ impl TerminalPanel {
             glib::Propagation::Proceed
         });
     }
-    fn insert_pane(&self, pane: Rc<Pane>) {
+    fn insert_pane(&self, pane: Rc<Pane>, admission: Admission<'_>) -> bool {
+        let available = self.imp().kinds.borrow().iter().any(|k| *k == pane.kind);
+        if self.imp().destroyed.get()
+            || !available
+            || self.pane_count() + self.imp().pending.get() > self.max_panes()
+        {
+            drop(admission);
+            pane.closed.set(true);
+            pane.shutdown();
+            unsafe {
+                pane.frame.destroy();
+            }
+            return false;
+        }
+
         let weak = self.downgrade();
         let id = pane.id;
         pane.header.connect_focus_requested(move || {
@@ -734,9 +787,10 @@ impl TerminalPanel {
             .and_then(|w| children.iter().position(|c| *c == w))
             .unwrap_or(children.len());
         self.imp().panes.borrow_mut().insert(index, pane.clone());
+        drop(admission);
         self.body().insert(&pane.frame, position);
         if pane.is_closed() || self.imp().destroyed.get() {
-            return;
+            return false;
         }
         self.set_active(Some(pane.id));
         let animated = self.animated();
@@ -760,6 +814,7 @@ impl TerminalPanel {
                 }
             }
         });
+        true
     }
     fn animated(&self) -> bool {
         self.imp().animation_ms.get() > 0
