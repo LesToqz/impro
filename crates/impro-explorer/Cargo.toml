@@ -10,5 +10,11 @@ gdk.workspace = true
 glib.workspace = true
 gio.workspace = true
 pango.workspace = true
+regex.workspace = true
+libc.workspace = true
+atk = "~0.18.2"
 impro-core.workspace = true
 impro-ui.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
