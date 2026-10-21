@@ -1059,3 +1059,138 @@ fn test_big_folder_stays_responsive_while_loading() {
         );
     });
 }
+
+fn notes_folder(f: &Fix) -> PathBuf {
+    f.p(".impro").join("Notes")
+}
+
+#[test]
+fn test_notes_section_keeps_tree_and_lists_markdown_notes() {
+    run(|| {
+        let f = setup();
+        let window = show_panel(&f, "impro-dark");
+        let notes = f.panel.notes_widgets();
+        assert!(!f.panel.notes_section_visible());
+        notes.button.clicked();
+        assert!(f.panel.notes_section_visible());
+        assert_eq!(
+            f.panel.search().parent().unwrap(),
+            notes.split.clone().upcast::<gtk::Widget>()
+        );
+        assert!(!notes_folder(&f).exists());
+        assert_eq!(notes.stack.visible_child_name().as_deref(), Some("empty"));
+        let new_file = f.panel.header_button("New File").unwrap();
+        assert_eq!(
+            atk::prelude::AtkObjectExt::name(&new_file.accessible().unwrap()).as_deref(),
+            Some("New File")
+        );
+        assert!(f.panel.header_button("New Folder").unwrap().is_visible());
+        std::fs::create_dir_all(notes_folder(&f)).unwrap();
+        for name in ["b note.md", "A.md", "skip.txt"] {
+            std::fs::write(notes_folder(&f).join(name), "x").unwrap();
+        }
+        std::fs::create_dir(notes_folder(&f).join("dir.md")).unwrap();
+        f.panel.header_button("Refresh").unwrap().clicked();
+        let store = notes.store.clone();
+        pump_until("notes listed", move || store.iter_n_children(None) == 2);
+        let mut listed = Vec::new();
+        let iter = notes.store.iter_first().unwrap();
+        loop {
+            listed.push(impro_explorer::util::string(&notes.store, &iter, 1));
+            if !notes.store.iter_next(&iter) {
+                break;
+            }
+        }
+        assert_eq!(listed, ["A", "b note"]);
+        let opened = Rc::new(RefCell::new(Vec::new()));
+        let sink = opened.clone();
+        f.panel
+            .connect_file_activated(move |_, path| sink.borrow_mut().push(path.to_path_buf()));
+        notes.tree.row_activated(
+            &gtk::TreePath::from_indicesv(&[1]),
+            &notes.tree.column(0).unwrap(),
+        );
+        assert_eq!(*opened.borrow(), [notes_folder(&f).join("b note.md")]);
+        notes.button.clicked();
+        assert!(!f.panel.notes_section_visible());
+        assert!(f.panel.tree().is_drawable());
+        destroy(&window);
+    });
+}
+
+#[test]
+fn test_new_note_button_creates_lazily_suffixes_and_opens() {
+    run(|| {
+        let f = setup();
+        let window = show_panel(&f, "impro-dark");
+        let opened = Rc::new(RefCell::new(Vec::new()));
+        let sink = opened.clone();
+        f.panel
+            .connect_file_activated(move |_, path| sink.borrow_mut().push(path.to_path_buf()));
+        let recorder = Recorder::default();
+        recorder.install(&f.panel, Some(Rc::new(|_| "coffi shop".to_owned())), |_| {
+            true
+        });
+        f.panel.show_notes_section(true);
+        let notes = f.panel.notes_widgets();
+        notes.new_button.clicked();
+        notes.new_button.clicked();
+        assert!(recorder
+            .names
+            .borrow()
+            .iter()
+            .all(|(title, _)| title == "New Note"));
+        let seen = opened.clone();
+        pump_until("both notes opened", move || seen.borrow().len() == 2);
+        wait_idle(&f.panel);
+        let (first, second) = (
+            notes_folder(&f).join("coffi shop.md"),
+            notes_folder(&f).join("coffi shop 2.md"),
+        );
+        assert_eq!(*opened.borrow(), [first.clone(), second.clone()]);
+        assert_eq!(std::fs::read_to_string(&first).unwrap(), "# coffi shop\n\n");
+        let store = notes.store.clone();
+        pump_until("both listed", move || store.iter_n_children(None) == 2);
+        let panel = f.panel.clone();
+        let wanted = second.clone();
+        pump_until("second selected", move || {
+            panel.selected_note().as_deref() == Some(wanted.as_path())
+        });
+        let iter = notes.store.iter_first().unwrap();
+        let mut names = vec![impro_explorer::util::string(&notes.store, &iter, 1)];
+        while notes.store.iter_next(&iter) {
+            names.push(impro_explorer::util::string(&notes.store, &iter, 1));
+        }
+        assert_eq!(names, ["coffi shop", "coffi shop 2"]);
+        assert!(f.panel.find_row(&f.p(".impro")).is_some());
+        destroy(&window);
+    });
+}
+
+#[test]
+fn test_note_name_errors_keep_dialog_open() {
+    run(|| {
+        let f = setup();
+        for name in ["", "   ", "a/b"] {
+            let result = await_op(&f.panel, |done| f.panel.create_note(name, Some(done)));
+            let error = result.expect_err(name);
+            assert!(!error.to_string().is_empty(), "{name:?}");
+        }
+        assert!(!f.p(".impro").exists());
+    });
+}
+
+#[test]
+fn test_search_keeps_notes_section_visible() {
+    run(|| {
+        let f = setup();
+        f.panel.show_notes_section(true);
+        f.panel.focus_search(Some("needle"));
+        wait_idle(&f.panel);
+        assert!(f.panel.notes_section_visible());
+        assert_eq!(
+            f.panel.search().parent().unwrap(),
+            f.panel.notes_widgets().split.upcast::<gtk::Widget>()
+        );
+    });
+}

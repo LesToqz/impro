@@ -491,7 +491,7 @@ fn test_activating_result_opens_tab_and_selects_exact_match() {
 }
 
 #[test]
-fn test_current_file_signal_and_rename() {
+fn test_current_file_signal() {
     run(|| {
         let h = setup_wired();
         h.open_file(&h.p("a.py"));
