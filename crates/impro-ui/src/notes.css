@@ -1,0 +1,53 @@
+
+popover.impro-selection-toolbar, popover.impro-selection-menu {
+    background: {bg}; color: {foreground};
+    border: 1px solid alpha({overlay}, 0.10); border-radius: 8px;
+    box-shadow: 0 1px 6px alpha({overlay}, 0.16), 0 8px 14px alpha({overlay}, 0.08);
+    padding: 5px; }
+.impro-selection-toolbar button { background: transparent; border: 0;
+    border-radius: 6px; box-shadow: none; color: {muted};
+    min-height: 28px; min-width: 28px; padding: 0; }
+.impro-selection-toolbar button label { font-size: 12px; font-weight: 600; }
+.impro-selection-toolbar button:hover, .impro-selection-menu button:hover {
+    background: {hover}; color: {foreground}; }
+.impro-selection-toolbar button.active, .impro-selection-toolbar button:active {
+    background: alpha({accent}, 0.13); color: {accent_text}; }
+.impro-selection-toolbar separator { background: alpha({overlay}, 0.12);
+    min-height: 16px; min-width: 1px; }
+.impro-selection-menu button { background: transparent; border: 0; border-radius: 6px;
+    box-shadow: none; color: {foreground}; padding: 4px 10px; min-height: 24px; }
+.impro-note-toolbar { background: {bg}; border-bottom: 1px solid alpha({overlay}, 0.07);
+    padding: 6px 12px; }
+.impro-note-toolbar button { background: transparent; border: 0;
+    border-radius: 6px; box-shadow: none; color: {muted}; min-height: 28px; min-width: 28px;
+    padding: 0; }
+.impro-note-toolbar button:hover { background: {hover};
+    color: {foreground}; }
+.impro-note-toolbar button:active, .impro-note-toolbar button:checked {
+    background: alpha({accent}, 0.13); color: {accent_text}; }
+.impro-note-toolbar separator { background: alpha({overlay}, 0.12); min-height: 16px; min-width: 1px; }
+.impro-note-glyph { font-size: 12px; font-weight: 600; }
+.impro-notes-header { border-top: 1px solid {border};
+    border-bottom: 1px solid {border}; color: {muted}; }
+.impro-notes-header button { background: transparent; border: 0; box-shadow: none;
+    color: {muted}; padding: 4px 8px; min-height: 20px; }
+.impro-notes-header button label { font-size: 12px; font-weight: 600; }
+.impro-notes-header button:hover { background: {hover}; color: {foreground}; }
+popover.impro-slash-menu { background: {bg}; color: {foreground};
+    border: 1px solid alpha({overlay}, 0.12); border-radius: 10px;
+    box-shadow: 0 1px 6px alpha({overlay}, 0.16), 0 8px 14px alpha({overlay}, 0.08);
+    padding: 8px; }
+.impro-slash-menu list, .impro-slash-menu row { background: transparent; }
+.impro-slash-menu row { padding: 3px 8px; border-radius: 4px; min-height: 28px; }
+.impro-slash-menu row:hover, .impro-slash-menu row:selected { background: {hover}; color: {foreground}; }
+.impro-slash-menu .slash-title { font-size: 13px; }
+.impro-slash-menu .slash-icon { min-width: 26px; min-height: 26px; border: 1px solid alpha({overlay}, 0.13);
+    border-radius: 4px; background: alpha({overlay}, 0.025); color: {muted}; }
+.impro-slash-menu .slash-muted { color: {muted}; font-size: 12px; }
+.impro-slash-menu .slash-group { min-height: 0; padding: 2px 0; }
+.impro-slash-menu .slash-group:hover { background: transparent; }
+.impro-slash-menu .slash-heading { padding: 2px 8px; font-weight: 500; }
+.impro-slash-menu .slash-footer { border-top: 1px solid alpha({overlay}, 0.09); margin-top: 6px; }
+.impro-slash-menu .slash-footer box { padding: 8px 8px 2px; min-height: 18px; }
+.impro-notes-count { opacity: 0.65; }
+.impro-notes-empty { color: {muted}; font-size: 12px; padding: 12px; }

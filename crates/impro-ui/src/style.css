@@ -1,0 +1,72 @@
+
+window, dialog, messagedialog { background-color: {bg}; color: {foreground}; }
+.background { background-color: {bg}; color: {foreground}; }
+button, combobox button { background: {button_bg}; color: {foreground};
+    border: 0; border-radius: {radius.button}px; box-shadow: none;
+    text-shadow: none; font-size: {type.control}px;
+    min-height: {geometry.button_content}px; padding: {spacing.compact}px {spacing.control}px; }
+button:hover, button:active, button:checked { background: alpha({overlay}, {opacity.hover}); }
+button:disabled, entry:disabled, menuitem:disabled { color: {faint}; }
+combobox:disabled { opacity: {opacity.disabled}; }
+combobox arrow { color: {muted}; min-width: {spacing.control}px; min-height: {spacing.compact}px; }
+button, menuitem, row, notebook > header.top > tabs > tab, treeview.view,
+scrollbar, scrollbar slider, menu, popover, tooltip { transition: none; }
+*:focus { outline-color: {border_focus}; outline-style: solid;
+    outline-width: {geometry.focus_ring}px; outline-offset: -{geometry.border}px;
+    -gtk-outline-radius: {radius.input}px; }
+button:focus, combobox button:focus { outline-width: {geometry.focus_ring}px; outline-offset: 0; }
+entry { background: {input_bg}; color: {foreground}; caret-color: {foreground};
+    border: {geometry.border}px solid {border}; border-radius: {radius.input}px;
+    box-shadow: none; text-shadow: none; font-size: {type.control}px;
+    min-height: {geometry.entry_content}px; padding: {spacing.compact}px {spacing.control}px;
+    transition: border-color {durations.input_border}ms {easing},
+                box-shadow {durations.input_border}ms {easing}; }
+entry:hover { border-color: {border_hover}; }
+entry:focus { border-color: {border_focus};
+    box-shadow: 0 0 0 {geometry.focus_ring}px {border_focus}; }
+entry selection, textview text selection { background: alpha({accent}, {selection_alpha});
+    color: {foreground}; }
+menu, popover { background: {sidebar_bg}; color: {foreground};
+    border: {geometry.border}px solid {border_hover}; border-radius: {radius.menu}px;
+    padding: {spacing.compact}px; box-shadow: {popup_shadow}; }
+popover { background: {bg}; }
+menuitem, popover modelbutton { padding: {spacing.compact}px {spacing.control}px;
+    border-radius: {radius.item}px; font-size: {type.menu}px; }
+menuitem:hover, menuitem:selected, popover modelbutton:hover, popover modelbutton:selected,
+row:hover, row:selected { background: alpha({overlay}, {opacity.hover}); color: {foreground}; }
+menu separator { background: {border}; min-height: {geometry.border}px; margin: {spacing.tight}px 0; }
+menuitem.destructive-action { color: {danger}; }
+
+
+
+scrollbar, scrollbar trough { background: transparent; border: 0;
+    box-shadow: none; padding: 0; margin: 0; min-width: 0; min-height: 0; }
+scrollbar slider { background: alpha({overlay}, {opacity.scrollbar}); border: 0;
+    border-radius: {radius.scrollbar}px; box-shadow: none;
+    min-width: {geometry.scrollbar_thumb}px; min-height: {geometry.scrollbar_thumb}px;
+    padding: 0; margin: {geometry.scrollbar_margin}px; }
+scrollbar.vertical slider { min-height: {geometry.scrollbar_length}px; }
+scrollbar.horizontal slider { min-width: {geometry.scrollbar_length}px; }
+/* The terminal reserves an eight-pixel lane even without scrollback. */
+.impro-terminal scrollbar.vertical slider {
+    margin-left: {geometry.terminal_scrollbar_margin}px;
+    margin-right: {geometry.terminal_scrollbar_margin}px; }
+scrollbar slider:hover, scrollbar slider:active { background: alpha({overlay}, {opacity.scrollbar_hover}); }
+scrollbar button { min-width: 0; min-height: 0; padding: 0; border: 0;
+    margin: 0; box-shadow: none; background: transparent; -gtk-icon-source: none; }
+paned > separator { background-color: {border}; background-image: none;
+    -gtk-icon-source: none; min-width: {geometry.separator}px; min-height: {geometry.separator}px;
+    border: 0; padding: 0; margin: 0;
+    transition: background-color {durations.resize_handle}ms {easing}; }
+paned > separator:hover, paned > separator:active { background-color: {accent}; }
+paned.horizontal > separator { border-left: {geometry.separator_hit_padding}px solid transparent;
+    border-right: {geometry.separator_hit_padding}px solid transparent; background-clip: padding-box; }
+paned.vertical > separator { border-top: {geometry.separator_hit_padding}px solid transparent;
+    border-bottom: {geometry.separator_hit_padding}px solid transparent; background-clip: padding-box; }
+
+tooltip, tooltip.background { background: {panel_bg}; color: {foreground};
+    border: 0; border-radius: {radius.tooltip}px; padding: {spacing.compact}px {spacing.control}px;
+    font-size: {type.tooltip}px; box-shadow: {popup_shadow}; }
+tooltip label { color: {foreground}; }
+dialog .dialog-action-area, messagedialog .dialog-action-area { padding: {spacing.section}px; }
+.impro-resize-gate { background: {panel_bg}; }

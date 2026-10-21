@@ -11,3 +11,5 @@ glib.workspace = true
 gio.workspace = true
 pango.workspace = true
 impro-core.workspace = true
+serde_json.workspace = true
+atk = "~0.18.2"
