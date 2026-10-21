@@ -282,13 +282,41 @@ fn search_path(root: &Path, query: &str, regex: bool) {
 fn idle() {
     let temp = tempfile::tempdir().unwrap();
     make_tree(temp.path(), 500);
+    let bare = std::env::var_os("PERF_BARE").is_some();
     let panel = ExplorerPanel::new(temp.path());
-    let window = window_for(&panel);
-    panel.show_notes_section(true);
-    panel.set_current_file(Some(&temp.path().join("pkg000/sub0/module_3.rs")));
+    let window = if bare {
+        // Control: a window with a plain label, to separate GTK/session noise.
+        window_for(&gtk::Label::new(Some("bare window")))
+    } else {
+        window_for(&panel)
+    };
+    if !bare {
+        panel.show_notes_section(true);
+        panel.set_current_file(Some(&temp.path().join("pkg000/sub0/module_3.rs")));
+    }
     let mut probe = Probe::default();
     run_until(&mut probe, Duration::from_secs(10), || !panel.is_busy());
-    run_until(&mut probe, Duration::from_millis(1500), || false);
+    // GTK's overlay scrollbars fade out for a couple of seconds after the first paint.
+    run_until(&mut probe, Duration::from_millis(4000), || false);
+    // Per-second CPU in the real main loop (no timers of ours): is any work left over?
+    if std::env::var_os("PERF_IDLE_SERIES").is_some() {
+        let quit = glib::MainLoop::new(None, false);
+        let stop = quit.clone();
+        let last = Rc::new(Cell::new(cpu_seconds()));
+        let ticks = Rc::new(Cell::new(0u32));
+        glib::timeout_add_local(Duration::from_secs(1), move || {
+            let now = cpu_seconds();
+            println!("idle-second {} cpu-s={:.3}", ticks.get(), now - last.get());
+            last.set(now);
+            ticks.set(ticks.get() + 1);
+            if ticks.get() >= 8 {
+                stop.quit();
+                return glib::ControlFlow::Break;
+            }
+            glib::ControlFlow::Continue
+        });
+        quit.run();
+    }
     // Block in the real main loop (no timers) to measure the true idle cost.
     let quit = glib::MainLoop::new(None, false);
     let stop = quit.clone();

@@ -1194,3 +1194,33 @@ fn test_search_keeps_notes_section_visible() {
         );
     });
 }
+
+#[test]
+fn test_reveal_deeply_nested_path_and_latest_request_wins() {
+    run(|| {
+        let f = setup();
+        let deep = f.p("a/b/c/d/e/f");
+        std::fs::create_dir_all(&deep).unwrap();
+        std::fs::write(deep.join("file.txt"), "x").unwrap();
+        std::fs::create_dir_all(f.p("a/other/deeper")).unwrap();
+        std::fs::write(f.p("a/other/deeper/second.txt"), "x").unwrap();
+        f.panel.refresh();
+        wait_idle(&f.panel);
+        // Every level needs its own asynchronous listing before the next can open.
+        f.panel.set_current_file(Some(&deep.join("file.txt")));
+        wait_idle(&f.panel);
+        assert_eq!(f.panel.selected_path(), Some(deep.join("file.txt")));
+        for level in ["a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/d/e", "a/b/c/d/e/f"] {
+            assert!(f.panel.expanded_paths().contains(&f.p(level)), "{level}");
+        }
+        // A second request before the first finished replaces it.
+        f.panel.set_current_file(Some(&f.p("Zdir/inner/deep.py")));
+        f.panel
+            .set_current_file(Some(&f.p("a/other/deeper/second.txt")));
+        wait_idle(&f.panel);
+        assert_eq!(
+            f.panel.selected_path(),
+            Some(f.p("a/other/deeper/second.txt"))
+        );
+    });
+}

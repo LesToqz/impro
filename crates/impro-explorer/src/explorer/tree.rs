@@ -455,6 +455,10 @@ impl ExplorerPanel {
             return;
         }
         self.advance_reveal();
+        // Expanding a folder on the way may have started another listing.
+        if imp.pending_scans.get() != 0 {
+            return;
+        }
         imp.want_expanded.borrow_mut().clear();
         imp.want_select.borrow_mut().take();
     }
