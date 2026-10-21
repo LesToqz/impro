@@ -143,7 +143,7 @@ pub fn set_walk_hook(root: &Path, hook: Option<WalkHook>) {
     };
 }
 
-fn fold(text: &str) -> String {
+pub(crate) fn fold(text: &str) -> String {
     if text.is_ascii() {
         text.to_ascii_lowercase()
     } else {
