@@ -1,0 +1,53 @@
+@define-color impro_notes_overlay {ui['overlay']};
+@define-color impro_notes_accent {ui['accent']};
+@define-color impro_notes_text {ui['foreground']};
+@define-color impro_notes_muted {ui['muted']};
+@define-color impro_git_new {ui['git_new']};
+@define-color impro_git_modified {ui['git_modified']};
+@define-color impro_git_conflict {ui['git_conflict']};
+.impro-explorer, .impro-explorer viewport, .impro-explorer scrolledwindow,
+.impro-explorer treeview {{ background: {ui['sidebar_bg']}; color: {ui['foreground']}; }}
+.impro-explorer-header {{ background: {ui['sidebar_bg']}; min-height: 24px; padding: 8px; }}
+.impro-explorer-header button {{ background: transparent; border: 0; border-radius: 4px;
+    box-shadow: none; color: {ui['muted']}; min-height: 16px; min-width: 16px; padding: 4px 6px; }}
+.impro-explorer-header button:checked {{ background: alpha({ui['overlay']}, 0.12); color: {ui['foreground']}; }}
+.impro-explorer-header button label {{ font-size: 12px; font-weight: 600; }}
+.impro-explorer.impro-explorer-compact treeview.view {{ -GtkTreeView-vertical-separator: 0; }}
+.impro-notes-split.vertical > separator {{ min-height: 6px; min-width: 0; border: 0; background: {ui['sidebar_bg']}; background-image: linear-gradient(to bottom, transparent 2px, alpha({ui['overlay']}, 0.10) 2px, alpha({ui['overlay']}, 0.10) 3px, transparent 3px); }}
+.impro-notes-split > separator:hover, .impro-notes-split > separator:active {{ background-color: {ui['sidebar_bg']}; background-image: linear-gradient(to bottom, transparent 2px, alpha({ui['accent']}, 0.5) 2px, alpha({ui['accent']}, 0.5) 3px, transparent 3px); }}
+.impro-explorer-header button image {{ opacity: 0.85; }}
+.impro-explorer-header button:hover {{ background: alpha({ui['overlay']}, 0.067); color: {ui['foreground']}; }}
+.impro-explorer-header button:hover image {{ opacity: 1; }}
+.impro-explorer treeview.view {{ color: {ui['muted']}; font-size: 13px;
+    -GtkTreeView-vertical-separator: 2; -GtkTreeView-horizontal-separator: 4;
+    -GtkTreeView-expander-size: 10; -gtk-icon-style: symbolic; }}
+.impro-explorer treeview.view:hover, .impro-explorer treeview.view:selected {{
+    background: alpha({ui['overlay']}, 0.067); color: {ui['foreground']}; border-radius: 8px; }}
+.impro-explorer treeview.view:focus {{ -gtk-outline-radius: 8px; }}
+.impro-explorer treeview expander {{ color: {ui['muted']}; }}
+.impro-explorer .impro-notes-header {{ border: 0; padding: 3px 8px; color: {ui['muted']}; }}
+.impro-explorer .impro-notes-header button {{ min-height: 24px; min-width: 24px; padding: 0;
+    border: 0; border-radius: 6px; background: transparent; box-shadow: none; color: {ui['muted']}; }}
+.impro-explorer .impro-notes-header button:first-child {{ padding: 0 6px; }}
+.impro-explorer .impro-notes-header button:hover {{ background: alpha({ui['overlay']}, 0.055); }}
+.impro-explorer .impro-notes-header button label {{ font-size: 12px; font-weight: 600; }}
+.impro-explorer .impro-notes-count {{ background: alpha({ui['overlay']}, 0.07); opacity: 1;
+    border-radius: 8px; padding: 1px 5px; min-height: 14px; min-width: 8px; font-size: 10px; }}
+.impro-explorer treeview.impro-notes-list {{ -GtkTreeView-vertical-separator: 0;
+    -GtkTreeView-horizontal-separator: 0; outline-width: 0; }}
+.impro-explorer treeview.impro-notes-list:hover {{ background: alpha({ui['overlay']}, 0.055); border-radius: 6px; }}
+.impro-explorer treeview.impro-notes-list:selected {{ background: alpha({ui['accent']}, 0.13);
+    color: {ui['foreground']}; border-radius: 6px; }}
+.impro-explorer treeview.impro-notes-list:focus {{ outline: 1px solid alpha({ui['accent']}, 0.22);
+    outline-offset: -1px; -gtk-outline-radius: 6px; }}
+.impro-explorer .impro-notes-empty {{ padding: 8px 12px; color: {ui['muted']}; font-size: 12px; }}
+.impro-explorer .impro-notes-empty-icon {{ opacity: 0.5; }}
+.impro-explorer .impro-notes-empty-title {{ font-weight: 600; color: {ui['foreground']}; }}
+.impro-explorer .impro-notes-empty button {{ background: alpha({ui['overlay']}, 0.055);
+    color: {ui['foreground']}; border: 0; border-radius: 6px; box-shadow: none;
+    min-height: 24px; padding: 0 10px; margin-top: 6px; font-size: 12px; }}
+.impro-explorer .impro-notes-empty button:hover {{ background: alpha({ui['accent']}, 0.13); }}
+.impro-explorer .impro-notes-scroll scrollbar {{ background: transparent; border: 0; }}
+.impro-explorer .impro-notes-scroll scrollbar slider {{ min-width: 4px; min-height: 24px;
+    border: 0; border-radius: 4px; background: alpha({ui['muted']}, 0.3); }}
+.impro-explorer .impro-notes-scroll scrollbar slider:hover {{ background: alpha({ui['muted']}, 0.5); }}

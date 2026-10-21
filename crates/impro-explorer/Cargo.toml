@@ -18,3 +18,5 @@ impro-ui.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
+gdk-pixbuf.workspace = true
+pango = { workspace = true, features = ["v1_44"] }

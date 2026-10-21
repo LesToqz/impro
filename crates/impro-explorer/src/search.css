@@ -1,0 +1,29 @@
+@define-color impro_search_match {ui['accent_text']};
+@define-color impro_search_group {ui['faint']};
+.impro-search, .impro-search scrolledwindow, .impro-search viewport {{
+    background: {ui['sidebar_bg']}; }}
+.impro-search-row {{ background: {ui['sidebar_bg']}; padding: 4px 12px 8px; }}
+.impro-search-entry {{ background: {ui['input_bg']}; color: {ui['foreground']};
+    border: 1px solid {ui['border']}; border-radius: 5px; min-height: 20px; padding: 4px 8px;
+    font-size: 13px; }}
+.impro-search-entry:hover {{ border-color: {ui['border_hover']}; }}
+.impro-search-entry:focus {{ border-color: {ui['border_focus']}; box-shadow: 0 0 0 2px {ui['border_focus']}; }}
+.impro-search-entry image {{ color: {ui['muted']}; }}
+.impro-search-entry image.right {{ min-width: 16px; padding: 0 6px; border-radius: 14px; }}
+.impro-search-entry image.right:hover {{ color: {ui['foreground']}; background: alpha({ui['overlay']}, 0.067); }}
+.impro-search-toggle {{ background: transparent; color: {ui['muted']};
+    border: 0; border-radius: 4px; box-shadow: none; min-height: 16px; min-width: 16px;
+    padding: 4px; font-size: 13px; }}
+.impro-search-toggle label {{ opacity: 0.85; }}
+.impro-search-toggle:hover {{ background: alpha({ui['overlay']}, 0.067); color: {ui['foreground']}; }}
+.impro-search-toggle:hover label, .impro-search-toggle:checked label {{ opacity: 1; }}
+.impro-search-toggle:checked {{ background: alpha({ui['accent']}, 0.1); color: {ui['accent_text']}; }}
+.impro-search-summary {{ color: {ui['faint']}; background: {ui['sidebar_bg']};
+    font-size: 12px; padding: 4px 12px; }}
+treeview.impro-search-results.view {{ background: {ui['sidebar_bg']}; color: {ui['muted']};
+    font-size: 13px; -GtkTreeView-vertical-separator: 2; -GtkTreeView-horizontal-separator: 4;
+    -GtkTreeView-expander-size: 10; }}
+treeview.impro-search-results.view:hover, treeview.impro-search-results.view:selected {{
+    background: alpha({ui['overlay']}, 0.067); color: {ui['foreground']}; border-radius: 8px; }}
+treeview.impro-search-results.view:focus {{ -gtk-outline-radius: 8px; }}
+treeview.impro-search-results expander {{ color: {ui['muted']}; }}
