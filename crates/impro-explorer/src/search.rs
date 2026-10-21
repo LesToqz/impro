@@ -29,8 +29,6 @@ pub const SKIP_DIRS: [&str; 12] = [
 pub const MAX_FILE_SIZE: usize = 1024 * 1024;
 /// Longest preview line shown for a match, in characters.
 pub const MAX_PREVIEW: usize = 200;
-/// Files handed to the text provider in one round trip to the main thread.
-const OVERLAY_CHUNK: usize = 64;
 
 pub fn is_skip_dir(name: &str) -> bool {
     SKIP_DIRS.contains(&name)
@@ -104,7 +102,7 @@ impl Default for SearchOptions {
 /// Live text for paths: `Some` overrides the disk (unsaved editor buffers).
 pub type TextProvider<'a> = &'a dyn Fn(&Path) -> Option<String>;
 
-/// Chunked live-text lookup, so a worker needs one main-thread round trip per chunk.
+/// Live-text lookup for a list of paths: one main-thread round trip per call.
 pub type Overlay<'a> = &'a mut dyn FnMut(&[PathBuf]) -> Vec<Option<String>>;
 
 /// Read a file as search text: regular, at most 1 MiB, no NUL in its first 8 KiB, UTF-8.
@@ -519,35 +517,32 @@ pub fn search_stream(
     }
     let paths = project_files(&root, Some(cancel));
     let needle = fold(query);
-    for chunk in paths.chunks(OVERLAY_CHUNK) {
+    // One round trip for every path: the provider only looks open buffers up, and a single
+    // snapshot keeps the scan consistent (and fast while the main thread repaints).
+    let live = overlay
+        .as_mut()
+        .map(|overlay| overlay(&paths))
+        .unwrap_or_default();
+    for (index, path) in paths.iter().enumerate() {
         if cancel.is_cancelled() {
             return Ok(result);
         }
-        let live = overlay
-            .as_mut()
-            .map(|overlay| overlay(chunk))
+        // Eligibility comes from the disk, as for the quick listing of text files.
+        let Some(disk) = read_text(path) else {
+            continue;
+        };
+        let name = path
+            .file_name()
+            .map(|n| n.to_string_lossy())
             .unwrap_or_default();
-        for (index, path) in chunk.iter().enumerate() {
-            if cancel.is_cancelled() {
-                return Ok(result);
-            }
-            // Eligibility comes from the disk, as for the quick listing of text files.
-            let Some(disk) = read_text(path) else {
-                continue;
-            };
-            let name = path
-                .file_name()
-                .map(|n| n.to_string_lossy())
-                .unwrap_or_default();
-            if fold(&name).contains(&needle) {
-                result.file_names.push(path.clone());
-            }
-            if current.as_deref() != Some(path.as_path()) {
-                let text = live.get(index).and_then(|t| t.as_deref()).unwrap_or(&disk);
-                scan(&mut result, path, text);
-            }
-            progress(&result);
+        if fold(&name).contains(&needle) {
+            result.file_names.push(path.clone());
         }
+        if current.as_deref() != Some(path.as_path()) {
+            let text = live.get(index).and_then(|t| t.as_deref()).unwrap_or(&disk);
+            scan(&mut result, path, text);
+        }
+        progress(&result);
     }
     Ok(result)
 }

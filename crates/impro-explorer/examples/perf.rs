@@ -225,6 +225,10 @@ fn search_path(root: &Path, query: &str, regex: bool) {
     let mut probe = Probe::default();
     run_until(&mut probe, Duration::from_secs(20), || !panel.is_busy());
     let search = panel.search();
+    if std::env::var_os("PERF_PROVIDER").is_some() {
+        // As in the app: the editor answers for its open buffers only.
+        search.set_text_provider(Some(Rc::new(|_| None)));
+    }
     search.regex_button().set_active(regex);
     // The toggle schedules a debounced run for an empty query: nothing to cancel.
     let first_batch = Rc::new(RefCell::new(None::<Duration>));
@@ -285,13 +289,6 @@ fn idle() {
     let mut probe = Probe::default();
     run_until(&mut probe, Duration::from_secs(10), || !panel.is_busy());
     run_until(&mut probe, Duration::from_millis(1500), || false);
-    let (cpu0, wall0) = (cpu_seconds(), Instant::now());
-    let context = glib::MainContext::default();
-    while wall0.elapsed() < Duration::from_secs(5) {
-        context.iteration(false);
-        std::thread::sleep(Duration::from_millis(1));
-        // Real idle blocks in poll; sleeping here only keeps the probe loop cheap.
-    }
     // Block in the real main loop (no timers) to measure the true idle cost.
     let quit = glib::MainLoop::new(None, false);
     let stop = quit.clone();
@@ -299,11 +296,6 @@ fn idle() {
     glib::timeout_add_local_once(Duration::from_secs(5), move || stop.quit());
     quit.run();
     let (cpu2, wall2) = (cpu_seconds(), wall1.elapsed());
-    println!(
-        "idle-probe-loop cpu-s={:.3} over {:.1}s (1 ms sleeps, not representative)",
-        cpu1 - cpu0,
-        wall0.elapsed().as_secs_f64()
-    );
     println!(
         "idle-main-loop cpu-s={:.3} over {:.1}s  => {:.2}% of one core",
         cpu2 - cpu1,
