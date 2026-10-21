@@ -1,0 +1,15 @@
+[package]
+name = "impro-vte"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+gtk.workspace = true
+gdk.workspace = true
+glib.workspace = true
+gio.workspace = true
+pango.workspace = true
+libc.workspace = true
+bitflags.workspace = true
+impro-vte-sys = { path = "sys" }

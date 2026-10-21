@@ -1,0 +1,12 @@
+[package]
+name = "impro"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+gtk.workspace = true
+glib.workspace = true
+gio.workspace = true
+webkit2gtk.workspace = true
+impro-vte.workspace = true
