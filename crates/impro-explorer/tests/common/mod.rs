@@ -106,3 +106,120 @@ pub fn destroy(widget: &impl IsA<gtk::Widget>) {
     // SAFETY: tests only destroy widgets they own, and use no GTK objects afterwards.
     unsafe { widget.destroy() }
 }
+
+use impro_explorer::explorer::{DialogHooks, ExplorerPanel};
+use impro_explorer::explorer::NameAction;
+use std::cell::RefCell;
+use std::path::{Path, PathBuf};
+use std::rc::Rc;
+
+/// Pump until the explorer has merged every listing and its search has settled.
+pub fn wait_idle(panel: &ExplorerPanel) {
+    let panel = panel.clone();
+    pump_until("explorer idle", move || {
+        !panel.is_busy() && !panel.search().is_searching() && !panel.search().timeout_pending()
+    });
+}
+
+/// Run an asynchronous explorer action and wait for its completion and the tree to settle.
+pub fn await_op(
+    panel: &ExplorerPanel,
+    start: impl FnOnce(Box<dyn FnOnce(Result<PathBuf, impro_core::fsops::FsOpError>)>),
+) -> Result<PathBuf, impro_core::fsops::FsOpError> {
+    let slot = Rc::new(RefCell::new(None));
+    let sink = slot.clone();
+    start(Box::new(move |result| *sink.borrow_mut() = Some(result)));
+    let watched = slot.clone();
+    pump_until("explorer operation", move || watched.borrow().is_some());
+    wait_idle(panel);
+    let result = slot.borrow_mut().take().expect("completed");
+    result
+}
+
+pub fn create(panel: &ExplorerPanel, parent: &Path, name: &str, folder: bool) -> Result<PathBuf, impro_core::fsops::FsOpError> {
+    await_op(panel, |done| panel.create(parent, name, folder, done))
+}
+
+pub fn rename(panel: &ExplorerPanel, path: &Path, name: &str) -> Result<PathBuf, impro_core::fsops::FsOpError> {
+    await_op(panel, |done| panel.rename(path, name, done))
+}
+
+pub fn delete(panel: &ExplorerPanel, path: &Path, permanent: bool) -> Result<PathBuf, impro_core::fsops::FsOpError> {
+    await_op(panel, |done| panel.delete(path, permanent, done))
+}
+
+/// Rows `[icon, name, path]` below `path` (loaded children only).
+pub fn children(panel: &ExplorerPanel, path: &Path) -> Vec<[Option<String>; 3]> {
+    let store = panel.store();
+    let mut rows = Vec::new();
+    let Some(row) = panel.find_row(path) else {
+        return rows;
+    };
+    let Some(child) = store.iter_children(Some(&row)) else {
+        return rows;
+    };
+    loop {
+        rows.push([
+            impro_explorer::util::opt_string(&store, &child, 0),
+            impro_explorer::util::opt_string(&store, &child, 1),
+            impro_explorer::util::opt_string(&store, &child, 2),
+        ]);
+        if !store.iter_next(&child) {
+            break;
+        }
+    }
+    rows
+}
+
+pub fn names(panel: &ExplorerPanel, path: &Path) -> Vec<String> {
+    children(panel, path).into_iter().map(|row| row[1].clone().unwrap_or_default()).collect()
+}
+
+pub fn expand(panel: &ExplorerPanel, path: &Path) {
+    let row = panel.find_row(path).expect("row to expand");
+    let tree_path = impro_explorer::util::path_of(&panel.store(), &row);
+    panel.tree().expand_row(&tree_path, false);
+    wait_idle(panel);
+}
+
+pub fn collapse(panel: &ExplorerPanel, path: &Path) {
+    let row = panel.find_row(path).expect("row to collapse");
+    let tree_path = impro_explorer::util::path_of(&panel.store(), &row);
+    panel.tree().collapse_row(&tree_path);
+}
+
+/// A dialog hook set that records name-dialog requests and optionally auto-answers.
+#[derive(Default, Clone)]
+pub struct Recorder {
+    pub names: Rc<RefCell<Vec<(String, String)>>>,
+    pub confirms: Rc<RefCell<Vec<impro_explorer::explorer::ConfirmRequest>>>,
+    pub errors: Rc<RefCell<Vec<String>>>,
+}
+
+impl Recorder {
+    /// Install recording hooks. `name` answers name dialogs (None: record only),
+    /// `confirm` answers every removal question.
+    pub fn install(
+        &self,
+        panel: &ExplorerPanel,
+        name: Option<Rc<dyn Fn(&str) -> String>>,
+        confirm: impl Fn(&impro_explorer::explorer::ConfirmRequest) -> bool + 'static,
+    ) {
+        let (names, confirms, errors) = (self.names.clone(), self.confirms.clone(), self.errors.clone());
+        let name_hook: Rc<dyn Fn(&str, &str, NameAction)> = Rc::new(move |title, initial, action| {
+            names.borrow_mut().push((title.to_owned(), initial.to_owned()));
+            if let Some(answer) = &name {
+                action(answer(title), Box::new(|_| {}));
+            }
+        });
+        panel.set_dialog_hooks(DialogHooks {
+            name_dialog: Some(name_hook),
+            confirm_removal: Some(Rc::new(move |request| {
+                confirms.borrow_mut().push(request.clone());
+                confirm(request)
+            })),
+            error_dialog: Some(Rc::new(move |message| errors.borrow_mut().push(message.to_owned()))),
+            remove: None,
+        });
+    }
+}
