@@ -241,3 +241,29 @@ fn test_bursts_of_changes_while_scans_are_in_flight_converge() {
         destroy(&panel);
     });
 }
+
+#[test]
+fn test_live_text_provider_may_cancel_its_own_search() {
+    run(|| {
+        let (_temp, panel) = setup();
+        let calls = Rc::new(Cell::new(0));
+        let search = panel.search();
+        let weak = search.downgrade();
+        let count = calls.clone();
+        search.set_text_provider(Some(Rc::new(move |_| {
+            count.set(count.get() + 1);
+            if let Some(search) = weak.upgrade() {
+                search.clear();
+                search.set_text_provider(None);
+            }
+            Some("needle".into())
+        })));
+        search.search_now(Some("needle"));
+        pump_until("provider cancels query", || calls.get() > 0);
+        wait_idle(&panel);
+        assert_eq!(calls.get(), 1);
+        assert_eq!(search.query(), "");
+        assert_eq!(search.results().total_matches, 0);
+        destroy(&panel);
+    });
+}

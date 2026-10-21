@@ -641,20 +641,47 @@ impl SearchPanel {
                 paths,
                 reply,
             } => {
-                // Editor providers may read a GtkTextBuffer, so they only run here.
-                let provider =
-                    if generation == self.imp().generation.get() && !self.imp().destroyed.get() {
-                        self.imp().provider.borrow().clone()
-                    } else {
-                        None
-                    };
-                let answer = paths
-                    .iter()
-                    .map(|path| provider.as_ref().and_then(|provider| provider(path)))
-                    .collect();
-                let _ = reply.send(answer);
+                // The editor may have thousands of paths to look up. Keep the single
+                // worker round trip, but yield between small main-thread slices.
+                self.overlay_step(generation, paths.into_iter(), reply, Vec::new());
             }
         }
+    }
+
+    fn overlay_step(
+        &self,
+        generation: u64,
+        mut paths: std::vec::IntoIter<PathBuf>,
+        reply: mpsc::Sender<Vec<Option<String>>>,
+        mut answer: Vec<Option<String>>,
+    ) {
+        let imp = self.imp();
+        if generation != imp.generation.get() || imp.destroyed.get() {
+            return;
+        }
+        // Clone before calling user code: a provider can replace itself or the query.
+        let provider = imp.provider.borrow().clone();
+        let Some(provider) = provider else {
+            let _ = reply.send(answer);
+            return;
+        };
+        let deadline = Instant::now() + Duration::from_millis(2);
+        while let Some(path) = paths.next() {
+            answer.push(provider(&path));
+            if generation != imp.generation.get() || imp.destroyed.get() {
+                return;
+            }
+            if Instant::now() >= deadline && paths.len() > 0 {
+                let weak = self.downgrade();
+                glib::idle_add_local_once(move || {
+                    if let Some(panel) = weak.upgrade() {
+                        panel.overlay_step(generation, paths, reply, answer);
+                    }
+                });
+                return;
+            }
+        }
+        let _ = reply.send(answer);
     }
 
     /// Apply a batch unless it belongs to a superseded run; `false` if it was dropped.

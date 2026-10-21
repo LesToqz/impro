@@ -7,7 +7,7 @@
 //!
 //! All GTK objects live on the main thread. Every directory scan, Git status run, notes
 //! listing, filesystem action and search runs on a small worker pool ([`pool`], at most
-//! `min(cores - 1, 4)` threads, none while idle); results come back as owned data through
+//! `min(cores - 1, 4)` threads, sleeping while idle); results come back as owned data through
 //! `glib::MainContext` channels and are applied in steps of a few milliseconds. The only
 //! main-thread filesystem calls are the `inotify` registrations of the `Gio::FileMonitor`
 //! watchers (Git metadata, the active file's folder and the notes folders).
@@ -35,6 +35,8 @@
 //!   `new_note_dialog()`, `create_note(name, done)`.
 //! * Models: `store()` (the file-tree `GtkTreeStore`: connect to `row-inserted` /
 //!   `row-deleted` to learn about tree changes), `tree()`, `header()`, `header_button(..)`.
+//! * Visibility uses inherited `gtk::WidgetExt` methods: `is_visible`, `set_visible`,
+//!   `set_no_show_all`. The host applies the explorer feature gate and remembers visibility.
 //! * Actions with asynchronous completion: `create(parent, name, folder, done)`,
 //!   `rename(path, new_name, done)`, `delete(path, permanent, done)`; dialog based:
 //!   `new_dialog`, `rename_dialog`, `delete_dialog`, `confirm_removal`, `name_dialog`.
@@ -54,6 +56,10 @@
 //! `set_font_size`, `focus_search()`, `clear()`, `search_now(Option<&str>)` (starts at once;
 //! results stream in, wait for `is_searching()` to turn false), `results()`, `entry()`,
 //! `tree()`, `store()`, signals `result-activated` and `escaped`.
+//! `case_button()` and `regex_button()` expose the toggles; `summary()` exposes the status
+//! label. Use `connect_result_activated` and `connect_escaped` for typed signal handlers.
+//! `is_searching()` includes pending model rows. Hosts normally react to activation
+//! signals, while diagnostics can observe `store()` row signals.
 //!
 //! ## Search engine ([`search`], no GTK)
 //! [`SKIP_DIRS`] (also `search::skip_dirs_sorted()`), `search::search`,
