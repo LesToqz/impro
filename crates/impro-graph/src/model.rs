@@ -188,6 +188,37 @@ impl Graph {
         self.nodes.is_empty()
     }
 
+    /// A synthetic graph of `n` note nodes (`n000000.md`, …) joined by the
+    /// given directed pairs; out-of-range pairs are ignored. Meant for demos,
+    /// benchmarks and tests of the layout.
+    pub fn from_pairs(n: usize, pairs: &[(u32, u32)]) -> Graph {
+        let nodes: Vec<Node> = (0..n)
+            .map(|i| Node {
+                id: Arc::from(format!("n{i:06}.md")),
+                kind: NodeKind::Note,
+                file: None,
+                in_degree: 0,
+                out_degree: 0,
+                group: None,
+                ctime: None,
+            })
+            .collect();
+        let mut edges: Vec<Edge> = pairs
+            .iter()
+            .filter(|(s, t)| (*s as usize) < n && (*t as usize) < n)
+            .map(|&(s, t)| Edge {
+                src: s,
+                dst: t,
+                kind: EdgeKind::Link,
+                resolved: true,
+                count: 1,
+            })
+            .collect();
+        edges.sort_unstable_by_key(|e| (e.src, e.dst));
+        edges.dedup_by_key(|e| (e.src, e.dst));
+        Graph::assemble(nodes, edges, false, n, Vec::new())
+    }
+
     /// Index of the node with this id.
     pub fn index_of(&self, id: &str) -> Option<usize> {
         self.nodes.binary_search_by(|n| (*n.id).cmp(id)).ok()
@@ -269,8 +300,7 @@ impl Graph {
             .filter(|a| alive.contains(&*a.source) && alive.contains(&*a.resolved))
             .cloned()
             .collect();
-        let total = nodes.len();
-        Graph::assemble(nodes, edges, self.truncated, total.max(self.total_nodes.min(total)), ambiguous)
+        Graph::assemble(nodes, edges, self.truncated, self.total_nodes, ambiguous)
     }
 
     pub fn adjacency(&self) -> Adjacency {
