@@ -1,0 +1,6 @@
+.ceo/agent.log
+.ceo/exit_code
+.ceo/
+target/
+*.pyc
+__pycache__/
