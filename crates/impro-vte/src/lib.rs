@@ -41,9 +41,33 @@ impl Terminal {
         cancellable: Option<&gio::Cancellable>,
         callback: F,
     ) {
+        self.spawn_async_path(
+            cwd.map(std::path::Path::new),
+            argv,
+            envv,
+            flags,
+            timeout,
+            cancellable,
+            callback,
+        );
+    }
+
+    /// Path-preserving variant of spawn_async, including non-UTF-8 Unix directories.
+    #[allow(clippy::too_many_arguments)]
+    pub fn spawn_async_path<F: FnOnce(Result<glib::Pid, glib::Error>) + 'static>(
+        &self,
+        cwd: Option<&std::path::Path>,
+        argv: &[&str],
+        envv: &[&str],
+        flags: glib::SpawnFlags,
+        timeout: i32,
+        cancellable: Option<&gio::Cancellable>,
+        callback: F,
+    ) {
+        use std::os::unix::ffi::OsStrExt;
         if argv.is_empty()
             || argv.iter().chain(envv.iter()).any(|s| s.contains('\0'))
-            || cwd.is_some_and(|s| s.contains('\0'))
+            || cwd.is_some_and(|s| s.as_os_str().as_bytes().contains(&0))
         {
             callback(Err(glib::Error::new(
                 gio::IOErrorEnum::InvalidArgument,
@@ -93,20 +117,20 @@ impl Terminal {
 }
 
 /// Clipboard representation understood by VTE.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u32)]
 pub enum Format {
     Text = 1,
     Html = 2,
 }
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u32)]
 pub enum CursorShape {
     Block = 0,
     Ibeam = 1,
     Underline = 2,
 }
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u32)]
 pub enum CursorBlinkMode {
     System = 0,
@@ -421,6 +445,99 @@ impl Terminal {
                 self.to_glib_none().0,
                 format as _,
             ))
+        }
+    }
+}
+
+impl Terminal {
+    /// Temporarily disable this during allocation to preserve original line wrapping.
+    pub fn set_rewrap_on_resize(&self, enabled: bool) {
+        self.set_property("rewrap-on-resize", enabled);
+    }
+    pub fn rewrap_on_resize(&self) -> bool {
+        self.property("rewrap-on-resize")
+    }
+    pub fn cursor_position(&self) -> (libc::c_long, libc::c_long) {
+        let (mut column, mut row) = (0, 0);
+        unsafe {
+            ffi::vte_terminal_get_cursor_position(self.to_glib_none().0, &mut column, &mut row);
+        }
+        (column, row)
+    }
+    /// Extract an inclusive rectangle of terminal cells without attribute arrays.
+    pub fn text_range_format(
+        &self,
+        format: Format,
+        start_row: libc::c_long,
+        start_column: libc::c_long,
+        end_row: libc::c_long,
+        end_column: libc::c_long,
+    ) -> Option<glib::GString> {
+        unsafe {
+            from_glib_full(ffi::vte_terminal_get_text_range_format(
+                self.to_glib_none().0,
+                format as _,
+                start_row,
+                start_column,
+                end_row,
+                end_column,
+                std::ptr::null_mut(),
+            ))
+        }
+    }
+}
+impl Pty {
+    /// Kernel PTY size, in (columns, rows) order, matching Terminal's grid API.
+    pub fn size(&self) -> Result<(i32, i32), glib::Error> {
+        unsafe {
+            let (mut rows, mut columns) = (0, 0);
+            let mut error = std::ptr::null_mut();
+            let ok =
+                ffi::vte_pty_get_size(self.to_glib_none().0, &mut rows, &mut columns, &mut error);
+            if ok != 0 {
+                Ok((columns, rows))
+            } else if !error.is_null() {
+                Err(from_glib_full(error))
+            } else {
+                Err(glib::Error::new(
+                    gio::IOErrorEnum::Failed,
+                    "Unable to read PTY size",
+                ))
+            }
+        }
+    }
+    /// Bytes waiting for VTE, without reading or consuming any output.
+    pub fn unread_bytes(&self) -> usize {
+        let mut bytes: libc::c_int = 0;
+        let ok = unsafe { libc::ioctl(self.fd(), libc::FIONREAD, &mut bytes) };
+        if ok == 0 {
+            bytes.max(0) as usize
+        } else {
+            0
+        }
+    }
+    /// Whether the program still uses canonical or echoing input (startup replay).
+    pub fn canonical_or_echo(&self) -> bool {
+        let mut state = std::mem::MaybeUninit::<libc::termios>::uninit();
+        unsafe {
+            libc::tcgetattr(self.fd(), state.as_mut_ptr()) == 0
+                && state.assume_init().c_lflag & (libc::ECHO | libc::ICANON) != 0
+        }
+    }
+}
+impl Terminal {
+    pub fn cursor_shape(&self) -> CursorShape {
+        match unsafe { ffi::vte_terminal_get_cursor_shape(self.to_glib_none().0) } {
+            1 => CursorShape::Ibeam,
+            2 => CursorShape::Underline,
+            _ => CursorShape::Block,
+        }
+    }
+    pub fn cursor_blink_mode(&self) -> CursorBlinkMode {
+        match unsafe { ffi::vte_terminal_get_cursor_blink_mode(self.to_glib_none().0) } {
+            1 => CursorBlinkMode::On,
+            2 => CursorBlinkMode::Off,
+            _ => CursorBlinkMode::System,
         }
     }
 }
