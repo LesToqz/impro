@@ -12,3 +12,10 @@ gio.workspace = true
 pango.workspace = true
 impro-core.workspace = true
 impro-ui.workspace = true
+impro-vte.workspace = true
+libc.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+gdk-pixbuf.workspace = true
+tempfile.workspace = true

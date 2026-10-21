@@ -520,12 +520,17 @@ name = "impro-terminal"
 version = "0.1.0"
 dependencies = [
  "gdk",
+ "gdk-pixbuf",
  "gio",
  "glib",
  "gtk",
  "impro-core",
  "impro-ui",
+ "impro-vte",
+ "libc",
  "pango",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]

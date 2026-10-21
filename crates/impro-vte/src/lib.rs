@@ -424,3 +424,46 @@ impl Terminal {
         }
     }
 }
+
+impl Terminal {
+    /// Temporarily disable this during allocation to preserve original line wrapping.
+    pub fn set_rewrap_on_resize(&self, enabled: bool) {
+        self.set_property("rewrap-on-resize", enabled);
+    }
+    pub fn rewrap_on_resize(&self) -> bool {
+        self.property("rewrap-on-resize")
+    }
+    pub fn cursor_position(&self) -> (libc::c_long, libc::c_long) {
+        let (mut column, mut row) = (0, 0);
+        unsafe { ffi::vte_terminal_get_cursor_position(self.to_glib_none().0, &mut column, &mut row); }
+        (column, row)
+    }
+    /// Extract an inclusive rectangle of terminal cells without attribute arrays.
+    pub fn text_range_format(&self, format: Format, start_row: libc::c_long, start_column: libc::c_long, end_row: libc::c_long, end_column: libc::c_long) -> Option<glib::GString> {
+        unsafe { from_glib_full(ffi::vte_terminal_get_text_range_format(self.to_glib_none().0, format as _, start_row, start_column, end_row, end_column, std::ptr::null_mut())) }
+    }
+}
+impl Pty {
+    /// Kernel PTY size, in (columns, rows) order, matching Terminal's grid API.
+    pub fn size(&self) -> Result<(i32, i32), glib::Error> {
+        unsafe {
+            let (mut rows, mut columns) = (0, 0);
+            let mut error = std::ptr::null_mut();
+            let ok = ffi::vte_pty_get_size(self.to_glib_none().0, &mut rows, &mut columns, &mut error);
+            if ok != 0 { Ok((columns, rows)) }
+            else if !error.is_null() { Err(from_glib_full(error)) }
+            else { Err(glib::Error::new(gio::IOErrorEnum::Failed, "Unable to read PTY size")) }
+        }
+    }
+    /// Bytes waiting for VTE, without reading or consuming any output.
+    pub fn unread_bytes(&self) -> usize {
+        let mut bytes: libc::c_int = 0;
+        let ok = unsafe { libc::ioctl(self.fd(), libc::FIONREAD, &mut bytes) };
+        if ok == 0 { bytes.max(0) as usize } else { 0 }
+    }
+    /// Whether the program still uses canonical or echoing input (startup replay).
+    pub fn canonical_or_echo(&self) -> bool {
+        let mut state = std::mem::MaybeUninit::<libc::termios>::uninit();
+        unsafe { libc::tcgetattr(self.fd(), state.as_mut_ptr()) == 0 && state.assume_init().c_lflag & (libc::ECHO | libc::ICANON) != 0 }
+    }
+}
