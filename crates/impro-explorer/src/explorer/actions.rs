@@ -52,6 +52,15 @@ pub struct DialogHooks {
 
 pub type OpCallback = Box<dyn FnOnce(Result<PathBuf, FsOpError>)>;
 
+/// `base/rest` without the trailing separator `join("")` would add.
+fn join_rest(base: &Path, rest: &Path) -> PathBuf {
+    if rest.as_os_str().is_empty() {
+        base.to_path_buf()
+    } else {
+        base.join(rest)
+    }
+}
+
 /// `os.path.splitext(name)[0]`, as a character count.
 fn stem_chars(name: &str) -> usize {
     let leading = name.chars().take_while(|c| *c == '.').count();
@@ -208,15 +217,15 @@ impl ExplorerPanel {
                     let remapped = expanded
                         .into_iter()
                         .map(|dir| match dir.strip_prefix(&old) {
-                            Ok(rest) => new.join(rest),
+                            Ok(rest) => join_rest(new, rest),
                             Err(_) => dir,
                         })
                         .collect();
                     panel.rebuild(remapped, Some(new.clone()));
                     {
                         let mut active = panel.imp().active_file.borrow_mut();
-                        if let Some(file) = active.as_ref().and_then(|f| f.strip_prefix(&old).ok()) {
-                            *active = Some(new.join(file));
+                        if let Some(rest) = active.as_ref().and_then(|f| f.strip_prefix(&old).ok()) {
+                            *active = Some(join_rest(new, rest));
                         }
                     }
                     panel.emit_by_name::<()>(

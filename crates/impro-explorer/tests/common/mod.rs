@@ -223,3 +223,65 @@ impl Recorder {
         });
     }
 }
+
+/// Minimal XTest driver (loaded at run time) to push real pointer events at the X server.
+pub struct XTest {
+    display: *mut std::ffi::c_void,
+    motion: unsafe extern "C" fn(*mut std::ffi::c_void, i32, i32, i32, u64) -> i32,
+    button: unsafe extern "C" fn(*mut std::ffi::c_void, u32, i32, u64) -> i32,
+    flush: unsafe extern "C" fn(*mut std::ffi::c_void) -> i32,
+    close: unsafe extern "C" fn(*mut std::ffi::c_void) -> i32,
+}
+
+impl XTest {
+    pub fn open() -> Option<Self> {
+        unsafe {
+            let open = |name: &str| {
+                let name = std::ffi::CString::new(name).unwrap();
+                libc::dlopen(name.as_ptr(), libc::RTLD_NOW)
+            };
+            let x11 = open("libX11.so.6");
+            let xtst = open("libXtst.so.6");
+            if x11.is_null() || xtst.is_null() {
+                return None;
+            }
+            let sym = |lib: *mut std::ffi::c_void, name: &str| {
+                let name = std::ffi::CString::new(name).unwrap();
+                libc::dlsym(lib, name.as_ptr())
+            };
+            let open_display: unsafe extern "C" fn(*const i8) -> *mut std::ffi::c_void =
+                std::mem::transmute(sym(x11, "XOpenDisplay"));
+            let display = open_display(std::ptr::null());
+            if display.is_null() {
+                return None;
+            }
+            Some(Self {
+                display,
+                motion: std::mem::transmute(sym(xtst, "XTestFakeMotionEvent")),
+                button: std::mem::transmute(sym(xtst, "XTestFakeButtonEvent")),
+                flush: std::mem::transmute(sym(x11, "XFlush")),
+                close: std::mem::transmute(sym(x11, "XCloseDisplay")),
+            })
+        }
+    }
+    pub fn motion(&self, x: i32, y: i32) {
+        unsafe {
+            (self.motion)(self.display, -1, x, y, 0);
+            (self.flush)(self.display);
+        }
+    }
+    pub fn button(&self, number: u32, press: bool) {
+        unsafe {
+            (self.button)(self.display, number, i32::from(press), 0);
+            (self.flush)(self.display);
+        }
+    }
+}
+
+impl Drop for XTest {
+    fn drop(&mut self) {
+        unsafe {
+            (self.close)(self.display);
+        }
+    }
+}

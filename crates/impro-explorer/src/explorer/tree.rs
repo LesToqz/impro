@@ -216,6 +216,20 @@ impl ExplorerPanel {
         iter
     }
 
+    /// The sibling after `row`, unless it is the trailing placeholder.
+    fn next_row(&self, row: &gtk::TreeIter) -> Option<gtk::TreeIter> {
+        let store = &self.w().store;
+        let next = row.clone();
+        (store.iter_next(&next) && !util::string(store, &next, 2).is_empty()).then_some(next)
+    }
+
+    /// Remove `row`; the following real sibling, if any.
+    fn remove_row(&self, row: &gtk::TreeIter) -> Option<gtk::TreeIter> {
+        let store = &self.w().store;
+        let next = row.clone();
+        (store.remove(&next) && !util::string(store, &next, 2).is_empty()).then_some(next)
+    }
+
     /// Advance one merge by up to the deadline; `true` when the folder is fully merged
     /// (or its row vanished).
     fn step_apply(&self, task: &mut Apply, deadline: Instant) -> bool {
@@ -231,7 +245,12 @@ impl ExplorerPanel {
             task.started = true;
             match store.iter_children(Some(&parent)) {
                 Some(first) if util::string(store, &first, 2).is_empty() => task.placeholder = Some(first),
-                other => task.cursor = other,
+                other => {
+                    task.cursor = other;
+                    // Never leave an expanded folder childless while rows are replaced:
+                    // GTK would collapse it.
+                    task.placeholder = Some(store.insert_with_values(Some(&parent), None, &placeholder_values()));
+                }
             }
         }
         let wanted_empty = self.imp().want_expanded.borrow().is_empty();
@@ -254,14 +273,12 @@ impl ExplorerPanel {
                     if current_path == entry.path {
                         let current_is_dir = util::string(store, &current, 0) == "folder";
                         if current_is_dir == entry.is_dir {
-                            let next = current.clone();
-                            task.cursor = store.iter_next(&next).then_some(next);
+                            task.cursor = self.next_row(&current);
                             kept = Some(current);
                         } else {
                             // A file became a folder (or back): replace the row.
                             inserted = Some(self.insert_entry(&parent, Some(&current), entry));
-                            let next = current.clone();
-                            task.cursor = store.remove(&next).then_some(next);
+                            task.cursor = self.remove_row(&current);
                         }
                         task.pos += 1;
                     } else {
@@ -277,8 +294,7 @@ impl ExplorerPanel {
                         };
                         if order(&current_entry, entry, task.folders_first) == Ordering::Less {
                             // Gone from disk.
-                            let next = current.clone();
-                            task.cursor = store.remove(&next).then_some(next);
+                            task.cursor = self.remove_row(&current);
                         } else {
                             inserted = Some(self.insert_entry(&parent, Some(&current), entry));
                             task.pos += 1;
@@ -287,7 +303,7 @@ impl ExplorerPanel {
                     }
                 }
             }
-            if inserted.is_some() {
+            if inserted.is_some() || kept.is_some() {
                 // Keep the placeholder until real rows exist, or GTK collapses the row.
                 if let Some(placeholder) = task.placeholder.take() {
                     store.remove(&placeholder);
@@ -310,8 +326,7 @@ impl ExplorerPanel {
         if finished {
             // Everything left over vanished from disk.
             while let Some(current) = task.cursor.take() {
-                let next = current.clone();
-                task.cursor = store.remove(&next).then_some(next);
+                task.cursor = self.remove_row(&current);
             }
             if let Some(placeholder) = task.placeholder.take() {
                 store.remove(&placeholder);

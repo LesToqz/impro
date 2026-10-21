@@ -900,6 +900,14 @@ impl ExplorerPanel {
         self.imp().notes_edited.borrow().get(path).cloned()
     }
 
+    /// Stop watching the notes folders (monitors are re-created by the next refresh).
+    #[doc(hidden)]
+    pub fn drop_notes_monitors(&self) {
+        for (_, monitor) in self.imp().notes_monitors.take() {
+            monitor.cancel();
+        }
+    }
+
     #[doc(hidden)]
     pub fn active_file(&self) -> Option<PathBuf> {
         self.imp().active_file.borrow().clone()
