@@ -113,3 +113,8 @@ extern "C" {
         color: *const gdk_sys::GdkRGBA,
     );
 }
+
+extern "C" {
+    pub fn vte_terminal_get_text_format(t: *mut VteTerminal, format: c_uint) -> *mut c_char;
+    pub fn vte_terminal_get_text_selected(t: *mut VteTerminal, format: c_uint) -> *mut c_char;
+}

@@ -2,7 +2,7 @@
 use gtk::prelude::*;
 use impro_core::{identity, settings, themes};
 use std::{
-    cell::{Cell, RefCell},
+    cell::Cell,
     path::{Path, PathBuf},
     rc::Rc,
     time::Instant,
@@ -84,27 +84,22 @@ pub fn install_screenshot_helper(
     failed: Rc<Cell<bool>>,
 ) {
     let armed = Rc::new(Cell::new(false));
-    window.connect_map_event(move |window, _| {
+    // map/after-paint can occur before GtkWidget has drawn its first contents.
+    // Queue one idle from draw: GDK has ended its paint buffer before it executes.
+    window.connect_draw(move |window, _| {
         if armed.replace(true) {
             return glib::Propagation::Proceed;
         }
-        let Some(clock) = window.frame_clock() else {
-            return glib::Propagation::Proceed;
-        };
         let weak = window.downgrade();
         let path = path.clone();
         let failed = failed.clone();
-        let handler = Rc::new(RefCell::new(None));
-        let pending = handler.clone();
-        let id = clock.connect_after_paint(move |clock| {
-            let signal = pending.borrow_mut().take();
-            if let Some(signal) = signal {
-                clock.disconnect(signal);
-            }
-            let Some(window) = weak.upgrade() else { return };
+        glib::idle_add_local_once(move || {
+            let Some(window) = weak.upgrade() else {
+                return;
+            };
+            window.display().sync();
             let elapsed = started.elapsed();
-            let result = capture_window(&window, &path);
-            if let Err(error) = result {
+            if let Err(error) = capture_window(&window, &path) {
                 eprintln!("impro: screenshot failed: {error}");
                 failed.set(true);
             }
@@ -115,11 +110,10 @@ pub fn install_screenshot_helper(
                 app.quit();
             }
         });
-        *handler.borrow_mut() = Some(id);
-        clock.request_phase(gdk::FrameClockPhase::AFTER_PAINT);
         glib::Propagation::Proceed
     });
 }
+
 pub fn capture_window(window: &impl IsA<gtk::Widget>, path: &Path) -> Result<(), String> {
     let window = window.as_ref();
     let native = window.window().ok_or("window has no native surface")?;

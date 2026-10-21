@@ -315,3 +315,73 @@ fn test_reverse_and_end_state() {
         }
     });
 }
+#[test]
+fn test_update_can_replace_another_widgets_tween() {
+    run(|| {
+        set_reduce_motion(false);
+        let first = gtk::Label::new(None);
+        let second = gtk::Label::new(None);
+        let replaced = Rc::new(Cell::new(false));
+        let r = replaced.clone();
+        let second_weak = second.downgrade();
+        animate(
+            &first,
+            40,
+            move |p| {
+                if p > 0.0 && !r.replace(true) {
+                    if let Some(second) = second_weak.upgrade() {
+                        animate(&second, 0, |_| {}, Default::default());
+                    }
+                }
+            },
+            Default::default(),
+        );
+        let old = animate(&second, 300, |_| {}, Default::default());
+        pump(120);
+        assert!(replaced.get());
+        assert!(old.finished());
+        assert!(!clock_attached());
+    });
+}
+#[test]
+fn test_cancel_releases_update_captures() {
+    run(|| {
+        let child = gtk::Label::new(None);
+        let owned = Rc::new(());
+        let weak = Rc::downgrade(&owned);
+        let tween = animate(
+            &child,
+            300,
+            move |_| {
+                let _ = &owned;
+            },
+            Default::default(),
+        );
+        assert!(weak.upgrade().is_some());
+        tween.cancel();
+        assert!(weak.upgrade().is_none());
+        assert!(tween.finished());
+    });
+}
+#[test]
+fn test_clock_moves_to_another_window() {
+    run(|| {
+        set_reduce_motion(false);
+        let first = gtk::Label::new(None);
+        let second = gtk::Label::new(None);
+        let a = window(&first);
+        let b = window(&second);
+        let old = animate(&first, 300, |_| {}, Default::default());
+        let next = animate(&second, 60, |_| {}, Default::default());
+        unsafe {
+            a.destroy();
+        }
+        pump(150);
+        assert!(old.finished());
+        assert!(next.finished());
+        assert!(!clock_attached());
+        unsafe {
+            b.destroy();
+        }
+    });
+}

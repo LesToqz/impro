@@ -175,13 +175,14 @@ impl Default for AnimateOptions {
         }
     }
 }
+type UpdateCallback = Rc<dyn Fn(f64)>;
 struct Inner {
     widget: glib::WeakRef<gtk::Widget>,
     key: MotionKey,
     duration: f64,
     delay: f64,
     curve: Curve,
-    update: Rc<dyn Fn(f64)>,
+    update: RefCell<Option<UpdateCallback>>,
     done: RefCell<Option<Box<dyn FnOnce()>>>,
     finished: Cell<bool>,
     origin: Cell<Option<i64>>,
@@ -211,7 +212,9 @@ impl Inner {
                 widget.disconnect(signal);
             }
         }
-        self.done.borrow_mut().take();
+        let done = self.done.borrow_mut().take();
+        let update = self.update.borrow_mut().take();
+        drop((done, update));
     }
     fn complete(&self) {
         let done = self.done.borrow_mut().take();
@@ -239,7 +242,10 @@ impl Inner {
             return;
         }
         let p = (elapsed / self.duration).clamp(0.0, 1.0);
-        (self.update)(if p == 1.0 { 1.0 } else { self.curve.sample(p) });
+        let update = self.update.borrow().clone();
+        if let Some(update) = update {
+            update(if p == 1.0 { 1.0 } else { self.curve.sample(p) });
+        }
         if p == 1.0 && !self.finished.get() {
             self.complete();
         }
@@ -252,7 +258,7 @@ struct Engine {
     host: glib::WeakRef<gtk::Widget>,
     timer: Option<glib::SourceId>,
     pumping: bool,
-    current: Option<Rc<Inner>>,
+    host_signal: Option<glib::SignalHandlerId>,
 }
 fn stop_if_idle() {
     let idle = ENGINE.with(|e| {
@@ -260,6 +266,7 @@ fn stop_if_idle() {
         !e.pumping && e.active.iter().all(|i| i.finished.get())
     });
     if idle {
+        detach_host_signal();
         let (tick, timer) = ENGINE.with(|e| {
             let mut e = e.borrow_mut();
             e.active.clear();
@@ -274,39 +281,68 @@ fn stop_if_idle() {
     }
 }
 fn pump(now: i64) -> bool {
-    // Move the vector out: no borrows span signal-emitting updates, no frame allocations.
-    let mut active = ENGINE.with(|e| {
+    // Keep every tween discoverable during reentrant replacement, but release
+    // the engine borrow before each update. Rc clones allocate nothing.
+    let count = ENGINE.with(|e| {
         let mut e = e.borrow_mut();
         e.pumping = true;
-        std::mem::take(&mut e.active)
+        e.active.len()
     });
-    for inner in &active {
-        ENGINE.with(|e| e.borrow_mut().current = Some(inner.clone()));
-        inner.advance(now);
-        ENGINE.with(|e| {
-            e.borrow_mut().current.take();
-        });
+    for index in 0..count {
+        let inner = ENGINE.with(|e| e.borrow().active.get(index).cloned());
+        if let Some(inner) = inner {
+            inner.advance(now);
+        }
     }
-    active.retain(|i| !i.finished.get());
     ENGINE.with(|e| {
         let mut e = e.borrow_mut();
-        active.append(&mut e.active);
-        e.active = active;
+        e.active.retain(|i| !i.finished.get());
         e.pumping = false;
         !e.active.is_empty()
     })
 }
+fn detach_host_signal() {
+    let (host, signal) = ENGINE.with(|e| {
+        let mut e = e.borrow_mut();
+        (e.host.upgrade(), e.host_signal.take())
+    });
+    if let (Some(host), Some(signal)) = (host, signal) {
+        host.disconnect(signal);
+    }
+}
+fn rehome_driver() {
+    let invalid = ENGINE.with(|e| {
+        let e = e.borrow();
+        !e.pumping && e.tick.is_some() && e.host.upgrade().is_none_or(|w| !w.is_mapped())
+    });
+    if invalid {
+        let tick = ENGINE.with(|e| e.borrow_mut().tick.take());
+        if let Some(tick) = tick {
+            tick.remove();
+        }
+        detach_host_signal();
+        schedule();
+    }
+}
+
 fn schedule() {
     let host = ENGINE.with(|e| {
         let e = e.borrow();
         if e.tick.is_some() || e.timer.is_some() || e.pumping {
             return None;
         }
-        e.active
+        let mut hosts = e
+            .active
             .iter()
-            .find(|i| !i.finished.get())
-            .and_then(|i| i.widget.upgrade())
-            .map(|w| w.toplevel().unwrap_or(w))
+            .filter(|i| !i.finished.get())
+            .filter_map(|i| i.widget.upgrade())
+            .map(|w| w.toplevel().unwrap_or(w));
+        let first = hosts.next()?;
+        if first.is_mapped() {
+            Some(first)
+        } else {
+            Some(hosts.find(|w| w.is_mapped()).unwrap_or(first))
+        }
     });
     let Some(host) = host else { return };
     if host.is_mapped() {
@@ -317,13 +353,16 @@ fn schedule() {
                 ENGINE.with(|e| {
                     e.borrow_mut().tick.take();
                 });
+                detach_host_signal();
                 glib::ControlFlow::Break
             }
         });
+        let signal = host.connect_unmap(|_| rehome_driver());
         ENGINE.with(|e| {
             let mut e = e.borrow_mut();
             e.host = host.downgrade();
             e.tick = Some(tick);
+            e.host_signal = Some(signal);
         });
     } else {
         let timer = glib::timeout_add_local(Duration::from_millis(16), || {
@@ -367,7 +406,6 @@ pub fn animate<'a>(
         let e = e.borrow();
         e.active
             .iter()
-            .chain(e.current.iter())
             .filter(|i| i.key == options.key && i.widget.upgrade().as_ref() == Some(widget))
             .cloned()
             .collect()
@@ -381,7 +419,7 @@ pub fn animate<'a>(
         duration: duration * 1000.0,
         delay: options.delay_ms.max(0.0) * 1000.0,
         curve: options.easing,
-        update: Rc::new(update),
+        update: RefCell::new(Some(Rc::new(update))),
         done: RefCell::new(options.on_done),
         finished: Cell::new(false),
         origin: Cell::new(None),
@@ -401,13 +439,19 @@ pub fn animate<'a>(
         inner.signals.borrow_mut().push(signal);
     }
     if duration <= 0.0 || !animations_enabled() {
-        (inner.update)(1.0);
+        let update = inner.update.borrow().clone();
+        if let Some(update) = update {
+            update(1.0);
+        }
         if !inner.finished.get() {
             inner.complete();
         }
         stop_if_idle();
     } else {
-        (inner.update)(0.0);
+        let update = inner.update.borrow().clone();
+        if let Some(update) = update {
+            update(0.0);
+        }
         if !inner.finished.get() {
             schedule();
         }
@@ -700,7 +744,7 @@ pub fn lerp_color(a: &str, b: &str, t: f64) -> Result<String, MotionError> {
 }
 struct FaderInner {
     widget: glib::WeakRef<gtk::Widget>,
-    update: Rc<dyn Fn(f64)>,
+    update: RefCell<Option<UpdateCallback>>,
     value: Cell<f64>,
     duration: f64,
     curve: Curve,
@@ -720,7 +764,7 @@ impl StateFader {
         let widget = widget.as_ref();
         let inner = Rc::new(FaderInner {
             widget: widget.downgrade(),
-            update: Rc::new(update),
+            update: RefCell::new(Some(Rc::new(update))),
             value: Cell::new(initial.clamp(0.0, 1.0)),
             duration,
             curve: easing("smooth").expect("built-in easing"),
@@ -748,7 +792,10 @@ impl StateFader {
         let f = this.clone();
         let c = widget.connect_destroy(move |_| f.disconnect());
         this.0.signals.borrow_mut().extend([a, b, c]);
-        (this.0.update)(this.value());
+        let update = this.0.update.borrow().clone();
+        if let Some(update) = update {
+            update(this.value());
+        }
         this
     }
     pub fn value(&self) -> f64 {
@@ -768,7 +815,10 @@ impl StateFader {
             move |p| {
                 let value = (start + (target - start) * p).clamp(0.0, 1.0);
                 inner.value.set(value);
-                (inner.update)(value);
+                let update = inner.update.borrow().clone();
+                if let Some(update) = update {
+                    update(value);
+                }
             },
             AnimateOptions {
                 key: self.0.key,
@@ -796,6 +846,8 @@ impl StateFader {
             return;
         }
         self.cancel();
+        let update = self.0.update.borrow_mut().take();
+        drop(update);
         let signals = std::mem::take(&mut *self.0.signals.borrow_mut());
         if let Some(widget) = self.0.widget.upgrade() {
             for signal in signals {

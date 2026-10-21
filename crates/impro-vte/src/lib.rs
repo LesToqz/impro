@@ -30,6 +30,7 @@ impl Terminal {
     }
 
     /// Spawn a child with no post-fork Rust callback; completion runs on GTK's main context.
+    #[allow(clippy::too_many_arguments)] // Mirrors the terminal spawn contract.
     pub fn spawn_async<F: FnOnce(Result<glib::Pid, glib::Error>) + 'static>(
         &self,
         cwd: Option<&str>,
@@ -40,7 +41,16 @@ impl Terminal {
         cancellable: Option<&gio::Cancellable>,
         callback: F,
     ) {
-        assert!(!argv.is_empty(), "argv must contain the executable");
+        if argv.is_empty()
+            || argv.iter().chain(envv.iter()).any(|s| s.contains('\0'))
+            || cwd.is_some_and(|s| s.contains('\0'))
+        {
+            callback(Err(glib::Error::new(
+                gio::IOErrorEnum::InvalidArgument,
+                "Spawn needs an executable and NUL-free arguments",
+            )));
+            return;
+        }
         unsafe extern "C" fn done<F: FnOnce(Result<glib::Pid, glib::Error>) + 'static>(
             _terminal: *mut ffi::VteTerminal,
             pid: glib::ffi::GPid,
@@ -54,17 +64,21 @@ impl Terminal {
                 Err(from_glib_none(error))
             });
         }
+        let cwd = cwd.to_glib_none();
+        let argv = argv.to_glib_none();
+        let environment = envv.to_glib_none();
+        let environment_ptr = if envv.is_empty() {
+            std::ptr::null_mut()
+        } else {
+            environment.0
+        };
         unsafe {
             ffi::vte_terminal_spawn_async(
                 self.to_glib_none().0,
                 0,
-                cwd.to_glib_none().0,
-                argv.to_glib_none().0,
-                if envv.is_empty() {
-                    std::ptr::null_mut()
-                } else {
-                    envv.to_glib_none().0
-                },
+                cwd.0,
+                argv.0,
+                environment_ptr,
                 flags.into_glib(),
                 None,
                 std::ptr::null_mut(),
@@ -388,5 +402,25 @@ impl Terminal {
             }
             None
         })
+    }
+}
+
+impl Terminal {
+    /// All visible terminal text plus scrollback, owned by the caller.
+    pub fn text_format(&self, format: Format) -> Option<glib::GString> {
+        unsafe {
+            from_glib_full(ffi::vte_terminal_get_text_format(
+                self.to_glib_none().0,
+                format as _,
+            ))
+        }
+    }
+    pub fn text_selected(&self, format: Format) -> Option<glib::GString> {
+        unsafe {
+            from_glib_full(ffi::vte_terminal_get_text_selected(
+                self.to_glib_none().0,
+                format as _,
+            ))
+        }
     }
 }
