@@ -1,0 +1,15 @@
+[package]
+name = "impro-ui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+gtk.workspace = true
+gdk.workspace = true
+glib.workspace = true
+gio.workspace = true
+pango.workspace = true
+impro-core.workspace = true
+serde_json.workspace = true
+atk = "~0.18.2"

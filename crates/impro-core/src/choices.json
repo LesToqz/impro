@@ -1,0 +1,28 @@
+{
+  "delete_mode": [
+    "trash",
+    "permanent"
+  ],
+  "terminal_cursor": [
+    "block",
+    "ibeam",
+    "underline"
+  ],
+  "graph_default_type": [
+    "global",
+    "local",
+    "note"
+  ],
+  "gitgraph_orientation": [
+    "horizontal",
+    "vertical"
+  ],
+  "gitgraph_time_format": [
+    "relative",
+    "absolute"
+  ],
+  "notes_sort": [
+    "name",
+    "modified"
+  ]
+}

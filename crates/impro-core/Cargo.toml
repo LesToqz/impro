@@ -1,0 +1,14 @@
+[package]
+name = "impro-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+regex.workspace = true
+libc.workspace = true
+tempfile.workspace = true
+unicode-casefold = "0.2"
+unicode-general-category = "1"

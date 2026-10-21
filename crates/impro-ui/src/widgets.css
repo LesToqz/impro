@@ -1,0 +1,49 @@
+
+button.impro-toggle, button.impro-toggle:hover, button.impro-toggle:active {
+    min-width: 40px; min-height: 22px; padding: 0; border: 0;
+    border-radius: 11px; background: {border_hover};
+    box-shadow: inset 0 4px 10px alpha(#000000, 0.07); }
+button.impro-toggle:checked, button.impro-toggle:checked:hover,
+button.impro-toggle:checked:active { background: {accent}; }
+button.impro-toggle:disabled { opacity: 0.5; }
+button.impro-toggle:focus { outline-width: 2px; outline-offset: 2px;
+    -gtk-outline-radius: 13px; }
+.impro-toggle-thumb { min-width: 18px; min-height: 18px;
+    border-radius: 9px; background: #ffffff;
+    box-shadow: 0 1px 2px alpha(#000000, 0.15); }
+list.impro-card { background: {surface_alt}; color: {foreground};
+    border-radius: 12px; border: 0; }
+list.impro-card > row, list.impro-card > row:hover, list.impro-card > row:active {
+    background: transparent; padding: 20px; border-radius: 8px; }
+list.impro-card > row:focus { outline-color: {border_focus}; outline-style: solid;
+    outline-width: 2px; outline-offset: -2px; -gtk-outline-radius: 8px; }
+list.impro-card separator.impro-card-divider { background: {border};
+    min-height: 1px; }
+.impro-setting-name { font-size: 13px; color: {foreground}; }
+.impro-setting-desc { font-size: 12px; color: {muted}; }
+.impro-setting-value { font-size: 13px; color: {muted}; }
+list.impro-nav { background: transparent; color: {foreground}; }
+list.impro-nav > row { padding: 3px 8px; margin-bottom: 2px; border-radius: 8px;
+    font-size: 13px; background: transparent; color: {foreground}; min-height: 0; }
+list.impro-nav > row:hover { background: transparent; }
+list.impro-nav > row:selected, list.impro-nav > row:selected:hover {
+    background: {hover}; color: {foreground}; }
+list.impro-nav > row:focus { outline-color: {border_focus}; outline-width: 2px;
+    outline-offset: -2px; -gtk-outline-radius: 8px; }
+list.impro-nav > row image { color: {muted}; }
+list.impro-nav .impro-nav-count { color: {muted}; font-size: 12px; }
+entry.impro-search-field { border-radius: 5px; font-size: 13px; }
+entry.impro-search-field image { color: {faint}; }
+button.impro-icon-button { background: transparent; box-shadow: none; color: {muted};
+    padding: 4px; min-width: 0; min-height: 0; border-radius: 4px; }
+button.impro-icon-button:hover { background: {hover}; color: {foreground}; }
+button.impro-icon-button:disabled { background: transparent; color: {faint}; opacity: 0.5; }
+.impro-hotkey-chip { font-size: 12px; padding: 2px 6px; border-radius: 10px;
+    background: {hover}; color: {foreground}; }
+button.impro-swatch { min-width: 22px; min-height: 22px; padding: 0;
+    border: 0; border-radius: 11px; box-shadow: none; }
+button.impro-swatch:checked { box-shadow: inset 0 0 0 2px {surface_alt},
+    inset 0 0 0 4px alpha(#ffffff, 0.85); }
+button.impro-swatch:focus { outline-width: 2px; outline-offset: 1px;
+    -gtk-outline-radius: 12px; }
+{swatches}

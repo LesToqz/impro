@@ -1,0 +1,19 @@
+[package]
+name = "impro-vte-sys"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+links = "vte-2.91"
+build = "build.rs"
+
+[dependencies]
+gtk-sys.workspace = true
+gdk-sys.workspace = true
+glib-sys.workspace = true
+gobject-sys.workspace = true
+gio-sys.workspace = true
+pango-sys.workspace = true
+libc.workspace = true
+
+[build-dependencies]
+pkg-config.workspace = true
