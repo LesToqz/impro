@@ -28,10 +28,8 @@ unsafe impl GlobalAlloc for Counting {
 #[global_allocator]
 static ALLOC: Counting = Counting;
 
-#[test]
-fn ticks_do_not_allocate() {
-    let n = 600usize;
-    let mut rng = Rng::new(5);
+fn random_graph(n: usize, seed: u64) -> Graph {
+    let mut rng = Rng::new(seed);
     let mut pairs = Vec::new();
     for i in 1..n as u32 {
         pairs.push((i, (rng.next_u64() % i as u64) as u32));
@@ -39,24 +37,29 @@ fn ticks_do_not_allocate() {
             pairs.push((i, (rng.next_u64() % n as u64) as u32));
         }
     }
-    let graph = Graph::from_pairs(n, &pairs);
-    let mut layout = Layout::new();
-    layout.set_graph(&graph);
-    // warm the buffers, then count
-    for _ in 0..3 {
-        layout.step();
+    Graph::from_pairs(n, &pairs)
+}
+
+#[test]
+fn ticks_do_not_allocate() {
+    for (n, seed) in [(600usize, 5u64), (2500, 6), (40, 7)] {
+        let graph = random_graph(n, seed);
+        let mut layout = Layout::new();
+        layout.set_graph(&graph);
+        layout.begin_drag(5.min(n - 1), 10.0, 10.0);
+        // no warm-up: set_graph must have sized every buffer; the run covers
+        // the whole cooling curve while the layout spreads out
+        let before = ALLOCATIONS.load(Ordering::SeqCst);
+        for k in 0..260 {
+            layout.drag_to(5.min(n - 1), 10.0 + k as f32, 10.0);
+            assert!(layout.step());
+        }
+        let after = ALLOCATIONS.load(Ordering::SeqCst);
+        assert_eq!(
+            after - before,
+            0,
+            "n={n}: ticks allocated {} times",
+            after - before
+        );
     }
-    layout.begin_drag(5, 10.0, 10.0);
-    let before = ALLOCATIONS.load(Ordering::SeqCst);
-    for k in 0..150 {
-        layout.drag_to(5, 10.0 + k as f32, 10.0);
-        assert!(layout.step());
-    }
-    let after = ALLOCATIONS.load(Ordering::SeqCst);
-    assert_eq!(
-        after - before,
-        0,
-        "ticks allocated {} times",
-        after - before
-    );
 }

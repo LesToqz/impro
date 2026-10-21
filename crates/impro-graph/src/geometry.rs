@@ -418,6 +418,32 @@ mod tests {
     }
 
     #[test]
+    fn anchored_zoom_holds_for_random_cameras() {
+        let mut rng = crate::layout::Rng::new(3);
+        let mut r = move || rng.unit() as f64;
+        for _ in 0..2000 {
+            let mut cam = Camera {
+                pan_x: r() * 4000.0 - 2000.0,
+                pan_y: r() * 4000.0 - 2000.0,
+                zoom: MIN_ZOOM + r() * (MAX_ZOOM - MIN_ZOOM),
+            };
+            let (ax, ay) = (r() * 1500.0, r() * 900.0);
+            let world = cam.to_world(ax, ay);
+            cam.zoom_at(
+                ax,
+                ay,
+                wheel_factor(wheel_pixels(
+                    r() * 800.0 - 400.0,
+                    WheelUnit::Pixel,
+                    r() < 0.5,
+                )),
+            );
+            let s = cam.to_screen(world.0, world.1);
+            assert!((s.0 - ax).abs() < 1e-6 && (s.1 - ay).abs() < 1e-6);
+        }
+    }
+
+    #[test]
     fn camera_fit_contains_the_bounds() {
         let mut cam = Camera::default();
         cam.fit((-100.0, -50.0, 300.0, 150.0), 800.0, 600.0, 20.0);

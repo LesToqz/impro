@@ -24,7 +24,7 @@ struct Cell {
     depth: u8,
 }
 
-const LEAF_CAPACITY: u32 = 4;
+const LEAF_CAPACITY: u32 = 8;
 const MAX_DEPTH: u8 = 28;
 
 #[derive(Default)]
@@ -37,6 +37,16 @@ pub struct QuadTree {
 }
 
 impl QuadTree {
+    /// Pre-sizes the buffers for `n` points so that rebuilding the tree every
+    /// tick does not allocate (a tree has far fewer than `4n + 64` cells).
+    pub fn reserve(&mut self, n: usize) {
+        self.cells
+            .reserve((4 * n + 64).saturating_sub(self.cells.len()));
+        self.order.reserve(n.saturating_sub(self.order.len()));
+        self.scratch.reserve(n.saturating_sub(self.scratch.len()));
+        self.pending.reserve(512);
+    }
+
     /// Point indices in tree order: iterating them keeps consecutive queries
     /// spatially close, which is much friendlier to the cache.
     pub fn order(&self) -> &[u32] {

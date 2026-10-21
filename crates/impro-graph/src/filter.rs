@@ -553,3 +553,96 @@ impl ProjectIndex {
         folder(self, prefix, opts)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::layout::Rng;
+
+    /// Independent reference: repeated relaxation instead of a queue.
+    fn reference_layers(g: &Graph, focus: usize, depth: u32, inc: bool, out: bool) -> Vec<u8> {
+        let n = g.nodes.len();
+        let mut dist = vec![u32::MAX; n];
+        dist[focus] = 0;
+        loop {
+            let mut changed = false;
+            for &(s, t) in &g.pairs {
+                let (s, t) = (s as usize, t as usize);
+                if out && dist[s] != u32::MAX && dist[s] + 1 < dist[t] {
+                    dist[t] = dist[s] + 1;
+                    changed = true;
+                }
+                if inc && dist[t] != u32::MAX && dist[t] + 1 < dist[s] {
+                    dist[s] = dist[t] + 1;
+                    changed = true;
+                }
+            }
+            if !changed {
+                break;
+            }
+        }
+        dist.iter()
+            .map(|d| if *d <= depth { *d as u8 } else { u8::MAX })
+            .collect()
+    }
+
+    #[test]
+    fn layers_match_a_reference_on_random_graphs() {
+        let mut rng = Rng::new(11);
+        for round in 0..200 {
+            let n = 2 + (rng.next_u64() % 40) as usize;
+            let m = (rng.next_u64() % (3 * n as u64)) as usize;
+            let pairs: Vec<_> = (0..m)
+                .map(|_| {
+                    (
+                        (rng.next_u64() % n as u64) as u32,
+                        (rng.next_u64() % n as u64) as u32,
+                    )
+                })
+                .collect();
+            let g = Graph::from_pairs(n, &pairs);
+            let focus = (rng.next_u64() % n as u64) as usize;
+            for depth in 1..=6 {
+                for (inc, out) in [(true, true), (true, false), (false, true)] {
+                    assert_eq!(
+                        layers_from(&g, focus, depth, inc, out),
+                        reference_layers(&g, focus, depth, inc, out),
+                        "round {round} depth {depth} inc {inc} out {out}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn neither_direction_reaches_nothing_and_bad_focus_is_safe() {
+        let g = Graph::from_pairs(3, &[(0, 1), (1, 2)]);
+        assert_eq!(layers_from(&g, 1, 6, false, false), [u8::MAX, 0, u8::MAX]);
+        assert_eq!(layers_from(&g, 9, 6, true, true), [u8::MAX; 3]);
+        assert_eq!(
+            layers_from(&g, 0, 0, true, true),
+            [0, 1, u8::MAX],
+            "depth is at least one hop"
+        );
+    }
+
+    #[test]
+    fn options_follow_the_preferences() {
+        let mut prefs = GraphPrefs {
+            search: "x".into(),
+            show_tags: true,
+            hide_unresolved: true,
+            show_orphans: false,
+            ..GraphPrefs::default()
+        };
+        for _ in 0..12 {
+            prefs.add_color_rule("q", true);
+        }
+        let o = GraphOptions::from_prefs(&prefs);
+        assert_eq!(o.query, "x");
+        assert!(o.show_tags && o.existing_only && !o.show_orphans && o.strict_filters);
+        assert!(!o.show_attachments && o.show_code);
+        assert_eq!(o.groups.len(), MAX_COLOR_RULES);
+        assert_eq!(o.max_nodes, 3000);
+    }
+}

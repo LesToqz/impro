@@ -238,7 +238,7 @@ impl Layout {
         let mut count = vec![0u32; n];
         let mut springs = Vec::with_capacity(graph.pairs.len());
         for &(s, t) in &graph.pairs {
-            if s != t {
+            if s != t && (s as usize) < n && (t as usize) < n {
                 springs.push((s, t));
                 count[s as usize] += 1;
                 count[t as usize] += 1;
@@ -259,6 +259,7 @@ impl Layout {
 
         self.weight = graph.nodes.iter().map(|n| n.degree() as f32).collect();
         self.refresh_radii();
+        self.tree.reserve(n);
         self.tree.build(&self.x, &self.y);
         self.grid.reserve(n);
 
