@@ -45,7 +45,10 @@ pub fn note_edited_text(timestamp: f64, now: Option<&glib::DateTime>) -> String 
     format!(
         "{} {}",
         edited.day_of_month(),
-        edited.format("%b").map(|s| s.to_string()).unwrap_or_default()
+        edited
+            .format("%b")
+            .map(|s| s.to_string())
+            .unwrap_or_default()
     )
 }
 
@@ -58,9 +61,14 @@ fn soft_hover(button: &impl IsA<gtk::Widget>, filled: bool) -> StateFader {
     StateFader::new(
         button,
         move |amount| {
-            let opacity = if filled { 0.055 + amount * 0.04 } else { amount * 0.055 };
+            let opacity = if filled {
+                0.055 + amount * 0.04
+            } else {
+                amount * 0.055
+            };
             let _ = provider.load_from_data(
-                format!("button {{ background: alpha(@impro_notes_overlay, {opacity}); }}").as_bytes(),
+                format!("button {{ background: alpha(@impro_notes_overlay, {opacity}); }}")
+                    .as_bytes(),
             );
         },
         128.0,
@@ -99,7 +107,8 @@ impl ExplorerPanel {
             }
         });
         header.pack_start(&collapse, true, true, 0);
-        let new_button = gtk::Button::from_icon_name(Some("list-add-symbolic"), gtk::IconSize::Menu);
+        let new_button =
+            gtk::Button::from_icon_name(Some("list-add-symbolic"), gtk::IconSize::Menu);
         new_button.set_relief(gtk::ReliefStyle::None);
         new_button.set_tooltip_text(Some("New Note"));
         set_accessible_name(&new_button, "New Note");
@@ -224,14 +233,24 @@ impl ExplorerPanel {
         let empty = gtk::Box::new(gtk::Orientation::Vertical, 4);
         empty.style_context().add_class("impro-notes-empty");
         empty.set_valign(gtk::Align::Center);
-        let empty_icon = gtk::Image::from_icon_name(Some("document-edit-symbolic"), gtk::IconSize::Dialog);
+        let empty_icon =
+            gtk::Image::from_icon_name(Some("document-edit-symbolic"), gtk::IconSize::Dialog);
         empty_icon.set_pixel_size(28);
-        empty_icon.style_context().add_class("impro-notes-empty-icon");
+        empty_icon
+            .style_context()
+            .add_class("impro-notes-empty-icon");
         empty.pack_start(&empty_icon, false, false, 4);
         let empty_title = gtk::Label::new(Some("No notes yet"));
-        empty_title.style_context().add_class("impro-notes-empty-title");
+        empty_title
+            .style_context()
+            .add_class("impro-notes-empty-title");
         empty.pack_start(&empty_title, false, false, 0);
-        empty.pack_start(&gtk::Label::new(Some("A little space for your ideas.")), false, false, 0);
+        empty.pack_start(
+            &gtk::Label::new(Some("A little space for your ideas.")),
+            false,
+            false,
+            0,
+        );
         let empty_new = gtk::Button::with_label("New note");
         empty_new.set_halign(gtk::Align::Center);
         empty_new.set_relief(gtk::ReliefStyle::None);
@@ -290,22 +309,57 @@ impl ExplorerPanel {
         }
     }
 
-    fn notes_open_marker(&self, cell: &gtk::CellRenderer, model: &gtk::TreeModel, iter: &gtk::TreeIter) {
+    fn notes_open_marker(
+        &self,
+        cell: &gtk::CellRenderer,
+        model: &gtk::TreeModel,
+        iter: &gtk::TreeIter,
+    ) {
         let path = util::string(model, iter, 2);
         let active = self.imp().active_file.borrow().as_deref().map(model_path);
-        cell.set_property("text", if active.as_deref() == Some(path.as_str()) { "▏" } else { "" });
-        if let Some(colour) = self.w().notes.tree.style_context().lookup_color("impro_notes_accent") {
-            cell.set_property("foreground-rgba", &colour);
+        cell.set_property(
+            "text",
+            if active.as_deref() == Some(path.as_str()) {
+                "▏"
+            } else {
+                ""
+            },
+        );
+        if let Some(colour) = self
+            .w()
+            .notes
+            .tree
+            .style_context()
+            .lookup_color("impro_notes_accent")
+        {
+            cell.set_property("foreground-rgba", colour);
         }
     }
 
-    fn notes_row_data(&self, cell: &gtk::CellRenderer, model: &gtk::TreeModel, iter: &gtk::TreeIter) {
+    fn notes_row_data(
+        &self,
+        cell: &gtk::CellRenderer,
+        model: &gtk::TreeModel,
+        iter: &gtk::TreeIter,
+    ) {
         let path = PathBuf::from(util::string(model, iter, 2));
-        let text = self.imp().notes_edited.borrow().get(&path).cloned().unwrap_or_default();
+        let text = self
+            .imp()
+            .notes_edited
+            .borrow()
+            .get(&path)
+            .cloned()
+            .unwrap_or_default();
         cell.set_property("text", text);
         cell.set_property("size-points", self.imp().font_size.get());
-        if let Some(colour) = self.w().notes.tree.style_context().lookup_color("impro_notes_muted") {
-            cell.set_property("foreground-rgba", &colour);
+        if let Some(colour) = self
+            .w()
+            .notes
+            .tree
+            .style_context()
+            .lookup_color("impro_notes_muted")
+        {
+            cell.set_property("foreground-rgba", colour);
         }
     }
 
@@ -367,7 +421,10 @@ impl ExplorerPanel {
         let button = &self.w().notes_button;
         button.set_no_show_all(!enabled);
         button.set_visible(enabled);
-        let wanted = imp.notes_requested.get().unwrap_or_else(|| imp.notes_dir_exists.get());
+        let wanted = imp
+            .notes_requested
+            .get()
+            .unwrap_or_else(|| imp.notes_dir_exists.get());
         self.set_notes_visible(enabled && wanted);
     }
 
@@ -403,7 +460,11 @@ impl ExplorerPanel {
             return;
         }
         let start = imp.notes_angle.get();
-        let target = if collapsed { -std::f64::consts::FRAC_PI_2 } else { 0.0 };
+        let target = if collapsed {
+            -std::f64::consts::FRAC_PI_2
+        } else {
+            0.0
+        };
         let weak = self.downgrade();
         motion::animate(
             &w.notes.chevron,
@@ -418,7 +479,14 @@ impl ExplorerPanel {
             },
             AnimateOptions::default(),
         );
-        set_accessible_name(&w.notes.collapse, if collapsed { "Expand notes" } else { "Collapse notes" });
+        set_accessible_name(
+            &w.notes.collapse,
+            if collapsed {
+                "Expand notes"
+            } else {
+                "Collapse notes"
+            },
+        );
         w.notes
             .body
             .set_transition_duration(if motion::animations_enabled() { 150 } else { 0 });
@@ -480,8 +548,9 @@ impl ExplorerPanel {
         }
         let height = w.notes_split.allocated_height() - 6;
         if height >= 216 {
-            imp.notes_height
-                .set(Some(96.max((height - w.notes_split.position()).min(height - 120))));
+            imp.notes_height.set(Some(
+                96.max((height - w.notes_split.position()).min(height - 120)),
+            ));
             self.layout_notes();
         }
     }
@@ -509,6 +578,9 @@ impl ExplorerPanel {
     /// Reload the notes list on a worker, preserving the active editor's highlight.
     pub fn refresh_notes(&self) {
         let imp = self.imp();
+        if imp.destroyed.get() {
+            return;
+        }
         if imp.notes_running.get() {
             imp.notes_dirty.set(true);
             return;
@@ -522,10 +594,14 @@ impl ExplorerPanel {
         pool::spawn(Lane::Interactive, move || {
             let folder = notes::notes_dir(&root);
             let exists = folder.is_dir();
-            let watch = [root.clone(), folder.parent().map(Path::to_path_buf).unwrap_or_default(), folder.clone()]
-                .into_iter()
-                .filter(|p| !p.as_os_str().is_empty() && p.is_dir())
-                .collect();
+            let watch = [
+                root.clone(),
+                folder.parent().map(Path::to_path_buf).unwrap_or_default(),
+                folder.clone(),
+            ]
+            .into_iter()
+            .filter(|p| !p.as_os_str().is_empty() && p.is_dir())
+            .collect();
             let notes = notes::list_notes(&root, &sort)
                 .unwrap_or_default()
                 .into_iter()
@@ -540,7 +616,11 @@ impl ExplorerPanel {
                 .collect();
             let _ = sender.send(Msg::Notes {
                 generation,
-                listing: Listing { exists, watch, notes },
+                listing: Listing {
+                    exists,
+                    watch,
+                    notes,
+                },
             });
         });
     }
@@ -564,14 +644,21 @@ impl ExplorerPanel {
         let mut edited = HashMap::new();
         let now = glib::DateTime::now_local().ok();
         for (path, modified) in &listing.notes {
-            let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+            let name = path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default();
             let stem: String = {
                 let count = name.chars().count();
                 name.chars().take(count.saturating_sub(3)).collect()
             };
             w.notes.store.insert_with_values(
                 None,
-                &[(0, &"text-x-generic-symbolic"), (1, &stem), (2, &model_path(path))],
+                &[
+                    (0, &"text-x-generic-symbolic"),
+                    (1, &stem),
+                    (2, &model_path(path)),
+                ],
             );
             edited.insert(
                 path.clone(),
@@ -581,7 +668,9 @@ impl ExplorerPanel {
         *imp.notes_edited.borrow_mut() = edited;
         let count = listing.notes.len();
         w.notes.count.set_text(&count.to_string());
-        w.notes.stack.set_visible_child_name(if count > 0 { "list" } else { "empty" });
+        w.notes
+            .stack
+            .set_visible_child_name(if count > 0 { "list" } else { "empty" });
         imp.notes_dir_exists.set(listing.exists);
         let pending = imp.notes_pending_select.borrow_mut().take();
         let target = pending
@@ -624,7 +713,9 @@ impl ExplorerPanel {
                         panel.notes_changed(file, other);
                     }
                 });
-                imp.notes_monitors.borrow_mut().insert(path.clone(), monitor);
+                imp.notes_monitors
+                    .borrow_mut()
+                    .insert(path.clone(), monitor);
             }
         }
     }
@@ -657,7 +748,9 @@ impl ExplorerPanel {
                 window.disconnect(handler);
             }
         }
-        let window = self.toplevel().and_then(|top| top.downcast::<gtk::Window>().ok());
+        let window = self
+            .toplevel()
+            .and_then(|top| top.downcast::<gtk::Window>().ok());
         if let Some(window) = window {
             let weak = self.downgrade();
             let handler = window.connect_focus_in_event(move |_, _| {
@@ -689,12 +782,18 @@ impl ExplorerPanel {
 
     #[doc(hidden)]
     pub fn selected_note(&self) -> Option<PathBuf> {
+        if self.is_destroyed() {
+            return None;
+        }
         let (_, iter) = self.w().notes.tree.selection().selected()?;
         Some(PathBuf::from(util::string(&self.w().notes.store, &iter, 2)))
     }
 
     #[doc(hidden)]
     pub fn select_note(&self, path: &Path) {
+        if self.is_destroyed() {
+            return;
+        }
         let w = self.w();
         let selection = w.notes.tree.selection();
         selection.unselect_all();
@@ -713,9 +812,17 @@ impl ExplorerPanel {
     }
 
     fn rename_note(&self) {
-        let Some(path) = self.selected_note() else { return };
-        let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-        let stem: String = name.chars().take(name.chars().count().saturating_sub(3)).collect();
+        let Some(path) = self.selected_note() else {
+            return;
+        };
+        let name = path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let stem: String = name
+            .chars()
+            .take(name.chars().count().saturating_sub(3))
+            .collect();
         let weak = self.downgrade();
         self.name_dialog(
             "Rename",
@@ -723,7 +830,9 @@ impl ExplorerPanel {
             Rc::new(move |name, done| {
                 let Some(panel) = weak.upgrade() else { return };
                 match notes::note_filename(&name) {
-                    Ok(filename) => panel.rename(&path, &filename, Box::new(move |r| done(r.map(|_| ())))),
+                    Ok(filename) => {
+                        panel.rename(&path, &filename, Box::new(move |r| done(r.map(|_| ()))))
+                    }
                     Err(error) => done(Err(error)),
                 }
             }),
@@ -743,20 +852,28 @@ impl ExplorerPanel {
     #[doc(hidden)]
     pub fn build_notes_menu(&self) -> gtk::Menu {
         let path = self.selected_note();
-        let menu = gtk::Menu::builder().attach_widget(&self.w().notes.tree).build();
+        let menu = gtk::Menu::builder()
+            .attach_widget(&self.w().notes.tree)
+            .build();
         type Callback = Box<dyn Fn(&ExplorerPanel)>;
         let items: [(&str, Callback); 4] = [
-            ("Open", Box::new(|p| {
-                if let Some(path) = p.selected_note() {
-                    p.emit_file_activated(&path);
-                }
-            })),
+            (
+                "Open",
+                Box::new(|p| {
+                    if let Some(path) = p.selected_note() {
+                        p.emit_file_activated(&path);
+                    }
+                }),
+            ),
             ("Rename", Box::new(|p| p.rename_note())),
-            ("Delete", Box::new(|p| {
-                if let Some(path) = p.selected_note() {
-                    p.delete_dialog(Some(&path));
-                }
-            })),
+            (
+                "Delete",
+                Box::new(|p| {
+                    if let Some(path) = p.selected_note() {
+                        p.delete_dialog(Some(&path));
+                    }
+                }),
+            ),
             ("Reveal in file tree", Box::new(|p| p.reveal_note())),
         ];
         for (title, callback) in items {
@@ -800,7 +917,10 @@ impl ExplorerPanel {
             return false;
         }
         let (x, y) = event.position();
-        match tree.path_at_pos(x as i32, y as i32).and_then(|(path, ..)| path) {
+        match tree
+            .path_at_pos(x as i32, y as i32)
+            .and_then(|(path, ..)| path)
+        {
             Some(path) => tree.set_cursor(&path, None::<&gtk::TreeViewColumn>, false),
             None => tree.selection().unselect_all(),
         }
@@ -830,7 +950,7 @@ impl ExplorerPanel {
     }
 
     /// Create a note, list and select it, and open it in the editor.
-    pub fn create_note(&self, name: &str, done: Option<Box<dyn FnOnce(Result<PathBuf, FsOpError>)>>) {
+    pub fn create_note(&self, name: &str, done: Option<OpCallback>) {
         let root = self.root();
         let name = name.to_owned();
         let weak = self.downgrade();

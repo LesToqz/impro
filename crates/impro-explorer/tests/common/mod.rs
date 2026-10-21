@@ -1,5 +1,9 @@
 //! Shared GTK test harness: every test closure runs on one dedicated GTK thread.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    clippy::type_complexity,
+    clippy::missing_transmute_annotations
+)]
 use gtk::prelude::*;
 use std::sync::{mpsc, OnceLock};
 use std::time::{Duration, Instant};
@@ -81,7 +85,11 @@ pub fn key_event(keyval: gdk::keys::Key, state: gdk::ModifierType) -> gdk::Event
 
 /// A key press delivered to `window` as GDK would (with its GdkWindow attached), so the
 /// window's default handler propagates it to the focus widget and its ancestors.
-pub fn window_key_event(window: &gtk::Window, keyval: gdk::keys::Key, state: gdk::ModifierType) -> gdk::Event {
+pub fn window_key_event(
+    window: &gtk::Window,
+    keyval: gdk::keys::Key,
+    state: gdk::ModifierType,
+) -> gdk::Event {
     use glib::translate::*;
     let event = key_event(keyval, state);
     let mut key = event.downcast::<gdk::EventKey>().expect("key event");
@@ -92,7 +100,11 @@ pub fn window_key_event(window: &gtk::Window, keyval: gdk::keys::Key, state: gdk
 }
 
 /// Emit `key-press-event` on `widget`; whether a handler stopped the event.
-pub fn press(widget: &impl IsA<gtk::Widget>, keyval: gdk::keys::Key, state: gdk::ModifierType) -> bool {
+pub fn press(
+    widget: &impl IsA<gtk::Widget>,
+    keyval: gdk::keys::Key,
+    state: gdk::ModifierType,
+) -> bool {
     let event = key_event(keyval, state);
     widget.emit_by_name::<bool>("key-press-event", &[&event])
 }
@@ -107,10 +119,24 @@ pub fn window(child: &impl IsA<gtk::Widget>, width: i32, height: i32) -> gtk::Wi
 }
 
 /// Copy a rectangle of a realized window (the GTK 3 `gdk_pixbuf_get_from_window`).
-pub fn window_pixbuf(window: &gdk::Window, x: i32, y: i32, width: i32, height: i32) -> Option<gdk_pixbuf::Pixbuf> {
+pub fn window_pixbuf(
+    window: &gdk::Window,
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+) -> Option<gdk_pixbuf::Pixbuf> {
     use glib::translate::*;
     // SAFETY: the window is alive and the call returns a new reference or NULL.
-    unsafe { from_glib_full(gdk::ffi::gdk_pixbuf_get_from_window(window.to_glib_none().0, x, y, width, height)) }
+    unsafe {
+        from_glib_full(gdk::ffi::gdk_pixbuf_get_from_window(
+            window.to_glib_none().0,
+            x,
+            y,
+            width,
+            height,
+        ))
+    }
 }
 
 /// `gtk_widget_destroy`, unsafe in the bindings because other references may remain.
@@ -119,8 +145,8 @@ pub fn destroy(widget: &impl IsA<gtk::Widget>) {
     unsafe { widget.destroy() }
 }
 
-use impro_explorer::explorer::{DialogHooks, ExplorerPanel};
 use impro_explorer::explorer::NameAction;
+use impro_explorer::explorer::{DialogHooks, ExplorerPanel};
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -148,15 +174,28 @@ pub fn await_op(
     result
 }
 
-pub fn create(panel: &ExplorerPanel, parent: &Path, name: &str, folder: bool) -> Result<PathBuf, impro_core::fsops::FsOpError> {
+pub fn create(
+    panel: &ExplorerPanel,
+    parent: &Path,
+    name: &str,
+    folder: bool,
+) -> Result<PathBuf, impro_core::fsops::FsOpError> {
     await_op(panel, |done| panel.create(parent, name, folder, done))
 }
 
-pub fn rename(panel: &ExplorerPanel, path: &Path, name: &str) -> Result<PathBuf, impro_core::fsops::FsOpError> {
+pub fn rename(
+    panel: &ExplorerPanel,
+    path: &Path,
+    name: &str,
+) -> Result<PathBuf, impro_core::fsops::FsOpError> {
     await_op(panel, |done| panel.rename(path, name, done))
 }
 
-pub fn delete(panel: &ExplorerPanel, path: &Path, permanent: bool) -> Result<PathBuf, impro_core::fsops::FsOpError> {
+pub fn delete(
+    panel: &ExplorerPanel,
+    path: &Path,
+    permanent: bool,
+) -> Result<PathBuf, impro_core::fsops::FsOpError> {
     await_op(panel, |done| panel.delete(path, permanent, done))
 }
 
@@ -184,7 +223,10 @@ pub fn children(panel: &ExplorerPanel, path: &Path) -> Vec<[Option<String>; 3]> 
 }
 
 pub fn names(panel: &ExplorerPanel, path: &Path) -> Vec<String> {
-    children(panel, path).into_iter().map(|row| row[1].clone().unwrap_or_default()).collect()
+    children(panel, path)
+        .into_iter()
+        .map(|row| row[1].clone().unwrap_or_default())
+        .collect()
 }
 
 pub fn expand(panel: &ExplorerPanel, path: &Path) {
@@ -217,20 +259,29 @@ impl Recorder {
         name: Option<Rc<dyn Fn(&str) -> String>>,
         confirm: impl Fn(&impro_explorer::explorer::ConfirmRequest) -> bool + 'static,
     ) {
-        let (names, confirms, errors) = (self.names.clone(), self.confirms.clone(), self.errors.clone());
-        let name_hook: Rc<dyn Fn(&str, &str, NameAction)> = Rc::new(move |title, initial, action| {
-            names.borrow_mut().push((title.to_owned(), initial.to_owned()));
-            if let Some(answer) = &name {
-                action(answer(title), Box::new(|_| {}));
-            }
-        });
+        let (names, confirms, errors) = (
+            self.names.clone(),
+            self.confirms.clone(),
+            self.errors.clone(),
+        );
+        let name_hook: Rc<dyn Fn(&str, &str, NameAction)> =
+            Rc::new(move |title, initial, action| {
+                names
+                    .borrow_mut()
+                    .push((title.to_owned(), initial.to_owned()));
+                if let Some(answer) = &name {
+                    action(answer(title), Box::new(|_| {}));
+                }
+            });
         panel.set_dialog_hooks(DialogHooks {
             name_dialog: Some(name_hook),
             confirm_removal: Some(Rc::new(move |request| {
                 confirms.borrow_mut().push(request.clone());
                 confirm(request)
             })),
-            error_dialog: Some(Rc::new(move |message| errors.borrow_mut().push(message.to_owned()))),
+            error_dialog: Some(Rc::new(move |message| {
+                errors.borrow_mut().push(message.to_owned())
+            })),
             remove: None,
         });
     }

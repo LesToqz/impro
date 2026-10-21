@@ -215,7 +215,10 @@ pub fn run(
         let _ = child.kill();
     }
     drop(stdout);
-    let status = finish(child, deadline.max(Instant::now() + Duration::from_millis(1)));
+    let status = finish(
+        child,
+        deadline.max(Instant::now() + Duration::from_millis(1)),
+    );
     if let Some(error) = failure {
         return Err(error);
     }
@@ -318,19 +321,41 @@ pub fn collect_status_with(root: &Path, limits: &Limits, cancel: Option<&CancelT
     let root = absolute(root);
     let deadline = Instant::now() + limits.timeout;
     let attempt = || -> io::Result<Snapshot> {
-        let top = run(&root, &["rev-parse", "--show-toplevel"], deadline, None, limits.max_output, cancel)?;
+        let top = run(
+            &root,
+            &["rev-parse", "--show-toplevel"],
+            deadline,
+            None,
+            limits.max_output,
+            cancel,
+        )?;
         let repo = PathBuf::from(OsStr::from_bytes(trim_newline(&top.data)));
-        let git_dir = run(&root, &["rev-parse", "--absolute-git-dir"], deadline, None, limits.max_output, cancel)?;
+        let git_dir = run(
+            &root,
+            &["rev-parse", "--absolute-git-dir"],
+            deadline,
+            None,
+            limits.max_output,
+            cancel,
+        )?;
         let output = run(
             &root,
-            &["status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignored=no"],
+            &[
+                "status",
+                "--porcelain=v1",
+                "-z",
+                "--untracked-files=all",
+                "--ignored=no",
+            ],
             deadline,
             Some(limits.max_entries.max(1) * 2 + 1),
             limits.max_output,
             cancel,
         )?;
         let mut result = parse_porcelain(&output.data, &repo, &root, limits.max_entries);
-        result.git_dir = Some(PathBuf::from(OsStr::from_bytes(trim_newline(&git_dir.data))));
+        result.git_dir = Some(PathBuf::from(OsStr::from_bytes(trim_newline(
+            &git_dir.data,
+        ))));
         result.truncated |= output.truncated;
         Ok(result)
     };

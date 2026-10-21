@@ -36,7 +36,12 @@ fn setup() -> Fix {
     pump(80);
     wait_idle(&panel);
     let notes = panel.notes_widgets();
-    Fix { temp, panel, window, notes }
+    Fix {
+        temp,
+        panel,
+        window,
+        notes,
+    }
 }
 
 impl Fix {
@@ -65,7 +70,9 @@ impl Fix {
         wait_idle(&self.panel);
         let p = self.panel.clone();
         let wanted = path.clone();
-        pump_until("note listed", move || p.selected_note().as_deref() == Some(wanted.as_path()));
+        pump_until("note listed", move || {
+            p.selected_note().as_deref() == Some(wanted.as_path())
+        });
         path
     }
     fn wait_names(&self, expected: &[&str]) -> bool {
@@ -107,8 +114,18 @@ fn test_initial_visibility_lazy_folder_and_new_file_action() {
         assert!(!f.folder().exists());
         assert_eq!(f.notes.stack.visible_child_name().as_deref(), Some("empty"));
         f.panel.header_button("New File").unwrap().clicked();
-        assert_eq!(*recorder.names.borrow(), [("New File".to_owned(), String::new())]);
-        assert_eq!(f.panel.header_button("New File").unwrap().tooltip_text().as_deref(), Some("New File"));
+        assert_eq!(
+            *recorder.names.borrow(),
+            [("New File".to_owned(), String::new())]
+        );
+        assert_eq!(
+            f.panel
+                .header_button("New File")
+                .unwrap()
+                .tooltip_text()
+                .as_deref(),
+            Some("New File")
+        );
         f.notes.button.clicked();
         assert!(!f.panel.notes_section_visible());
     });
@@ -135,11 +152,21 @@ fn test_empty_state_actions_share_note_creation_and_stay_visible_when_collapsed(
         f.notes.new_button.clicked();
         f.notes.empty_new.clicked();
         assert_eq!(recorder.names.borrow().len(), 2);
-        assert!(recorder.names.borrow().iter().all(|(title, _)| title == "New Note"));
+        assert!(recorder
+            .names
+            .borrow()
+            .iter()
+            .all(|(title, _)| title == "New Note"));
         f.panel.set_notes_collapsed(true);
         pump(220);
         assert!(f.notes.new_button.is_drawable());
-        assert_eq!((f.notes.new_button.allocated_width(), f.notes.new_button.allocated_height()), (24, 24));
+        assert_eq!(
+            (
+                f.notes.new_button.allocated_width(),
+                f.notes.new_button.allocated_height()
+            ),
+            (24, 24)
+        );
     });
 }
 
@@ -160,7 +187,10 @@ fn test_edited_labels_cover_recent_times_and_calendar_boundaries() {
         }
         let midnight = glib::DateTime::from_local(2026, 10, 21, 0, 2, 0.0).unwrap();
         let before = glib::DateTime::from_local(2026, 10, 20, 23, 0, 0.0).unwrap();
-        assert_eq!(note_edited_text(before.to_unix() as f64, Some(&midnight)), "yesterday");
+        assert_eq!(
+            note_edited_text(before.to_unix() as f64, Some(&midnight)),
+            "yesterday"
+        );
     });
 }
 
@@ -176,18 +206,35 @@ fn test_edited_metadata_refreshes_without_changing_model_or_selection() {
         f.panel.refresh_notes();
         let p = f.panel.clone();
         let target = path.clone();
-        pump_until("edited text", move || p.notes_edited(&target).as_deref() == Some("5 min ago"));
+        pump_until("edited text", move || {
+            p.notes_edited(&target).as_deref() == Some("5 min ago")
+        });
         assert_eq!(f.panel.selected_note(), Some(path.clone()));
         assert_eq!(f.notes.store.n_columns(), 3);
         pump(80);
         let column = f.notes.tree.column(0).unwrap();
         let row = gtk::TreePath::from_indicesv(&[0]);
-        assert_eq!(f.notes.tree.background_area(Some(&row), Some(&column)).height(), 32);
+        assert_eq!(
+            f.notes
+                .tree
+                .background_area(Some(&row), Some(&column))
+                .height(),
+            32
+        );
         f.panel.set_compact(true);
         pump(80);
-        assert_eq!(f.notes.tree.background_area(Some(&row), Some(&column)).height(), 32);
+        assert_eq!(
+            f.notes
+                .tree
+                .background_area(Some(&row), Some(&column))
+                .height(),
+            32
+        );
         assert!(f.notes.scroll.is_overlay_scrolling());
-        assert_eq!((f.notes.tree.margin_top(), f.notes.tree.margin_bottom()), (4, 4));
+        assert_eq!(
+            (f.notes.tree.margin_top(), f.notes.tree.margin_bottom()),
+            (4, 4)
+        );
         f.panel.set_current_file(Some(&path));
         f.panel.select_note(&path);
         let first = f.notes.store.iter_first().unwrap();
@@ -218,7 +265,9 @@ fn test_existing_folder_at_open_and_root_change() {
         pump_until("notes hidden", move || !p.notes_section_visible());
         f.panel.refresh();
         let p = f.panel.clone();
-        pump_until("notes visible after refresh", move || p.notes_section_visible());
+        pump_until("notes visible after refresh", move || {
+            p.notes_section_visible()
+        });
         destroy(&other);
     });
 }
@@ -231,8 +280,14 @@ fn test_vertical_layout_default_size_and_minimums() {
         pump(120);
         let split = &f.notes.split;
         assert_eq!(split.orientation(), gtk::Orientation::Vertical);
-        assert_eq!(split.child1().unwrap(), f.panel.search().upcast::<gtk::Widget>());
-        assert_eq!(split.child2().unwrap(), f.notes.section.clone().upcast::<gtk::Widget>());
+        assert_eq!(
+            split.child1().unwrap(),
+            f.panel.search().upcast::<gtk::Widget>()
+        );
+        assert_eq!(
+            split.child2().unwrap(),
+            f.notes.section.clone().upcast::<gtk::Widget>()
+        );
         let y = |w: &gtk::Widget| w.translate_coordinates(&f.panel, 0, 0).unwrap().1;
         assert!(y(f.notes.section.upcast_ref()) > y(f.panel.search().upcast_ref()));
         let available = f64::from(split.allocated_height() - 6);
@@ -272,7 +327,12 @@ fn test_real_divider_drag_and_height_remembered_across_collapse_and_hide() {
         pump(80);
         xtest.button(1, false);
         pump(80);
-        assert!((f.notes.split.position() - (before - 65)).abs() <= 3, "{} vs {}", f.notes.split.position(), before - 65);
+        assert!(
+            (f.notes.split.position() - (before - 65)).abs() <= 3,
+            "{} vs {}",
+            f.notes.split.position(),
+            before - 65
+        );
         let remembered = f.panel.notes_height().expect("height remembered");
         f.notes.collapse.clicked();
         assert!(f.panel.notes_collapsed());
@@ -319,21 +379,26 @@ fn test_create_activate_and_active_editor_highlight() {
         let f = setup();
         let opened = Rc::new(RefCell::new(Vec::new()));
         let sink = opened.clone();
-        f.panel.connect_file_activated(move |_, path| sink.borrow_mut().push(path.to_path_buf()));
+        f.panel
+            .connect_file_activated(move |_, path| sink.borrow_mut().push(path.to_path_buf()));
         let first = f.note("First");
         let second = f.note("Second");
         assert!(f.panel.notes_section_visible());
         assert_eq!(*opened.borrow(), [first.clone(), second]);
         assert_eq!(f.notes.count.text(), "2");
         let column = f.notes.tree.column(0).unwrap();
-        f.notes.tree.row_activated(&gtk::TreePath::from_indicesv(&[0]), &column);
+        f.notes
+            .tree
+            .row_activated(&gtk::TreePath::from_indicesv(&[0]), &column);
         assert_eq!(opened.borrow().last().unwrap(), &first);
         assert!(f.notes.tree.activates_on_single_click());
         f.panel.set_current_file(Some(&first));
         f.panel.refresh_notes();
         let p = f.panel.clone();
         let wanted = first.clone();
-        pump_until("active note selected", move || p.selected_note().as_deref() == Some(wanted.as_path()));
+        pump_until("active note selected", move || {
+            p.selected_note().as_deref() == Some(wanted.as_path())
+        });
         f.panel.set_current_file(Some(&f.root().join("plain.py")));
         assert_eq!(f.panel.selected_note(), None);
         f.panel.set_open_after_create(false);
@@ -365,16 +430,19 @@ fn test_section_rename_delete_keys_and_tree_sync() {
         assert!(f.wait_names(&["Renamed"]));
         let p = f.panel.clone();
         let wanted = renamed.clone();
-        pump_until("renamed note selected", move || p.selected_note().as_deref() == Some(wanted.as_path()));
+        pump_until("renamed note selected", move || {
+            p.selected_note().as_deref() == Some(wanted.as_path())
+        });
         f.panel.reveal_note();
         wait_idle(&f.panel);
         assert_eq!(f.panel.selected_path(), Some(renamed.clone()));
         assert!(f.panel.find_row(&renamed).is_some());
         let opened = Rc::new(RefCell::new(Vec::new()));
         let sink = opened.clone();
-        f.panel.connect_file_activated(move |_, p| sink.borrow_mut().push(p.to_path_buf()));
+        f.panel
+            .connect_file_activated(move |_, p| sink.borrow_mut().push(p.to_path_buf()));
         assert!(press_notes(&f, key::Return));
-        assert_eq!(*opened.borrow(), [renamed.clone()]);
+        assert_eq!(*opened.borrow(), std::slice::from_ref(&renamed));
         f.panel.set_confirm_delete(false);
         assert!(press_notes(&f, key::Delete));
         assert!(f.wait_names(&[]));
@@ -445,8 +513,15 @@ fn test_context_menu_and_reveal_hidden_notes() {
         f.panel.set_current_file(Some(&active));
         f.panel.select_note(&path);
         let menu = f.panel.build_notes_menu();
-        let items: Vec<gtk::MenuItem> = menu.children().into_iter().filter_map(|w| w.downcast().ok()).collect();
-        let labels: Vec<_> = items.iter().map(|i| i.label().unwrap().to_string()).collect();
+        let items: Vec<gtk::MenuItem> = menu
+            .children()
+            .into_iter()
+            .filter_map(|w| w.downcast().ok())
+            .collect();
+        let labels: Vec<_> = items
+            .iter()
+            .map(|i| i.label().unwrap().to_string())
+            .collect();
         assert_eq!(labels, ["Open", "Rename", "Delete", "Reveal in file tree"]);
         assert!(gtk::Menu::for_attach_widget(&f.notes.tree).contains(menu.upcast_ref()));
         items.last().unwrap().activate();
@@ -519,7 +594,8 @@ fn test_sort_compact_folders_first_and_git_colors() {
         let second = f.note("Zulu");
         let set_mtime = |path: &Path, seconds: u64| {
             let file = std::fs::File::options().write(true).open(path).unwrap();
-            file.set_modified(std::time::UNIX_EPOCH + std::time::Duration::from_secs(seconds)).unwrap();
+            file.set_modified(std::time::UNIX_EPOCH + std::time::Duration::from_secs(seconds))
+                .unwrap();
         };
         set_mtime(&first, 1);
         set_mtime(&second, 2);
@@ -544,7 +620,10 @@ fn test_sort_compact_folders_first_and_git_colors() {
         assert_eq!(names(&f.panel, &root), ["zzz", "aaa.py"]);
         let tree_cell = |panel: &ExplorerPanel| -> i32 {
             let column = panel.tree().column(0).unwrap();
-            let cell = column.cells()[1].clone().downcast::<gtk::CellRendererText>().unwrap();
+            let cell = column.cells()[1]
+                .clone()
+                .downcast::<gtk::CellRendererText>()
+                .unwrap();
             let (_, height): (i32, i32) = cell.fixed_size();
             height
         };
@@ -557,10 +636,15 @@ fn test_sort_compact_folders_first_and_git_colors() {
         // Git colours toggle the decoration at paint time.
         let file = root.join("aaa.py");
         let mut snapshot = impro_explorer::gitstatus::Snapshot::default();
-        snapshot.files.insert(file.clone(), impro_explorer::gitstatus::Status::MODIFIED);
+        snapshot
+            .files
+            .insert(file.clone(), impro_explorer::gitstatus::Status::MODIFIED);
         f.panel.apply_snapshot(snapshot);
         let column = f.panel.tree().column(0).unwrap();
-        let cell = column.cells()[1].clone().downcast::<gtk::CellRendererText>().unwrap();
+        let cell = column.cells()[1]
+            .clone()
+            .downcast::<gtk::CellRendererText>()
+            .unwrap();
         let row = f.panel.find_row(&file).unwrap();
         let set = |panel: &ExplorerPanel| {
             column.cell_set_cell_data(&panel.store(), &row, false, false);

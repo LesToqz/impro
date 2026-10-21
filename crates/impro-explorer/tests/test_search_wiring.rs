@@ -71,7 +71,9 @@ impl Harness {
     }
     fn wait_scan(&self) {
         let panel = self.search();
-        pump_until("scan finished", move || !panel.is_searching() && !panel.timeout_pending());
+        pump_until("scan finished", move || {
+            !panel.is_searching() && !panel.timeout_pending()
+        });
     }
 
     // ---- editor stand-in ---------------------------------------------------------------
@@ -86,7 +88,11 @@ impl Harness {
                 let view = gtk::TextView::with_buffer(&buffer);
                 self.editor_box.pack_start(&view, true, true, 0);
                 view.show();
-                self.tabs.borrow_mut().push(Tab { path: path.to_path_buf(), buffer, view });
+                self.tabs.borrow_mut().push(Tab {
+                    path: path.to_path_buf(),
+                    buffer,
+                    view,
+                });
                 self.tabs.borrow().len() - 1
             }
         };
@@ -114,7 +120,8 @@ impl Harness {
         let mut end = start;
         end.forward_chars(length.max(0));
         tab.buffer.select_range(&start, &end);
-        *self.selection.borrow_mut() = Some((line as usize, column as usize, (column + length) as usize));
+        *self.selection.borrow_mut() =
+            Some((line as usize, column as usize, (column + length) as usize));
         tab.view.grab_focus();
     }
     fn focus_current(&self) -> bool {
@@ -127,7 +134,12 @@ impl Harness {
     fn buffer_text(&self, path: &Path) -> Option<String> {
         let tabs = self.tabs.borrow();
         let tab = tabs.iter().find(|t| t.path == path)?;
-        Some(tab.buffer.text(&tab.buffer.start_iter(), &tab.buffer.end_iter(), true).map(|t| t.to_string()).unwrap_or_default())
+        Some(
+            tab.buffer
+                .text(&tab.buffer.start_iter(), &tab.buffer.end_iter(), true)
+                .map(|t| t.to_string())
+                .unwrap_or_default(),
+        )
     }
     /// `MainWindow.search_in_files`.
     fn search_in_files(&self) {
@@ -138,10 +150,18 @@ impl Harness {
             .and_then(|i| {
                 let tabs = self.tabs.borrow();
                 let buffer = &tabs[i].buffer;
-                buffer.selection_bounds().map(|(a, b)| buffer.text(&a, &b, true).map(|t| t.to_string()).unwrap_or_default())
+                buffer.selection_bounds().map(|(a, b)| {
+                    buffer
+                        .text(&a, &b, true)
+                        .map(|t| t.to_string())
+                        .unwrap_or_default()
+                })
             })
             .unwrap_or_default();
-        let seed = if seed.trim().is_empty() || seed.contains(['\n', '\r']) || seed.chars().count() > 200 {
+        let seed = if seed.trim().is_empty()
+            || seed.contains(['\n', '\r'])
+            || seed.chars().count() > 200
+        {
             String::new()
         } else {
             seed
@@ -153,10 +173,16 @@ impl Harness {
 fn setup() -> Harness {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path().canonicalize().unwrap();
-    std::fs::write(root.join("a.py"), "alpha needle one\nline two\n  needle two\n").unwrap();
+    std::fs::write(
+        root.join("a.py"),
+        "alpha needle one\nline two\n  needle two\n",
+    )
+    .unwrap();
     std::fs::write(root.join("b.py"), "needle in b\n").unwrap();
     std::fs::write(root.join("notes.md"), "# Title\n\nsome needle here\n").unwrap();
-    let big: String = (0..300).map(|i| format!("line {i}\n")).collect::<String>() + "the needle far below\n" + &"tail\n".repeat(100);
+    let big: String = (0..300).map(|i| format!("line {i}\n")).collect::<String>()
+        + "the needle far below\n"
+        + &"tail\n".repeat(100);
     std::fs::write(root.join("big.py"), big).unwrap();
     let explorer = ExplorerPanel::new(&root);
     let editor_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -183,22 +209,30 @@ fn setup() -> Harness {
     wait_idle(&harness.explorer);
     // Wiring as in the window.
     let (tabs, current) = (harness.tabs.clone(), harness.current.clone());
-    harness.explorer.set_text_provider(Some(Rc::new(move |path| {
-        let tabs = tabs.borrow();
-        let _ = &current;
-        let tab = tabs.iter().find(|t| t.path == path)?;
-        Some(tab.buffer.text(&tab.buffer.start_iter(), &tab.buffer.end_iter(), true).map(|t| t.to_string()).unwrap_or_default())
-    })));
+    harness
+        .explorer
+        .set_text_provider(Some(Rc::new(move |path| {
+            let tabs = tabs.borrow();
+            let _ = &current;
+            let tab = tabs.iter().find(|t| t.path == path)?;
+            Some(
+                tab.buffer
+                    .text(&tab.buffer.start_iter(), &tab.buffer.end_iter(), true)
+                    .map(|t| t.to_string())
+                    .unwrap_or_default(),
+            )
+        })));
     harness
 }
 
 fn wire(h: &Rc<Harness>) {
     let weak = Rc::downgrade(h);
-    h.explorer.connect_search_result_activated(move |_, path, line, column, length| {
-        if let Some(h) = weak.upgrade() {
-            h.open_file_at(path, line, column, length);
-        }
-    });
+    h.explorer
+        .connect_search_result_activated(move |_, path, line, column, length| {
+            if let Some(h) = weak.upgrade() {
+                h.open_file_at(path, line, column, length);
+            }
+        });
     let weak = Rc::downgrade(h);
     h.explorer.connect_file_activated(move |_, path| {
         if let Some(h) = weak.upgrade() {
@@ -231,14 +265,22 @@ fn wire(h: &Rc<Harness>) {
     h.explorer.connect_path_deleted(move |_, path| {
         let Some(h) = weak.upgrade() else { return };
         h.tabs.borrow_mut().retain(|t| t.path != path);
-        *h.current.borrow_mut() = if h.tabs.borrow().is_empty() { None } else { Some(0) };
+        *h.current.borrow_mut() = if h.tabs.borrow().is_empty() {
+            None
+        } else {
+            Some(0)
+        };
         h.explorer.set_current_file(h.current_path().as_deref());
     });
     let weak = Rc::downgrade(h);
     h.window.connect_key_press_event(move |_, event| {
-        let Some(h) = weak.upgrade() else { return glib::Propagation::Proceed };
+        let Some(h) = weak.upgrade() else {
+            return glib::Propagation::Proceed;
+        };
         let ctrl_shift = gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::SHIFT_MASK;
-        if (event.keyval() == key::F || event.keyval() == key::f) && event.state().contains(ctrl_shift) {
+        if (event.keyval() == key::F || event.keyval() == key::f)
+            && event.state().contains(ctrl_shift)
+        {
             h.search_in_files();
             return glib::Propagation::Stop;
         }
@@ -263,15 +305,32 @@ fn test_search_box_is_first_under_header() {
         let h = setup_wired();
         let children = h.explorer.children();
         assert_eq!(children.len(), 2);
-        assert!(children[0].style_context().has_class("impro-explorer-header"));
+        assert!(children[0]
+            .style_context()
+            .has_class("impro-explorer-header"));
         let split = children[1].clone().downcast::<gtk::Paned>().unwrap();
         assert_eq!(split.orientation(), gtk::Orientation::Vertical);
         assert_eq!(split.child1().unwrap(), h.search().upcast::<gtk::Widget>());
-        assert_eq!(split.child2().unwrap(), h.explorer.notes_widgets().section.upcast::<gtk::Widget>());
-        let row = h.search().children()[0].clone().downcast::<gtk::Box>().unwrap();
-        assert_eq!(row.children()[0], h.search().entry().upcast::<gtk::Widget>());
-        assert_eq!(h.search().children()[1], h.search().stack().upcast::<gtk::Widget>());
-        assert_eq!(h.search().stack().visible_child_name().as_deref(), Some("content"));
+        assert_eq!(
+            split.child2().unwrap(),
+            h.explorer.notes_widgets().section.upcast::<gtk::Widget>()
+        );
+        let row = h.search().children()[0]
+            .clone()
+            .downcast::<gtk::Box>()
+            .unwrap();
+        assert_eq!(
+            row.children()[0],
+            h.search().entry().upcast::<gtk::Widget>()
+        );
+        assert_eq!(
+            h.search().children()[1],
+            h.search().stack().upcast::<gtk::Widget>()
+        );
+        assert_eq!(
+            h.search().stack().visible_child_name().as_deref(),
+            Some("content")
+        );
         assert!(h.explorer.tree().is_ancestor(&h.search()));
     });
 }
@@ -284,11 +343,22 @@ fn test_typing_shows_results_and_escape_restores_tree() {
         h.explorer.focus_search(None);
         assert!(h.search().entry().is_focus());
         h.search_for("needle");
-        assert_eq!(h.search().stack().visible_child_name().as_deref(), Some("results"));
-        assert!(!h.search().stack().child_by_name("content").unwrap().is_mapped());
+        assert_eq!(
+            h.search().stack().visible_child_name().as_deref(),
+            Some("results")
+        );
+        assert!(!h
+            .search()
+            .stack()
+            .child_by_name("content")
+            .unwrap()
+            .is_mapped());
         press(&h.search().entry(), key::Escape, gdk::ModifierType::empty());
         assert_eq!(h.search().query(), "");
-        assert_eq!(h.search().stack().visible_child_name().as_deref(), Some("content"));
+        assert_eq!(
+            h.search().stack().visible_child_name().as_deref(),
+            Some("content")
+        );
         // With a tab open, Esc hands focus back to the editor.
         let focus = h.window.focused_widget().unwrap();
         assert!(focus.is_ancestor(&h.editor_box));
@@ -303,7 +373,10 @@ fn test_escape_without_tabs_focuses_tree() {
         h.search_for("needle");
         press(&h.search().entry(), key::Escape, gdk::ModifierType::empty());
         assert_eq!(h.search().query(), "");
-        assert_eq!(h.window.focused_widget().unwrap(), h.explorer.tree().upcast::<gtk::Widget>());
+        assert_eq!(
+            h.window.focused_widget().unwrap(),
+            h.explorer.tree().upcast::<gtk::Widget>()
+        );
     });
 }
 
@@ -317,7 +390,10 @@ fn test_active_tab_group_first_and_switching_resorts() {
         let w = h.clone();
         pump_until("four groups", move || w.groups().len() == 4);
         assert_eq!(h.groups()[0], h.p("a.py"));
-        assert_eq!(h.groups()[1..], [h.p("b.py"), h.p("big.py"), h.p("notes.md")]);
+        assert_eq!(
+            h.groups()[1..],
+            [h.p("b.py"), h.p("big.py"), h.p("notes.md")]
+        );
         h.open_file(&h.p("b.py"));
         let w = h.clone();
         pump_until("b first", move || w.groups().first() == Some(&w.p("b.py")));
@@ -329,7 +405,9 @@ fn test_active_tab_group_first_and_switching_resorts() {
         assert_eq!(h.groups()[0], h.p("a.py"));
         assert_eq!(h.groups().len(), 4);
         let first = h.search().store().iter_first().unwrap();
-        assert!(impro_explorer::util::string(&h.search().store(), &first, 2).contains("current file"));
+        assert!(
+            impro_explorer::util::string(&h.search().store(), &first, 2).contains("current file")
+        );
     });
 }
 
@@ -344,12 +422,18 @@ fn test_unsaved_edits_are_searched() {
         };
         assert!(!modified);
         buffer.set_text("zebra unsaved\nneedle edited\n");
-        assert_eq!(h.buffer_text(&h.p("b.py")).as_deref(), Some("zebra unsaved\nneedle edited\n"));
+        assert_eq!(
+            h.buffer_text(&h.p("b.py")).as_deref(),
+            Some("zebra unsaved\nneedle edited\n")
+        );
         assert_eq!(h.buffer_text(&h.p("a.py")), None);
         h.search_for("zebra");
         assert_eq!(h.groups(), [h.p("b.py")]);
         assert_eq!(h.search().results().groups[0].matches[0].line, 0);
-        assert_eq!(std::fs::read_to_string(h.p("b.py")).unwrap(), "needle in b\n");
+        assert_eq!(
+            std::fs::read_to_string(h.p("b.py")).unwrap(),
+            "needle in b\n"
+        );
     });
 }
 
@@ -375,7 +459,9 @@ fn test_activating_result_opens_tab_and_selects_exact_match() {
             (2, 2, 6)
         );
         let path = impro_explorer::util::path_of(&store, &child);
-        h.search().tree().row_activated(&path, &h.search().tree().column(0).unwrap());
+        h.search()
+            .tree()
+            .row_activated(&path, &h.search().tree().column(0).unwrap());
         assert_eq!(h.tabs.borrow().len(), 2);
         assert_eq!(h.current_path(), Some(h.p("a.py")));
         {
@@ -383,11 +469,22 @@ fn test_activating_result_opens_tab_and_selects_exact_match() {
             let buffer = &tabs[1].buffer;
             let (start, end) = buffer.selection_bounds().unwrap();
             assert_eq!(buffer.text(&start, &end, true).as_deref(), Some("needle"));
-            assert_eq!((start.line(), start.line_offset(), end.line_offset()), (2, 2, 8));
+            assert_eq!(
+                (start.line(), start.line_offset(), end.line_offset()),
+                (2, 2, 8)
+            );
             assert!(tabs[1].view.is_focus());
         }
         // Activating again focuses the existing tab instead of duplicating it.
-        h.search().emit_by_name::<()>("result-activated", &[&h.p("b.py").to_string_lossy().into_owned(), &0i32, &0i32, &6i32]);
+        h.search().emit_by_name::<()>(
+            "result-activated",
+            &[
+                &h.p("b.py").to_string_lossy().into_owned(),
+                &0i32,
+                &0i32,
+                &6i32,
+            ],
+        );
         assert_eq!(h.tabs.borrow().len(), 2);
         assert_eq!(h.current_path(), Some(h.p("b.py")));
     });
@@ -416,7 +513,10 @@ fn test_ctrl_shift_f_focuses_entry_shows_explorer_and_prefills_selection() {
         {
             let tabs = h.tabs.borrow();
             let buffer = &tabs[0].buffer;
-            buffer.select_range(&buffer.iter_at_line_offset(0, 6), &buffer.iter_at_line_offset(0, 12));
+            buffer.select_range(
+                &buffer.iter_at_line_offset(0, 6),
+                &buffer.iter_at_line_offset(0, 12),
+            );
         }
         h.explorer.hide();
         assert!(!h.explorer.is_visible());
@@ -425,9 +525,14 @@ fn test_ctrl_shift_f_focuses_entry_shows_explorer_and_prefills_selection() {
         assert!(h.explorer.is_visible());
         assert!(h.search().entry().is_focus());
         assert_eq!(h.search().query(), "needle");
-        assert_eq!(h.search().stack().visible_child_name().as_deref(), Some("results"));
+        assert_eq!(
+            h.search().stack().visible_child_name().as_deref(),
+            Some("results")
+        );
         let w = h.clone();
-        pump_until("current group first", move || w.groups().first() == Some(&w.p("a.py")));
+        pump_until("current group first", move || {
+            w.groups().first() == Some(&w.p("a.py"))
+        });
         // Lowercase keyval (no Caps) behaves the same, and a multi-line selection is not used.
         h.search().clear();
         {
@@ -461,7 +566,10 @@ fn test_explorer_shortcuts_do_not_act_from_search_entry_or_results() {
         h.search_for("needle");
         let recorder = Recorder::default();
         recorder.install(&h.explorer, None, |_| false);
-        for target in [h.search().entry().upcast::<gtk::Widget>(), h.search().tree().upcast()] {
+        for target in [
+            h.search().entry().upcast::<gtk::Widget>(),
+            h.search().tree().upcast(),
+        ] {
             target.grab_focus();
             assert_eq!(h.window.focused_widget().unwrap(), target);
             if target == h.search().entry().upcast::<gtk::Widget>() {
@@ -481,7 +589,10 @@ fn test_explorer_shortcuts_do_not_act_from_search_entry_or_results() {
         assert!(recorder.names.borrow().is_empty());
         assert!(recorder.confirms.borrow().is_empty());
         assert!(h.p("b.py").exists());
-        let mut entries: Vec<_> = std::fs::read_dir(h.root()).unwrap().map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect();
+        let mut entries: Vec<_> = std::fs::read_dir(h.root())
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
         entries.sort();
         assert_eq!(entries, ["a.py", "b.py", "big.py", "keep", "notes.md"]);
         assert_eq!(h.search().query(), "needle");
@@ -503,7 +614,11 @@ fn test_rename_and_delete_refresh_results() {
         let w = h.clone();
         pump_until("c.py listed", move || w.groups().contains(&w.p("c.py")));
         h.wait_scan();
-        let mut names: Vec<_> = h.groups().iter().map(|p| p.file_name().unwrap().to_string_lossy().into_owned()).collect();
+        let mut names: Vec<_> = h
+            .groups()
+            .iter()
+            .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
+            .collect();
         names.sort();
         assert_eq!(names, ["a.py", "big.py", "c.py", "notes.md"]);
         assert!(!h.groups().contains(&h.p("b.py")));
@@ -519,7 +634,11 @@ fn test_rename_and_delete_refresh_results() {
         delete(&h.explorer, &h.p("z.py"), false).unwrap();
         h.wait_scan();
         assert!(!h.groups().contains(&h.p("z.py")));
-        let mut names: Vec<_> = h.groups().iter().map(|p| p.file_name().unwrap().to_string_lossy().into_owned()).collect();
+        let mut names: Vec<_> = h
+            .groups()
+            .iter()
+            .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
+            .collect();
         names.sort();
         assert_eq!(names, ["big.py", "c.py"]);
         // Refresh also re-runs the query for files created behind the app's back.
@@ -534,7 +653,10 @@ fn test_rename_and_delete_refresh_results() {
 fn test_open_folder_changes_search_root() {
     run(|| {
         let h = setup_wired();
-        let other = h.root().parent().unwrap().join(format!("{}-other", h.temp.path().file_name().unwrap().to_string_lossy()));
+        let other = h.root().parent().unwrap().join(format!(
+            "{}-other",
+            h.temp.path().file_name().unwrap().to_string_lossy()
+        ));
         std::fs::create_dir(&other).unwrap();
         std::fs::write(other.join("only.py"), "needle only here\n").unwrap();
         h.search_for("needle");
@@ -544,7 +666,9 @@ fn test_open_folder_changes_search_root() {
         let w = h.clone();
         let expected = other.join("only.py");
         pump_until("only.py found", move || {
-            w.groups() == [expected.clone()] && !w.search().is_searching() && !w.search().timeout_pending()
+            w.groups() == [expected.clone()]
+                && !w.search().is_searching()
+                && !w.search().timeout_pending()
         });
         std::fs::remove_dir_all(&other).unwrap();
     });

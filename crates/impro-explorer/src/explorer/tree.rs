@@ -128,7 +128,8 @@ impl ExplorerPanel {
         if generation != imp.generation.get() {
             return;
         }
-        imp.pending_scans.set(imp.pending_scans.get().saturating_sub(1));
+        imp.pending_scans
+            .set(imp.pending_scans.get().saturating_sub(1));
         let row = self
             .find_row(&dir)
             .and_then(|iter| self.w().store.path(&iter))
@@ -198,9 +199,18 @@ impl ExplorerPanel {
         }
     }
 
-    fn insert_entry(&self, parent: &gtk::TreeIter, sibling: Option<&gtk::TreeIter>, entry: &Entry) -> gtk::TreeIter {
+    fn insert_entry(
+        &self,
+        parent: &gtk::TreeIter,
+        sibling: Option<&gtk::TreeIter>,
+        entry: &Entry,
+    ) -> gtk::TreeIter {
         let store = &self.w().store;
-        let icon = if entry.is_dir { "folder" } else { "text-x-generic" };
+        let icon = if entry.is_dir {
+            "folder"
+        } else {
+            "text-x-generic"
+        };
         let values: [(u32, &dyn ToValue); 3] = [(0, &icon), (1, &entry.name), (2, &entry.path)];
         let iter = match sibling {
             None => store.insert_with_values(Some(parent), None, &values),
@@ -219,14 +229,14 @@ impl ExplorerPanel {
     /// The sibling after `row`, unless it is the trailing placeholder.
     fn next_row(&self, row: &gtk::TreeIter) -> Option<gtk::TreeIter> {
         let store = &self.w().store;
-        let next = row.clone();
+        let next = *row;
         (store.iter_next(&next) && !util::string(store, &next, 2).is_empty()).then_some(next)
     }
 
     /// Remove `row`; the following real sibling, if any.
     fn remove_row(&self, row: &gtk::TreeIter) -> Option<gtk::TreeIter> {
         let store = &self.w().store;
-        let next = row.clone();
+        let next = *row;
         (store.remove(&next) && !util::string(store, &next, 2).is_empty()).then_some(next)
     }
 
@@ -244,12 +254,15 @@ impl ExplorerPanel {
         if !task.started {
             task.started = true;
             match store.iter_children(Some(&parent)) {
-                Some(first) if util::string(store, &first, 2).is_empty() => task.placeholder = Some(first),
+                Some(first) if util::string(store, &first, 2).is_empty() => {
+                    task.placeholder = Some(first)
+                }
                 other => {
                     task.cursor = other;
                     // Never leave an expanded folder childless while rows are replaced:
                     // GTK would collapse it.
-                    task.placeholder = Some(store.insert_with_values(Some(&parent), None, &placeholder_values()));
+                    task.placeholder =
+                        Some(store.insert_with_values(Some(&parent), None, &placeholder_values()));
                 }
             }
         }
@@ -257,7 +270,7 @@ impl ExplorerPanel {
         let mut counter = 0u32;
         while task.pos < task.entries.len() {
             counter += 1;
-            if counter % 16 == 0 && Instant::now() >= deadline {
+            if counter & 15 == 0 && Instant::now() >= deadline {
                 break;
             }
             let entry = &task.entries[task.pos];
@@ -311,7 +324,12 @@ impl ExplorerPanel {
             }
             if !wanted_empty && entry.is_dir {
                 if let Some(row) = inserted.as_ref().or(kept.as_ref()) {
-                    if self.imp().want_expanded.borrow().contains(Path::new(&entry.path)) {
+                    if self
+                        .imp()
+                        .want_expanded
+                        .borrow()
+                        .contains(Path::new(&entry.path))
+                    {
                         if let Some(reference) = store
                             .path(row)
                             .and_then(|path| gtk::TreeRowReference::new(store, &path))
@@ -373,6 +391,9 @@ impl ExplorerPanel {
 
     /// The row of `path`, if it has been loaded into the tree.
     pub fn find_row(&self, path: &Path) -> Option<gtk::TreeIter> {
+        if self.is_destroyed() {
+            return None;
+        }
         let store = &self.w().store;
         let root = self.root();
         let mut row = store.iter_first()?;
@@ -397,6 +418,9 @@ impl ExplorerPanel {
     }
 
     pub fn selected_path(&self) -> Option<PathBuf> {
+        if self.is_destroyed() {
+            return None;
+        }
         let (_, iter) = self.w().tree.selection().selected()?;
         let path = util::string(&self.w().store, &iter, 2);
         (!path.is_empty()).then(|| PathBuf::from(path))
@@ -417,11 +441,16 @@ impl ExplorerPanel {
     }
 
     pub fn expanded_paths(&self) -> HashSet<PathBuf> {
+        if self.is_destroyed() {
+            return HashSet::new();
+        }
         let w = self.w();
         let found = RefCell::new(HashSet::new());
         w.tree.map_expanded_rows(|_, path| {
             if let Some(iter) = w.store.iter(path) {
-                found.borrow_mut().insert(PathBuf::from(util::string(&w.store, &iter, 2)));
+                found
+                    .borrow_mut()
+                    .insert(PathBuf::from(util::string(&w.store, &iter, 2)));
             }
         });
         found.into_inner()
@@ -430,6 +459,9 @@ impl ExplorerPanel {
     /// Where "New File" / "New Folder" create: the selected folder, else its parent.
     pub fn target_folder(&self) -> PathBuf {
         let root = self.root();
+        if self.is_destroyed() {
+            return root;
+        }
         let w = self.w();
         let Some((_, iter)) = w.tree.selection().selected() else {
             return root;
@@ -477,6 +509,9 @@ impl ExplorerPanel {
     /// Replace the whole tree with the root alone, then restore `expanded` and `selected`
     /// as folders load.
     pub(crate) fn rebuild_clear(&self, expanded: HashSet<PathBuf>, selected: Option<PathBuf>) {
+        if self.is_destroyed() {
+            return;
+        }
         let imp = self.imp();
         let w = self.w();
         self.restart_generation();
@@ -502,6 +537,9 @@ impl ExplorerPanel {
     /// Re-list every visible folder and merge the changes in place, keeping expansion,
     /// selection and scroll position. Collapsed folders reload when next expanded.
     pub(crate) fn rebuild(&self, expanded: HashSet<PathBuf>, selected: Option<PathBuf>) {
+        if self.is_destroyed() {
+            return;
+        }
         let imp = self.imp();
         self.restart_generation();
         *imp.want_expanded.borrow_mut() = expanded;
@@ -526,7 +564,9 @@ impl ExplorerPanel {
     /// Drop a folder's children (it is collapsed) and leave only the placeholder.
     fn reset_dir(&self, dir: &Path) {
         let store = &self.w().store;
-        let Some(row) = self.find_row(dir) else { return };
+        let Some(row) = self.find_row(dir) else {
+            return;
+        };
         while let Some(child) = store.iter_children(Some(&row)) {
             store.remove(&child);
         }
@@ -549,7 +589,9 @@ impl ExplorerPanel {
 
     pub(super) fn on_activated(&self, path: &gtk::TreePath) {
         let w = self.w();
-        let Some(iter) = w.store.iter(path) else { return };
+        let Some(iter) = w.store.iter(path) else {
+            return;
+        };
         let full_path = util::string(&w.store, &iter, 2);
         if util::string(&w.store, &iter, 0) == "folder" {
             if w.tree.row_expanded(path) {
@@ -567,6 +609,9 @@ impl ExplorerPanel {
     /// Expand to `path` as listings arrive, then select it; outside the root only clears
     /// the selection.
     pub(super) fn reveal_path(&self, path: Option<&Path>) {
+        if self.is_destroyed() {
+            return;
+        }
         let tree = &self.w().tree;
         let root = self.root();
         let Some(path) = path.map(impro_core::fsops::absolute) else {

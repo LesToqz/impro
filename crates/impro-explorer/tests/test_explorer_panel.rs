@@ -5,7 +5,8 @@ use gtk::prelude::*;
 use impro_core::fsops::FsOpError;
 use impro_core::themes;
 use impro_explorer::explorer::{
-    scan_count, set_scan_counting, ConfirmRequest, DeleteMode, DialogHooks, ExplorerPanel, NameAction,
+    scan_count, set_scan_counting, ConfirmRequest, DeleteMode, DialogHooks, ExplorerPanel,
+    NameAction,
 };
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -50,7 +51,11 @@ fn setup() -> Fix {
 }
 
 fn root_name(fix: &Fix) -> String {
-    fix.root().file_name().unwrap().to_string_lossy().into_owned()
+    fix.root()
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned()
 }
 
 #[test]
@@ -59,10 +64,23 @@ fn test_root_sort_and_hidden_files() {
         let f = setup();
         let store = f.panel.store();
         let root = store.iter_first().unwrap();
-        assert_eq!(impro_explorer::util::string(&store, &root, 1), root_name(&f));
-        assert_eq!(names(&f.panel, &f.root()), ["adir", "Zdir", ".hidden", "A.py", "b.py"]);
-        let icons: Vec<_> = children(&f.panel, &f.root()).iter().take(2).map(|r| r[0].clone()).collect();
-        assert_eq!(icons, [Some("folder".to_owned()), Some("folder".to_owned())]);
+        assert_eq!(
+            impro_explorer::util::string(&store, &root, 1),
+            root_name(&f)
+        );
+        assert_eq!(
+            names(&f.panel, &f.root()),
+            ["adir", "Zdir", ".hidden", "A.py", "b.py"]
+        );
+        let icons: Vec<_> = children(&f.panel, &f.root())
+            .iter()
+            .take(2)
+            .map(|r| r[0].clone())
+            .collect();
+        assert_eq!(
+            icons,
+            [Some("folder".to_owned()), Some("folder".to_owned())]
+        );
     });
 }
 
@@ -71,12 +89,18 @@ fn test_lazy_loading_one_scandir_per_expansion() {
     run(|| {
         let f = setup();
         let folder = f.p("Zdir");
-        assert_eq!(children(&f.panel, &folder), [[None, Some(String::new()), Some(String::new())]]);
+        assert_eq!(
+            children(&f.panel, &folder),
+            [[None, Some(String::new()), Some(String::new())]]
+        );
         set_scan_counting(true);
         expand(&f.panel, &folder);
         assert_eq!(scan_count(&folder), 1);
         assert_eq!(names(&f.panel, &folder), ["inner"]);
-        assert_eq!(children(&f.panel, &folder.join("inner")), [[None, Some(String::new()), Some(String::new())]]);
+        assert_eq!(
+            children(&f.panel, &folder.join("inner")),
+            [[None, Some(String::new()), Some(String::new())]]
+        );
         collapse(&f.panel, &folder);
         expand(&f.panel, &folder);
         assert_eq!(scan_count(&folder), 1);
@@ -106,12 +130,18 @@ fn test_rename_delete_and_folder_signals() {
         let renamed = Rc::new(RefCell::new(Vec::new()));
         let deleted = Rc::new(RefCell::new(Vec::new()));
         let (r, d) = (renamed.clone(), deleted.clone());
-        f.panel.connect_path_renamed(move |_, old, new| r.borrow_mut().push((old.to_path_buf(), new.to_path_buf())));
-        f.panel.connect_path_deleted(move |_, path| d.borrow_mut().push(path.to_path_buf()));
+        f.panel.connect_path_renamed(move |_, old, new| {
+            r.borrow_mut().push((old.to_path_buf(), new.to_path_buf()))
+        });
+        f.panel
+            .connect_path_deleted(move |_, path| d.borrow_mut().push(path.to_path_buf()));
         for name in ["A.py", "Zdir"] {
             let old = f.p(name);
             let new = rename(&f.panel, &old, &format!("renamed-{name}")).unwrap();
-            assert_eq!(renamed.borrow().last().unwrap(), &(old.clone(), new.clone()));
+            assert_eq!(
+                renamed.borrow().last().unwrap(),
+                &(old.clone(), new.clone())
+            );
             assert!(f.panel.find_row(&old).is_none());
             assert_eq!(f.panel.selected_path(), Some(new.clone()));
             delete(&f.panel, &new, false).unwrap();
@@ -129,8 +159,10 @@ fn test_root_protection_and_failed_operations_do_not_emit() {
         let f = setup();
         let signals = Rc::new(RefCell::new(0));
         let (a, b) = (signals.clone(), signals.clone());
-        f.panel.connect_path_renamed(move |_, _, _| *a.borrow_mut() += 1);
-        f.panel.connect_path_deleted(move |_, _| *b.borrow_mut() += 1);
+        f.panel
+            .connect_path_renamed(move |_, _, _| *a.borrow_mut() += 1);
+        f.panel
+            .connect_path_deleted(move |_, _| *b.borrow_mut() += 1);
         assert!(rename(&f.panel, &f.root(), "other").is_err());
         assert!(delete(&f.panel, &f.root(), false).is_err());
         assert!(rename(&f.panel, &f.p("A.py"), "b.py").is_err());
@@ -145,13 +177,17 @@ fn test_activation_files_and_folder_toggle() {
         let f = setup();
         let activated = Rc::new(RefCell::new(Vec::new()));
         let sink = activated.clone();
-        f.panel.connect_file_activated(move |_, path| sink.borrow_mut().push(path.to_path_buf()));
+        f.panel
+            .connect_file_activated(move |_, path| sink.borrow_mut().push(path.to_path_buf()));
         let tree = f.panel.tree();
         let column = tree.column(0).unwrap();
         let file = f.p("A.py");
         let row = f.panel.find_row(&file).unwrap();
-        tree.row_activated(&impro_explorer::util::path_of(&f.panel.store(), &row), &column);
-        assert_eq!(*activated.borrow(), [file.clone()]);
+        tree.row_activated(
+            &impro_explorer::util::path_of(&f.panel.store(), &row),
+            &column,
+        );
+        assert_eq!(*activated.borrow(), std::slice::from_ref(&file));
         let row = f.panel.find_row(&f.p("Zdir")).unwrap();
         let path = impro_explorer::util::path_of(&f.panel.store(), &row);
         tree.row_activated(&path, &column);
@@ -212,11 +248,19 @@ fn test_permission_error_and_symlink_cycle() {
         f.panel.refresh();
         wait_idle(&f.panel);
         assert!(children(&f.panel, &link).is_empty());
-        assert_eq!(f.panel.store().iter_n_children(f.panel.find_row(&link).as_ref()), 0);
+        assert_eq!(
+            f.panel
+                .store()
+                .iter_n_children(f.panel.find_row(&link).as_ref()),
+            0
+        );
     });
 }
 
-fn stem_selection_dialog_fixture(panel: &ExplorerPanel, attempts: Rc<RefCell<Vec<String>>>) -> gtk::Dialog {
+fn stem_selection_dialog_fixture(
+    panel: &ExplorerPanel,
+    attempts: Rc<RefCell<Vec<String>>>,
+) -> gtk::Dialog {
     let log = attempts.clone();
     let action: NameAction = Rc::new(move |name, done| {
         let first = {
@@ -241,8 +285,14 @@ fn test_name_dialog_keeps_errors_open_and_selects_stem() {
         let attempts = Rc::new(RefCell::new(Vec::new()));
         let dialog = stem_selection_dialog_fixture(&f.panel, attempts.clone());
         let content = dialog.content_area().children();
-        let entry = content.iter().find_map(|w| w.clone().downcast::<gtk::Entry>().ok()).unwrap();
-        let label = content.iter().find_map(|w| w.clone().downcast::<gtk::Label>().ok()).unwrap();
+        let entry = content
+            .iter()
+            .find_map(|w| w.clone().downcast::<gtk::Entry>().ok())
+            .unwrap();
+        let label = content
+            .iter()
+            .find_map(|w| w.clone().downcast::<gtk::Label>().ok())
+            .unwrap();
         assert_eq!(label.text(), "");
         assert_eq!(entry.selection_bounds(), Some((0, 6)));
         entry.set_text("new.py");
@@ -257,7 +307,11 @@ fn test_name_dialog_keeps_errors_open_and_selects_stem() {
 
 /// Press `keyval` on the explorer and report the actions the hooks saw.
 fn press_on(panel: &ExplorerPanel, keyval: gdk::keys::Key, state: gdk::ModifierType) -> bool {
-    panel.on_key(&key_event(keyval, state).downcast::<gdk::EventKey>().unwrap())
+    panel.on_key(
+        &key_event(keyval, state)
+            .downcast::<gdk::EventKey>()
+            .unwrap(),
+    )
 }
 
 #[test]
@@ -268,10 +322,17 @@ fn test_shortcuts() {
         recorder.install(&f.panel, None, |_| false);
         f.panel.select(&f.p("b.py"));
         assert!(press_on(&f.panel, key::F2, gdk::ModifierType::empty()));
-        assert_eq!(recorder.names.borrow().last().unwrap(), &("Rename".to_owned(), "b.py".to_owned()));
+        assert_eq!(
+            recorder.names.borrow().last().unwrap(),
+            &("Rename".to_owned(), "b.py".to_owned())
+        );
         assert!(press_on(&f.panel, key::Delete, gdk::ModifierType::empty()));
         assert_eq!(recorder.confirms.borrow().len(), 1);
-        assert!(press_on(&f.panel, key::N, gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::SHIFT_MASK));
+        assert!(press_on(
+            &f.panel,
+            key::N,
+            gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::SHIFT_MASK
+        ));
         assert_eq!(recorder.names.borrow().last().unwrap().0, "New Folder");
         std::fs::File::create(f.p("external.txt")).unwrap();
         assert!(f.panel.find_row(&f.p("external.txt")).is_none());
@@ -290,20 +351,33 @@ fn test_search_box_under_header_and_forwarding() {
         assert_eq!(children.len(), 2);
         let notes = f.panel.notes_widgets();
         assert_eq!(children[1], notes.split.clone().upcast::<gtk::Widget>());
-        assert_eq!(notes.split.child1().unwrap(), f.panel.search().upcast::<gtk::Widget>());
+        assert_eq!(
+            notes.split.child1().unwrap(),
+            f.panel.search().upcast::<gtk::Widget>()
+        );
         let search = f.panel.search();
         let row = search.children()[0].clone().downcast::<gtk::Box>().unwrap();
         assert_eq!(row.children()[0], search.entry().upcast::<gtk::Widget>());
         let received = Rc::new(RefCell::new(Vec::new()));
         let sink = received.clone();
-        f.panel.connect_search_result_activated(move |_, path, a, b, c| {
-            sink.borrow_mut().push((path.to_path_buf(), a, b, c));
-        });
-        search.emit_by_name::<()>("result-activated", &[&f.p("b.py").to_string_lossy().into_owned(), &3i32, &4i32, &5i32]);
+        f.panel
+            .connect_search_result_activated(move |_, path, a, b, c| {
+                sink.borrow_mut().push((path.to_path_buf(), a, b, c));
+            });
+        search.emit_by_name::<()>(
+            "result-activated",
+            &[
+                &f.p("b.py").to_string_lossy().into_owned(),
+                &3i32,
+                &4i32,
+                &5i32,
+            ],
+        );
         assert_eq!(*received.borrow(), [(f.p("b.py"), 3, 4, 5)]);
         let escaped = Rc::new(RefCell::new(0));
         let count = escaped.clone();
-        f.panel.connect_search_escaped(move |_| *count.borrow_mut() += 1);
+        f.panel
+            .connect_search_escaped(move |_| *count.borrow_mut() += 1);
         search.emit_by_name::<()>("escaped", &[]);
         assert_eq!(*escaped.borrow(), 1);
         f.panel.set_current_file(Some(&f.p("A.py")));
@@ -329,7 +403,10 @@ fn test_focus_search_with_query_and_clear() {
         assert_eq!(f.panel.search().results().total_matches, 1);
         f.panel.clear_search();
         assert_eq!(f.panel.search().query(), "");
-        assert_eq!(f.panel.search().stack().visible_child_name().as_deref(), Some("content"));
+        assert_eq!(
+            f.panel.search().stack().visible_child_name().as_deref(),
+            Some("content")
+        );
     });
 }
 
@@ -341,7 +418,10 @@ fn test_shortcuts_ignored_when_search_has_focus() {
         recorder.install(&f.panel, None, |_| false);
         f.panel.select(&f.p("b.py"));
         let window = common::window(&f.panel, 300, 500);
-        for widget in [f.panel.search().entry().upcast::<gtk::Widget>(), f.panel.search().tree().upcast()] {
+        for widget in [
+            f.panel.search().entry().upcast::<gtk::Widget>(),
+            f.panel.search().tree().upcast(),
+        ] {
             widget.grab_focus();
             assert!(!press_on(&f.panel, key::F2, gdk::ModifierType::empty()));
         }
@@ -384,7 +464,8 @@ fn test_current_file_reveals_nested_path_without_activating_it() {
         let f = setup();
         let activated = Rc::new(RefCell::new(0));
         let count = activated.clone();
-        f.panel.connect_file_activated(move |_, _| *count.borrow_mut() += 1);
+        f.panel
+            .connect_file_activated(move |_, _| *count.borrow_mut() += 1);
         let path = f.p("Zdir/inner/deep.py");
         f.panel.set_current_file(Some(&path));
         wait_idle(&f.panel);
@@ -393,7 +474,8 @@ fn test_current_file_reveals_nested_path_without_activating_it() {
         assert_eq!(f.panel.search().current_path(), Some(path));
         f.panel.set_current_file(None);
         assert_eq!(f.panel.selected_path(), None);
-        f.panel.set_current_file(Some(Path::new("/outside-project.py")));
+        f.panel
+            .set_current_file(Some(Path::new("/outside-project.py")));
         assert_eq!(f.panel.selected_path(), None);
         assert_eq!(*activated.borrow(), 0);
     });
@@ -416,7 +498,10 @@ fn test_delete_defaults_confirmation_and_cancel() {
         recorder.install(&f.panel, None, |_| false);
         f.panel.delete_dialog(None);
         assert_eq!(recorder.confirms.borrow().len(), 1);
-        assert_eq!(confirm_text(&recorder.confirms.borrow()[0]).0, "Delete \"A.py\"?");
+        assert_eq!(
+            confirm_text(&recorder.confirms.borrow()[0]).0,
+            "Delete \"A.py\"?"
+        );
         wait_idle(&f.panel);
         assert!(path.exists());
         recorder.install(&f.panel, None, |_| true);
@@ -453,23 +538,29 @@ fn trash_hook(destination: PathBuf) -> impro_explorer::explorer::RemoveHook {
     })
 }
 
-fn set_remove_hook(panel: &ExplorerPanel, recorder: &Recorder, remove: impro_explorer::explorer::RemoveHook, confirm: bool) {
+fn set_remove_hook(
+    panel: &ExplorerPanel,
+    recorder: &Recorder,
+    remove: impro_explorer::explorer::RemoveHook,
+    confirm: bool,
+) {
     recorder.install(panel, None, move |_| confirm);
-    let mut hooks = DialogHooks::default();
     let installed = recorder.clone();
-    hooks.name_dialog = None;
-    hooks.confirm_removal = Some(Rc::new({
-        let confirms = installed.confirms.clone();
-        move |request| {
-            confirms.borrow_mut().push(request.clone());
-            confirm
-        }
-    }));
-    hooks.error_dialog = Some(Rc::new({
-        let errors = installed.errors.clone();
-        move |message| errors.borrow_mut().push(message.to_owned())
-    }));
-    hooks.remove = Some(remove);
+    let hooks = DialogHooks {
+        name_dialog: None,
+        confirm_removal: Some(Rc::new({
+            let confirms = installed.confirms.clone();
+            move |request| {
+                confirms.borrow_mut().push(request.clone());
+                confirm
+            }
+        })),
+        error_dialog: Some(Rc::new({
+            let errors = installed.errors.clone();
+            move |message| errors.borrow_mut().push(message.to_owned())
+        })),
+        remove: Some(remove),
+    };
     panel.set_dialog_hooks(hooks);
 }
 
@@ -484,7 +575,8 @@ fn test_trash_success_updates_tree_and_emits_once() {
         f.panel.set_confirm_delete(false);
         let deleted = Rc::new(RefCell::new(Vec::new()));
         let sink = deleted.clone();
-        f.panel.connect_path_deleted(move |_, item| sink.borrow_mut().push(item.to_path_buf()));
+        f.panel
+            .connect_path_deleted(move |_, item| sink.borrow_mut().push(item.to_path_buf()));
         let recorder = Recorder::default();
         set_remove_hook(&f.panel, &recorder, trash_hook(destination.clone()), true);
         f.panel.delete_dialog(None);
@@ -492,7 +584,7 @@ fn test_trash_success_updates_tree_and_emits_once() {
         pump_until("deleted", move || !d.borrow().is_empty());
         wait_idle(&f.panel);
         assert!(recorder.confirms.borrow().is_empty());
-        assert_eq!(*deleted.borrow(), [path.clone()]);
+        assert_eq!(*deleted.borrow(), std::slice::from_ref(&path));
         assert!(f.panel.find_row(&path).is_none());
         assert!(destination.exists());
     });
@@ -526,15 +618,17 @@ fn test_trash_fallback_requires_separate_permanent_confirmation() {
                         accept
                     }
                 });
-                let mut hooks = DialogHooks::default();
-                hooks.confirm_removal = Some(Rc::new({
-                    let confirms = recorder.confirms.clone();
-                    move |request| {
-                        confirms.borrow_mut().push(request.clone());
-                        request.title.starts_with("Move ") || accept
-                    }
-                }));
-                hooks.remove = Some(hook);
+                let hooks = DialogHooks {
+                    confirm_removal: Some(Rc::new({
+                        let confirms = recorder.confirms.clone();
+                        move |request| {
+                            confirms.borrow_mut().push(request.clone());
+                            request.title.starts_with("Move ") || accept
+                        }
+                    })),
+                    remove: Some(hook),
+                    ..DialogHooks::default()
+                };
                 f.panel.set_dialog_hooks(hooks);
                 f.panel.delete_dialog(None);
                 let expected = if confirm { 2 } else { 1 };
@@ -544,7 +638,11 @@ fn test_trash_fallback_requires_separate_permanent_confirmation() {
                 pump(60);
                 let prompts = recorder.confirms.borrow();
                 assert_eq!(prompts.len(), expected, "confirm={confirm} accept={accept}");
-                assert!(prompts.last().unwrap().detail.contains("Delete permanently instead?"));
+                assert!(prompts
+                    .last()
+                    .unwrap()
+                    .detail
+                    .contains("Delete permanently instead?"));
                 assert_eq!(path.exists(), !accept, "confirm={confirm} accept={accept}");
             }
         }
@@ -637,11 +735,19 @@ fn test_tree_geometry_rounded_selection_hover_and_live_themes() {
             let sidebar = rgb(&theme.ui["sidebar_bg"]);
             let overlay = rgb(&theme.ui["overlay"]);
             let mix = |a: u8, b: u8| (f64::from(a) * 0.933 + f64::from(b) * 0.067).round() as u8;
-            let tint = (mix(sidebar.0, overlay.0), mix(sidebar.1, overlay.1), mix(sidebar.2, overlay.2));
-            let close = move |p: (u8, u8, u8)| p.0.abs_diff(tint.0) <= 1 && p.1.abs_diff(tint.1) <= 1 && p.2.abs_diff(tint.2) <= 1;
+            let tint = (
+                mix(sidebar.0, overlay.0),
+                mix(sidebar.1, overlay.1),
+                mix(sidebar.2, overlay.2),
+            );
+            let close = move |p: (u8, u8, u8)| {
+                p.0.abs_diff(tint.0) <= 1 && p.1.abs_diff(tint.1) <= 1 && p.2.abs_diff(tint.2) <= 1
+            };
             let (w, t) = (window.clone(), tree.clone());
             let (ax, ay) = (area.x(), area.y());
-            pump_until("corner is sidebar", move || row_pixel(&w, &t, ax, ay) == sidebar);
+            pump_until("corner is sidebar", move || {
+                row_pixel(&w, &t, ax, ay) == sidebar
+            });
             let (w, t) = (window.clone(), tree.clone());
             let (cx, cy) = (area.width() - 15, area.y() + area.height() / 2);
             pump_until("selection tint", move || close(row_pixel(&w, &t, cx, cy)));
@@ -650,12 +756,18 @@ fn test_tree_geometry_rounded_selection_hover_and_live_themes() {
             let origin = tree.bin_window().unwrap().origin();
             let display = gdk::Display::default().unwrap();
             let pointer = display.default_seat().unwrap().pointer().unwrap();
-            pointer.warp(&gdk::Screen::default().unwrap(), origin.1 + cx, origin.2 + cy);
+            pointer.warp(
+                &gdk::Screen::default().unwrap(),
+                origin.1 + cx,
+                origin.2 + cy,
+            );
             let (w, t) = (window.clone(), tree.clone());
             pump_until("hover tint", move || close(row_pixel(&w, &t, cx, cy)));
             pointer.warp(&gdk::Screen::default().unwrap(), 0, 0);
             let (w, t) = (window.clone(), tree.clone());
-            pump_until("hover cleared", move || row_pixel(&w, &t, cx, cy) == sidebar);
+            pump_until("hover cleared", move || {
+                row_pixel(&w, &t, cx, cy) == sidebar
+            });
             f.panel.select(&f.p("A.py"));
             f.panel.search().entry().grab_focus();
         }
@@ -668,13 +780,22 @@ fn test_header_icons_accessibility_and_instant_css_for_all_themes() {
     run(|| {
         let f = setup();
         let window = show_panel(&f, "impro-dark");
-        let header = f.panel.children()[0].clone().downcast::<gtk::Box>().unwrap();
-        let name = |w: &gtk::Widget| atk::prelude::AtkObjectExt::name(&w.accessible().unwrap()).map(|n| n.to_string());
+        let header = f.panel.children()[0]
+            .clone()
+            .downcast::<gtk::Box>()
+            .unwrap();
+        let name = |w: &gtk::Widget| {
+            atk::prelude::AtkObjectExt::name(&w.accessible().unwrap()).map(|n| n.to_string())
+        };
         assert_eq!(name(header.upcast_ref()).as_deref(), Some("EXPLORER"));
         assert_eq!(header.tooltip_text().as_deref(), Some("EXPLORER"));
         let actions = header.children()[0].clone().downcast::<gtk::Box>().unwrap();
         assert_eq!(actions.halign(), gtk::Align::Center);
-        let labels: Vec<_> = actions.children().iter().map(|w| name(w).unwrap()).collect();
+        let labels: Vec<_> = actions
+            .children()
+            .iter()
+            .map(|w| name(w).unwrap())
+            .collect();
         assert_eq!(labels, ["Notes", "New File", "New Folder", "Refresh"]);
         for theme in themes::themes() {
             let css = impro_ui::style::build_css(theme);
@@ -695,7 +816,13 @@ fn test_header_actions_create_in_selected_folder_and_refresh() {
         let recorder = Recorder::default();
         recorder.install(
             &f.panel,
-            Some(Rc::new(|title: &str| if title == "New File" { "created.txt".into() } else { "created-folder".into() })),
+            Some(Rc::new(|title: &str| {
+                if title == "New File" {
+                    "created.txt".into()
+                } else {
+                    "created-folder".into()
+                }
+            })),
             |_| true,
         );
         f.panel.header_button("New File").unwrap().clicked();
@@ -754,13 +881,22 @@ fn test_delete_menu_item_inherits_base_padding_radius_and_danger() {
             #[allow(deprecated)]
             let padding = context.padding(state);
             let space = &impro_ui::style::TOKENS["spacing"];
-            let (compact, control) = (space["compact"].as_i64().unwrap() as i16, space["control"].as_i64().unwrap() as i16);
+            let (compact, control) = (
+                space["compact"].as_i64().unwrap() as i16,
+                space["control"].as_i64().unwrap() as i16,
+            );
             assert_eq!(
                 (padding.top, padding.right, padding.bottom, padding.left),
                 (compact, control, compact, control)
             );
-            let radius: i32 = context.style_property_for_state("border-radius", state).get().unwrap();
-            assert_eq!(i64::from(radius), impro_ui::style::TOKENS["radius"]["item"].as_i64().unwrap());
+            let radius: i32 = context
+                .style_property_for_state("border-radius", state)
+                .get()
+                .unwrap();
+            assert_eq!(
+                i64::from(radius),
+                impro_ui::style::TOKENS["radius"]["item"].as_i64().unwrap()
+            );
         }
         unsafe { menu.destroy() };
         destroy(&window);

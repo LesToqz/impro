@@ -64,10 +64,15 @@ fn main() {
     let started = Instant::now();
     let explorer = ExplorerPanel::new(&root);
     explorer.connect_file_activated(|_, path| println!("file-activated {}", path.display()));
-    explorer.connect_path_renamed(|_, old, new| println!("path-renamed {} -> {}", old.display(), new.display()));
+    explorer.connect_path_renamed(|_, old, new| {
+        println!("path-renamed {} -> {}", old.display(), new.display())
+    });
     explorer.connect_path_deleted(|_, path| println!("path-deleted {}", path.display()));
     explorer.connect_search_result_activated(|_, path, line, column, length| {
-        println!("search-result-activated {} {line}:{column}+{length}", path.display());
+        println!(
+            "search-result-activated {} {line}:{column}+{length}",
+            path.display()
+        );
     });
     let window = gtk::Window::new(gtk::WindowType::Toplevel);
     let (width, height) = options.size.unwrap_or((300, 720));
@@ -90,7 +95,9 @@ fn main() {
         let window = window.clone();
         let mut quiet = 0;
         glib::timeout_add_local(Duration::from_millis(60), move || {
-            let busy = explorer.is_busy() || explorer.search().is_searching() || explorer.search().timeout_pending();
+            let busy = explorer.is_busy()
+                || explorer.search().is_searching()
+                || explorer.search().timeout_pending();
             quiet = if busy { 0 } else { quiet + 1 };
             // Settled for a few frames: the tree, search results and notes are in place.
             if quiet < 6 && started.elapsed() < Duration::from_secs(8) {

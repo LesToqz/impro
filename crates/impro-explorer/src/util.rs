@@ -27,7 +27,9 @@ pub fn data_func(
     CellLayoutExt::set_cell_data_func(
         column,
         cell,
-        Some(Box::new(move |_layout, cell, model, iter| func(cell, model, iter))),
+        Some(Box::new(move |_layout, cell, model, iter| {
+            func(cell, model, iter)
+        })),
     );
 }
 
@@ -47,7 +49,11 @@ pub fn opt_string(
     iter: &gtk::TreeIter,
     column: i32,
 ) -> Option<String> {
-    model.value(iter, column).get::<Option<String>>().ok().flatten()
+    model
+        .value(iter, column)
+        .get::<Option<String>>()
+        .ok()
+        .flatten()
 }
 
 pub fn int(model: &impl IsA<gtk::TreeModel>, iter: &gtk::TreeIter, column: i32) -> i32 {

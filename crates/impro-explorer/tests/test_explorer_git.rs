@@ -39,7 +39,12 @@ impl Fix {
         Command::new("git")
             .arg("-C")
             .arg(self.root())
-            .args(["-c", "user.name=Test", "-c", "user.email=test@example.invalid"])
+            .args([
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.invalid",
+            ])
             .args(args)
             .output()
             .unwrap()
@@ -54,27 +59,45 @@ impl Fix {
     }
     fn settled(&self) -> bool {
         let panel = self.panel.clone();
-        poll(4000, move || !panel.git_running() && !panel.git_timeout_pending())
+        poll(4000, move || {
+            !panel.git_running() && !panel.git_timeout_pending()
+        })
     }
     fn wait_status(&self, path: &Path, status: Option<Status>) -> bool {
         let (panel, path) = (self.panel.clone(), path.to_path_buf());
-        poll(5000, move || panel.git_snapshot().files.get(&path).copied() == status)
+        poll(5000, move || {
+            panel.git_snapshot().files.get(&path).copied() == status
+        })
     }
     fn text_cell(&self) -> (gtk::TreeViewColumn, gtk::CellRendererText) {
         let column = self.panel.tree().column(0).unwrap();
-        let cell = column.cells()[1].clone().downcast::<gtk::CellRendererText>().unwrap();
+        let cell = column.cells()[1]
+            .clone()
+            .downcast::<gtk::CellRendererText>()
+            .unwrap();
         (column, cell)
     }
     fn assert_decoration(&self, path: &Path, kind: Option<Kind>, theme: &str) {
-        let row = self.panel.find_row(path).unwrap_or_else(|| panic!("row {}", path.display()));
+        let row = self
+            .panel
+            .find_row(path)
+            .unwrap_or_else(|| panic!("row {}", path.display()));
         let (column, cell) = self.text_cell();
         column.cell_set_cell_data(&self.panel.store(), &row, false, false);
         let text: Option<String> = cell.property("text");
-        assert_eq!(text.as_deref(), path.file_name().and_then(|n| n.to_str()), "{}", path.display());
+        assert_eq!(
+            text.as_deref(),
+            path.file_name().and_then(|n| n.to_str()),
+            "{}",
+            path.display()
+        );
         let set: bool = cell.property("foreground-set");
         assert_eq!(set, kind.is_some(), "{} {kind:?}", path.display());
         if let Some(kind) = kind {
-            let expected = gdk::RGBA::parse(&themes::get_theme(Some(theme)).ui[&format!("git_{}", kind.as_str())]).unwrap();
+            let expected = gdk::RGBA::parse(
+                &themes::get_theme(Some(theme)).ui[&format!("git_{}", kind.as_str())],
+            )
+            .unwrap();
             let colour: gdk::RGBA = cell.property("foreground-rgba");
             assert_eq!(colour, expected, "{} {kind:?} in {theme}", path.display());
         }
@@ -89,7 +112,12 @@ fn setup() -> Fix {
         assert!(Command::new("git")
             .arg("-C")
             .arg(&root)
-            .args(["-c", "user.name=Test", "-c", "user.email=test@example.invalid"])
+            .args([
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.invalid"
+            ])
             .args(args)
             .output()
             .unwrap()
@@ -108,7 +136,13 @@ fn setup() -> Fix {
     std::fs::create_dir_all(nested.parent().unwrap()).unwrap();
     std::fs::write(&nested, "new\n").unwrap();
     let panel = ExplorerPanel::new(&root);
-    let fix = Fix { temp, panel, new, modified, nested };
+    let fix = Fix {
+        temp,
+        panel,
+        new,
+        modified,
+        nested,
+    };
     assert!(fix.wait_status(&fix.new, Some(Status::NEW)), "initial scan");
     wait_idle(&fix.panel);
     fix
@@ -135,7 +169,10 @@ fn test_name_colours_and_undecorated_row_reset() {
 fn test_long_name_uses_right_edge_without_a_badge_gap() {
     run(|| {
         let f = setup();
-        let path = f.write(&format!("{}.py", "a_very_long_untracked_filename_".repeat(4)), "x");
+        let path = f.write(
+            &format!("{}.py", "a_very_long_untracked_filename_".repeat(4)),
+            "x",
+        );
         f.panel.refresh();
         assert!(f.wait_status(&path, Some(Status::NEW)));
         let window = gtk::OffscreenWindow::new();
@@ -360,7 +397,8 @@ fn test_bursts_coalesce_worker_is_off_main_thread_and_stale_result_dropped() {
             ..Snapshot::default()
         };
         {
-            let (gate, state, latest, new) = (gate.clone(), state.clone(), latest.clone(), new.clone());
+            let (gate, state, latest, new) =
+                (gate.clone(), state.clone(), latest.clone(), new.clone());
             set_git_collector(Some(Arc::new(move |_| {
                 let first = {
                     let mut calls = state.lock().unwrap();
@@ -369,7 +407,11 @@ fn test_bursts_coalesce_worker_is_off_main_thread_and_stale_result_dropped() {
                 };
                 if first {
                     let (lock, cv) = &*gate;
-                    let _ = cv.wait_timeout_while(lock.lock().unwrap(), Duration::from_secs(3), |open| !*open).unwrap();
+                    let _ = cv
+                        .wait_timeout_while(lock.lock().unwrap(), Duration::from_secs(3), |open| {
+                            !*open
+                        })
+                        .unwrap();
                     return Snapshot {
                         files: [(new.clone(), Status::CONFLICT)].into_iter().collect(),
                         ..Snapshot::default()
@@ -380,7 +422,9 @@ fn test_bursts_coalesce_worker_is_off_main_thread_and_stale_result_dropped() {
         }
         f.panel.refresh_git();
         let calls = state.clone();
-        pump_until("first scan entered", move || !calls.lock().unwrap().is_empty());
+        pump_until("first scan entered", move || {
+            !calls.lock().unwrap().is_empty()
+        });
         assert_ne!(state.lock().unwrap()[0], std::thread::current().id());
         for _ in 0..30 {
             f.panel.refresh_git();
@@ -391,7 +435,9 @@ fn test_bursts_coalesce_worker_is_off_main_thread_and_stale_result_dropped() {
         gate.1.notify_all();
         let panel = f.panel.clone();
         let wanted = latest.clone();
-        pump_until("latest snapshot", move || *panel.git_snapshot() == wanted && !panel.git_running());
+        pump_until("latest snapshot", move || {
+            *panel.git_snapshot() == wanted && !panel.git_running()
+        });
         assert_eq!(state.lock().unwrap().len(), 2);
         f.assert_decoration(&f.new, Some(Kind::New), "impro-dark");
     });
@@ -409,7 +455,9 @@ fn test_destroy_cancels_pending_and_running_delivery() {
             set_git_collector(Some(Arc::new(move |_| {
                 *entered.lock().unwrap() = true;
                 let (lock, cv) = &*gate;
-                let _ = cv.wait_timeout_while(lock.lock().unwrap(), Duration::from_secs(3), |open| !*open).unwrap();
+                let _ = cv
+                    .wait_timeout_while(lock.lock().unwrap(), Duration::from_secs(3), |open| !*open)
+                    .unwrap();
                 *finished.lock().unwrap() = true;
                 Snapshot::default()
             })));
@@ -477,7 +525,11 @@ fn test_unchanged_snapshot_does_not_repaint_but_changes_do() {
         let before = draws.get();
         f.panel.apply_snapshot(same);
         pump(120);
-        assert_eq!(draws.get(), before, "an identical snapshot must not repaint");
+        assert_eq!(
+            draws.get(),
+            before,
+            "an identical snapshot must not repaint"
+        );
         let mut changed = (*f.panel.git_snapshot()).clone();
         changed.files.remove(&f.new);
         f.panel.apply_snapshot(changed);

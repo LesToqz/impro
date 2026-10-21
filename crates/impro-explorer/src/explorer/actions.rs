@@ -38,18 +38,27 @@ pub struct ConfirmRequest {
 
 /// Replacement for the removal itself: `(trash, path, project_root)`; `None` runs the
 /// real operation. Called on a worker thread.
-pub type RemoveHook = Arc<dyn Fn(bool, &Path, &Path) -> Option<Result<PathBuf, FsOpError>> + Send + Sync>;
+pub type RemoveHook =
+    Arc<dyn Fn(bool, &Path, &Path) -> Option<Result<PathBuf, FsOpError>> + Send + Sync>;
+
+/// Answer a name dialog: `(title, initial text, action)`.
+pub type NameDialogHook = Rc<dyn Fn(&str, &str, NameAction)>;
+/// Answer a removal question.
+pub type ConfirmHook = Rc<dyn Fn(&ConfirmRequest) -> bool>;
+/// Receive an error message instead of showing a dialog.
+pub type ErrorHook = Rc<dyn Fn(&str)>;
 
 /// Replacements for the modal dialogs, so a host (or a test) can answer without a user.
 #[derive(Clone, Default)]
 pub struct DialogHooks {
     /// `(title, initial text, action)`; call `action(text, done)` to submit a name.
-    pub name_dialog: Option<Rc<dyn Fn(&str, &str, NameAction)>>,
-    pub confirm_removal: Option<Rc<dyn Fn(&ConfirmRequest) -> bool>>,
-    pub error_dialog: Option<Rc<dyn Fn(&str)>>,
+    pub name_dialog: Option<NameDialogHook>,
+    pub confirm_removal: Option<ConfirmHook>,
+    pub error_dialog: Option<ErrorHook>,
     pub remove: Option<RemoveHook>,
 }
 
+/// Completion of an asynchronous filesystem action.
 pub type OpCallback = Box<dyn FnOnce(Result<PathBuf, FsOpError>)>;
 
 /// `base/rest` without the trailing separator `join("")` would add.
@@ -65,13 +74,16 @@ fn join_rest(base: &Path, rest: &Path) -> PathBuf {
 fn stem_chars(name: &str) -> usize {
     let leading = name.chars().take_while(|c| *c == '.').count();
     let rest: String = name.chars().skip(leading).collect();
-    let stem = rest.rfind('.').map_or(rest.chars().count(), |i| rest[..i].chars().count());
+    let stem = rest
+        .rfind('.')
+        .map_or(rest.chars().count(), |i| rest[..i].chars().count());
     leading + stem
 }
 
 impl ExplorerPanel {
     fn window(&self) -> Option<gtk::Window> {
-        self.toplevel().and_then(|top| top.downcast::<gtk::Window>().ok())
+        self.toplevel()
+            .and_then(|top| top.downcast::<gtk::Window>().ok())
     }
 
     /// Install dialog replacements (see [`DialogHooks`]).
@@ -90,6 +102,9 @@ impl ExplorerPanel {
     /// Point the explorer (and its search) at another folder.
     pub fn set_root(&self, path: &Path) {
         let imp = self.imp();
+        if imp.destroyed.get() {
+            return;
+        }
         *imp.git_snapshot.borrow_mut() = Rc::new(crate::gitstatus::Snapshot::default());
         self.set_git_monitor(None);
         self.watch_current_file(None);
@@ -105,6 +120,9 @@ impl ExplorerPanel {
 
     /// Re-list the visible folders, then refresh search results, Git and notes.
     pub fn refresh(&self) {
+        if self.is_destroyed() {
+            return;
+        }
         self.rebuild(self.expanded_paths(), self.selected_path());
         self.refresh_search();
         self.refresh_git();
@@ -114,6 +132,9 @@ impl ExplorerPanel {
     pub fn set_folders_first(&self, enabled: bool) {
         let imp = self.imp();
         imp.folders_first.set(enabled);
+        if imp.destroyed.get() {
+            return;
+        }
         // Sibling order changes, so merging in place would not line up: start over.
         self.rebuild_clear(self.expanded_paths(), self.selected_path());
         self.refresh_search();
@@ -146,6 +167,9 @@ impl ExplorerPanel {
     /// Reveal the active editor file and list its search results first.
     pub fn set_current_file(&self, path: Option<&Path>) {
         let imp = self.imp();
+        if imp.destroyed.get() {
+            return;
+        }
         let path = path.filter(|p| !p.as_os_str().is_empty());
         *imp.active_file.borrow_mut() = path.map(fsops::absolute);
         self.watch_current_file(path);
@@ -202,7 +226,9 @@ impl ExplorerPanel {
     pub fn rename(&self, path: &Path, new_name: &str, done: OpCallback) {
         let root = self.root();
         if fsops::absolute(path) == root {
-            done(Err(FsOpError::Invalid("The project root cannot be renamed.".into())));
+            done(Err(FsOpError::Invalid(
+                "The project root cannot be renamed.".into(),
+            )));
             return;
         }
         let expanded = self.expanded_paths();
@@ -224,14 +250,13 @@ impl ExplorerPanel {
                     panel.rebuild(remapped, Some(new.clone()));
                     {
                         let mut active = panel.imp().active_file.borrow_mut();
-                        if let Some(rest) = active.as_ref().and_then(|f| f.strip_prefix(&old).ok()) {
+                        if let Some(rest) = active.as_ref().and_then(|f| f.strip_prefix(&old).ok())
+                        {
                             *active = Some(join_rest(new, rest));
                         }
                     }
-                    panel.emit_by_name::<()>(
-                        "path-renamed",
-                        &[&model_path(&old), &model_path(new)],
-                    );
+                    panel
+                        .emit_by_name::<()>("path-renamed", &[&model_path(&old), &model_path(new)]);
                     // After the signal, so open tabs already carry their new paths.
                     panel.refresh_search();
                     panel.refresh_git();
@@ -246,7 +271,9 @@ impl ExplorerPanel {
     pub fn delete(&self, path: &Path, permanent: bool, done: OpCallback) {
         let root = self.root();
         if fsops::absolute(path) == root {
-            done(Err(FsOpError::Invalid("The project root cannot be deleted.".into())));
+            done(Err(FsOpError::Invalid(
+                "The project root cannot be deleted.".into(),
+            )));
             return;
         }
         let trash = self.imp().delete_mode.get() == DeleteMode::Trash && !permanent;
@@ -298,7 +325,10 @@ impl ExplorerPanel {
             Some(title),
             self.window().as_ref(),
             gtk::DialogFlags::MODAL,
-            &[("Cancel", gtk::ResponseType::Cancel), ("OK", gtk::ResponseType::Ok)],
+            &[
+                ("Cancel", gtk::ResponseType::Cancel),
+                ("OK", gtk::ResponseType::Ok),
+            ],
         );
         dialog.set_default_response(gtk::ResponseType::Ok);
         let content = dialog.content_area();
@@ -325,11 +355,14 @@ impl ExplorerPanel {
                 return;
             }
             dialog.set_response_sensitive(gtk::ResponseType::Ok, false);
-            let (dialog_weak, label_weak, panel_weak) = (dialog.downgrade(), error_label.downgrade(), weak.clone());
+            let (dialog_weak, label_weak, panel_weak) =
+                (dialog.downgrade(), error_label.downgrade(), weak.clone());
             action(
                 entry.text().to_string(),
                 Box::new(move |result| {
-                    let Some(dialog) = dialog_weak.upgrade() else { return };
+                    let Some(dialog) = dialog_weak.upgrade() else {
+                        return;
+                    };
                     match result {
                         Ok(()) => close_dialog(&panel_weak, &dialog),
                         Err(error) => {
@@ -352,17 +385,27 @@ impl ExplorerPanel {
             "",
             Rc::new(move |name, done| {
                 let Some(panel) = weak.upgrade() else { return };
-                panel.create(&parent, &name, folder, Box::new(move |r| done(r.map(|_| ()))));
+                panel.create(
+                    &parent,
+                    &name,
+                    folder,
+                    Box::new(move |r| done(r.map(|_| ()))),
+                );
             }),
         );
     }
 
     pub fn rename_dialog(&self) {
-        let Some(path) = self.selected_path() else { return };
+        let Some(path) = self.selected_path() else {
+            return;
+        };
         if path == self.root() {
             return;
         }
-        let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+        let name = path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
         let weak = self.downgrade();
         self.name_dialog(
             "Rename",
@@ -377,7 +420,10 @@ impl ExplorerPanel {
     /// Ask before removing `path`; `done(true)` when accepted.
     pub fn confirm_removal(&self, path: &Path, fallback: bool, done: Box<dyn FnOnce(bool)>) {
         let trash = self.imp().delete_mode.get() == DeleteMode::Trash && !fallback;
-        let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+        let name = path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
         let title = if trash {
             format!("Move \"{name}\" to trash?")
         } else {
@@ -493,7 +539,9 @@ impl ExplorerPanel {
                                         &path,
                                         true,
                                         Box::new(move |result| {
-                                            if let (Err(error), Some(panel)) = (result, weak.upgrade()) {
+                                            if let (Err(error), Some(panel)) =
+                                                (result, weak.upgrade())
+                                            {
                                                 panel.error_dialog(&error.to_string());
                                             }
                                         }),
@@ -567,14 +615,21 @@ impl ExplorerPanel {
         }
     }
 
-    pub(super) fn on_button(&self, tree: &gtk::TreeView, event: &gdk::EventButton) -> glib::Propagation {
+    pub(super) fn on_button(
+        &self,
+        tree: &gtk::TreeView,
+        event: &gdk::EventButton,
+    ) -> glib::Propagation {
         // A click is the user taking over from any pending reveal.
         self.imp().want_select.borrow_mut().take();
         if event.button() != 3 {
             return glib::Propagation::Proceed;
         }
         let (x, y) = event.position();
-        match tree.path_at_pos(x as i32, y as i32).and_then(|(path, ..)| path) {
+        match tree
+            .path_at_pos(x as i32, y as i32)
+            .and_then(|(path, ..)| path)
+        {
             Some(path) => tree.set_cursor(&path, None::<&gtk::TreeViewColumn>, false),
             None => tree.selection().unselect_all(),
         }
@@ -584,13 +639,9 @@ impl ExplorerPanel {
     }
 
     fn search_has_focus(&self) -> bool {
-        let focus = self
-            .window()
-            .and_then(|window| window.focused_widget());
+        let focus = self.window().and_then(|window| window.focused_widget());
         let w = self.w();
-        focus.is_some_and(|focus| {
-            focus.is_ancestor(&w.search) && !focus.is_ancestor(&w.scroll)
-        })
+        focus.is_some_and(|focus| focus.is_ancestor(&w.search) && !focus.is_ancestor(&w.scroll))
     }
 
     /// Explorer shortcuts: F2 rename, Delete, F5 refresh, Ctrl+Shift+N new folder.
@@ -634,4 +685,3 @@ fn close_dialog(panel: &glib::WeakRef<ExplorerPanel>, dialog: &gtk::Dialog) {
     // SAFETY: the dialog is modal and owned by the explorer; nothing uses it afterwards.
     unsafe { dialog.destroy() }
 }
-

@@ -9,9 +9,12 @@ mod gitdeco;
 mod notes;
 mod tree;
 
-pub use actions::{ConfirmRequest, DeleteMode, DialogHooks, NameAction, RemoveHook};
-pub use notes::{note_edited_text, NotesHandles};
+pub use actions::{
+    ConfirmHook, ConfirmRequest, DeleteMode, DialogHooks, ErrorHook, NameAction, NameDialogHook,
+    OpCallback, RemoveHook,
+};
 pub use gitdeco::set_git_collector;
+pub use notes::{note_edited_text, NotesHandles};
 pub use tree::{scan_count, scan_dir, set_scan_counting, Entry};
 
 use crate::gitstatus::Snapshot;
@@ -91,6 +94,7 @@ mod imp {
 
     pub struct ExplorerPanel {
         pub(crate) w: OnceCell<Widgets>,
+        pub(crate) destroyed: Cell<bool>,
         pub(crate) root: RefCell<PathBuf>,
         pub(crate) show_hidden: Cell<bool>,
         pub(crate) confirm_delete: Cell<bool>,
@@ -116,7 +120,7 @@ mod imp {
         pub(crate) next_op: Cell<u64>,
         pub(crate) op_running: Cell<bool>,
         pub(crate) op_queue: RefCell<VecDeque<PendingOp>>,
-        pub(crate) ops: RefCell<HashMap<u64, Box<dyn FnOnce(Result<PathBuf, FsOpError>)>>>,
+        pub(crate) ops: RefCell<HashMap<u64, OpDone>>,
         // git decorations
         pub(crate) git_snapshot: RefCell<Rc<Snapshot>>,
         pub(crate) git_generation: Cell<u64>,
@@ -146,7 +150,8 @@ mod imp {
         pub(crate) notes_hover: RefCell<HashMap<String, f64>>,
         pub(crate) notes_hover_path: RefCell<Option<String>>,
         pub(crate) notes_angle: Cell<f64>,
-        pub(crate) notes_window: RefCell<Option<(glib::WeakRef<gtk::Window>, glib::SignalHandlerId)>>,
+        pub(crate) notes_window:
+            RefCell<Option<(glib::WeakRef<gtk::Window>, glib::SignalHandlerId)>>,
         // dialogs
         pub(crate) hooks: RefCell<DialogHooks>,
         pub(crate) dialog: RefCell<Option<gtk::Dialog>>,
@@ -156,6 +161,7 @@ mod imp {
         fn default() -> Self {
             Self {
                 w: OnceCell::new(),
+                destroyed: Cell::new(false),
                 root: RefCell::new(PathBuf::new()),
                 show_hidden: Cell::new(true),
                 confirm_delete: Cell::new(true),
@@ -365,7 +371,10 @@ impl ExplorerPanel {
             notes_split,
             notes,
         };
-        assert!(self.imp().w.set(widgets).is_ok(), "explorer panel built once");
+        assert!(
+            self.imp().w.set(widgets).is_ok(),
+            "explorer panel built once"
+        );
         let w = self.w();
         // The text cell reads git decorations at paint time.
         let weak = self.downgrade();
@@ -414,8 +423,9 @@ impl ExplorerPanel {
         });
         let weak = self.downgrade();
         w.tree.connect_button_press_event(move |tree, event| {
-            weak.upgrade()
-                .map_or(glib::Propagation::Proceed, |panel| panel.on_button(tree, event))
+            weak.upgrade().map_or(glib::Propagation::Proceed, |panel| {
+                panel.on_button(tree, event)
+            })
         });
         let weak = self.downgrade();
         w.tree.connect_popup_menu(move |_| {
@@ -433,14 +443,20 @@ impl ExplorerPanel {
             }
         });
         let weak = self.downgrade();
-        w.search.connect_result_activated(move |_, path, line, column, length| {
-            if let Some(panel) = weak.upgrade() {
-                panel.emit_by_name::<()>(
-                    "search-result-activated",
-                    &[&path.to_string_lossy().into_owned(), &line, &column, &length],
-                );
-            }
-        });
+        w.search
+            .connect_result_activated(move |_, path, line, column, length| {
+                if let Some(panel) = weak.upgrade() {
+                    panel.emit_by_name::<()>(
+                        "search-result-activated",
+                        &[
+                            &path.to_string_lossy().into_owned(),
+                            &line,
+                            &column,
+                            &length,
+                        ],
+                    );
+                }
+            });
         let weak = self.downgrade();
         w.search.connect_escaped(move |_| {
             if let Some(panel) = weak.upgrade() {
@@ -448,11 +464,12 @@ impl ExplorerPanel {
             }
         });
         let weak = self.downgrade();
-        w.notes_split.connect_notify_local(Some("position"), move |_, _| {
-            if let Some(panel) = weak.upgrade() {
-                panel.notes_position_changed();
-            }
-        });
+        w.notes_split
+            .connect_notify_local(Some("position"), move |_, _| {
+                if let Some(panel) = weak.upgrade() {
+                    panel.notes_position_changed();
+                }
+            });
         let weak = self.downgrade();
         w.notes_split.connect_size_allocate(move |_, _| {
             if let Some(panel) = weak.upgrade() {
@@ -525,7 +542,10 @@ impl ExplorerPanel {
         job: impl FnOnce() -> Result<PathBuf, FsOpError> + Send + 'static,
         done: impl FnOnce(Result<PathBuf, FsOpError>) + 'static,
     ) {
-        self.imp().op_queue.borrow_mut().push_back((Box::new(job), Box::new(done)));
+        self.imp()
+            .op_queue
+            .borrow_mut()
+            .push_back((Box::new(job), Box::new(done)));
         self.pump_ops();
     }
 
@@ -548,6 +568,7 @@ impl ExplorerPanel {
     }
 
     fn shutdown(&self) {
+        self.imp().destroyed.set(true);
         self.stop_git();
         let imp = self.imp();
         if let Some(source) = imp.apply_source.take() {
@@ -564,6 +585,11 @@ impl ExplorerPanel {
     }
 
     // ---- public surface ---------------------------------------------------------------
+
+    /// The panel was destroyed; its methods then do nothing.
+    pub fn is_destroyed(&self) -> bool {
+        self.imp().destroyed.get()
+    }
 
     /// The project root (absolute).
     pub fn root(&self) -> PathBuf {
@@ -638,7 +664,10 @@ impl ExplorerPanel {
         let whole = (height + 0.999) as i32;
         for (cell, tree) in [(&w.text_cell, &w.tree), (&w.notes.cell, &w.notes.tree)] {
             cell.set_size_points(size);
-            cell.set_fixed_size(-1, if compact { 16 } else { 20 }.max(whole + if compact { 0 } else { 4 }));
+            cell.set_fixed_size(
+                -1,
+                if compact { 16 } else { 20 }.max(whole + if compact { 0 } else { 4 }),
+            );
             tree.columns_autosize();
             tree.queue_resize();
         }
@@ -688,7 +717,10 @@ impl ExplorerPanel {
 
     // ---- typed signal helpers ---------------------------------------------------------
 
-    pub fn connect_file_activated<F: Fn(&Self, &Path) + 'static>(&self, f: F) -> glib::SignalHandlerId {
+    pub fn connect_file_activated<F: Fn(&Self, &Path) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
         self.connect_local("file-activated", false, move |args| {
             let panel = args[0].get::<ExplorerPanel>().ok()?;
             let path: String = args[1].get().ok()?;
@@ -697,7 +729,10 @@ impl ExplorerPanel {
         })
     }
 
-    pub fn connect_path_renamed<F: Fn(&Self, &Path, &Path) + 'static>(&self, f: F) -> glib::SignalHandlerId {
+    pub fn connect_path_renamed<F: Fn(&Self, &Path, &Path) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
         self.connect_local("path-renamed", false, move |args| {
             let panel = args[0].get::<ExplorerPanel>().ok()?;
             let (old, new): (String, String) = (args[1].get().ok()?, args[2].get().ok()?);
@@ -706,7 +741,10 @@ impl ExplorerPanel {
         })
     }
 
-    pub fn connect_path_deleted<F: Fn(&Self, &Path) + 'static>(&self, f: F) -> glib::SignalHandlerId {
+    pub fn connect_path_deleted<F: Fn(&Self, &Path) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
         self.connect_local("path-deleted", false, move |args| {
             let panel = args[0].get::<ExplorerPanel>().ok()?;
             let path: String = args[1].get().ok()?;

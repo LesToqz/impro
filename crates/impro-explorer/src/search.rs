@@ -239,9 +239,7 @@ pub fn list_project_files(root: &Path, show_hidden: bool, limit: usize) -> Vec<P
             let name = entry.file_name().to_string_lossy().into_owned();
             let is_dir = entry
                 .file_type()
-                .map(|kind| {
-                    kind.is_dir() || (kind.is_symlink() && entry.path().is_dir())
-                })
+                .map(|kind| kind.is_dir() || (kind.is_symlink() && entry.path().is_dir()))
                 .unwrap_or(false);
             let symlink = entry.file_type().is_ok_and(|kind| kind.is_symlink());
             if is_dir {
@@ -349,7 +347,14 @@ fn scan_text(text: &str, pattern: &Regex, mut accept: impl FnMut(Match) -> bool)
             char_pos += line[byte_pos..found.start()].chars().count();
             byte_pos = found.start();
             let length = line[found.range()].chars().count();
-            if !accept(preview(line_no, line, char_pos, found.start(), found.end(), length)) {
+            if !accept(preview(
+                line_no,
+                line,
+                char_pos,
+                found.start(),
+                found.end(),
+                length,
+            )) {
                 return;
             }
         }
@@ -492,9 +497,12 @@ pub fn search_stream(
     };
 
     if let Some(current) = current.as_deref().filter(|_| !cancel.is_cancelled()) {
-        let live = overlay
-            .as_mut()
-            .and_then(|overlay| overlay(&[current.to_path_buf()]).into_iter().next().flatten());
+        let live = overlay.as_mut().and_then(|overlay| {
+            overlay(&[current.to_path_buf()])
+                .into_iter()
+                .next()
+                .flatten()
+        });
         if let Some(text) = live.or_else(|| read_text(current)) {
             scan(&mut result, current, &text);
         }
@@ -522,7 +530,10 @@ pub fn search_stream(
             let Some(disk) = read_text(path) else {
                 continue;
             };
-            let name = path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default();
+            let name = path
+                .file_name()
+                .map(|n| n.to_string_lossy())
+                .unwrap_or_default();
             if fold(&name).contains(&needle) {
                 result.file_names.push(path.clone());
             }
@@ -552,5 +563,12 @@ pub fn search(
     };
     let overlay: Option<Overlay<'_>> = provider.map(|_| &mut chunked as Overlay<'_>);
     let none = CancelToken::new();
-    search_stream(root, query, options, overlay, cancel.unwrap_or(&none), &mut |_| {})
+    search_stream(
+        root,
+        query,
+        options,
+        overlay,
+        cancel.unwrap_or(&none),
+        &mut |_| {},
+    )
 }

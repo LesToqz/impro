@@ -33,7 +33,12 @@ fn basename_is_metadata(file: Option<&gio::File>) -> bool {
 
 impl ExplorerPanel {
     /// Resolve the name colour of a row from the current snapshot at paint time.
-    pub(super) fn git_cell_data(&self, cell: &gtk::CellRenderer, model: &gtk::TreeModel, iter: &gtk::TreeIter) {
+    pub(super) fn git_cell_data(
+        &self,
+        cell: &gtk::CellRenderer,
+        model: &gtk::TreeModel,
+        iter: &gtk::TreeIter,
+    ) {
         let imp = self.imp();
         let status = if imp.git_enabled.get() && imp.git_colors.get() {
             let snapshot = imp.git_snapshot.borrow().clone();
@@ -60,7 +65,7 @@ impl ExplorerPanel {
                 .lookup_color(&format!("impro_{role}"))
                 .or_else(|| gdk::RGBA::parse(&impro_core::themes::get_theme(None).ui[role]).ok());
             if let Some(colour) = colour {
-                cell.set_property("foreground-rgba", &colour);
+                cell.set_property("foreground-rgba", colour);
             }
         }
         cell.set_property("foreground-set", status.is_some());

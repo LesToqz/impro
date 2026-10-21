@@ -39,7 +39,12 @@ impl Repo {
         let output = Command::new("git")
             .arg("-C")
             .arg(&self.root)
-            .args(["-c", "user.name=Test", "-c", "user.email=test@example.invalid"])
+            .args([
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.invalid",
+            ])
             .args(args)
             .output()
             .unwrap();
@@ -111,11 +116,17 @@ fn test_rename_destination_and_old_folder() {
     std::fs::create_dir(r.p("new")).unwrap();
     r.git(&["mv", "old/file name.txt", "new/rénamed file.txt"]);
     let snapshot = r.snapshot();
-    assert_eq!(snapshot.files[&r.p("new/rénamed file.txt")], Status::MODIFIED);
+    assert_eq!(
+        snapshot.files[&r.p("new/rénamed file.txt")],
+        Status::MODIFIED
+    );
     assert!(!snapshot.files.contains_key(&r.p("old/file name.txt")));
     assert_eq!(snapshot.folders[&r.p("old")], Status::MODIFIED);
     assert_eq!(snapshot.folders[&r.p("new")], Status::MODIFIED);
-    assert_eq!(r.snapshot_of(&r.p("old")).folders[&r.p("old")], Status::MODIFIED);
+    assert_eq!(
+        r.snapshot_of(&r.p("old")).folders[&r.p("old")],
+        Status::MODIFIED
+    );
 }
 
 #[test]
@@ -134,7 +145,11 @@ fn test_unicode_spaces_newlines_and_nested_aggregate() {
     let snapshot = r.snapshot();
     assert_eq!(snapshot.files[&path], Status::NEW);
     for folder in ["", "outer", "outer/inner"] {
-        assert_eq!(snapshot.folders[&r.root.join(folder)], Status::NEW, "{folder}");
+        assert_eq!(
+            snapshot.folders[&r.root.join(folder)],
+            Status::NEW,
+            "{folder}"
+        );
     }
     r.write("clean.txt", "modified");
     assert_eq!(r.snapshot().folders[&r.root], Status::MODIFIED);
@@ -148,7 +163,10 @@ fn test_explorer_subfolder_filters_siblings() {
     let snapshot = r.snapshot_of(&r.p("sub"));
     assert_eq!(snapshot.files, map(&[(&path, Status::NEW)]));
     let folders: std::collections::HashSet<_> = snapshot.folders.keys().cloned().collect();
-    assert_eq!(folders, [r.p("sub"), r.p("sub/nested")].into_iter().collect());
+    assert_eq!(
+        folders,
+        [r.p("sub"), r.p("sub/nested")].into_iter().collect()
+    );
 }
 
 #[test]
@@ -176,7 +194,11 @@ fn test_all_conflict_codes_typechange_copy_and_unstaged_rename() {
         assert_eq!(result.files[&r.p("f")], Status::CONFLICT, "{code}");
     }
     for code in [" T", "T ", " C", " R"] {
-        let extra = if matches!(code.trim(), "C" | "R") { "old\0" } else { "" };
+        let extra = if matches!(code.trim(), "C" | "R") {
+            "old\0"
+        } else {
+            ""
+        };
         let data = format!("{code} f\0{extra}");
         let result = parse_porcelain(data.as_bytes(), root, root, MAX_ENTRIES);
         assert_eq!(result.files[&r.p("f")], Status::MODIFIED, "{code:?}");
@@ -188,7 +210,9 @@ fn test_no_repository_missing_binary_and_timeout() {
     let r = Repo::new();
     let outside = tempfile::tempdir().unwrap();
     assert!(collect_status(outside.path(), MAX_ENTRIES).files.is_empty());
-    assert!(collect_status(outside.path(), MAX_ENTRIES).git_dir.is_none());
+    assert!(collect_status(outside.path(), MAX_ENTRIES)
+        .git_dir
+        .is_none());
     let saved = std::env::var_os("PATH");
     std::env::set_var("PATH", "");
     let missing = r.snapshot();
@@ -262,14 +286,19 @@ fn test_real_subprocess_timeout_and_output_bound() {
     let pidfile = binaries.path().join("pid");
     fake_git(
         binaries.path(),
-        &format!("#!/bin/sh\necho $$ > '{}'\nexec /bin/sleep 60\n", pidfile.display()),
+        &format!(
+            "#!/bin/sh\necho $$ > '{}'\nexec /bin/sleep 60\n",
+            pidfile.display()
+        ),
     );
     let limits = Limits {
         timeout: Duration::from_millis(100),
         ..Limits::default()
     };
     let started = Instant::now();
-    let files = with_path(binaries.path(), || collect_status_with(&r.root, &limits, None).files);
+    let files = with_path(binaries.path(), || {
+        collect_status_with(&r.root, &limits, None).files
+    });
     assert!(files.is_empty());
     assert!(started.elapsed() < Duration::from_secs(2));
     // The sleeping child must have been killed rather than left running.
@@ -280,7 +309,14 @@ fn test_real_subprocess_timeout_and_output_bound() {
         "#!/bin/sh\n/usr/bin/awk 'BEGIN { for (i = 0; i < 10000; i++) printf \"?? file\\0\" }'\n",
     );
     let output = with_path(binaries.path(), || {
-        run(&r.root, &["status"], Instant::now() + Duration::from_secs(2), None, 127, None)
+        run(
+            &r.root,
+            &["status"],
+            Instant::now() + Duration::from_secs(2),
+            None,
+            127,
+            None,
+        )
     })
     .unwrap();
     assert!(output.truncated);
@@ -311,8 +347,14 @@ fn test_commands_use_readonly_environment_and_list_args() {
     let r = Repo::new();
     let binaries = tempfile::tempdir().unwrap();
     let log = binaries.path().join("calls.log");
-    let real = String::from_utf8(Command::new("sh").args(["-c", "command -v git"]).output().unwrap().stdout)
-        .unwrap();
+    let real = String::from_utf8(
+        Command::new("sh")
+            .args(["-c", "command -v git"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
     fake_git(
         binaries.path(),
         &format!(
@@ -335,7 +377,10 @@ fn test_commands_use_readonly_environment_and_list_args() {
 #[test]
 fn test_snapshot_diff_reports_only_changed_paths() {
     let a = Snapshot {
-        files: map(&[(Path::new("/r/a"), Status::NEW), (Path::new("/r/b"), Status::MODIFIED)]),
+        files: map(&[
+            (Path::new("/r/a"), Status::NEW),
+            (Path::new("/r/b"), Status::MODIFIED),
+        ]),
         folders: map(&[(Path::new("/r"), Status::MODIFIED)]),
         ..Snapshot::default()
     };
@@ -346,6 +391,8 @@ fn test_snapshot_diff_reports_only_changed_paths() {
     b.folders.insert(PathBuf::from("/r"), Status::CONFLICT);
     let mut changed = a.diff(&b);
     changed.sort();
-    assert_eq!(changed, [Path::new("/r"), Path::new("/r/a"), Path::new("/r/b")]);
+    assert_eq!(
+        changed,
+        [Path::new("/r"), Path::new("/r/a"), Path::new("/r/b")]
+    );
 }
-

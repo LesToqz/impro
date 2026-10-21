@@ -7,8 +7,8 @@ pub mod searchpanel;
 #[doc(hidden)]
 pub mod util;
 
-use impro_core::themes::UiColors;
 pub use explorer::{ConfirmRequest, DeleteMode, DialogHooks, ExplorerPanel, NameAction};
+use impro_core::themes::UiColors;
 pub use search::SKIP_DIRS;
 pub use searchpanel::{search_css, SearchPanel};
 

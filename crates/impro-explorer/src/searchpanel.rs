@@ -4,8 +4,8 @@
 //! renders them incrementally (a few milliseconds per idle step) so a thousand hits keep
 //! the list at 60 fps. Every new query cancels the previous run within one file.
 use crate::pool::{self, CancelToken, Lane};
-use crate::util;
 use crate::search::{search_stream, FileGroup, SearchError, SearchOptions, SearchResults};
+use crate::util;
 use glib::subclass::Signal;
 use gtk::{prelude::*, subclass::prelude::*};
 use std::cell::{Cell, OnceCell, RefCell};
@@ -138,7 +138,11 @@ fn escape(text: &str) -> String {
 }
 
 fn char_slice(text: &str, from: usize, to: usize) -> &str {
-    let byte = |index: usize| text.char_indices().nth(index).map_or(text.len(), |(i, _)| i);
+    let byte = |index: usize| {
+        text.char_indices()
+            .nth(index)
+            .map_or(text.len(), |(i, _)| i)
+    };
     let (a, b) = (byte(from), byte(to));
     &text[a..b.max(a)]
 }
@@ -187,7 +191,10 @@ impl SearchPanel {
         for button in [&case_button, &regex_button] {
             button.set_valign(gtk::Align::Center);
             if let Some(accessible) = button.accessible() {
-                atk::prelude::AtkObjectExt::set_name(&accessible, &button.tooltip_text().unwrap_or_default());
+                atk::prelude::AtkObjectExt::set_name(
+                    &accessible,
+                    &button.tooltip_text().unwrap_or_default(),
+                );
             }
             button.style_context().add_class("impro-search-toggle");
             row.pack_start(button, false, false, 0);
@@ -299,13 +306,15 @@ impl SearchPanel {
         });
         let weak = self.downgrade();
         w.entry.connect_key_press_event(move |entry, event| {
-            weak.upgrade()
-                .map_or(glib::Propagation::Proceed, |panel| panel.key(entry.upcast_ref(), event))
+            weak.upgrade().map_or(glib::Propagation::Proceed, |panel| {
+                panel.key(entry.upcast_ref(), event)
+            })
         });
         let weak = self.downgrade();
         w.tree.connect_key_press_event(move |tree, event| {
-            weak.upgrade()
-                .map_or(glib::Propagation::Proceed, |panel| panel.key(tree.upcast_ref(), event))
+            weak.upgrade().map_or(glib::Propagation::Proceed, |panel| {
+                panel.key(tree.upcast_ref(), event)
+            })
         });
         let weak = self.downgrade();
         w.tree.connect_row_activated(move |_, path, _| {
@@ -478,9 +487,11 @@ impl SearchPanel {
         }
         self.invalidate();
         let query = self.query();
-        self.w()
-            .stack
-            .set_visible_child_name(if query.is_empty() { "content" } else { "results" });
+        self.w().stack.set_visible_child_name(if query.is_empty() {
+            "content"
+        } else {
+            "results"
+        });
         if query.is_empty() {
             self.reset_results();
             return;
@@ -508,9 +519,11 @@ impl SearchPanel {
         }
         self.invalidate();
         let query = self.query();
-        self.w()
-            .stack
-            .set_visible_child_name(if query.is_empty() { "content" } else { "results" });
+        self.w().stack.set_visible_child_name(if query.is_empty() {
+            "content"
+        } else {
+            "results"
+        });
         if query.is_empty() {
             self.reset_results();
         } else {
@@ -578,7 +591,15 @@ impl SearchPanel {
         let has_provider = imp.provider.borrow().is_some();
         imp.searching.set(true);
         pool::spawn(Lane::Background, move || {
-            run_search(generation, root, query, options, has_provider, cancel, sender);
+            run_search(
+                generation,
+                root,
+                query,
+                options,
+                has_provider,
+                cancel,
+                sender,
+            );
         });
     }
 
@@ -595,11 +616,12 @@ impl SearchPanel {
                 reply,
             } => {
                 // Editor providers may read a GtkTextBuffer, so they only run here.
-                let provider = if generation == self.imp().generation.get() && !self.imp().destroyed.get() {
-                    self.imp().provider.borrow().clone()
-                } else {
-                    None
-                };
+                let provider =
+                    if generation == self.imp().generation.get() && !self.imp().destroyed.get() {
+                        self.imp().provider.borrow().clone()
+                    } else {
+                        None
+                    };
                 let answer = paths
                     .iter()
                     .map(|path| provider.as_ref().and_then(|provider| provider(path)))
@@ -715,7 +737,11 @@ impl SearchPanel {
         let w = self.w();
         if w.store.iter_first().is_some() {
             w.tree.grab_focus();
-            w.tree.set_cursor(&gtk::TreePath::new_first(), None::<&gtk::TreeViewColumn>, false);
+            w.tree.set_cursor(
+                &gtk::TreePath::new_first(),
+                None::<&gtk::TreeViewColumn>,
+                false,
+            );
         }
     }
 
@@ -725,7 +751,11 @@ impl SearchPanel {
             .parent()
             .map(|p| p.to_string_lossy().into_owned())
             .unwrap_or_default();
-        let tag = if group.is_current { "  · current file" } else { "" };
+        let tag = if group.is_current {
+            "  · current file"
+        } else {
+            ""
+        };
         let name = group
             .path
             .file_name()
@@ -814,7 +844,10 @@ impl SearchPanel {
                 ],
             )
         } else {
-            match w.store.iter_nth_child(None, w.store.iter_n_children(None) - 1) {
+            match w
+                .store
+                .iter_nth_child(None, w.store.iter_n_children(None) - 1)
+            {
                 Some(parent) => parent,
                 None => return,
             }
@@ -852,7 +885,10 @@ impl SearchPanel {
         let summary = if results.truncated {
             format!("Showing the first {} results", results.total_matches)
         } else if results.total_matches > 0 {
-            format!("{} results in {} files", results.total_matches, results.total_files)
+            format!(
+                "{} results in {} files",
+                results.total_matches, results.total_files
+            )
         } else if !results.file_names.is_empty() {
             format!("{} file name results", results.file_names.len())
         } else if imp.searching.get() {
@@ -882,8 +918,11 @@ impl SearchPanel {
             }
         } else {
             let file = util::string(&w.store, &iter, 3);
-            let (line, column, length): (i32, i32, i32) =
-                (util::int(&w.store, &iter, 4), util::int(&w.store, &iter, 5), util::int(&w.store, &iter, 6));
+            let (line, column, length): (i32, i32, i32) = (
+                util::int(&w.store, &iter, 4),
+                util::int(&w.store, &iter, 5),
+                util::int(&w.store, &iter, 6),
+            );
             self.emit_by_name::<()>("result-activated", &[&file, &line, &column, &length]);
         }
     }
@@ -953,11 +992,20 @@ fn absolute_or_empty(path: &Path) -> PathBuf {
 }
 
 /// Resolve Pango colours at paint time so live theme changes keep hits fresh.
-fn style_result(tree: &gtk::TreeView, cell: &gtk::CellRenderer, model: &gtk::TreeModel, iter: &gtk::TreeIter) {
+fn style_result(
+    tree: &gtk::TreeView,
+    cell: &gtk::CellRenderer,
+    model: &gtk::TreeModel,
+    iter: &gtk::TreeIter,
+) {
     let kind = util::string(model, iter, 7);
     let group = kind == "group";
     let context = tree.style_context();
-    let colour = context.lookup_color(if group { "impro_search_group" } else { "impro_search_match" });
+    let colour = context.lookup_color(if group {
+        "impro_search_group"
+    } else {
+        "impro_search_match"
+    });
     let mut markup = util::string(model, iter, 2);
     if let Some(colour) = colour {
         let hex = hex(&colour);

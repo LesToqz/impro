@@ -59,7 +59,15 @@ fn test_skips_directories_and_sorts_relative_paths() {
         .map(|n| f.write(n, "needle"))
         .collect();
     let found: Vec<_> = iter_project_files(f.root()).collect();
-    assert_eq!(found, [paths[3].clone(), paths[1].clone(), paths[2].clone(), paths[0].clone()]);
+    assert_eq!(
+        found,
+        [
+            paths[3].clone(),
+            paths[1].clone(),
+            paths[2].clone(),
+            paths[0].clone()
+        ]
+    );
 }
 
 #[test]
@@ -89,8 +97,18 @@ fn test_literal_case_regex_and_multiple_matches() {
     assert_eq!(found.len(), 2);
     assert_eq!(tuple(&found[0]), (0, 0, 3, "A.b aXb a.b"));
     assert_eq!(tuple(&found[1]), (0, 8, 3, "aXb a.b"));
-    assert_eq!(find_in_text("A.b aXb a.b", "a.b", true, false).unwrap().len(), 1);
-    assert_eq!(find_in_text("A.b aXb a.b", "a.b", false, true).unwrap().len(), 3);
+    assert_eq!(
+        find_in_text("A.b aXb a.b", "a.b", true, false)
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        find_in_text("A.b aXb a.b", "a.b", false, true)
+            .unwrap()
+            .len(),
+        3
+    );
     assert!(find("abc", "").is_empty());
     assert!(find_in_text("abc", "^|$", false, true).unwrap().is_empty());
 }
@@ -124,7 +142,10 @@ fn assert_preview(line: &str, query: &str, offset: usize, preview: &str) {
     let found = find(&format!("header\n{line}"), query);
     let m = &found[0];
     let column = line.find(query).map(|b| line[..b].chars().count()).unwrap();
-    assert_eq!((m.line, m.column, m.length), (1, column, query.chars().count()));
+    assert_eq!(
+        (m.line, m.column, m.length),
+        (1, column, query.chars().count())
+    );
     assert_eq!(m.preview_offset, offset);
     assert_eq!(m.line_text, preview);
     let start = m.column - m.preview_offset;
@@ -197,9 +218,12 @@ fn test_order_and_basename_literal_matches() {
     let paths: Vec<_> = result.groups.iter().map(|g| g.path.clone()).collect();
     assert_eq!(paths, [current.clone(), a, z]);
     assert!(result.groups[0].is_current);
-    assert_eq!(result.file_names, [name.clone()]);
+    assert_eq!(result.file_names, std::slice::from_ref(&name));
     assert_eq!((result.total_matches, result.total_files), (3, 3));
-    assert_eq!(f.search("NEEDLE", |o| o.case_sensitive = true).file_names, [name]);
+    assert_eq!(
+        f.search("NEEDLE", |o| o.case_sensitive = true).file_names,
+        [name]
+    );
     assert!(f.search(".*", |o| o.regex = true).file_names.is_empty());
 }
 
@@ -222,13 +246,29 @@ fn test_live_provider_overrides_disk_and_supports_unsaved_file() {
         current_path: Some(unsaved.clone()),
         ..SearchOptions::default()
     };
-    let provider = |p: &Path| Some(if p == unsaved { "needle needle" } else { "changed" }.to_owned());
+    let provider = |p: &Path| {
+        Some(
+            if p == unsaved {
+                "needle needle"
+            } else {
+                "changed"
+            }
+            .to_owned(),
+        )
+    };
     let result = search(f.root(), "needle", &options, Some(&provider), None).unwrap();
     let paths: Vec<_> = result.groups.iter().map(|g| g.path.clone()).collect();
     assert_eq!(paths, [unsaved]);
     assert_eq!(result.total_matches, 2);
     let none = |_: &Path| None;
-    let result = search(f.root(), "needle", &SearchOptions::default(), Some(&none), None).unwrap();
+    let result = search(
+        f.root(),
+        "needle",
+        &SearchOptions::default(),
+        Some(&none),
+        None,
+    )
+    .unwrap();
     assert_eq!(result.groups[0].path, disk);
 }
 
@@ -238,10 +278,24 @@ fn test_per_file_and_total_limits() {
     f.write("a", "needle needle needle");
     f.write("b", "needle needle");
     let result = f.search("needle", |o| o.max_per_file = 2);
-    assert_eq!(result.groups.iter().map(|g| g.matches.len()).collect::<Vec<_>>(), [2, 2]);
+    assert_eq!(
+        result
+            .groups
+            .iter()
+            .map(|g| g.matches.len())
+            .collect::<Vec<_>>(),
+        [2, 2]
+    );
     assert!(result.truncated);
     let result = f.search("needle", |o| o.max_total = 3);
-    assert_eq!(result.groups.iter().map(|g| g.matches.len()).collect::<Vec<_>>(), [3]);
+    assert_eq!(
+        result
+            .groups
+            .iter()
+            .map(|g| g.matches.len())
+            .collect::<Vec<_>>(),
+        [3]
+    );
     assert!(result.truncated);
     assert_eq!(f.search("needle", |o| o.max_total = 0).total_matches, 0);
     assert!(f.search("needle", |o| o.max_total = 0).truncated);
@@ -259,7 +313,10 @@ fn test_cancellation_between_files() {
     };
     let cancel = CancelToken::new();
     cancel.cancel();
-    assert!(search(f.root(), "needle", &options, None, Some(&cancel)).unwrap().groups.is_empty());
+    assert!(search(f.root(), "needle", &options, None, Some(&cancel))
+        .unwrap()
+        .groups
+        .is_empty());
     let cancel = CancelToken::new();
     let trigger = cancel.clone();
     let provider = move |_: &Path| {
@@ -305,7 +362,14 @@ fn test_current_provider_runs_before_project_enumeration() {
 fn test_empty_query_and_missing_root() {
     let f = Files::new();
     assert_eq!(f.search("", |_| {}).total_matches, 0);
-    let result = search(Path::new("/does/not/exist"), "x", &SearchOptions::default(), None, None).unwrap();
+    let result = search(
+        Path::new("/does/not/exist"),
+        "x",
+        &SearchOptions::default(),
+        None,
+        None,
+    )
+    .unwrap();
     assert!(result.groups.is_empty());
 }
 
@@ -344,7 +408,10 @@ fn test_quick_switcher_listing_skips_excluded_and_hidden() {
             .collect()
     };
     assert_eq!(names(false), ["a.txt", "b.txt", "sub/c.txt"]);
-    assert_eq!(names(true), [".dot", "a.txt", "b.txt", ".hidden/y.txt", "sub/c.txt"]);
+    assert_eq!(
+        names(true),
+        [".dot", "a.txt", "b.txt", ".hidden/y.txt", "sub/c.txt"]
+    );
     assert_eq!(list_project_files(f.root(), true, 2).len(), 2);
 }
 
@@ -388,7 +455,9 @@ fn setup() -> Fixture {
 
 fn wait_scan(panel: &SearchPanel) {
     let panel = panel.clone();
-    pump_until("search to finish", move || !panel.timeout_pending() && !panel.is_searching());
+    pump_until("search to finish", move || {
+        !panel.timeout_pending() && !panel.is_searching()
+    });
 }
 
 fn row_text(panel: &SearchPanel, path: &str, column: i32) -> String {
@@ -409,14 +478,23 @@ fn escape_key() -> gdk::keys::Key {
 fn test_pages_and_clear() {
     run(|| {
         let f = setup();
-        assert_eq!(f.panel.stack().visible_child_name().as_deref(), Some("content"));
+        assert_eq!(
+            f.panel.stack().visible_child_name().as_deref(),
+            Some("content")
+        );
         f.panel.entry().set_text("needle");
-        assert_eq!(f.panel.stack().visible_child_name().as_deref(), Some("results"));
+        assert_eq!(
+            f.panel.stack().visible_child_name().as_deref(),
+            Some("results")
+        );
         wait_scan(&f.panel);
         assert_eq!(f.panel.results().total_matches, 4);
         f.panel.clear();
         assert_eq!(f.panel.query(), "");
-        assert_eq!(f.panel.stack().visible_child_name().as_deref(), Some("content"));
+        assert_eq!(
+            f.panel.stack().visible_child_name().as_deref(),
+            Some("content")
+        );
     });
 }
 
@@ -445,16 +523,21 @@ fn test_signal_match_and_file_name() {
         let f = setup();
         let received = Rc::new(RefCell::new(Vec::new()));
         let sink = received.clone();
-        f.panel.connect_result_activated(move |_, path, line, column, length| {
-            sink.borrow_mut().push((path.to_path_buf(), line, column, length));
-        });
+        f.panel
+            .connect_result_activated(move |_, path, line, column, length| {
+                sink.borrow_mut()
+                    .push((path.to_path_buf(), line, column, length));
+            });
         f.panel.search_now(Some("needle"));
         wait_scan(&f.panel);
         let tree = f.panel.tree();
         let column = tree.column(0).unwrap();
         tree.row_activated(&gtk::TreePath::from_string("0:1"), &column);
         tree.row_activated(&gtk::TreePath::from_string("2:0"), &column);
-        assert_eq!(*received.borrow(), [(f.a.clone(), 0, 7, 6), (f.name.clone(), 0, 0, 0)]);
+        assert_eq!(
+            *received.borrow(),
+            [(f.a.clone(), 0, 7, 6), (f.name.clone(), 0, 0, 0)]
+        );
     });
 }
 
@@ -479,7 +562,10 @@ fn test_group_activation_toggles() {
 fn test_escape_entry_and_list() {
     run(|| {
         let f = setup();
-        for widget in [f.panel.entry().upcast::<gtk::Widget>(), f.panel.tree().upcast()] {
+        for widget in [
+            f.panel.entry().upcast::<gtk::Widget>(),
+            f.panel.tree().upcast(),
+        ] {
             f.panel.search_now(Some("needle"));
             assert!(press(&widget, escape_key(), gdk::ModifierType::empty()));
             assert_eq!(f.panel.query(), "");
@@ -517,11 +603,18 @@ fn test_invalid_regex_message_sync_and_async() {
         f.panel.regex_button().set_active(true);
         f.panel.search_now(Some("["));
         let panel = f.panel.clone();
-        pump_until("error", move || panel.summary().text().starts_with("Invalid regular expression:"));
+        pump_until("error", move || {
+            panel
+                .summary()
+                .text()
+                .starts_with("Invalid regular expression:")
+        });
         f.panel.entry().set_text("(");
         wait_scan(&f.panel);
         let summary = f.panel.summary();
-        pump_until("second error", move || summary.text().starts_with("Invalid regular expression:"));
+        pump_until("second error", move || {
+            summary.text().starts_with("Invalid regular expression:")
+        });
         assert_eq!(row_count(&f.panel), 0);
     });
 }
@@ -542,7 +635,8 @@ fn test_markup_escaped_and_highlighted() {
 fn test_trimmed_markup_escapes_context_and_match() {
     run(|| {
         let f = setup();
-        f.files.write("a.py", format!("    {} & <needle> tail", "x".repeat(120)));
+        f.files
+            .write("a.py", format!("    {} & <needle> tail", "x".repeat(120)));
         f.panel.search_now(Some("<needle>"));
         wait_scan(&f.panel);
         let markup = row_text(&f.panel, "0:0", 2);
@@ -575,7 +669,11 @@ fn test_current_results_before_slow_scan_and_superseding_query() {
                     if first {
                         let (lock, cv) = &*gate;
                         let _ = cv
-                            .wait_timeout_while(lock.lock().unwrap(), std::time::Duration::from_secs(3), |open| !*open)
+                            .wait_timeout_while(
+                                lock.lock().unwrap(),
+                                std::time::Duration::from_secs(3),
+                                |open| !*open,
+                            )
                             .unwrap();
                     }
                 })),
@@ -604,7 +702,9 @@ fn test_current_results_before_slow_scan_and_superseding_query() {
         assert_eq!(f.panel.results().total_matches, 1);
         assert_eq!(f.panel.results().groups[0].path, f.name);
         // Explicit late delivery must be discarded as well.
-        assert!(!f.panel.deliver_snapshot(old_generation, SearchResults::default(), true));
+        assert!(!f
+            .panel
+            .deliver_snapshot(old_generation, SearchResults::default(), true));
         assert_eq!(f.panel.results().total_matches, 1);
         set_walk_hook(f.files.root(), None);
     });
@@ -624,7 +724,11 @@ fn test_destroy_during_scan() {
                     *entered.lock().unwrap() = true;
                     let (lock, cv) = &*gate;
                     let _ = cv
-                        .wait_timeout_while(lock.lock().unwrap(), std::time::Duration::from_secs(3), |open| !*open)
+                        .wait_timeout_while(
+                            lock.lock().unwrap(),
+                            std::time::Duration::from_secs(3),
+                            |open| !*open,
+                        )
                         .unwrap();
                 })),
             );
@@ -637,7 +741,9 @@ fn test_destroy_during_scan() {
         *gate.0.lock().unwrap() = true;
         gate.1.notify_all();
         pump(60);
-        assert!(!f.panel.deliver_snapshot(generation, f.panel.results(), true));
+        assert!(!f
+            .panel
+            .deliver_snapshot(generation, f.panel.results(), true));
         set_walk_hook(f.files.root(), None);
     });
 }
@@ -670,13 +776,18 @@ fn test_root_provider_focus_and_down() {
         wait_scan(&f.panel);
         assert!(f.panel.results().groups.is_empty());
         f.panel.set_root(f.files.root());
-        f.panel.set_text_provider(Some(Rc::new(|_| Some("buffer".to_owned()))));
+        f.panel
+            .set_text_provider(Some(Rc::new(|_| Some("buffer".to_owned()))));
         f.panel.search_now(Some("buffer"));
         wait_scan(&f.panel);
         assert_eq!(f.panel.results().total_matches, 3);
         f.panel.focus_search();
         assert_eq!(f.panel.entry().selection_bounds(), Some((0, 6)));
-        assert!(press(&f.panel.entry(), gdk::keys::constants::Down, gdk::ModifierType::empty()));
+        assert!(press(
+            &f.panel.entry(),
+            gdk::keys::constants::Down,
+            gdk::ModifierType::empty()
+        ));
         let (path, _) = f.panel.tree().cursor();
         assert_eq!(path.map(|p| p.to_str().to_string()).as_deref(), Some("0"));
     });
@@ -708,7 +819,9 @@ fn test_enter_moves_focus_into_results() {
         f.panel.entry().set_text("needle");
         f.panel.entry().emit_by_name::<()>("activate", &[]);
         let panel = f.panel.clone();
-        pump_until("cursor in results", move || panel.tree().cursor().0.is_some());
+        pump_until("cursor in results", move || {
+            panel.tree().cursor().0.is_some()
+        });
         assert!(f.panel.tree().is_focus());
     });
 }
@@ -733,9 +846,15 @@ fn search_css_text() -> String {
 fn test_narrow_result_keeps_late_match_near_start_and_ellipsizes_tail() {
     run(|| {
         let provider = gtk::CssProvider::new();
-        provider.load_from_data(search_css_text().as_bytes()).unwrap();
+        provider
+            .load_from_data(search_css_text().as_bytes())
+            .unwrap();
         let screen = gdk::Screen::default().unwrap();
-        gtk::StyleContext::add_provider_for_screen(&screen, &provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::StyleContext::add_provider_for_screen(
+            &screen,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
         let f = setup();
         let line = format!("{}needle{} end", "context ".repeat(15), " tail".repeat(12));
         assert_eq!((line.find("needle").unwrap(), line.len()), (120, 190));
@@ -773,11 +892,18 @@ fn test_narrow_result_keeps_late_match_near_start_and_ellipsizes_tail() {
         // The navigator reserves a 12 px inset on either side.
         let t = tree.clone();
         pump_until("tree width", move || t.allocated_width() == 260 - 24);
-        let scroll = tree.parent().unwrap().downcast::<gtk::ScrolledWindow>().unwrap();
+        let scroll = tree
+            .parent()
+            .unwrap()
+            .downcast::<gtk::ScrolledWindow>()
+            .unwrap();
         let adjustment = scroll.hadjustment();
         assert!(adjustment.upper() <= adjustment.page_size());
         assert!(!scroll.hscrollbar().unwrap().is_child_visible());
-        assert!(column.cell_get_position(&number).unwrap().0 > 0 || column.cell_get_position(&number).unwrap().1 > 0);
+        assert!(
+            column.cell_get_position(&number).unwrap().0 > 0
+                || column.cell_get_position(&number).unwrap().1 > 0
+        );
         destroy(&window);
         gtk::StyleContext::remove_provider_for_screen(&screen, &provider);
     });
@@ -822,12 +948,18 @@ fn test_entry_geometry_native_clear_icon_and_focus_ring() {
         assert!(entry.icon_name(secondary).is_none());
         f.panel.search_now(Some("needle"));
         window.show_all();
-        assert_eq!(entry.icon_name(secondary).as_deref(), Some("edit-clear-symbolic"));
+        assert_eq!(
+            entry.icon_name(secondary).as_deref(),
+            Some("edit-clear-symbolic")
+        );
         assert!(entry.icon_is_activatable(secondary));
         let event = gdk::Event::new(gdk::EventType::ButtonRelease);
         entry.emit_by_name::<()>("icon-release", &[&secondary, &event]);
         assert_eq!(f.panel.query(), "");
-        assert_eq!(f.panel.stack().visible_child_name().as_deref(), Some("content"));
+        assert_eq!(
+            f.panel.stack().visible_child_name().as_deref(),
+            Some("content")
+        );
         window.show_all();
         assert!(entry.icon_name(secondary).is_none());
         assert_eq!(entry.allocated_height(), 30);
@@ -869,13 +1001,18 @@ fn test_result_rows_share_geometry_and_rounded_overlay_in_both_themes() {
             impro_ui::apply_theme(theme, None, None, None).unwrap();
             let column = tree.column(0).unwrap();
             let area = tree.background_area(Some(&path), Some(&column));
-            let group_area = tree.background_area(Some(&gtk::TreePath::from_string("0")), Some(&column));
+            let group_area =
+                tree.background_area(Some(&gtk::TreePath::from_string("0")), Some(&column));
             assert!((24..=26).contains(&area.height()), "{}", area.height());
             assert_eq!(group_area.height(), area.height());
             let sidebar = rgb(&theme.ui["sidebar_bg"]);
             let overlay = rgb(&theme.ui["overlay"]);
             let mix = |a: u8, b: u8| (f64::from(a) * 0.933 + f64::from(b) * 0.067).round() as u8;
-            let tint = (mix(sidebar.0, overlay.0), mix(sidebar.1, overlay.1), mix(sidebar.2, overlay.2));
+            let tint = (
+                mix(sidebar.0, overlay.0),
+                mix(sidebar.1, overlay.1),
+                mix(sidebar.2, overlay.2),
+            );
             let (x, y) = tree.convert_bin_window_to_widget_coords(area.x(), area.y());
             let (t, w) = (tree.clone(), window.clone());
             pump_until("corner is sidebar", move || pixel(&w, &t, x, y) == sidebar);
@@ -917,7 +1054,8 @@ fn attributes(list: &pango::AttrList) -> Attrs {
             }
             pango::AttrType::Foreground => {
                 if let Some(color) = attr.downcast_ref::<pango::AttrColor>().map(|a| a.color()) {
-                    seen.foregrounds.push((color.red(), color.green(), color.blue()));
+                    seen.foregrounds
+                        .push((color.red(), color.green(), color.blue()));
                 }
             }
             _ => {}
@@ -944,15 +1082,37 @@ fn test_group_and_match_attributes_follow_live_theme_switches() {
             column.cell_set_cell_data(&store, &group, false, false);
             let attrs: pango::AttrList = cell.property("attributes");
             let seen = attributes(&attrs);
-            assert!(seen.absolute_size == Some(12288), "{}: {:?}", theme.id, seen);
-            assert!(seen.weight == Some(pango::Weight::Semibold), "{}: {:?}", theme.id, seen);
+            assert!(
+                seen.absolute_size == Some(12288),
+                "{}: {:?}",
+                theme.id,
+                seen
+            );
+            assert!(
+                seen.weight == Some(pango::Weight::Semibold),
+                "{}: {:?}",
+                theme.id,
+                seen
+            );
             let faint = pango::Color::parse(&theme.ui["faint"]).unwrap();
-            assert!(seen.foregrounds.contains(&(faint.red(), faint.green(), faint.blue())), "{}: {:?}", theme.id, seen);
+            assert!(
+                seen.foregrounds
+                    .contains(&(faint.red(), faint.green(), faint.blue())),
+                "{}: {:?}",
+                theme.id,
+                seen
+            );
             column.cell_set_cell_data(&store, &matched, false, false);
             let attrs: pango::AttrList = cell.property("attributes");
             let seen = attributes(&attrs);
             let accent = pango::Color::parse(&theme.ui["accent_text"]).unwrap();
-            assert!(seen.foregrounds.contains(&(accent.red(), accent.green(), accent.blue())), "{}: {:?}", theme.id, seen);
+            assert!(
+                seen.foregrounds
+                    .contains(&(accent.red(), accent.green(), accent.blue())),
+                "{}: {:?}",
+                theme.id,
+                seen
+            );
             assert!(seen.absolute_size.is_none(), "{:?}", seen);
             let shown: String = cell.property("text");
             assert_eq!(shown, "<needle> & more");
@@ -966,8 +1126,14 @@ fn test_search_toggles_have_compact_geometry_and_accessible_names() {
     run(|| {
         let mut f = setup();
         let window = show_styled_window(&mut f);
-        for (button, name) in [(f.panel.case_button(), "Match case"), (f.panel.regex_button(), "Use regular expression")] {
-            assert_eq!(atk::prelude::AtkObjectExt::name(&button.accessible().unwrap()).as_deref(), Some(name));
+        for (button, name) in [
+            (f.panel.case_button(), "Match case"),
+            (f.panel.regex_button(), "Use regular expression"),
+        ] {
+            assert_eq!(
+                atk::prelude::AtkObjectExt::name(&button.accessible().unwrap()).as_deref(),
+                Some(name)
+            );
             assert!(button.allocated_height() <= 30);
             assert!(button.allocated_width() <= 30);
             button.set_active(true);
@@ -981,7 +1147,8 @@ fn test_incremental_render_appends_without_clearing_and_keeps_file_names_last() 
     run(|| {
         let f = setup();
         for i in 0..30 {
-            f.files.write(&format!("many/f{i:02}.txt"), "needle one\nneedle two");
+            f.files
+                .write(&format!("many/f{i:02}.txt"), "needle one\nneedle two");
         }
         f.panel.search_now(Some("needle"));
         wait_scan(&f.panel);
@@ -989,7 +1156,10 @@ fn test_incremental_render_appends_without_clearing_and_keeps_file_names_last() 
         assert_eq!(groups, 33);
         let last = row_text(&f.panel, &(groups - 1).to_string(), 7);
         assert_eq!(last, "group");
-        assert_eq!(row_text(&f.panel, &(groups - 1).to_string(), 2), "<b>File names</b>");
+        assert_eq!(
+            row_text(&f.panel, &(groups - 1).to_string(), 2),
+            "<b>File names</b>"
+        );
         assert!(f.panel.summary().text().contains("results in"));
     });
 }
