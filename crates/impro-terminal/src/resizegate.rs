@@ -70,7 +70,8 @@ mod imp {
                 obj.imp().destroyed.set(true);
                 obj.cancel_timer();
                 obj.stop_waiting();
-                obj.imp().terminals.borrow_mut().clear();
+                let terminals = std::mem::take(&mut *obj.imp().terminals.borrow_mut());
+                drop(terminals);
             });
             obj.connect_add(|obj, _| obj.child_changed());
             obj.connect_remove(|obj, _| obj.child_changed());
@@ -78,7 +79,8 @@ mod imp {
         fn dispose(&self) {
             self.obj().cancel_timer();
             self.obj().stop_waiting();
-            self.terminals.borrow_mut().clear();
+            let terminals = std::mem::take(&mut *self.terminals.borrow_mut());
+            drop(terminals);
         }
     }
     impl ResizeGate {

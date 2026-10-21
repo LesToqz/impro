@@ -143,6 +143,13 @@ impl Startup {
         rx.attach(None, move |command| {
             if let Some(s) = weak.upgrade() {
                 if !s.cancelled.get() {
+                    if let Some(p) = s.pane.upgrade() {
+                        let name = std::path::Path::new(&command.0)
+                            .file_name()
+                            .and_then(|v| v.to_str())
+                            .unwrap_or("bash");
+                        p.header.set_shell_name(name);
+                    }
                     *s.command.borrow_mut() = Some(command);
                     if s.fallback_ready.get() {
                         s.spawn();

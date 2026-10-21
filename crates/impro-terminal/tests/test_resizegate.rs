@@ -284,7 +284,12 @@ fn test_background_padding_and_native_child_clipping_pixels() {
         assert!(f.g.set_background("invalid").is_err());
         let _t = f.hold(10000);
         allocate(&f.g, 300, 150);
-        pump(40);
+        poll(|| {
+            f.g.window()
+                .unwrap()
+                .pixbuf(270, 130, 1, 1)
+                .is_some_and(|p| p.read_pixel_bytes()[..3] == [68, 85, 102])
+        });
         let pix = f.g.window().unwrap().pixbuf(270, 130, 1, 1).unwrap();
         assert_eq!(&pix.read_pixel_bytes()[..3], &[68, 85, 102]);
         assert_eq!(f.c.allocated_width(), 200);

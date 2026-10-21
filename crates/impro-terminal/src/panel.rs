@@ -170,7 +170,13 @@ mod imp {
                 scrollback: Cell::new(10000),
                 bell: Cell::new(false),
                 copy_on_select: Cell::new(false),
-                palette: RefCell::new(impro_core::themes::get_theme(None).terminal.clone()),
+                palette: RefCell::new({
+                    let mut colors = impro_core::themes::get_theme(Some("dark-plus"))
+                        .terminal
+                        .clone();
+                    colors.cursor.clear();
+                    colors
+                }),
                 body: RefCell::new(None),
                 overlay: RefCell::new(None),
                 add: RefCell::new(None),
@@ -1414,7 +1420,8 @@ impl TerminalPanel {
             crate::disconnect(&c, h);
         }
         self.imp().commit_pending.set(false);
-        self.imp().factories.borrow_mut().clear();
+        let factories = std::mem::take(&mut *self.imp().factories.borrow_mut());
+        drop(factories);
         for p in panes.into_iter().chain(closing) {
             p.closed.set(true);
             p.shutdown();

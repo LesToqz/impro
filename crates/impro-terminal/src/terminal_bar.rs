@@ -204,7 +204,8 @@ pub struct PaneHeader {
     pub label_button: gtk::Button,
     pub fullscreen_button: IconButton,
     pub delete_button: IconButton,
-    shell_name: String,
+    shell_name: Rc<RefCell<String>>,
+    number: Rc<Cell<usize>>,
     kind: String,
 }
 impl PaneHeader {
@@ -245,7 +246,8 @@ impl PaneHeader {
             label_button,
             fullscreen_button,
             delete_button,
-            shell_name: shell_name.into(),
+            shell_name: Rc::new(RefCell::new(shell_name.into())),
+            number: Rc::new(Cell::new(1)),
             kind: kind.into(),
         };
         obj.set_number(1);
@@ -254,11 +256,16 @@ impl PaneHeader {
     pub fn text(&self) -> String {
         self.label.text().into()
     }
+    pub fn set_shell_name(&self, name: &str) {
+        *self.shell_name.borrow_mut() = name.into();
+        self.set_number(self.number.get());
+    }
     pub fn set_number(&self, position: usize) {
+        self.number.set(position);
         self.label.set_text(&match self.kind.as_str() {
             "graph" => "Graph view".into(),
             "gitgraph" => "Git graph".into(),
-            _ => format!("{}{position}", self.shell_name),
+            _ => format!("{}{position}", self.shell_name.borrow()),
         });
     }
     pub fn set_active(&self, value: bool) {
@@ -492,6 +499,7 @@ impl AddButton {
 }
 struct ToastInner {
     label: gtk::Label,
+    leaving: Cell<bool>,
     timer: RefCell<Option<glib::SourceId>>,
     destroyed: Cell<bool>,
 }
@@ -506,6 +514,7 @@ impl LimitToast {
         label.set_no_show_all(true);
         let obj = Self(Rc::new(ToastInner {
             label,
+            leaving: Cell::new(false),
             timer: RefCell::new(None),
             destroyed: Cell::new(false),
         }));
@@ -526,6 +535,7 @@ impl LimitToast {
                 if let Some(s) = s {
                     s.remove();
                 }
+                o.leaving.set(false);
                 motion::fade(l, false, 0, true, None);
                 l.set_opacity(1.0);
             }
@@ -546,20 +556,24 @@ impl LimitToast {
         if let Some(s) = old {
             s.remove();
         }
-        motion::slide_in(&self.0.label, 8, ENTER_MS, None);
+        if self.0.leaving.replace(false) || !self.0.label.is_visible() {
+            motion::slide_in(&self.0.label, 8, ENTER_MS, None);
+        }
         let weak = Rc::downgrade(&self.0);
         let id = glib::timeout_add_local_once(Duration::from_millis(SHOW_MS), move || {
             if let Some(o) = weak.upgrade() {
                 o.timer.borrow_mut().take();
-                let weak = o.label.downgrade();
+                o.leaving.set(true);
+                let weak = Rc::downgrade(&o);
                 motion::fade(
                     &o.label,
                     false,
                     FADE_MS,
                     true,
                     Some(Box::new(move || {
-                        if let Some(l) = weak.upgrade() {
-                            l.set_opacity(1.0);
+                        if let Some(o) = weak.upgrade() {
+                            o.leaving.set(false);
+                            o.label.set_opacity(1.0);
                         }
                     })),
                 );

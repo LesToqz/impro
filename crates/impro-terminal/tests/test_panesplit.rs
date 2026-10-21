@@ -283,3 +283,22 @@ fn test_shell_born_after_uneven_layout_uses_final_grid() {
         d.assert_prompt();
     });
 }
+#[test]
+fn test_real_webkit_resize_keeps_page_state_and_pause_resume() {
+    let exe = std::env::current_exe().unwrap();
+    let qa = exe
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("examples/webkit_host_qa");
+    let result = std::process::Command::new(qa)
+        .env("G_DEBUG", "fatal-criticals")
+        .output()
+        .expect("cargo test builds QA example; build --examples before selecting only this test");
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+}

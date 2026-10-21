@@ -74,11 +74,16 @@ fn terminal_performance() {
         let construction = start.elapsed().as_secs_f64() * 1000.;
         poll(|| paints.borrow().len() == 6);
         let first_paint = start.elapsed().as_secs_f64() * 1000.;
-        d.ready();
+        poll(|| d.panel.panes().iter().all(|p| p.pid().is_some()));
         let open_ms = start.elapsed().as_secs_f64() * 1000.;
+        pump(70);
         let open_rss = rss();
         println!("open-six construction-ms={construction:.3} all-first-paints-ms={first_paint:.3} async-shells-ready-ms={open_ms:.3} pane-paint-ms={:?} rss-kib={open_rss} delta-kib={}",paints.borrow(),open_rss as i64-baseline as i64);
 
+        println!(
+            "paint-budget-met={}",
+            paints.borrow().iter().all(|ms| *ms < 30.0)
+        );
         while d.panel.pane_count() > 1 {
             d.panel.close_current();
         }
@@ -117,6 +122,20 @@ fn terminal_performance() {
             .iter()
             .map(|p| p.gate.as_ref().unwrap().commit_count())
             .collect();
+        let resized = Rc::new(Cell::new(None::<Instant>));
+        for p in d.panel.panes() {
+            let resized = resized.clone();
+            let grid = Cell::new((0, 0));
+            p.terminal
+                .as_ref()
+                .unwrap()
+                .connect_size_allocate(move |_, a| {
+                    let size = (a.width(), a.height());
+                    if grid.replace(size) != size {
+                        resized.set(Some(Instant::now()));
+                    }
+                });
+        }
         let before_rss = rss();
         let start = Instant::now();
         ALLOCS.set(0);
@@ -127,8 +146,18 @@ fn terminal_performance() {
         ENABLE.set(false);
         let allocs = ALLOCS.get();
         let motion_ms = start.elapsed().as_secs_f64() * 1000.;
+        let moved = Instant::now();
         pointer(&handle, gdk::EventType::ButtonRelease, 1049.75);
-        pump(180);
+        poll(|| {
+            resized.get().is_some()
+                && d.panel.panes().iter().all(|p| {
+                    p.gate
+                        .as_ref()
+                        .is_some_and(|g| g.target() == g.committed() && !g.has_pending_sources())
+                })
+        });
+        let settle_ms = resized.get().unwrap().duration_since(moved).as_secs_f64() * 1000.;
+        let answered_ms = moved.elapsed().as_secs_f64() * 1000.;
         let commits: Vec<_> = d
             .panel
             .panes()
@@ -136,7 +165,7 @@ fn terminal_performance() {
             .zip(before_commits)
             .map(|(p, n)| p.gate.as_ref().unwrap().commit_count() - n)
             .collect();
-        println!("drag-200 motion-ms={motion_ms:.3} settle-ms={:.3} rust-allocations={allocs} gate-commits={commits:?} rss-before-kib={before_rss} rss-after-kib={}",start.elapsed().as_secs_f64()*1000.-180.,rss());
+        println!("drag-200 motion-ms={motion_ms:.3} allocation-settle-ms={settle_ms:.3} answers-settled-ms={answered_ms:.3} rust-allocations={allocs} gate-commits={commits:?} rss-before-kib={before_rss} rss-after-kib={}",rss());
         assert_eq!(allocs, 0);
         assert_eq!(body.pane_sizes()[0], initial[0] + 50);
         assert!(commits.iter().all(|n| *n <= 1));
