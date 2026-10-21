@@ -343,6 +343,28 @@ impl PaneSplit {
         }
         self.queue_resize();
     }
+    // The pointer-motion path reuses the press snapshot and existing ratio buffer.
+    fn move_from_sizes(&self, index: usize, delta: f64, sizes: &[i32]) {
+        if index + 1 >= sizes.len() || !delta.is_finite() {
+            return;
+        }
+        {
+            let mut layout = self.imp().layout.borrow_mut();
+            if layout.ratios.len() != sizes.len() {
+                return;
+            }
+            let total = sizes[index] + sizes[index + 1];
+            let floor = self.imp().minimum.get().min(total / 2);
+            let first = (sizes[index] as f64 + delta)
+                .round_ties_even()
+                .clamp(floor as f64, (total - floor) as f64);
+            for (r, s) in layout.ratios.iter_mut().zip(sizes) {
+                *r = *s as f64;
+            }
+            layout.ratios[index] = first;
+            layout.ratios[index + 1] = total as f64 - first;
+        }
+    }
     fn rebuild_handles(&self) {
         let generation = self.imp().generation.get().wrapping_add(1);
         self.imp().generation.set(generation);
@@ -411,6 +433,10 @@ impl PaneSplit {
                     h.grab_focus();
                     if e.event_type() == gdk::EventType::DoubleButtonPress {
                         d.borrow_mut().take();
+                        if h.has_grab() {
+                            h.grab_remove();
+                        }
+                        h.unset_state_flags(gtk::StateFlags::ACTIVE);
                         owner.equalize();
                     } else {
                         let (x, y) = e.root();
@@ -434,32 +460,30 @@ impl PaneSplit {
                 let Some((origin, sizes)) = state.as_ref() else {
                     return glib::Propagation::Proceed;
                 };
-                // No cloning or temporary vectors on the pointer-motion path.
-                {
-                    let mut layout = owner.imp().layout.borrow_mut();
-                    let (x, y) = e.root();
-                    let delta = if vertical { y } else { x } - origin;
-                    let total = sizes[index] + sizes[index + 1];
-                    let floor = owner.imp().minimum.get().min(total / 2);
-                    let first = (sizes[index] as f64 + delta)
-                        .round_ties_even()
-                        .clamp(floor as f64, (total - floor) as f64);
-                    for (r, s) in layout.ratios.iter_mut().zip(sizes) {
-                        *r = *s as f64;
-                    }
-                    layout.ratios[index] = first;
-                    layout.ratios[index + 1] = total as f64 - first;
-                }
+                let (x, y) = e.root();
+                owner.move_from_sizes(index, if vertical { y } else { x } - origin, sizes);
                 drop(state);
                 owner.queue_resize();
                 glib::Propagation::Stop
             });
             let d = drag.clone();
+            let weak = self.downgrade();
             h.connect_button_release_event(move |h, e| {
                 if e.button() != 1 {
                     return glib::Propagation::Proceed;
                 }
-                d.borrow_mut().take();
+                let state = d.borrow_mut().take();
+                let Some((origin, sizes)) = state else {
+                    return glib::Propagation::Proceed;
+                };
+                if let Some(owner) = weak
+                    .upgrade()
+                    .filter(|o| o.imp().generation.get() == generation)
+                {
+                    let (x, y) = e.root();
+                    owner.move_from_sizes(index, if vertical { y } else { x } - origin, &sizes);
+                    owner.queue_resize();
+                }
                 if h.has_grab() {
                     h.grab_remove();
                 }

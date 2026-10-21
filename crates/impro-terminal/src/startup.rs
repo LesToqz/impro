@@ -236,8 +236,8 @@ impl Startup {
         let state = self.clone();
         let terminal = t.downgrade();
         let cancellable = pane.cancellable.clone();
-        t.spawn_async(
-            cwd.to_str(),
+        t.spawn_async_path(
+            Some(&cwd),
             &[&shell, "-i"],
             &["TERM=xterm-256color", "COLORTERM=truecolor"],
             glib::SpawnFlags::DEFAULT,

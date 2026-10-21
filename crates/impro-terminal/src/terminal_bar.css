@@ -14,12 +14,12 @@
     border: 0; border-radius: 4px; box-shadow: none; text-shadow: none; outline-offset: -1px;
     min-height: 22px; min-width: 24px; padding: 0; }}
 .impro-terminal-header button {{ margin: 3px 0 3px 2px; }}
-.impro-terminal-header button:hover {{ background: {hover}; color: {ui['foreground']}; box-shadow: none; }}
+.impro-terminal-header button:hover {{ background: {header_hover}; color: {ui['foreground']}; box-shadow: none; }}
 .impro-terminal-header button.impro-terminal-delete:hover {{ background: alpha({ui['danger']}, 0.15);
     color: {ui['danger']}; }}
 .impro-terminal-header .impro-terminal-header-label {{ min-width: 0; margin: 0; padding: 0 12px;
     border-radius: 0; font-size: 13px; color: {ui['muted']}; }}
-.impro-terminal-header .impro-terminal-header-label:hover {{ background: {hover};
+.impro-terminal-header .impro-terminal-header-label:hover {{ background: {header_hover};
     color: {ui['foreground']}; }}
 .impro-terminal-header.active .impro-terminal-header-label {{ color: {ui['foreground']}; }}
 .impro-terminal-header.active.focused .impro-terminal-header-label {{
@@ -35,7 +35,7 @@
 .impro-pane-chooser list {{ background: transparent; padding: 0; }}
 .impro-pane-chooser row {{ min-height: 28px; padding: 0 8px; border: 0;
     border-radius: {item_radius}px; color: {ui['foreground']}; }}
-.impro-pane-chooser row:hover {{ background: {hover}; }}
+.impro-pane-chooser row:hover {{ background: {header_hover}; }}
 .impro-pane-chooser row:selected {{ background: {ui['hover']}; color: {ui['hover_fg']}; }}
 .impro-terminal-toast {{ background: alpha(#000000, 0.9); color: {notice_fg}; font-size: 13px;
     font-feature-settings: "tnum"; border: 0; border-radius: 8px; padding: 8px 12px;

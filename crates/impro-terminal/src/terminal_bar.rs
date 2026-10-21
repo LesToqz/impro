@@ -1,4 +1,5 @@
 //! Compact pane chrome, chooser and informational limit notice.
+use glib::translate::*;
 use gtk::prelude::*;
 use impro_core::themes::{self, UiColors};
 use impro_ui::motion::{self, AnimateOptions, MotionKey};
@@ -15,7 +16,10 @@ pub const FADE_MS: u32 = 128;
 
 pub fn css(ui: &UiColors) -> String {
     let mut values = ui.clone();
-    values.insert("hover".into(), format!("alpha({}, 0.067)", ui["overlay"]));
+    values.insert(
+        "header_hover".into(),
+        format!("alpha({}, 0.067)", ui["overlay"]),
+    );
     values.insert(
         "notice_fg".into(),
         themes::legible(&ui["warning"], "#1a1a1a", 4.5),
@@ -417,6 +421,12 @@ impl AddButton {
         if self.0.kinds.borrow().is_empty() {
             return;
         }
+        unsafe {
+            gtk::ffi::gtk_popover_set_transitions_enabled(
+                self.0.popover.to_glib_none().0,
+                motion::animations_enabled().into_glib(),
+            );
+        }
         self.0.popover.show_all();
         if let Some(row) = self.0.choices.row_at_index(0) {
             self.0.choices.select_row(Some(&row));
@@ -516,7 +526,7 @@ impl LimitToast {
                 if let Some(s) = s {
                     s.remove();
                 }
-                l.hide();
+                motion::fade(l, false, 0, true, None);
                 l.set_opacity(1.0);
             }
         });

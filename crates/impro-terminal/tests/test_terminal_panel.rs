@@ -507,3 +507,133 @@ fn test_kill_releases_widgets_and_handlers() {
         poll(|| weak.upgrade().is_none() && terminal.upgrade().is_none());
     });
 }
+#[test]
+fn test_discrete_layout_commits_without_waiting_for_pace() {
+    run(|| {
+        let d = Dock::new(false, 2);
+        d.ready();
+        for p in d.panel.panes() {
+            p.gate.as_ref().unwrap().set_pace_ms(10000);
+        }
+        d.panel.toggle_maximize();
+        poll(|| {
+            let p = d.panel.current_pane().unwrap();
+            p.gate.as_ref().unwrap().committed() == p.gate.as_ref().unwrap().target()
+                && p.frame.allocated_width() > 1100
+        });
+        d.panel.restore();
+        poll(|| {
+            d.panel
+                .panes()
+                .iter()
+                .all(|p| p.gate.as_ref().unwrap().committed() == p.gate.as_ref().unwrap().target())
+        });
+    });
+}
+#[test]
+fn test_graph_lifecycle_numbering_focus_and_terminal_settings() {
+    run(|| {
+        for stacked in [false, true] {
+            let d = Dock::new(stacked, 1);
+            let e = gtk::Entry::new();
+            d.panel.add_graph(Some(e.upcast_ref()));
+            d.panel.new_terminal();
+            assert_eq!(d.panel.header_labels(), ["bash1", "Graph view", "bash2"]);
+            assert_eq!(d.panel.graph_count(), 1);
+            d.panel.set_font_size(13);
+            d.panel.set_scrollback(20000);
+            assert_eq!(d.panel.graph_views(), [e.upcast::<gtk::Widget>()]);
+            d.panel.close_kind("graph");
+            assert!(!d.panel.has_graph());
+            assert_eq!(d.panel.header_labels(), ["bash1", "bash2"]);
+        }
+    });
+}
+#[test]
+fn test_chooser_factory_is_lazy_and_duplicate_graph_focuses_without_limit() {
+    run(|| {
+        let d = Dock::new(false, 0);
+        let calls = Rc::new(Cell::new(0));
+        let c = calls.clone();
+        d.panel.set_factory("graph", move || {
+            c.set(c.get() + 1);
+            gtk::Entry::new().upcast()
+        });
+        assert_eq!(calls.get(), 0);
+        assert!(d.panel.add_graph(None));
+        d.panel.set_max_panes(1);
+        assert!(!d.panel.add_graph(None));
+        assert_eq!(calls.get(), 1);
+        assert!(!d.panel.toast().widget().is_visible());
+    });
+}
+#[test]
+fn test_chooser_activation_keeps_new_pane_focus() {
+    run(|| {
+        let d = Dock::new(false, 1);
+        d.ready();
+        d.panel.set_factory("graph", || gtk::Entry::new().upcast());
+        d.panel.add_button().open();
+        d.panel.add_button().choose("graph");
+        pump(40);
+        assert_eq!(
+            d.window.focused_widget(),
+            d.panel.graph_views().first().cloned()
+        );
+    });
+}
+#[test]
+fn test_last_graph_close_and_destroyed_reject() {
+    run(|| {
+        let d = Dock::new(false, 0);
+        d.panel.add_graph(Some(gtk::Entry::new().upcast_ref()));
+        let calls = Rc::new(Cell::new(0));
+        let c = calls.clone();
+        d.panel.connect_last_closed(move |_| c.set(c.get() + 1));
+        d.panel.close_kind("graph");
+        assert_eq!(calls.get(), 1);
+        unsafe {
+            d.panel.destroy();
+        }
+        assert!(!d.panel.add_graph(Some(gtk::Entry::new().upcast_ref())));
+    });
+}
+#[test]
+fn test_gitgraph_lifecycle_limits_focus_and_numbering() {
+    run(|| {
+        let d = Dock::new(false, 1);
+        d.panel.add_gitgraph(Some(gtk::Entry::new().upcast_ref()));
+        d.panel.add_graph(Some(gtk::Entry::new().upcast_ref()));
+        assert_eq!(
+            d.panel.header_labels(),
+            ["bash1", "Git graph", "Graph view"]
+        );
+        d.panel.set_max_panes(3);
+        assert!(!d.panel.new_terminal());
+        assert_eq!(d.panel.toast().widget().text(), "Cannot add (limit 3)");
+        assert!(d.panel.has_gitgraph());
+        d.panel.close_kind("gitgraph");
+        assert_eq!(d.panel.gitgraph_count(), 0);
+    });
+}
+#[test]
+fn test_gitgraph_animation_releases_limit_and_shuts_down_immediately() {
+    run(|| {
+        let d = Dock::new(false, 0);
+        let calls = Rc::new(Cell::new(0));
+        let c = calls.clone();
+        d.panel.add_custom_pane(
+            "gitgraph",
+            &gtk::Entry::new(),
+            Some(Box::new(move || c.set(c.get() + 1))),
+        );
+        pump(40);
+        d.panel.set_animation_ms(100);
+        d.panel.set_max_panes(1);
+        d.panel.close_current();
+        assert_eq!(calls.get(), 1);
+        assert!(d.panel.new_terminal());
+        poll(|| d.panel.closing_panes().is_empty());
+        assert_eq!(calls.get(), 1);
+    });
+}

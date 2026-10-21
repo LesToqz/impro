@@ -215,7 +215,10 @@ mod imp {
             obj.set_vexpand(true);
             obj.style_context().add_class("impro-terminal");
             obj.connect_destroy(|obj| obj.shutdown());
-            obj.connect_map(|obj| obj.commit_layout());
+            obj.connect_map(|obj| {
+                obj.update_layout();
+                obj.commit_layout();
+            });
             obj.connect_unmap(|obj| obj.commit_layout());
         }
         fn dispose(&self) {
@@ -736,6 +739,7 @@ impl TerminalPanel {
         }
         pane.frame.show_all();
         self.update_layout();
+
         self.commit_layout();
         if animated && !pane.is_closed() {
             let f = terminal_bar::fade(&pane.frame, 0.0, 1.0, self.imp().animation_ms.get(), None);

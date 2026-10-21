@@ -41,9 +41,33 @@ impl Terminal {
         cancellable: Option<&gio::Cancellable>,
         callback: F,
     ) {
+        self.spawn_async_path(
+            cwd.map(std::path::Path::new),
+            argv,
+            envv,
+            flags,
+            timeout,
+            cancellable,
+            callback,
+        );
+    }
+
+    /// Path-preserving variant of spawn_async, including non-UTF-8 Unix directories.
+    #[allow(clippy::too_many_arguments)]
+    pub fn spawn_async_path<F: FnOnce(Result<glib::Pid, glib::Error>) + 'static>(
+        &self,
+        cwd: Option<&std::path::Path>,
+        argv: &[&str],
+        envv: &[&str],
+        flags: glib::SpawnFlags,
+        timeout: i32,
+        cancellable: Option<&gio::Cancellable>,
+        callback: F,
+    ) {
+        use std::os::unix::ffi::OsStrExt;
         if argv.is_empty()
             || argv.iter().chain(envv.iter()).any(|s| s.contains('\0'))
-            || cwd.is_some_and(|s| s.contains('\0'))
+            || cwd.is_some_and(|s| s.as_os_str().as_bytes().contains(&0))
         {
             callback(Err(glib::Error::new(
                 gio::IOErrorEnum::InvalidArgument,

@@ -96,6 +96,19 @@ mod imp {
         }
     }
     impl WidgetImpl for ResizeGate {
+        fn draw(&self, cr: &gtk::cairo::Context) -> glib::Propagation {
+            let obj = self.obj();
+            gtk::render_background(
+                &obj.style_context(),
+                cr,
+                0.0,
+                0.0,
+                obj.allocated_width() as f64,
+                obj.allocated_height() as f64,
+            );
+            self.parent_draw(cr)
+        }
+
         fn preferred_width(&self) -> (i32, i32) {
             self.preferred(false, None)
         }
@@ -258,6 +271,10 @@ impl ResizeGate {
         if !changed.is_empty() && !self.imp().destroyed.get() {
             self.wait_for(changed);
         }
+    }
+    /// Pace the next allocation against output from these terminal programs.
+    pub fn wait_for_programs(&self, terminals: &[Terminal]) {
+        self.wait_for(terminals.to_vec());
     }
     fn wait_for(&self, terminals: Vec<Terminal>) {
         self.stop_waiting();
