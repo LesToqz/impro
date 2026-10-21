@@ -26,3 +26,7 @@ Write `.ceo/report.md` (commit it last) with:
 Stop. Commit work in progress as `chore(<slug>): WIP`, write STATUS:
 BLOCKED with the exact reason and what you need. Do not guess around
 missing credentials, secrets, or product decisions.
+
+## Naming
+- Use only the project name given in the Port charter. Never use the former project name, nor any word on the
+  "Forbidden words" line of your brief, anywhere: code, comments, tests, docs, file names, commit messages.
