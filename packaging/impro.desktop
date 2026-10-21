@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=impro
+Comment=Edit project files with an integrated terminal
+Exec=impro
+Icon=impro
+Terminal=false
+Type=Application
+Categories=Development;IDE;TextEditor;
