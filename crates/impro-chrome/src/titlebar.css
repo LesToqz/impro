@@ -1,0 +1,39 @@
+
+headerbar.impro-titlebar, headerbar.impro-titlebar:backdrop {
+    background: {ui['sidebar_bg']}; color: {ui['titlebar_fg']}; min-height: 39px;
+    padding: 0; margin: 0; border: 0; border-bottom: 1px solid {ui['border']}; border-radius: 0;
+    box-shadow: none;
+}
+headerbar.impro-titlebar:backdrop { color: {ui['muted']}; }
+.impro-titlebar .impro-title { color: {ui['title_fg']}; font-size: 13px; font-weight: 600; }
+.impro-titlebar menubar {
+    background: transparent; color: inherit; padding: 0; margin: 0 0 0 6px;
+    border: 0; box-shadow: none;
+}
+.impro-titlebar menubar > menuitem {
+    color: inherit; font-size: 13px; padding: 4px 8px; min-height: 20px; margin: 0 1px;
+    border: 0; border-radius: 4px; box-shadow: none; transition: none;
+}
+.impro-titlebar menubar > menuitem:hover {
+    background: {hover}; color: {ui['titlebar_fg']}; box-shadow: none;
+}
+.impro-titlebar button.titlebutton,
+.impro-titlebar button.impro-settings-button {
+    background: transparent; color: {ui['muted']}; border: 0; box-shadow: none;
+    text-shadow: none; -gtk-icon-shadow: none; margin: 0; transition: none;
+}
+.impro-titlebar button.titlebutton {
+    border-radius: 0; min-width: 40px; min-height: 39px; padding: 0;
+}
+.impro-titlebar button.titlebutton image { -gtk-icon-transform: none; }
+.impro-titlebar button.impro-settings-button {
+    border-radius: 4px; -gtk-outline-radius: 4px; min-width: 16px; min-height: 16px; padding: 6px;
+}
+.impro-titlebar button.titlebutton:hover,
+.impro-titlebar button.impro-settings-button:hover { background: {hover}; color: {ui['foreground']}; }
+.impro-titlebar button.titlebutton:active,
+.impro-titlebar button.impro-settings-button:checked,
+.impro-titlebar button.impro-settings-button:active { background: {pressed}; color: {ui['foreground']}; }
+.impro-titlebar button.titlebutton.close:hover,
+.impro-titlebar button.titlebutton.close:active { background: {ui['danger']}; color: #ffffff; }
+.impro-titlebar separator { background: transparent; min-width: 0; margin: 0; }

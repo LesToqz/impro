@@ -1,0 +1,28 @@
+
+.impro-prompt-host { background: transparent; }
+.impro-prompt { background: {ui['bg']}; color: {ui['foreground']};
+    border: 1px solid {ui['border_hover']}; border-radius: 12px; box-shadow: {shadow}; }
+.impro-prompt entry.impro-prompt-input { background: transparent; color: {ui['foreground']};
+    border: 0; border-bottom: 1px solid {ui['sidebar_bg']}; border-radius: 12px 12px 0 0;
+    box-shadow: none; outline: none; font-size: 15px; min-height: 25px; padding: 12px 24px; }
+.impro-prompt entry.impro-prompt-input:focus { border-color: {ui['sidebar_bg']};
+    box-shadow: none; outline: none; }
+.impro-prompt entry.impro-prompt-input image { color: {ui['muted']}; }
+.impro-prompt scrolledwindow, .impro-prompt viewport,
+.impro-prompt list.impro-prompt-results { background: transparent; border: 0; }
+.impro-prompt list.impro-prompt-results row.impro-prompt-item { padding: 5px 12px;
+    border-radius: 4px; background: transparent; color: {ui['foreground']};
+    font-size: 15px; outline: none; transition: none; }
+.impro-prompt list.impro-prompt-results row.impro-prompt-item:hover { background: transparent; }
+.impro-prompt list.impro-prompt-results row.impro-prompt-item:selected,
+.impro-prompt list.impro-prompt-results row.impro-prompt-item:selected:hover {
+    background: alpha({ui['overlay']}, 0.067); color: {ui['foreground']}; }
+.impro-prompt row.impro-prompt-muted label.impro-prompt-title { color: {ui['muted']}; }
+.impro-prompt label.impro-prompt-detail { color: {ui['muted']}; font-size: 12px; }
+.impro-prompt label.impro-prompt-hotkey { background: alpha({ui['overlay']}, 0.067);
+    color: {ui['muted']}; font-size: 12px; padding: 2px 6px; border-radius: 999px; }
+.impro-prompt label.impro-prompt-empty { color: {ui['muted']}; font-size: 15px;
+    padding: 18px 12px; }
+.impro-prompt .impro-prompt-instructions { color: {ui['muted']}; font-size: 12px;
+    padding: 8px; border-top: 1px solid {ui['sidebar_bg']}; }
+.impro-prompt .impro-prompt-instructions label { color: {ui['muted']}; }
