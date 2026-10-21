@@ -58,6 +58,7 @@ impl ViewTab {
 #[derive(Clone)]
 struct Config {
     root: Option<PathBuf>,
+    font_family: Option<String>,
     font: i32,
     default_font: i32,
     line_numbers: bool,
@@ -73,9 +74,10 @@ struct Config {
 }
 impl Default for Config {
     fn default() -> Self {
-        let t = impro_core::themes::get_theme(Some("impro-dark"));
+        let t = impro_core::themes::get_theme(Some("dark-plus"));
         Self {
             root: None,
+            font_family: None,
             font: 11,
             default_font: 11,
             line_numbers: true,
@@ -103,7 +105,7 @@ mod imp {
     use super::*;
     #[derive(Default)]
     pub struct EditorPanel {
-        pub widgets: OnceCell<Widgets>,
+        pub(super) widgets: OnceCell<Widgets>,
         pub(super) config: RefCell<Config>,
         pub tabs: RefCell<Vec<Rc<EditorTab>>>,
         pub views: RefCell<BTreeMap<String, Rc<ViewTab>>>,
@@ -113,6 +115,8 @@ mod imp {
         pub announced: RefCell<Option<PathBuf>>,
         pub dirty: Cell<bool>,
         pub closed: Cell<bool>,
+        pub assembling: Cell<bool>,
+        pub root_revision: Cell<u64>,
         pub dialog: RefCell<Option<DialogHook>>,
         pub last_error: RefCell<Option<String>>,
     }
@@ -160,6 +164,7 @@ mod imp {
     impl WidgetImpl for EditorPanel {
         fn destroy(&self) {
             self.obj().shutdown();
+            self.parent_destroy();
         }
     }
     impl ContainerImpl for EditorPanel {}
@@ -175,7 +180,9 @@ macro_rules! config_get {($($method:ident:$field:ident->$ty:ty),*$(,)?)=>{$(pub 
 impl EditorPanel {
     pub fn new(root: Option<&Path>) -> Self {
         let this: Self = glib::Object::new();
-        this.imp().config.borrow_mut().root = root.map(file::absolute);
+        if root.is_some() {
+            this.set_root(root);
+        }
         this
     }
     fn widgets(&self) -> &Widgets {
@@ -254,18 +261,6 @@ impl EditorPanel {
                 status,
             })
             .ok();
-        let weak = self.downgrade();
-        notebook.connect_switch_page(move |_, _, _| {
-            if let Some(p) = weak.upgrade() {
-                // switch-page default handler runs after ordinary handlers.
-                let weak = p.downgrade();
-                glib::idle_add_local_once(move || {
-                    if let Some(p) = weak.upgrade() {
-                        p.switched();
-                    }
-                });
-            }
-        });
         // Use an after handler so external observers see the selected page immediately.
         let weak = self.downgrade();
         notebook.connect_local("switch-page", true, move |_| {
@@ -411,9 +406,9 @@ impl EditorPanel {
                 ],
             ),
             Prompt::Quit => (
-                "Save unsaved files before quitting?".into(),
+                "Save changes before quitting?".into(),
                 vec![
-                    ("Save", Response::Save),
+                    ("Save All", Response::Save),
                     ("Discard", Response::Discard),
                     ("Cancel", Response::Cancel),
                 ],
@@ -429,6 +424,11 @@ impl EditorPanel {
             gtk::ButtonsType::None,
             &text,
         );
+        if matches!(prompt, Prompt::Quit) {
+            dialog.set_message_type(gtk::MessageType::Warning);
+            dialog.set_secondary_text(Some("Unsaved changes will be lost if you discard them."));
+            dialog.set_default_response(gtk::ResponseType::Other(2));
+        }
         for (i, (label, _)) in choices.iter().enumerate() {
             dialog.add_button(label, gtk::ResponseType::Other(i as u16));
         }
@@ -528,7 +528,9 @@ impl EditorPanel {
         let tab = EditorTab::new(self, path, doc);
         self.imp().tabs.borrow_mut().push(tab.clone());
         let n = self.notebook();
+        self.imp().assembling.set(true);
         n.append_page(&tab.page, Some(&tab.header.widget));
+        self.imp().assembling.set(false);
         n.set_tab_reorderable(&tab.page, true);
         tab.page.show_all();
         tab.header.widget.show_all();
@@ -596,7 +598,7 @@ impl EditorPanel {
         true
     }
     fn switched(&self) {
-        if self.imp().closed.get() {
+        if self.imp().closed.get() || self.imp().assembling.get() {
             return;
         }
         let current = self.current_tab();
@@ -660,7 +662,7 @@ impl EditorPanel {
     }
     fn size_tabs(&self) {
         let n = self.notebook();
-        let width = ((n.allocated_width() - 16) / n.n_pages().max(1) as i32).clamp(120, 200) - 8;
+        let width = ((self.allocated_width() - 16) / n.n_pages().max(1) as i32).clamp(120, 200) - 8;
         for tab in self.tabs() {
             if tab.header.widget.width_request() != width {
                 tab.header.widget.set_size_request(width, 32);
@@ -721,7 +723,8 @@ impl EditorPanel {
         if self.imp().closed.get() {
             return false;
         }
-        if let Some(tab) = self.imp().views.borrow().get(key).cloned() {
+        let existing = self.imp().views.borrow().get(key).cloned();
+        if let Some(tab) = existing {
             self.notebook()
                 .set_current_page(self.notebook().page_num(&tab.page));
             self.focus_current();
@@ -759,7 +762,9 @@ impl EditorPanel {
             .borrow_mut()
             .insert(key.into(), tab.clone());
         let n = self.notebook();
+        self.imp().assembling.set(true);
         n.append_page(&tab.page, Some(&tab.header.widget));
+        self.imp().assembling.set(false);
         n.set_tab_reorderable(&tab.page, true);
         tab.page.show_all();
         tab.header.widget.show_all();
@@ -782,6 +787,17 @@ impl EditorPanel {
         }
     }
     pub fn close_view_tab(&self, key: &str) -> bool {
+        if self.imp().assembling.get() {
+            let exists = self.has_view_tab(key);
+            let weak = self.downgrade();
+            let key = key.to_owned();
+            glib::idle_add_local_once(move || {
+                if let Some(p) = weak.upgrade() {
+                    p.close_view_tab(&key);
+                }
+            });
+            return exists;
+        }
         let tab = self.imp().views.borrow_mut().remove(key);
         let Some(t) = tab else {
             return false;
@@ -844,6 +860,18 @@ impl EditorPanel {
         }
     }
     pub fn close_tab(&self, tab: &Rc<EditorTab>, done: impl FnOnce(bool) + 'static) {
+        if self.imp().assembling.get() {
+            let weak = self.downgrade();
+            let tab = tab.clone();
+            glib::idle_add_local_once(move || {
+                if let Some(p) = weak.upgrade() {
+                    p.close_tab(&tab, done);
+                } else {
+                    done(false);
+                }
+            });
+            return;
+        }
         if tab.is_closed() {
             done(true);
             return;
@@ -1072,20 +1100,57 @@ impl EditorPanel {
         let new = file::absolute(new.as_ref());
         for t in self.tabs() {
             if let Ok(rest) = t.path().strip_prefix(&old) {
-                t.set_path(new.join(rest));
+                let path = new.join(rest);
+                t.set_path(path.clone());
+                if crate::tab::is_markdown(&path) {
+                    let weak = Rc::downgrade(&t);
+                    let expected = path.clone();
+                    self.worker(
+                        move || path.canonicalize().unwrap_or(path),
+                        move |resolved| {
+                            if let Some(t) = weak.upgrade() {
+                                if !t.is_closed() && t.path() == expected {
+                                    t.set_resolved_path(resolved);
+                                }
+                            }
+                        },
+                    );
+                }
             }
         }
         self.update_status();
         self.announce_current();
     }
     pub fn set_root(&self, path: Option<&Path>) {
-        self.imp().config.borrow_mut().root = path.map(file::absolute);
+        let root = path.map(file::absolute);
+        self.imp().config.borrow_mut().root = root.clone();
+        let revision = self.imp().root_revision.get() + 1;
+        self.imp().root_revision.set(revision);
+        if let Some(root) = root {
+            let weak = self.downgrade();
+            self.worker(
+                move || root.canonicalize().unwrap_or(root),
+                move |resolved| {
+                    if let Some(p) = weak.upgrade() {
+                        if p.imp().root_revision.get() == revision {
+                            p.imp().config.borrow_mut().root = Some(resolved);
+                            p.reclassify_markdown();
+                        }
+                    }
+                },
+            );
+        }
+        self.reclassify_markdown();
+    }
+    fn reclassify_markdown(&self) {
         let focus = self
             .toplevel()
             .and_then(|w| w.downcast::<gtk::Window>().ok())
             .and_then(|w| w.focused_widget());
         for t in self.tabs() {
-            t.sync_markdown();
+            if crate::tab::is_markdown(&t.path()) {
+                t.sync_markdown();
+            }
         }
         if let Some(w) = focus {
             w.grab_focus();
@@ -1204,7 +1269,12 @@ impl EditorPanel {
     pub fn set_default_font_size(&self, size: i32) {
         self.imp().config.borrow_mut().default_font = size.clamp(MIN_FONT_SIZE, MAX_FONT_SIZE);
     }
+    pub fn font_family(&self) -> Option<String> {
+        self.imp().config.borrow().font_family.clone()
+    }
     pub fn set_font_family(&self, family: Option<&str>) {
+        self.imp().config.borrow_mut().font_family =
+            family.filter(|s| !s.is_empty()).map(str::to_owned);
         for t in self.tabs() {
             t.chrome.set_font_family(family);
             t.set_tab_stops();
@@ -1243,10 +1313,10 @@ impl EditorPanel {
         if let Some(v) = flag("md_readable_width") {
             self.set_md_readable_width(v);
         }
-        if let Some(v) = flag("slash_commands") {
+        if let Some(v) = flag("notes_slash_commands") {
             self.set_slash_commands(v);
         }
-        if let Some(v) = flag("selection_toolbar") {
+        if let Some(v) = flag("notes_selection_toolbar") {
             self.set_selection_toolbar(v);
         }
         if let Some(size) = values.get("editor_font_size").and_then(|v| v.as_i64()) {
@@ -1254,7 +1324,7 @@ impl EditorPanel {
             self.set_default_font_size(size);
             self.set_font_size(size);
         }
-        if let Some(family) = values.get("editor_font_family").and_then(|v| v.as_str()) {
+        if let Some(family) = values.get("editor_font").and_then(|v| v.as_str()) {
             self.set_font_family(Some(family));
         }
     }
@@ -1391,7 +1461,7 @@ impl EditorPanel {
                 let b = &t.buffer;
                 let cursor = b.iter_at_mark(&b.get_insert().expect("buffer insert mark"));
                 let selection = b.selection_bounds();
-                if ")] }\"'".contains(c) && selection.is_none() && cursor.char() == Some(c) {
+                if ")]}\"'".contains(c) && selection.is_none() && cursor.char() == Some(c) {
                     let mut next = cursor;
                     next.forward_char();
                     b.place_cursor(&next);

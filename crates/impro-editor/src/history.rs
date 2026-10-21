@@ -143,6 +143,9 @@ impl History {
             s.actions[s.index - 1].id
         };
     }
+    pub fn invalidate_saved(&self) {
+        self.0.state.borrow_mut().saved = u64::MAX;
+    }
     pub fn at_saved(&self) -> bool {
         let s = self.0.state.borrow();
         let id = if s.index == 0 {

@@ -61,6 +61,14 @@ pub fn layout_for(view: &gtk::TextView, text: &str) -> pango::Layout {
     layout.set_font_description(Some(&font));
     layout
 }
+/// A drawn row in viewport coordinates, exposed for geometry/accessibility adapters.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct GutterRow {
+    pub line: i32,
+    pub y: i32,
+    pub height: i32,
+    pub active: bool,
+}
 #[derive(Clone)]
 pub struct ViewChrome(Rc<Inner>);
 struct Inner {
@@ -81,12 +89,15 @@ struct Inner {
     font_family: RefCell<Option<String>>,
     digits: Cell<i32>,
     width: Cell<i32>,
+    measured: Cell<i32>,
     layouts: RefCell<Vec<pango::Layout>>,
     digit_width: Cell<i32>,
     provider: gtk::CssProvider,
     refreshing: Cell<bool>,
     painted_lines: Cell<usize>,
+    rows: RefCell<[GutterRow; 1024]>,
     destroyed: Cell<bool>,
+    sync_source: RefCell<Option<glib::SourceId>>,
 }
 impl ViewChrome {
     pub fn new(view: &gtk::TextView, colors: &UiColors) -> Self {
@@ -105,7 +116,7 @@ impl ViewChrome {
         let provider = gtk::CssProvider::new();
         view.style_context()
             .add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
-        let default = impro_core::themes::get_theme(Some("impro-dark"))
+        let default = impro_core::themes::get_theme(Some("dark-plus"))
             .chrome
             .clone();
         let fallback = gdk::RGBA::parse("#858585").expect("constant color");
@@ -134,12 +145,15 @@ impl ViewChrome {
             font_family: RefCell::new(None),
             digits: Cell::new(0),
             width: Cell::new(0),
+            measured: Cell::new(0),
             layouts: RefCell::new(Vec::new()),
             digit_width: Cell::new(8),
             provider,
             refreshing: Cell::new(false),
             painted_lines: Cell::new(0),
+            rows: RefCell::new([GutterRow::default(); 1024]),
             destroyed: Cell::new(false),
+            sync_source: RefCell::new(None),
         }));
         let weak = Rc::downgrade(&this.0);
         area.connect_draw(move |_, cr| {
@@ -180,6 +194,7 @@ impl ViewChrome {
             if let Some(i) = weak.upgrade() {
                 let h = Self(i);
                 h.rebuild_layouts();
+                h.refresh_colors();
                 h.update_width();
             }
         });
@@ -239,11 +254,17 @@ impl ViewChrome {
         this.refresh_tags();
         this
     }
+    pub fn drawing_area(&self) -> gtk::DrawingArea {
+        self.0.area.clone()
+    }
     pub fn width(&self) -> i32 {
         self.0.width.get()
     }
     pub fn painted_lines(&self) -> usize {
         self.0.painted_lines.get()
+    }
+    pub fn painted_rows(&self) -> Vec<GutterRow> {
+        self.0.rows.borrow()[..self.0.painted_lines.get().min(1024)].to_vec()
     }
     pub fn line_tag(&self) -> gtk::TextTag {
         self.0.line_tag.clone()
@@ -258,8 +279,18 @@ impl ViewChrome {
         self.0.provider.clone()
     }
     pub fn set_line_numbers(&self, enabled: bool) {
+        let Some(view) = self.0.view.upgrade() else {
+            return;
+        };
+        if !enabled && self.0.area.parent().is_some() {
+            self.0.area.hide();
+            view.remove(&self.0.area);
+        }
         self.0.line_numbers.set(enabled);
         self.update_width();
+        if enabled && self.0.area.parent().is_none() {
+            view.add_child_in_window(&self.0.area, gtk::TextWindowType::Left, 0, 0);
+        }
         self.update_labels();
     }
     pub fn set_highlight_line(&self, enabled: bool) {
@@ -306,19 +337,26 @@ impl ViewChrome {
         if let Some(c) = current.get("bracket_bg") {
             self.0.bracket_tag.set_background(Some(c));
         }
-        if let Some(c) = current
-            .get("gutter_fg")
-            .and_then(|s| gdk::RGBA::parse(s).ok())
-        {
+        self.refresh_colors();
+        self.0.area.queue_draw();
+    }
+    fn refresh_colors(&self) {
+        let colors = self.colors();
+        let theme = impro_ui::current_theme();
+        let foreground = theme
+            .as_ref()
+            .and_then(|t| t.ui.get("faint"))
+            .or_else(|| colors.get("gutter_fg"));
+        let active = theme
+            .as_ref()
+            .and_then(|t| t.ui.get("muted"))
+            .or_else(|| colors.get("gutter_fg_active"));
+        if let Some(c) = foreground.and_then(|s| gdk::RGBA::parse(s).ok()) {
             self.0.foreground.set(c);
         }
-        if let Some(c) = current
-            .get("gutter_fg_active")
-            .and_then(|s| gdk::RGBA::parse(s).ok())
-        {
+        if let Some(c) = active.and_then(|s| gdk::RGBA::parse(s).ok()) {
             self.0.active_foreground.set(c);
         }
-        self.0.area.queue_draw();
     }
     fn rebuild_layouts(&self) {
         let Some(view) = self.0.view.upgrade() else {
@@ -336,22 +374,26 @@ impl ViewChrome {
             .collect();
         self.0.digit_width.set(layouts[0].pixel_size().0);
         self.0.layouts.replace(layouts);
+        self.0.digits.set(0);
     }
     pub fn update_width(&self) {
         let (Some(v), Some(b)) = (self.0.view.upgrade(), self.0.buffer.upgrade()) else {
             return;
         };
         let digits = digits_for(b.line_count());
-        if digits != self.0.digits.get() || self.0.layouts.borrow().is_empty() {
+        if self.0.layouts.borrow().is_empty() {
+            self.rebuild_layouts();
+        }
+        if digits != self.0.digits.get() {
             self.0.digits.set(digits);
-            if self.0.layouts.borrow().is_empty() {
-                self.rebuild_layouts();
-            }
+            self.0.measured.set(
+                layout_for(&v, &"0".repeat(digits as usize)).pixel_size().0
+                    + PADDING_LEFT
+                    + PADDING_RIGHT,
+            );
         }
         let width = if self.0.line_numbers.get() {
-            layout_for(&v, &"0".repeat(digits as usize)).pixel_size().0
-                + PADDING_LEFT
-                + PADDING_RIGHT
+            self.0.measured.get()
         } else {
             0
         };
@@ -360,6 +402,27 @@ impl ViewChrome {
         }
     }
     pub fn update_labels(&self) {
+        if self.0.area.parent().is_none() || self.0.destroyed.get() {
+            return;
+        }
+        if self.0.sync_source.borrow().is_none() {
+            let weak = Rc::downgrade(&self.0);
+            let id = glib::idle_add_local_full(glib::Priority::LOW, move || {
+                if let Some(inner) = weak.upgrade() {
+                    inner.sync_source.take();
+                    let h = Self(inner);
+                    h.place_area();
+                }
+                glib::ControlFlow::Break
+            });
+            self.0.sync_source.replace(Some(id));
+        }
+        self.place_area();
+    }
+    fn place_area(&self) {
+        if self.0.destroyed.get() || self.0.area.parent().is_none() {
+            return;
+        }
         let Some(v) = self.0.view.upgrade() else {
             return;
         };
@@ -371,6 +434,15 @@ impl ViewChrome {
             self.0.area.set_size_request(width, rect.height().max(1));
         }
         v.move_child(&self.0.area, 0, rect.y());
+        let allocation = self.0.area.allocation();
+        if allocation.width() != width
+            || allocation.height() != rect.height().max(1)
+            || allocation.y() != 0
+        {
+            self.0
+                .area
+                .size_allocate(&gtk::Allocation::new(0, 0, width, rect.height().max(1)));
+        }
         self.0.area.set_visible(self.0.line_numbers.get());
         self.0.area.queue_draw();
     }
@@ -392,6 +464,7 @@ impl ViewChrome {
         }
         let dw = self.0.digit_width.get();
         let mut count = 0;
+        let mut rows = self.0.rows.borrow_mut();
         let mut previous = -1;
         loop {
             let (top, height) = v.line_yrange(&iter);
@@ -417,8 +490,18 @@ impl ViewChrome {
                 }
                 x -= dw;
             }
+            if let Some(row) = rows.get_mut(count) {
+                *row = GutterRow {
+                    line: iter.line(),
+                    y: top - rect.y(),
+                    height,
+                    active: iter.line() == active,
+                };
+            }
             count += 1;
-            if !iter.forward_line() {
+            let line = iter.line();
+            iter.forward_line();
+            if iter.line() == line {
                 break;
             }
         }
@@ -472,7 +555,7 @@ impl ViewChrome {
                 }
                 let mut a = here;
                 let mut z = here;
-                if "([{ ".contains(c) {
+                if "([{".contains(c) {
                     z.forward_chars(BRACKET_RANGE);
                 } else {
                     a.backward_chars(BRACKET_RANGE);
@@ -502,6 +585,9 @@ impl ViewChrome {
     pub fn destroy(&self) {
         if self.0.destroyed.replace(true) {
             return;
+        }
+        if let Some(id) = self.0.sync_source.take() {
+            id.remove();
         }
         if let Some(b) = self.0.buffer.upgrade() {
             for m in &self.0.marks {

@@ -16,6 +16,8 @@ use std::{
 pub struct EditorTab {
     panel: glib::WeakRef<EditorPanel>,
     path: RefCell<PathBuf>,
+    resolved_path: RefCell<PathBuf>,
+    language_name: Cell<&'static str>,
     pub buffer: gtk::TextBuffer,
     pub view: gtk::TextView,
     pub page: gtk::Overlay,
@@ -40,6 +42,7 @@ pub struct EditorTab {
     md_updating: Cell<bool>,
     restore: Rc<RefCell<Option<glib::SourceId>>>,
     pub(crate) revision: Cell<u64>,
+    paint_source: Rc<RefCell<Option<glib::SourceId>>>,
 }
 impl EditorTab {
     pub(crate) fn new(panel: &EditorPanel, path: PathBuf, doc: crate::file::Document) -> Rc<Self> {
@@ -70,9 +73,15 @@ impl EditorTab {
         page.add(&source_scroll);
         let header = TabHeader::new("Close file", None);
         let history = History::new(&buffer);
+        let language_name = highlight::language_name(
+            &path.to_string_lossy(),
+            doc.text.lines().next().unwrap_or(""),
+        );
         let tab = Rc::new(Self {
             panel: panel.downgrade(),
+            language_name: Cell::new(language_name),
             path: RefCell::new(path),
+            resolved_path: RefCell::new(doc.resolved_path),
             saved_chars: Cell::new(buffer.char_count()),
             buffer: buffer.clone(),
             view: view.clone(),
@@ -97,6 +106,7 @@ impl EditorTab {
             md_updating: Cell::new(false),
             restore: Rc::new(RefCell::new(None)),
             revision: Cell::new(0),
+            paint_source: Rc::new(RefCell::new(None)),
         });
         let weak = Rc::downgrade(&tab);
         tab.header.close.connect_clicked(move |_| {
@@ -124,6 +134,7 @@ impl EditorTab {
         buffer.connect_changed(move |_| {
             if let Some(t) = weak.upgrade() {
                 t.revision.set(t.revision.get() + 1);
+                t.flush_edit();
                 if !t.history.restoring() {
                     t.sync_dirty();
                 }
@@ -201,6 +212,7 @@ impl EditorTab {
                 t.set_tab_stops();
             }
         });
+        tab.chrome.set_font_family(panel.font_family().as_deref());
         tab.set_font_size(panel.font_size());
         tab.sync_markdown();
         tab.update_title();
@@ -242,7 +254,7 @@ impl EditorTab {
         let Some(root) = panel.root() else {
             return "standalone";
         };
-        let path = self.path();
+        let path = self.resolved_path.borrow().clone();
         if !path.starts_with(&root) {
             return "outside";
         }
@@ -257,7 +269,7 @@ impl EditorTab {
     pub fn language(&self) -> String {
         if is_markdown(&self.path()) {
             let location = self.markdown_location();
-            let label = match (
+            let mode = match (
                 matches!(location, "note" | "standalone"),
                 self.md_mode.get() == "preview",
             ) {
@@ -267,7 +279,7 @@ impl EditorTab {
                 (false, false) => "Code",
             };
             format!(
-                "Markdown ({label}){}",
+                "Markdown ({mode}){}",
                 if self.md_large.get() {
                     " — live preview disabled above 1 MiB"
                 } else {
@@ -275,41 +287,36 @@ impl EditorTab {
                 }
             )
         } else {
-            let mut end = self.buffer.start_iter();
-            end.forward_to_line_end();
-            highlight::language_name(
-                &self.path().to_string_lossy(),
-                &self
-                    .buffer
-                    .text(&self.buffer.start_iter(), &end, false)
-                    .unwrap_or_default(),
-            )
-            .into()
+            self.language_name.get().into()
         }
     }
     pub(crate) fn set_path(self: &Rc<Self>, path: PathBuf) {
+        self.resolved_path.replace(path.clone());
         self.path.replace(path);
         self.detect_language();
         self.sync_markdown();
         self.sync_slash_menu();
         self.update_title();
     }
+    pub(crate) fn set_resolved_path(self: &Rc<Self>, path: PathBuf) {
+        self.resolved_path.replace(path);
+        self.sync_markdown();
+    }
     fn detect_language(&self) {
-        let language = if self.md_mode.get() == "preview" {
-            "Plain Text".to_string()
-        } else {
-            let mut end = self.buffer.start_iter();
-            end.forward_to_line_end();
-            highlight::language_name(
-                &self.path().to_string_lossy(),
-                &self
-                    .buffer
-                    .text(&self.buffer.start_iter(), &end, false)
-                    .unwrap_or_default(),
-            )
-            .into()
-        };
-        self.highlighter.set_language(&language);
+        let mut end = self.buffer.start_iter();
+        end.forward_to_line_end();
+        let text = self
+            .buffer
+            .text(&self.buffer.start_iter(), &end, false)
+            .unwrap_or_default();
+        let language = highlight::language_name(&self.path().to_string_lossy(), &text);
+        self.language_name.set(language);
+        self.highlighter
+            .set_language(if self.md_mode.get() == "preview" {
+                "Plain Text"
+            } else {
+                language
+            });
     }
     pub fn update_title(&self) {
         let path = self.path();
@@ -339,6 +346,8 @@ impl EditorTab {
         self.deleted.set(false);
         if self.revision.get() == revision {
             self.history.mark_saved();
+        } else {
+            self.history.invalidate_saved();
         }
         self.sync_dirty();
         self.update_title();
@@ -382,6 +391,12 @@ impl EditorTab {
                 r.destroy();
             }
             self.md_mode.set("source");
+            self.view.set_editable(true);
+            self.view.set_cursor_visible(true);
+            if let Some(p) = self.panel.upgrade() {
+                self.chrome.set_line_numbers(p.line_numbers());
+                self.chrome.set_highlight_line(p.highlight_line());
+            }
             self.detect_language();
             self.sync_toggle(false);
             self.sync_slash_menu();
@@ -552,11 +567,37 @@ impl EditorTab {
         }
         impro_markdown::seltoolbar::sync(self);
     }
+    #[allow(deprecated)]
+    fn flush_edit(&self) {
+        if self.closed.get() || self.paint_source.borrow().is_some() || !self.view.is_mapped() {
+            return;
+        }
+        use glib::translate::ToGlibPtr;
+        let weak = self.view.downgrade();
+        let source = self.paint_source.clone();
+        let id = glib::idle_add_local_full(glib::Priority::from(130), move || {
+            source.take();
+            if let Some(view) = weak.upgrade() {
+                if view.is_mapped() {
+                    if let Some(window) = gtk::prelude::WidgetExt::window(&view) {
+                        unsafe {
+                            gdk::ffi::gdk_window_process_updates(window.to_glib_none().0, 1);
+                        }
+                    }
+                }
+            }
+            glib::ControlFlow::Break
+        });
+        self.paint_source.replace(Some(id));
+    }
     pub(crate) fn destroy(&self) {
         if self.closed.replace(true) {
             return;
         }
         if let Some(id) = self.restore.take() {
+            id.remove();
+        }
+        if let Some(id) = self.paint_source.take() {
             id.remove();
         }
         if let Some(r) = self.md_renderer.take() {

@@ -15,6 +15,7 @@ pub struct Document {
     pub text: String,
     pub ending: &'static str,
     pub mtime: SystemTime,
+    pub resolved_path: PathBuf,
 }
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
@@ -27,6 +28,7 @@ pub fn detect_line_ending(text: &str) -> &'static str {
     }
 }
 pub fn read_file(path: impl AsRef<Path>) -> io::Result<Document> {
+    let path = path.as_ref();
     let stream = fs::OpenOptions::new()
         .read(true)
         .custom_flags(libc::O_NONBLOCK)
@@ -54,6 +56,7 @@ pub fn read_file(path: impl AsRef<Path>) -> io::Result<Document> {
         ending: detect_line_ending(&text),
         text: text.replace("\r\n", "\n"),
         mtime: meta.modified()?,
+        resolved_path: path.canonicalize().unwrap_or_else(|_| absolute(path)),
     })
 }
 /// Follow symlinks, preserve mode, sync and replace in the destination directory.
@@ -69,13 +72,13 @@ pub fn atomic_write(path: impl AsRef<Path>, text: &str, ending: &str) -> io::Res
     let mut temp = tempfile::Builder::new()
         .prefix(".impro-")
         .tempfile_in(parent)?;
-    temp.as_file()
-        .set_permissions(fs::Permissions::from_mode(mode))?;
     if ending == "CRLF" {
         temp.write_all(text.replace('\n', "\r\n").as_bytes())?;
     } else {
         temp.write_all(text.as_bytes())?;
     }
+    temp.as_file()
+        .set_permissions(fs::Permissions::from_mode(mode))?;
     temp.as_file().sync_all()?;
     temp.persist(&target).map_err(|e| e.error)?;
     fs::File::open(parent)?.sync_all()?;
@@ -143,8 +146,7 @@ pub fn unindent(line: &str, width: usize) -> &str {
     if let Some(rest) = line.strip_prefix('\t') {
         rest
     } else {
-        &line[..]
-            .get(line.bytes().take_while(|c| *c == b' ').count().min(width)..)
+        line.get(line.bytes().take_while(|c| *c == b' ').count().min(width)..)
             .unwrap_or(line)
     }
 }
