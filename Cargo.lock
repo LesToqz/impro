@@ -473,13 +473,18 @@ dependencies = [
 name = "impro-explorer"
 version = "0.1.0"
 dependencies = [
+ "atk",
  "gdk",
+ "gdk-pixbuf",
  "gio",
  "glib",
  "gtk",
  "impro-core",
  "impro-ui",
+ "libc",
  "pango",
+ "regex",
+ "tempfile",
 ]
 
 [[package]]
