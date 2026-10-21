@@ -47,19 +47,30 @@ fn paint(lines: &mut [Value], path: &str, highlighter: Option<&dyn Highlighter>)
         }
         return;
     };
+    let mut starts = Vec::with_capacity(lines.len());
+    let mut lengths = Vec::with_capacity(lines.len());
     let mut position = 0;
-    for l in lines {
-        let length = l["text"].as_str().unwrap_or_default().chars().count();
-        let mut tokens = Vec::new();
-        for (a, b, kind) in &runs {
-            let lo = a.saturating_sub(position);
-            let hi = b.saturating_sub(position).min(length);
-            if lo < hi {
-                tokens.push(json!([lo, hi, kind]));
-            }
-        }
-        l["k"] = json!(tokens);
+    for line in lines.iter_mut() {
+        starts.push(position);
+        let length = line["text"].as_str().unwrap_or_default().chars().count();
+        lengths.push(length);
+        line["k"] = json!([]);
         position += length + 1;
+    }
+    for (start, end, kind) in runs {
+        let mut index = starts
+            .partition_point(|offset| *offset <= start)
+            .saturating_sub(1);
+        while index < lines.len() && starts[index] < end {
+            let lo = start.saturating_sub(starts[index]);
+            let hi = end.saturating_sub(starts[index]).min(lengths[index]);
+            if lo < hi {
+                if let Some(tokens) = lines[index]["k"].as_array_mut() {
+                    tokens.push(json!([lo, hi, kind]));
+                }
+            }
+            index += 1;
+        }
     }
 }
 pub fn highlight_hunks(file: &mut Value, highlighter: Option<&dyn Highlighter>) {

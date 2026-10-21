@@ -1,7 +1,7 @@
 //! Bounded, read-only commit graph data, independent of a display.
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
-use std::io::Read;
+use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::sync::mpsc;
@@ -28,7 +28,13 @@ pub fn run(
     cap: usize,
     partial: bool,
 ) -> Result<(Vec<u8>, bool), GitError> {
-    run_with(root, args, deadline, cap, partial, |bytes| bytes)
+    let (mut bytes, clipped) = run_with(root, args, deadline, cap, partial, move |reader| {
+        let mut bytes = Vec::with_capacity(cap.min(65536));
+        reader.read_to_end(&mut bytes)?;
+        Ok(bytes)
+    })?;
+    bytes.truncate(cap);
+    Ok((bytes, clipped))
 }
 fn run_with<T: Send + 'static>(
     root: &Path,
@@ -36,37 +42,37 @@ fn run_with<T: Send + 'static>(
     deadline: Instant,
     cap: usize,
     partial: bool,
-    parse: impl FnOnce(Vec<u8>) -> T + Send + 'static,
+    parse: impl FnOnce(&mut dyn Read) -> std::io::Result<T> + Send + 'static,
 ) -> Result<(T, bool), GitError> {
-    let mut child = Command::new("git")
-        .args(["--no-pager", "-c", "core.quotepath=off", "-C"])
-        .arg(root)
-        .args(args)
-        .env("GIT_OPTIONAL_LOCKS", "0")
-        .env("GIT_TERMINAL_PROMPT", "0")
-        .env("GIT_NO_LAZY_FETCH", "1")
-        .env("LC_ALL", "C")
-        .env("GIT_PAGER", "cat")
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()
-        .map_err(|e| {
-            GitError(if e.kind() == std::io::ErrorKind::NotFound {
-                "git-missing"
-            } else {
-                "not-a-repo"
-            })
-        })?;
+    let mut child = ChildGuard(
+        Command::new("git")
+            .args(["--no-pager", "-c", "core.quotepath=off", "-C"])
+            .arg(root)
+            .args(args)
+            .env("GIT_OPTIONAL_LOCKS", "0")
+            .env("GIT_TERMINAL_PROMPT", "0")
+            .env("GIT_NO_LAZY_FETCH", "1")
+            .env("LC_ALL", "C")
+            .env("GIT_PAGER", "cat")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|e| {
+                GitError(if e.kind() == std::io::ErrorKind::NotFound {
+                    "git-missing"
+                } else {
+                    "not-a-repo"
+                })
+            })?,
+    );
     let stdout = child.stdout.take().ok_or(GitError("git-failed"))?;
     let (tx, rx) = mpsc::sync_channel(1);
     let reader = std::thread::spawn(move || {
-        let mut data = Vec::with_capacity(cap.min(65536));
-        let result = stdout
-            .take(cap.saturating_add(1) as u64)
-            .read_to_end(&mut data);
-        let clipped = data.len() > cap;
-        data.truncate(cap);
-        let _ = tx.send(result.map(|_| (parse(data), clipped)));
+        let limit = cap.saturating_add(1) as u64;
+        let mut source = stdout.take(limit);
+        let result = parse(&mut source);
+        let clipped = limit - source.limit() > cap as u64;
+        let _ = tx.send(result.map(|data| (data, clipped)));
     });
     let received = rx.recv_timeout(deadline.saturating_duration_since(Instant::now()));
     // A reader finishing doesn't imply process exit (a child may close stdout then hang).
@@ -84,6 +90,9 @@ fn run_with<T: Send + 'static>(
         Ok(Err(_)) => Err(GitError("git-failed")),
         Err(_) => Err(GitError("timeout")),
     };
+    if result.is_err() {
+        let _ = child.kill();
+    }
     // A sleeping watchdog also covers processes that close stdout before hanging.
     let signal = std::sync::Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
     let wake = signal.clone();
@@ -124,16 +133,22 @@ fn run_with<T: Send + 'static>(
     let _ = reader.join();
     result
 }
-trait KillIfError {
-    fn kill_if_error<T>(&mut self, result: &Result<T, GitError>) -> std::io::Result<()>;
+struct ChildGuard(std::process::Child);
+impl std::ops::Deref for ChildGuard {
+    type Target = std::process::Child;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
-impl KillIfError for std::process::Child {
-    fn kill_if_error<T>(&mut self, result: &Result<T, GitError>) -> std::io::Result<()> {
-        if result.is_err() {
-            self.kill()
-        } else {
-            Ok(())
-        }
+impl std::ops::DerefMut for ChildGuard {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+impl Drop for ChildGuard {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
     }
 }
 
@@ -201,22 +216,22 @@ pub fn infer_merged_name(subject: &[u8]) -> Option<String> {
     } else {
         let (rest, remote) = if let Some(r) = s.strip_prefix("Merge remote-tracking branch ") {
             (r, true)
-        } else if let Some(r) = s
-            .strip_prefix("Merge branch ")
-            .or_else(|| s.strip_prefix("Merge tag "))
-        {
-            (r, false)
         } else {
-            return None;
+            let r = s
+                .strip_prefix("Merge branch ")
+                .or_else(|| s.strip_prefix("Merge tag "))?;
+            (r, false)
         };
         let quote = rest.chars().next()?;
         if !matches!(quote, '\'' | '"') {
             return None;
         }
-        let (name, tail) = rest[1..].split_once(quote)?;
-        if !tail.is_empty() && !tail.starts_with(" into ") {
-            return None;
-        }
+        let rest = &rest[1..];
+        let end = rest.char_indices().find_map(|(i, c)| {
+            let tail = &rest[i + c.len_utf8()..];
+            (c == quote && (tail.is_empty() || tail.starts_with(" into "))).then_some(i)
+        })?;
+        let name = &rest[..end];
         if remote {
             name.split_once('/')
                 .filter(|(_, n)| !n.is_empty())
@@ -244,24 +259,33 @@ pub(crate) fn valid_hash(s: &[u8]) -> bool {
 }
 /// Parse fixed-width NUL fields without copying the complete output or field list.
 pub fn parse_log(data: &[u8]) -> Vec<Value> {
-    let mut fields = data.split(|b| *b == 0);
+    parse_log_stream(&mut std::io::Cursor::new(data)).unwrap_or_default()
+}
+fn parse_log_stream(source: &mut dyn Read) -> std::io::Result<Vec<Value>> {
+    let mut source = BufReader::with_capacity(65536, source);
+    let mut row: [Vec<u8>; 9] = std::array::from_fn(|_| Vec::with_capacity(128));
     let mut commits = Vec::with_capacity(1500);
     loop {
-        let row: Vec<_> = fields.by_ref().take(9).collect();
-        if row.len() != 9 {
-            break;
+        for field in &mut row {
+            field.clear();
+            if source.read_until(0, field)? == 0 {
+                return Ok(commits);
+            }
+            if field.last() == Some(&0) {
+                field.pop();
+            }
         }
-        if !valid_hash(row[0]) {
+        if !valid_hash(&row[0]) {
             continue;
         }
-        let parents: Vec<_> = String::from_utf8_lossy(row[2])
+        let parents: Vec<_> = String::from_utf8_lossy(&row[2])
             .split_whitespace()
             .map(str::to_owned)
             .collect();
-        commits.push(json!({"hash":text(row[0]),"short":text(row[1]),"merged_name":if parents.len()>=2 {infer_merged_name(row[3])} else {None},"parents":parents,"subject":clean(row[3],Some(300),false,false),"author":clean(row[4],Some(120),false,false),"email":clean(row[5],Some(120),false,false),"ts":number(row[6]),"tz":timezone_minutes(&text(row[7])),"cts":number(row[8]),"refs":[]}));
+        commits.push(json!({"hash":text(&row[0]),"short":text(&row[1]),"merged_name":if parents.len()>=2 {infer_merged_name(&row[3])} else {None},"parents":parents,"subject":clean(&row[3],Some(300),false,false),"author":clean(&row[4],Some(120),false,false),"email":clean(&row[5],Some(120),false,false),"ts":number(&row[6]),"tz":timezone_minutes(&text(&row[7])),"cts":number(&row[8]),"refs":[]}));
     }
-    commits
 }
+
 pub type Refs = HashMap<String, Vec<Value>>;
 pub fn parse_refs(data: &[u8], branch: Option<&str>) -> (Refs, Option<String>) {
     let mut refs = Refs::new();
@@ -272,7 +296,7 @@ pub fn parse_refs(data: &[u8], branch: Option<&str>) -> (Refs, Option<String>) {
             continue;
         }
         if f[0] == "refs/remotes/origin/HEAD" && f[4].starts_with("refs/remotes/") {
-            default = Some(clean(f[4][13..].as_bytes(), None, false, false));
+            default = Some(clean(&f[4].as_bytes()[13..], None, false, false));
         }
         let (name, kind) = if let Some(n) = f[0].strip_prefix("refs/heads/") {
             (n, "branch")
@@ -344,8 +368,8 @@ pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
         std::env::current_dir().unwrap_or_default().join(root)
     };
     let mut result = json!({"ok":false,"error":null,"repo":{"name":clean(absolute.file_name().unwrap_or_default().as_encoded_bytes(),None,false,false),"root":clean(absolute.as_os_str().as_encoded_bytes(),None,false,true),"default_branch":null},"head":{"hash":null,"branch":null,"detached":false},"dirty":null,"total":0,"truncated":false,"commits":[]});
-    let work = || -> Result<Value, GitError> {
-        let mut r = result.clone();
+    let mut work = || -> Result<(), GitError> {
+        let r = &mut result;
         let (top, _) = run(
             root,
             &["rev-parse", "--show-toplevel"],
@@ -400,7 +424,7 @@ pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
             Ok((s, _)) => s,
             Err(e) => {
                 r["error"] = json!(if e.0 == "git-failed" { "empty" } else { e.0 });
-                return Ok(r);
+                return Ok(());
             }
         };
         r["head"]["hash"] = json!(text(&sha).trim());
@@ -424,7 +448,7 @@ pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
             deadline,
             MAX_OUTPUT,
             false,
-            |data| parse_log(&data),
+            parse_log_stream,
         )?;
         for c in &mut commits {
             c["refs"] = json!(refs
@@ -489,13 +513,10 @@ pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
         r["total"] = json!(total);
         r["commits"] = json!(commits);
         r["ok"] = json!(true);
-        Ok(r)
+        Ok(())
     };
-    match work() {
-        Ok(r) => r,
-        Err(e) => {
-            result["error"] = json!(e.0);
-            result
-        }
+    if let Err(e) = work() {
+        result["error"] = json!(e.0);
     }
+    result
 }
