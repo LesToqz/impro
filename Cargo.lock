@@ -495,6 +495,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "impro-graph"
+version = "0.1.0"
+dependencies = [
+ "memchr",
+ "regex",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "impro-markdown"
 version = "0.1.0"
 dependencies = [
