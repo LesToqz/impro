@@ -79,6 +79,18 @@ pub fn key_event(keyval: gdk::keys::Key, state: gdk::ModifierType) -> gdk::Event
     (*key).clone()
 }
 
+/// A key press delivered to `window` as GDK would (with its GdkWindow attached), so the
+/// window's default handler propagates it to the focus widget and its ancestors.
+pub fn window_key_event(window: &gtk::Window, keyval: gdk::keys::Key, state: gdk::ModifierType) -> gdk::Event {
+    use glib::translate::*;
+    let event = key_event(keyval, state);
+    let mut key = event.downcast::<gdk::EventKey>().expect("key event");
+    let raw: &mut gdk::ffi::GdkEventKey = key.as_mut();
+    raw.window = window.window().expect("realized window").to_glib_full();
+    raw.send_event = 1;
+    (*key).clone()
+}
+
 /// Emit `key-press-event` on `widget`; whether a handler stopped the event.
 pub fn press(widget: &impl IsA<gtk::Widget>, keyval: gdk::keys::Key, state: gdk::ModifierType) -> bool {
     let event = key_event(keyval, state);
