@@ -136,7 +136,8 @@ pub fn set_reduce_motion(flag: bool) {
 pub fn animations_enabled() -> bool {
     !REDUCE.get()
         && std::env::var(impro_core::identity::REDUCE_MOTION_ENV).as_deref() != Ok("1")
-        && gtk::Settings::default().is_none_or(|s| s.is_gtk_enable_animations())
+        && (!gtk::is_initialized()
+            || gtk::Settings::default().is_none_or(|s| s.is_gtk_enable_animations()))
 }
 fn next_id() -> u64 {
     NEXT.with(|n| {
@@ -346,14 +347,18 @@ fn schedule() {
     });
     let Some(host) = host else { return };
     if host.is_mapped() {
-        let tick = host.add_tick_callback(|_, clock| {
-            if pump(clock.frame_time()) {
+        let tick = host.add_tick_callback(|host, clock| {
+            let active = pump(clock.frame_time());
+            if active && host.is_mapped() {
                 glib::ControlFlow::Continue
             } else {
                 ENGINE.with(|e| {
                     e.borrow_mut().tick.take();
                 });
                 detach_host_signal();
+                if active {
+                    schedule();
+                }
                 glib::ControlFlow::Break
             }
         });
@@ -730,10 +735,7 @@ pub fn lerp_color(a: &str, b: &str, t: f64) -> Result<String, MotionError> {
     }
     let (a, b) = (color(a)?, color(b)?);
     let c: [f64; 4] = std::array::from_fn(|i| (a[i] + (b[i] - a[i]) * t).clamp(0.0, 1.0));
-    let alpha = format!("{:.6}", c[3])
-        .trim_end_matches('0')
-        .trim_end_matches('.')
-        .to_string();
+    let alpha = six_significant_digits(c[3]);
     Ok(format!(
         "rgba({}, {}, {}, {})",
         (c[0] * 255.0).round_ties_even() as u8,
@@ -742,6 +744,27 @@ pub fn lerp_color(a: &str, b: &str, t: f64) -> Result<String, MotionError> {
         alpha
     ))
 }
+fn six_significant_digits(value: f64) -> String {
+    if value == 0.0 {
+        return "0".into();
+    }
+    let scientific = format!("{value:.5e}");
+    let (mantissa, exponent) = scientific.split_once('e').expect("formatted exponent");
+    let exponent = exponent.parse::<i32>().expect("formatted integer exponent");
+    if (-4..6).contains(&exponent) {
+        let fixed = format!("{:.*}", (5 - exponent).max(0) as usize, value);
+        fixed
+            .trim_end_matches('0')
+            .trim_end_matches('.')
+            .to_string()
+    } else {
+        format!(
+            "{}e{exponent:+03}",
+            mantissa.trim_end_matches('0').trim_end_matches('.')
+        )
+    }
+}
+
 struct FaderInner {
     widget: glib::WeakRef<gtk::Widget>,
     update: RefCell<Option<UpdateCallback>>,

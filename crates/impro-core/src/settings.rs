@@ -88,19 +88,25 @@ pub fn normalize(key: &str, value: &Value) -> Result<Value, UnknownSetting> {
         });
     }
     if let Some(&(lo, hi)) = limits().get(key) {
-        return Ok(value
-            .as_f64()
-            .filter(|v| v.is_finite())
+        let number = value.as_f64().filter(|v| v.is_finite()).or_else(|| {
+            // JSON integers have unbounded precision in the source settings store.
+            // Clamp enormous integers without coercing them to infinity; nonfinite
+            // floating-point values still fall back to the default.
+            let raw = value.as_number()?.to_string();
+            let digits = raw.strip_prefix('-').unwrap_or(&raw);
+            if !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()) {
+                Some(if raw.starts_with('-') { lo } else { hi })
+            } else {
+                None
+            }
+        });
+        return Ok(number
             .map(|v| Value::from(v.clamp(lo, hi).round_ties_even() as i64))
             .unwrap_or_else(|| default.clone()));
     }
     Ok(value
         .as_str()
-        .filter(|s| {
-            s.chars().count() <= FONT_NAME_MAX
-                && s.chars()
-                    .all(|c| !c.is_control() && (c == ' ' || !c.is_whitespace()))
-        })
+        .filter(|s| s.chars().count() <= FONT_NAME_MAX && s.chars().all(crate::text::is_printable))
         .map(|s| Value::from(s.trim()))
         .unwrap_or_else(|| default.clone()))
 }
@@ -156,7 +162,9 @@ impl Store {
         file.flush()?;
         file.as_file().sync_all()?;
         file.persist(&self.path).map_err(|e| e.error)?;
-        fs::File::open(parent)?.sync_all()?;
+        // Replacement has committed. A directory sync is best-effort: reporting
+        // failure now would incorrectly promise that the old file was preserved.
+        let _ = fs::File::open(parent).and_then(|directory| directory.sync_all());
         Ok(())
     }
     pub fn get_value(&self, key: &str) -> Result<Value, UnknownSetting> {

@@ -89,7 +89,7 @@ pub fn font_family(name: Option<&str>) -> String {
         .unwrap_or("")
         .trim()
         .chars()
-        .filter(|c| !c.is_control() && !['"', '\\', ';', '{', '}'].contains(c))
+        .filter(|c| impro_core::text::is_printable(*c) && !['"', '\\', ';', '{', '}'].contains(c))
         .collect();
     if name.is_empty() {
         name
@@ -185,6 +185,11 @@ pub fn apply_theme(
     ui_font: Option<&str>,
     editor_font: Option<&str>,
 ) -> Result<(), StyleError> {
+    if !gtk::is_initialized_main_thread() {
+        return Err(StyleError(
+            "impro theme requires an initialized GTK display".into(),
+        ));
+    }
     let screen = gdk::Screen::default()
         .ok_or_else(|| StyleError("impro theme requires an initialized GTK display".into()))?;
     let settings = gtk::Settings::default()

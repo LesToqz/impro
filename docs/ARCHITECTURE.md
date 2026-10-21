@@ -10,7 +10,7 @@ Cargo jobs are limited to three. Run only one Cargo operation at a time.
 
 | Crate | Owns | Depends on |
 | --- | --- | --- |
-| impro-core | identity, 14 themes, settings, fsops, pure note edits | std, serde/JSON, regex, libc, tempfile; no GTK/GIO |
+| impro-core | identity, 14 themes, settings, fsops, pure note edits | std, serde/JSON, regex, libc, tempfile, Unicode helpers; no GTK/GIO |
 | impro-ui | shared CSS/provider, tokens, motion, widgets, note toolbar | core, GTK stack |
 | impro-vte | safe Terminal/Pty and the local FFI shim | GTK stack, sys/pkg-config |
 | impro-explorer | explorer, search, gitstatus | core, ui, GTK |
@@ -52,6 +52,8 @@ Use `themes::{contrast,luminance,legible,mix_color}` for derived colours.
 `Result` for unknown keys. A save result of `false` means IO failed; retain your
 in-memory preferences. `save` merges raw keys, preserving extensions.
 `Store::new(path)` offers the same operations with an explicit path for tests.
+Unbounded JSON integers clamp without float overflow, and font-family validation
+rejects Unicode control/format/separator characters.
 Writes use a 0600 temporary file, fsync, atomic replacement and parent fsync.
 `settings_path()` resolves XDG/HOME at call time and never imports older settings.
 `get_graph/set_graph` and `get_gitgraph/set_gitgraph` preserve **opaque JSON**;
@@ -251,7 +253,7 @@ window after its first draw is flushed, then quits. PNG parent directories must
 exist. `IMPRO_QA_TIMING=1` additionally prints `first-paint-ms=...` (main entry to
 paint, excluding PNG encoding). Capture failures log and exit nonzero.
 
-`xvfb-run -a dbus-run-session -- python3 scripts/startup-bench.py --runs 10`
+`xvfb-run -a dbus-run-session -- python3 scripts/startup-bench.py --runs 10 --output .ceo/startup.json`
 records comparable process-launch→map measurements plus the internal paint
 milestone. Supply `--reference-root /absolute/reference/project` to benchmark a
 read-only Python reference package (module derived from directory name).

@@ -174,3 +174,14 @@ fn test_every_requested_command_exists_in_order() {
     );
     assert_eq!(SLASH_COMMANDS.len(), 16);
 }
+#[test]
+fn test_name_sort_uses_full_unicode_casefold() {
+    let root = tempfile::tempdir().unwrap();
+    create_note(root.path(), "ς").unwrap();
+    create_note(root.path(), "σ").unwrap();
+    create_note(root.path(), "Straße").unwrap();
+    create_note(root.path(), "ﬃ").unwrap();
+    assert_eq!(impro_core::text::casefold("Straße Σς ﬃ"), "strasse σσ ffi");
+    let paths = list_notes(root.path(), "name").unwrap();
+    assert_eq!(paths[0].file_stem().unwrap(), "ﬃ");
+}

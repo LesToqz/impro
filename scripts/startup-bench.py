@@ -125,6 +125,7 @@ def main():
     parser.add_argument("--binary", default="target/release/impro")
     parser.add_argument("--reference-root", type=Path)
     parser.add_argument("--runs", type=int, default=10)
+    parser.add_argument("--output", type=Path, help="write clean JSON independently of session daemon stdout")
     args = parser.parse_args()
     Path(".ceo").mkdir(exist_ok=True)
     env = dict(os.environ, GDK_BACKEND="x11", GIO_USE_VFS="local", PYTHONDONTWRITEBYTECODE="1")
@@ -136,7 +137,10 @@ def main():
         result["reference"] = measure(x, ["python3", "-m", root.name.lower(), "/tmp"], reference_env, args.runs)
         result["map_speedup"] = result["reference"]["median_map_ms"] / result["impro"]["median_map_ms"]
     x.x.XCloseDisplay(x.display)
-    print(json.dumps(result, indent=2))
+    payload = json.dumps(result, indent=2)
+    if args.output:
+        args.output.write_text(payload + "\n", encoding="utf-8")
+    print(payload)
 
 
 if __name__ == "__main__":

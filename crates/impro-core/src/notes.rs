@@ -81,12 +81,7 @@ pub fn list_notes(root: impl AsRef<Path>, sort: &str) -> Result<Vec<PathBuf>, No
         .filter(|p| is_markdown(p) && p.is_file())
         .map(|p| {
             let modified = fs::metadata(&p).ok().and_then(|m| m.modified().ok());
-            let name = p
-                .file_stem()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_lowercase()
-                .replace('ß', "ss");
+            let name = crate::text::casefold(&p.file_stem().unwrap_or_default().to_string_lossy());
             (p, name, modified)
         })
         .collect();

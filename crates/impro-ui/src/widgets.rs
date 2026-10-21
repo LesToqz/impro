@@ -263,9 +263,8 @@ impl SettingRow {
             .iter()
             .map(|s| s.to_string())
             .collect::<Vec<_>>();
-        let haystack = format!("{name} {description} {}", aliases.join(" "))
-            .to_lowercase()
-            .replace('ß', "ss");
+        let haystack =
+            impro_core::text::casefold(&format!("{name} {description} {}", aliases.join(" ")));
         Self {
             widget,
             key: options.key.map(str::to_owned),
@@ -282,9 +281,7 @@ impl SettingRow {
         }
     }
     pub fn matches(&self, query: &str) -> bool {
-        query
-            .to_lowercase()
-            .replace('ß', "ss")
+        impro_core::text::casefold(query)
             .split_whitespace()
             .all(|w| self.haystack.contains(w))
     }
@@ -407,7 +404,7 @@ impl SettingCard {
             .collect()
     }
     pub fn set_query(&self, query: &str) {
-        *self.query.borrow_mut() = query.trim().to_lowercase();
+        *self.query.borrow_mut() = impro_core::text::casefold(query.trim());
         self.widget.invalidate_filter();
         self.widget.invalidate_headers();
     }

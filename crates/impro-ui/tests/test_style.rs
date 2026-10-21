@@ -107,3 +107,26 @@ fn test_non_overlay_scrollbars_are_ten_pixels() {
         }
     });
 }
+#[test]
+fn test_failed_apply_preserves_previous_theme_and_provider() {
+    run(|| {
+        impro_ui::init();
+        apply_style(Some(get_theme(Some("impro-light")))).unwrap();
+        let old = provider().unwrap();
+        let mut broken = get_theme(None).clone();
+        broken.ui.insert("bg".into(), "invalid-colour".into());
+        assert!(apply_style(Some(&broken)).is_err());
+        assert_eq!(current_theme().unwrap().id, "impro-light");
+        assert_eq!(provider().unwrap(), old);
+        assert!(!gtk::Settings::default()
+            .unwrap()
+            .is_gtk_application_prefer_dark_theme());
+    });
+}
+#[test]
+fn test_requires_display() {
+    assert!(apply_style(None)
+        .unwrap_err()
+        .to_string()
+        .contains("initialized GTK display"));
+}

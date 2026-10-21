@@ -164,3 +164,36 @@ fn test_graph_survives_theme_and_font_save() {
     assert!(s.set_blob("gitgraph", &json!([1, 2])));
     assert_eq!(s.get_blob("gitgraph"), json!([1, 2]));
 }
+#[test]
+fn test_arbitrarily_large_json_integers_clamp_and_preserve_unknown_keys() {
+    let (_d, s) = store();
+    let huge = "9".repeat(1000);
+    let payload =
+        format!("{{\"editor_font_size\":{huge},\"explorer_font_size\":-{huge},\"future\":{huge}}}");
+    fs::create_dir_all(s.path().parent().unwrap()).unwrap();
+    fs::write(s.path(), payload).unwrap();
+    assert_eq!(s.get_value("editor_font_size").unwrap(), 32);
+    assert_eq!(s.get_value("explorer_font_size").unwrap(), 8);
+    s.set_value("theme", &json!("nord")).unwrap();
+    assert_eq!(s.load()["future"].to_string(), huge);
+    assert_eq!(
+        normalize(
+            "editor_font_size",
+            &serde_json::from_str::<Value>("1e400").unwrap()
+        )
+        .unwrap(),
+        11
+    );
+}
+#[test]
+fn test_printable_font_families_reject_unicode_format_characters() {
+    for raw in [
+        "bad\u{200b}name",
+        "bad\u{e000}name",
+        "bad\u{a0}name",
+        "bad\u{2028}name",
+    ] {
+        assert_eq!(normalize("ui_font", &json!(raw)).unwrap(), "");
+    }
+    assert_eq!(normalize("ui_font", &json!("café λ")).unwrap(), "café λ");
+}

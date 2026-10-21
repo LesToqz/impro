@@ -301,12 +301,12 @@ fn test_reverse_and_end_state() {
     run(|| {
         let child = gtk::Label::new(None);
         let window = window(&child);
-        let f = StateFader::new(&child, |_| {}, 50.0, 0.0);
+        let f = StateFader::new(&child, |_| {}, 150.0, 0.0);
         f.set(1.0);
-        pump(30);
+        pump(80);
         assert!(f.value() > 0.0 && f.value() < 1.0);
         f.set(0.0);
-        pump(100);
+        pump(250);
         assert_eq!(f.value(), 0.0);
         f.disconnect();
         assert!(!clock_attached());
@@ -384,4 +384,47 @@ fn test_clock_moves_to_another_window() {
             b.destroy();
         }
     });
+}
+#[test]
+fn test_completion_can_hide_the_clock_host() {
+    run(|| {
+        set_reduce_motion(false);
+        let first = gtk::Label::new(None);
+        let second = gtk::Label::new(None);
+        let a = window(&first);
+        let b = window(&second);
+        let weak = a.downgrade();
+        animate(
+            &first,
+            30,
+            |_| {},
+            AnimateOptions {
+                on_done: Some(Box::new(move || {
+                    if let Some(a) = weak.upgrade() {
+                        a.hide();
+                    }
+                })),
+                ..Default::default()
+            },
+        );
+        let other = animate(&second, 100, |_| {}, Default::default());
+        pump(200);
+        assert!(other.finished());
+        assert!(!clock_attached());
+        unsafe {
+            a.destroy();
+            b.destroy();
+        }
+    });
+}
+#[test]
+fn test_color_alpha_uses_six_significant_digits() {
+    assert_eq!(
+        lerp_color("rgba(0,0,0,0.001234567)", "#000", 0.0).unwrap(),
+        "rgba(0, 0, 0, 0.00123457)"
+    );
+    assert_eq!(
+        lerp_color("rgba(0,0,0,0.00001234567)", "#000", 0.0).unwrap(),
+        "rgba(0, 0, 0, 1.23457e-05)"
+    );
 }
