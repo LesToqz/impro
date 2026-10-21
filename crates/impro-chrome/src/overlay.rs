@@ -206,7 +206,7 @@ impl OverlayHost {
         }
         let weak = Rc::downgrade(&self.0);
         let p = prompt.downgrade();
-        prompt.connect_closed(move || {
+        prompt.set_host_closed(move || {
             if let (Some(inner), Some(p)) = (weak.upgrade(), p.upgrade()) {
                 let host = OverlayHost(inner);
                 if host

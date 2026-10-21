@@ -136,6 +136,9 @@ struct Inner {
     selected: Cell<i32>,
     open: Cell<bool>,
     pending: RefCell<Option<glib::SourceId>>,
+    host_closed: RefCell<Option<Action>>,
+    busy: Cell<bool>,
+    pending_choice: Cell<Option<gdk::ModifierType>>,
     closed: RefCell<Vec<Action>>,
     chosen: RefCell<Vec<Chosen>>,
     query_chosen: RefCell<Vec<QueryChosen>>,
@@ -221,6 +224,9 @@ impl Prompt {
             selected: Cell::new(-1),
             open: Cell::new(false),
             pending: RefCell::new(None),
+            host_closed: RefCell::new(None),
+            busy: Cell::new(false),
+            pending_choice: Cell::new(None),
             closed: RefCell::new(vec![]),
             chosen: RefCell::new(vec![]),
             query_chosen: RefCell::new(vec![]),
@@ -490,6 +496,10 @@ impl Prompt {
         if self.0.pending.borrow().is_some() {
             self.refresh();
         }
+        if self.0.busy.get() {
+            self.0.pending_choice.set(Some(modifiers));
+            return;
+        }
         let item = self.selected_item();
         let query = self.query();
         if item.is_none() && query.trim().is_empty() {
@@ -517,9 +527,31 @@ impl Prompt {
         if !self.0.open.replace(false) {
             return;
         }
+        self.0.pending_choice.set(None);
+        let host = self.0.host_closed.borrow().clone();
+        if let Some(f) = host {
+            f();
+        }
         let callbacks = self.0.closed.borrow().clone();
         for callback in callbacks {
             callback();
+        }
+    }
+    pub(crate) fn set_host_closed(&self, callback: impl Fn() + 'static) {
+        *self.0.host_closed.borrow_mut() = Some(Rc::new(callback));
+    }
+    pub(crate) fn set_search_pending(&self, pending: bool) {
+        self.0.busy.set(pending);
+        self.0.pending_choice.set(None);
+    }
+    pub fn search_pending(&self) -> bool {
+        self.0.busy.get()
+    }
+    pub(crate) fn finish_search(&self, items: Vec<PromptItem>) {
+        self.0.busy.set(false);
+        self.set_items(items);
+        if let Some(mods) = self.0.pending_choice.take() {
+            self.choose(mods);
         }
     }
     pub fn connect_closed(&self, callback: impl Fn() + 'static) {

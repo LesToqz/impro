@@ -155,7 +155,9 @@ fn file_item(file: &FileEntry, ranges: Vec<fuzzy::Range>) -> PromptItem {
 }
 struct Files {
     index: Mutex<FuzzyIndex<FileEntry>>,
-    empty: Vec<FileEntry>,
+    empty: Mutex<Vec<FileEntry>>,
+    ready: AtomicBool,
+    large: bool,
     cancel: Mutex<Option<Arc<AtomicBool>>>,
 }
 impl Drop for Files {
@@ -188,7 +190,9 @@ impl QuickSwitcher {
                 |f: &FileEntry| f.shown.clone(),
                 true,
             )),
-            empty: vec![],
+            empty: Mutex::new(vec![]),
+            ready: AtomicBool::new(true),
+            large: false,
             cancel: Mutex::new(None),
         });
         let state = Rc::new(RefCell::new(files));
@@ -219,56 +223,19 @@ impl QuickSwitcher {
         display_path(path, &self.root.borrow())
     }
     /// Replace the index from the caller's file list. Reindexing happens on a worker
-    /// for large lists; the first empty-query page is available immediately.
+    /// for large lists; `index_ready()` reports completion and visible results refresh.
     pub fn set_files(&self, paths: Vec<PathBuf>, recent: Vec<PathBuf>) {
         let root = self.root();
-        let mut seen = HashSet::new();
-        let mut entries: Vec<_> = paths
-            .into_iter()
-            .filter_map(|path| {
-                let shown = display_path(&path, &root);
-                seen.insert(shown.clone())
-                    .then_some(FileEntry { shown, path })
-            })
-            .collect();
-        entries.sort_by(|a, b| {
-            fuzzy::fold(&a.shown)
-                .cmp(&fuzzy::fold(&b.shown))
-                .then(a.shown.cmp(&b.shown))
-        });
-        let lookup: HashMap<_, _> = entries
-            .iter()
-            .enumerate()
-            .map(|(i, f)| (f.shown.clone(), i))
-            .collect();
-        let mut empty = vec![];
-        let mut seen = HashSet::new();
-        for path in recent {
-            let shown = display_path(&path, &root);
-            if let Some(&i) = lookup.get(&shown) {
-                if seen.insert(i) {
-                    empty.push(entries[i].clone());
-                }
-            }
-            if empty.len() == MAX_RESULTS {
-                break;
-            }
-        }
-        for (i, f) in entries.iter().enumerate() {
-            if empty.len() == MAX_RESULTS {
-                break;
-            }
-            if seen.insert(i) {
-                empty.push(f.clone());
-            }
-        }
+        let large = paths.len() > 5000;
         let files = Arc::new(Files {
             index: Mutex::new(FuzzyIndex::new(
                 vec![],
                 |f: &FileEntry| f.shown.clone(),
                 true,
             )),
-            empty,
+            empty: Mutex::new(vec![]),
+            ready: AtomicBool::new(false),
+            large,
             cancel: Mutex::new(None),
         });
         if let Ok(cancel) = self.files.borrow().cancel.lock() {
@@ -276,29 +243,41 @@ impl QuickSwitcher {
                 c.store(true, Ordering::Relaxed);
             }
         }
-        // Acquire before spawning so a query cannot observe an unbuilt index.
-        let (send, recv) = std::sync::mpsc::sync_channel(1);
-        let worker = files.clone();
-        let large = entries.len() > 5000;
+        *self.files.borrow_mut() = files.clone();
         if large {
-            std::thread::spawn(move || {
-                if let Ok(mut index) = worker.index.lock() {
-                    let _ = send.send(());
-                    *index = FuzzyIndex::new(entries, |f| f.shown.clone(), true);
+            #[allow(deprecated)]
+            let (sender, receiver) = glib::MainContext::channel::<()>(glib::Priority::DEFAULT);
+            let weak = self.prompt.downgrade();
+            let state = Rc::downgrade(&self.files);
+            let expected = files.clone();
+            receiver.attach(None, move |_| {
+                if let (Some(p), Some(state)) = (weak.upgrade(), state.upgrade()) {
+                    if Arc::ptr_eq(&state.borrow(), &expected) {
+                        p.refresh();
+                    }
                 }
+                glib::ControlFlow::Break
             });
-            let _ = recv.recv();
-        } else if let Ok(mut index) = files.index.lock() {
-            *index = FuzzyIndex::new(entries, |f| f.shown.clone(), true);
+            std::thread::spawn(move || {
+                build_files(&files, paths, recent, &root);
+                let _ = sender.send(());
+            });
+        } else {
+            build_files(&files, paths, recent, &root);
         }
-        *self.files.borrow_mut() = files;
-        self.install_provider();
+        self.prompt.refresh();
+    }
+    pub fn index_ready(&self) -> bool {
+        self.files.borrow().ready.load(Ordering::Acquire)
     }
     fn install_provider(&self) {
         let state = self.files.clone();
         let widget = self.prompt.widget().downgrade();
         let weak_prompt = self.prompt.downgrade();
         self.prompt.set_provider(move |query| {
+            if let Some(p) = weak_prompt.upgrade() {
+                p.set_search_pending(false);
+            }
             let files = state.borrow().clone();
             if let Ok(mut old) = files.cancel.lock() {
                 if let Some(c) = old.take() {
@@ -306,10 +285,21 @@ impl QuickSwitcher {
                 }
             }
             if query.trim().is_empty() {
-                return files.empty.iter().map(|f| file_item(f, vec![])).collect();
+                return files
+                    .empty
+                    .try_lock()
+                    .map(|empty| empty.iter().map(|f| file_item(f, vec![])).collect())
+                    .unwrap_or_default();
             }
             {
-                let sync = files.index.try_lock().ok().filter(|idx| idx.len() <= 5000);
+                if !files.ready.load(Ordering::Acquire) {
+                    return vec![];
+                }
+                let sync = if files.large {
+                    None
+                } else {
+                    files.index.try_lock().ok()
+                };
                 if let Some(mut index) = sync {
                     return index
                         .search(query, Some(MAX_RESULTS))
@@ -317,6 +307,9 @@ impl QuickSwitcher {
                         .map(|(f, _, r)| file_item(&f, r))
                         .collect();
                 }
+            }
+            if let Some(p) = weak_prompt.upgrade() {
+                p.set_search_pending(true);
             }
             let cancel = Arc::new(AtomicBool::new(false));
             if let Ok(mut current) = files.cancel.lock() {
@@ -329,12 +322,16 @@ impl QuickSwitcher {
                 Vec<(FileEntry, Vec<fuzzy::Range>)>,
             >(glib::Priority::DEFAULT);
             let weak = weak_prompt.clone();
+            let delivery_cancel = cancel.clone();
             let w = widget.clone();
             receiver.attach(None, move |results| {
                 if w.upgrade().is_some() {
                     if let Some(p) = weak.upgrade() {
-                        if p.query() == expected && p.is_open() {
-                            p.set_items(
+                        if p.query() == expected
+                            && p.is_open()
+                            && !delivery_cancel.load(Ordering::Relaxed)
+                        {
+                            p.finish_search(
                                 results.into_iter().map(|(f, r)| file_item(&f, r)).collect(),
                             );
                         }
@@ -376,4 +373,55 @@ fn display_path(path: &Path, root: &Path) -> String {
         }
     }
     path.to_string_lossy().into()
+}
+
+fn build_files(files: &Files, paths: Vec<PathBuf>, recent: Vec<PathBuf>, root: &Path) {
+    let mut seen = HashSet::new();
+    let entries: Vec<_> = paths
+        .into_iter()
+        .filter_map(|path| {
+            let shown = display_path(&path, root);
+            seen.insert(shown.clone())
+                .then_some(FileEntry { shown, path })
+        })
+        .collect();
+    let lookup: HashMap<_, _> = entries
+        .iter()
+        .enumerate()
+        .map(|(i, f)| (f.shown.clone(), i))
+        .collect();
+    let mut sorted: Vec<_> = entries
+        .iter()
+        .enumerate()
+        .map(|(i, f)| (fuzzy::fold(&f.shown), &f.shown, i))
+        .collect();
+    sorted.sort_unstable();
+    let mut empty = vec![];
+    let mut seen = HashSet::new();
+    for path in recent {
+        let shown = display_path(&path, root);
+        if let Some(&i) = lookup.get(&shown) {
+            if seen.insert(i) {
+                empty.push(entries[i].clone());
+            }
+        }
+        if empty.len() == MAX_RESULTS {
+            break;
+        }
+    }
+    for (_, _, i) in sorted {
+        if empty.len() == MAX_RESULTS {
+            break;
+        }
+        if seen.insert(i) {
+            empty.push(entries[i].clone());
+        }
+    }
+    if let Ok(mut value) = files.empty.lock() {
+        *value = empty;
+    }
+    if let Ok(mut index) = files.index.lock() {
+        *index = FuzzyIndex::new(entries, |f| f.shown.clone(), true);
+    }
+    files.ready.store(true, Ordering::Release);
 }
