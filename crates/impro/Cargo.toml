@@ -10,3 +10,6 @@ glib.workspace = true
 gio.workspace = true
 webkit2gtk.workspace = true
 impro-vte.workspace = true
+gdk.workspace = true
+impro-core.workspace = true
+impro-ui.workspace = true
