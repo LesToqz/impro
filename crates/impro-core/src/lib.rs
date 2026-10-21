@@ -1,3 +1,7 @@
-//! Display-independent application logic.
+//! Pure application logic; this crate deliberately has no GTK/GIO dependency.
+pub mod fsops;
+pub mod identity;
+pub mod notes;
+pub mod settings;
 pub mod themes;
 pub fn init() {}
