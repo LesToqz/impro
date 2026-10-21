@@ -1,0 +1,39 @@
+.impro-editor, .impro-editor stack, .impro-editor notebook,
+.impro-editor notebook > stack { background: {ui['bg']}; color: {ui['foreground']}; border: 0; }
+.impro-editor notebook > header.top { background: {ui['sidebar_bg']};
+    border: 0; border-bottom: 1px solid {ui['border']}; padding: 5px 8px 0; margin: 0; }
+.impro-editor notebook > header.top > tabs { padding: 0; margin: 0; border: 0; }
+.impro-editor notebook > header.top > tabs > tab { background: transparent;
+    color: {ui['faint']}; border: 1px solid transparent; border-radius: 10px 10px 0 0;
+    box-shadow: none; min-height: 32px; padding: 0 3px; margin: 0; font-size: 13px; }
+.impro-editor notebook > header.top > tabs > tab:hover { color: {ui['muted']}; }
+.impro-editor notebook > header.top > tabs > tab:checked { background: {ui['bg']};
+    color: {ui['foreground']}; border-color: {ui['border']}; border-bottom-color: {ui['bg']}; }
+.impro-tab-inner { padding: 0 6px; border-radius: 4px; }
+tab:hover .impro-tab-inner:not(.active), .impro-tab-inner.hover:not(.active) {
+    background: alpha({ui['overlay']}, .067); color: {ui['muted']}; }
+.impro-editor .impro-tab-close { opacity: 0; min-width: 14px; min-height: 14px;
+    padding: 2px; margin: 0; border: 0; border-radius: 8px; box-shadow: none;
+    background: transparent; color: {ui['muted']}; transition: none; }
+tab:hover .impro-tab-close, tab:checked .impro-tab-close,
+.impro-tab-inner.hover .impro-tab-close, .impro-tab-close:focus { opacity: 1; }
+.impro-editor .impro-tab-close:hover { background: alpha({ui['overlay']}, .067); color: {ui['foreground']}; }
+.impro-tab-divider { min-width: 1px; min-height: 13px; background: {ui['border_hover']}; margin: 0; }
+.impro-editor textview, .impro-editor textview text { background-color: {ui['bg']};
+    color: {ui['editor_fg']}; caret-color: {ui['cursor']}; font-family: monospace; font-size: 11pt; }
+.impro-editor textview text selection { background-color: {ui['editor_selection']}; color: {ui['selection_fg']}; }
+.md-toggle { background: {ui['sidebar_bg']}; border: 1px solid {ui['border']};
+    border-radius: 16px; padding: 2px; }
+.md-toggle button { background: transparent; background-image: none; box-shadow: none;
+    border: 0; border-radius: 12px; color: {ui['muted']}; font-size: 12px;
+    padding: 4px 10px; min-height: 18px; min-width: 0; }
+.md-toggle button:hover { background: alpha({ui['overlay']}, .067); color: {ui['foreground']}; }
+.md-toggle button:checked { background: {ui['bg']}; color: {ui['foreground']}; }
+.impro-empty { color: {ui['muted']}; font-size: 16px; padding: 12px; }
+.impro-find-bar > revealer > box { background: {ui['sidebar_bg']}; border-top: 1px solid {ui['border']};
+    border-bottom: 0; box-shadow: none; padding: 8px; }
+.impro-status { background: {ui['sidebar_bg']}; color: {ui['muted']}; font-size: 12px;
+    font-feature-settings: "tnum"; padding: 4px; border-top: 1px solid {ui['border']};
+    border-left: 1px solid {ui['border']}; border-radius: 8px 0 0 0; }
+.impro-status-item { padding: 3px 4px; border-radius: 4px; }
+.impro-status-item:hover { background: alpha({ui['overlay']}, .067); color: {ui['foreground']}; }

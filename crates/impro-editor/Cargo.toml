@@ -12,3 +12,13 @@ gio.workspace = true
 pango.workspace = true
 impro-core.workspace = true
 impro-ui.workspace = true
+impro-markdown = { path = "../impro-markdown" }
+syntect.workspace = true
+cairo-rs.workspace = true
+pangocairo.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+libc.workspace = true
+
+[dev-dependencies]
+gdk-pixbuf.workspace = true
