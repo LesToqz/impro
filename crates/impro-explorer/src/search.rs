@@ -34,6 +34,13 @@ pub fn is_skip_dir(name: &str) -> bool {
     SKIP_DIRS.contains(&name)
 }
 
+/// [`SKIP_DIRS`] in alphabetical order (the settings page lists them that way).
+pub fn skip_dirs_sorted() -> Vec<&'static str> {
+    let mut names = SKIP_DIRS.to_vec();
+    names.sort_unstable();
+    names
+}
+
 /// A query the user can correct.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SearchError(pub String);

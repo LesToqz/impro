@@ -2,7 +2,7 @@
 //! `GtkTreeStore` in steps of a few milliseconds so even a 50 000-entry folder keeps the
 //! interface responsive.
 use super::*;
-use crate::pool::{self, Lane};
+use crate::pool::{self, CancelToken, Lane};
 use std::cmp::Ordering;
 use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
 use std::sync::Mutex;
@@ -66,10 +66,23 @@ pub(crate) fn order(a: &Entry, b: &Entry, folders_first: bool) -> Ordering {
 /// List and sort a directory. Directory symlinks remain leaf entries, avoiding cycles;
 /// unreadable directories list as empty.
 pub fn scan_dir(dir: &Path, show_hidden: bool, folders_first: bool) -> Vec<Entry> {
+    scan_dir_cancellable(dir, show_hidden, folders_first, &CancelToken::new())
+}
+
+/// [`scan_dir`] that gives up (returning what it has, unsorted) once `cancel` is set.
+pub fn scan_dir_cancellable(
+    dir: &Path,
+    show_hidden: bool,
+    folders_first: bool,
+    cancel: &CancelToken,
+) -> Vec<Entry> {
     record_scan(dir);
     let mut entries = Vec::new();
     if let Ok(listing) = std::fs::read_dir(dir) {
-        for item in listing.flatten() {
+        for (index, item) in listing.flatten().enumerate() {
+            if index & 255 == 255 && cancel.is_cancelled() {
+                return entries;
+            }
             let name = item.file_name().to_string_lossy().into_owned();
             if !show_hidden && name.starts_with('.') {
                 continue;
@@ -119,8 +132,9 @@ impl ExplorerPanel {
         let generation = imp.generation.get();
         let (hidden, folders_first) = (imp.show_hidden.get(), imp.folders_first.get());
         let dir = dir.to_path_buf();
+        let cancel = imp.scan_cancel.borrow().clone();
         pool::spawn(Lane::Interactive, move || {
-            let entries = scan_dir(&dir, hidden, folders_first);
+            let entries = scan_dir_cancellable(&dir, hidden, folders_first, &cancel);
             let _ = sender.send(Msg::Dir {
                 generation,
                 dir,
@@ -554,6 +568,8 @@ impl ExplorerPanel {
     fn restart_generation(&self) {
         let imp = self.imp();
         imp.generation.set(imp.generation.get() + 1);
+        // Scans of the previous generation stop reading as soon as they notice.
+        imp.scan_cancel.replace(CancelToken::new()).cancel();
         imp.tasks.borrow_mut().clear();
         if let Some(source) = imp.apply_source.take() {
             source.remove();

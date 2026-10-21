@@ -27,6 +27,7 @@ use std::cell::{Cell, OnceCell, RefCell};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::sync::Arc;
 use std::sync::OnceLock;
 
 type OpJob = Box<dyn FnOnce() -> Result<PathBuf, FsOpError> + Send>;
@@ -43,6 +44,8 @@ pub(crate) enum Msg {
     Git {
         generation: u64,
         snapshot: Snapshot,
+        /// Some decoration differs from the snapshot the worker started from.
+        changed: bool,
     },
     Notes {
         generation: u64,
@@ -110,6 +113,7 @@ mod imp {
         pub(crate) loaded: RefCell<HashSet<PathBuf>>,
         pub(crate) generation: Cell<u64>,
         pub(crate) pending_scans: Cell<usize>,
+        pub(crate) scan_cancel: RefCell<crate::pool::CancelToken>,
         pub(crate) tasks: RefCell<VecDeque<tree::Apply>>,
         pub(crate) apply_source: RefCell<Option<glib::SourceId>>,
         pub(crate) want_expanded: RefCell<HashSet<PathBuf>>,
@@ -122,7 +126,7 @@ mod imp {
         pub(crate) op_queue: RefCell<VecDeque<PendingOp>>,
         pub(crate) ops: RefCell<HashMap<u64, OpDone>>,
         // git decorations
-        pub(crate) git_snapshot: RefCell<Rc<Snapshot>>,
+        pub(crate) git_snapshot: RefCell<Arc<Snapshot>>,
         pub(crate) git_generation: Cell<u64>,
         pub(crate) git_timeout: RefCell<Option<glib::SourceId>>,
         pub(crate) git_running: Cell<bool>,
@@ -176,6 +180,7 @@ mod imp {
                 loaded: RefCell::default(),
                 generation: Cell::new(0),
                 pending_scans: Cell::new(0),
+                scan_cancel: RefCell::default(),
                 tasks: RefCell::default(),
                 apply_source: RefCell::new(None),
                 want_expanded: RefCell::default(),
@@ -523,7 +528,8 @@ impl ExplorerPanel {
             Msg::Git {
                 generation,
                 snapshot,
-            } => self.deliver_git(generation, snapshot),
+                changed,
+            } => self.deliver_git(generation, snapshot, changed),
             Msg::Notes {
                 generation,
                 listing,
@@ -579,6 +585,7 @@ impl ExplorerPanel {
             source.remove();
         }
         imp.tasks.borrow_mut().clear();
+        imp.scan_cancel.borrow().cancel();
         imp.generation.set(imp.generation.get() + 1);
         if let Some(source) = imp.receiver_source.take() {
             source.remove();

@@ -105,7 +105,7 @@ impl ExplorerPanel {
         if imp.destroyed.get() {
             return;
         }
-        *imp.git_snapshot.borrow_mut() = Rc::new(crate::gitstatus::Snapshot::default());
+        *imp.git_snapshot.borrow_mut() = Arc::new(crate::gitstatus::Snapshot::default());
         self.set_git_monitor(None);
         self.watch_current_file(None);
         imp.notes_requested.set(None);
@@ -602,7 +602,13 @@ impl ExplorerPanel {
         menu
     }
 
-    pub(super) fn popup_menu(&self, event: Option<&gdk::EventButton>) {
+    /// Pop the context menu up as the keyboard shortcut would; returns it for inspection.
+    #[doc(hidden)]
+    pub fn popup_context_menu(&self) -> gtk::Menu {
+        self.popup_menu(None)
+    }
+
+    pub(super) fn popup_menu(&self, event: Option<&gdk::EventButton>) -> gtk::Menu {
         let menu = self.build_menu();
         match event {
             Some(event) => menu.popup_at_pointer(Some(event)),
@@ -613,6 +619,7 @@ impl ExplorerPanel {
                 None,
             ),
         }
+        menu
     }
 
     pub(super) fn on_button(

@@ -9,6 +9,8 @@
 //!   --expand PATH       reveal PATH (relative to ROOT) in the tree
 //!   --decorated         keep the window manager decorations (default: none)
 //!   --geometry          print widget geometry after settling (for parity checks)
+//!   --dialog KIND       open the new-file | rename | delete | new-note dialog (or the
+//!                       context `menu`) and screenshot it instead of the window
 //!   --screenshot FILE   write a PNG once the tree has settled, then quit
 //! ```
 use gtk::prelude::*;
@@ -26,6 +28,7 @@ struct Options {
     notes: bool,
     decorated: bool,
     geometry: bool,
+    dialog: Option<String>,
     expand: Vec<String>,
     screenshot: Option<PathBuf>,
 }
@@ -46,6 +49,7 @@ fn parse() -> Options {
             "--notes" => options.notes = true,
             "--decorated" => options.decorated = true,
             "--geometry" => options.geometry = true,
+            "--dialog" => options.dialog = args.next(),
             "--expand" => options.expand.extend(args.next()),
             "--screenshot" => options.screenshot = args.next().map(PathBuf::from),
             other => options.root = Some(PathBuf::from(other)),
@@ -156,10 +160,12 @@ fn main() {
     if let Some(query) = &options.search {
         explorer.focus_search(Some(query));
     }
+    let dialog_kind = options.dialog.clone();
     if let Some(file) = options.screenshot.clone() {
         let explorer = explorer.clone();
         let window = window.clone();
         let mut quiet = 0;
+        let mut menu: Option<gtk::Menu> = None;
         let geometry = options.geometry;
         glib::timeout_add_local(Duration::from_millis(60), move || {
             let busy = explorer.is_busy()
@@ -170,11 +176,39 @@ fn main() {
             if quiet < 6 && started.elapsed() < Duration::from_secs(8) {
                 return glib::ControlFlow::Continue;
             }
+            if let (Some(kind), None, None) = (&dialog_kind, explorer.open_dialog(), &menu) {
+                // The tree is loaded: select a file and open the requested dialog.
+                explorer.select(&root.join("README.md"));
+                explorer.focus_tree();
+                match kind.as_str() {
+                    "new-file" => explorer.new_dialog(false),
+                    "rename" => explorer.rename_dialog(),
+                    "delete" => explorer.delete_dialog(None),
+                    "menu" => {
+                        menu = Some(explorer.popup_context_menu());
+                    }
+                    _ => explorer.new_note_dialog(),
+                }
+                quiet = 0;
+                return glib::ControlFlow::Continue;
+            }
             println!("settled-ms={}", started.elapsed().as_millis());
             if geometry {
                 print_geometry(&explorer);
             }
-            let Some(gdk_window) = window.window() else {
+            let target = if let Some(menu) = &menu {
+                menu.toplevel()
+                    .and_then(|t| t.downcast::<gtk::Window>().ok())
+                    .unwrap_or_else(|| window.clone())
+            } else if dialog_kind.is_some() {
+                explorer
+                    .open_dialog()
+                    .map(|d| d.upcast::<gtk::Window>())
+                    .unwrap_or_else(|| window.clone())
+            } else {
+                window.clone()
+            };
+            let Some(gdk_window) = target.window() else {
                 gtk::main_quit();
                 return glib::ControlFlow::Break;
             };

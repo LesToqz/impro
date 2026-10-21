@@ -111,7 +111,7 @@ impl ExplorerPanel {
         imp.git_enabled.set(enabled);
         if !enabled {
             imp.git_cancel.borrow().cancel();
-            *imp.git_snapshot.borrow_mut() = Rc::new(Snapshot::default());
+            *imp.git_snapshot.borrow_mut() = Arc::new(Snapshot::default());
             self.set_git_monitor(None);
             self.w().tree.queue_draw();
         }
@@ -133,23 +133,27 @@ impl ExplorerPanel {
         let root = imp.root.borrow().clone();
         let cancel = CancelToken::new();
         *imp.git_cancel.borrow_mut() = cancel.clone();
+        let previous = imp.git_snapshot.borrow().clone();
         pool::spawn(Lane::Interactive, move || {
             let snapshot = collect(&root, &cancel);
+            // Diffing 20 000 entries stays off the main thread.
+            let changed = !previous.diff(&snapshot).is_empty();
             let _ = sender.send(Msg::Git {
                 generation,
                 snapshot,
+                changed,
             });
         });
     }
 
-    pub(super) fn deliver_git(&self, generation: u64, snapshot: Snapshot) {
+    pub(super) fn deliver_git(&self, generation: u64, snapshot: Snapshot, changed: bool) {
         let imp = self.imp();
         if imp.git_closed.get() {
             return;
         }
         imp.git_running.set(false);
         if generation == imp.git_generation.get() && imp.git_enabled.get() {
-            self.apply_snapshot(snapshot);
+            self.install_snapshot(snapshot, changed);
         } else if imp.git_enabled.get() && imp.git_timeout.borrow().is_none() {
             self.schedule_git();
         }
@@ -158,14 +162,14 @@ impl ExplorerPanel {
     /// Install a snapshot, repainting only when some decoration actually changed.
     #[doc(hidden)]
     pub fn apply_snapshot(&self, snapshot: Snapshot) {
+        let changed = !self.imp().git_snapshot.borrow().diff(&snapshot).is_empty();
+        self.install_snapshot(snapshot, changed);
+    }
+
+    fn install_snapshot(&self, snapshot: Snapshot, changed: bool) {
         let imp = self.imp();
         let git_dir = snapshot.git_dir.clone();
-        let snapshot = Rc::new(snapshot);
-        let changed = {
-            let old = imp.git_snapshot.borrow();
-            !old.diff(&snapshot).is_empty()
-        };
-        *imp.git_snapshot.borrow_mut() = snapshot;
+        *imp.git_snapshot.borrow_mut() = Arc::new(snapshot);
         self.set_git_monitor(git_dir);
         if changed {
             self.w().tree.queue_draw();
@@ -175,7 +179,8 @@ impl ExplorerPanel {
     /// Direct delivery of a result for `generation` (stale or disabled ones are dropped).
     #[doc(hidden)]
     pub fn deliver_git_snapshot(&self, generation: u64, snapshot: Snapshot) {
-        self.deliver_git(generation, snapshot);
+        let changed = !self.imp().git_snapshot.borrow().diff(&snapshot).is_empty();
+        self.deliver_git(generation, snapshot, changed);
     }
 
     #[doc(hidden)]
@@ -184,7 +189,7 @@ impl ExplorerPanel {
     }
 
     #[doc(hidden)]
-    pub fn git_snapshot(&self) -> Rc<Snapshot> {
+    pub fn git_snapshot(&self) -> Arc<Snapshot> {
         self.imp().git_snapshot.borrow().clone()
     }
 
