@@ -357,6 +357,12 @@ impl ExplorerPanel {
         imp.want_select.borrow_mut().take();
     }
 
+    /// A listing of `dir` was requested (its folder was expanded at least once).
+    #[doc(hidden)]
+    pub fn is_loaded(&self, dir: &Path) -> bool {
+        self.imp().loaded.borrow().contains(dir)
+    }
+
     /// Listings are being fetched or merged.
     pub fn is_busy(&self) -> bool {
         let imp = self.imp();
