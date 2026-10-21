@@ -341,7 +341,11 @@ impl ExplorerPanel {
         text_cell.set_ellipsize(pango::EllipsizeMode::End);
         util::pack(&column, &text_cell, true);
         util::attribute(&column, &text_cell, "text", 1);
+        // Rows share one height, so GTK need not measure all of them (50 000 entries).
+        column.set_sizing(gtk::TreeViewColumnSizing::Fixed);
+        column.set_expand(true);
         tree.append_column(&column);
+        tree.set_fixed_height_mode(true);
         let scroll = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Automatic)
             .vscrollbar_policy(gtk::PolicyType::Automatic)

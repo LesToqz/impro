@@ -7,6 +7,8 @@
 //!   --search QUERY      type QUERY into the search box
 //!   --notes             show the Notes section
 //!   --expand PATH       reveal PATH (relative to ROOT) in the tree
+//!   --decorated         keep the window manager decorations (default: none)
+//!   --geometry          print widget geometry after settling (for parity checks)
 //!   --screenshot FILE   write a PNG once the tree has settled, then quit
 //! ```
 use gtk::prelude::*;
@@ -22,6 +24,8 @@ struct Options {
     theme: Option<String>,
     search: Option<String>,
     notes: bool,
+    decorated: bool,
+    geometry: bool,
     expand: Vec<String>,
     screenshot: Option<PathBuf>,
 }
@@ -40,6 +44,8 @@ fn parse() -> Options {
             "--theme" => options.theme = args.next(),
             "--search" => options.search = args.next(),
             "--notes" => options.notes = true,
+            "--decorated" => options.decorated = true,
+            "--geometry" => options.geometry = true,
             "--expand" => options.expand.extend(args.next()),
             "--screenshot" => options.screenshot = args.next().map(PathBuf::from),
             other => options.root = Some(PathBuf::from(other)),
@@ -48,8 +54,67 @@ fn parse() -> Options {
     options
 }
 
+fn rect(name: &str, panel: &ExplorerPanel, widget: &impl IsA<gtk::Widget>) {
+    let (x, y) = widget.translate_coordinates(panel, 0, 0).unwrap_or((0, 0));
+    println!(
+        "{name:22} x={x} y={y} w={} h={}",
+        widget.allocated_width(),
+        widget.allocated_height()
+    );
+}
+
+fn print_geometry(panel: &ExplorerPanel) {
+    let (header, actions) = panel.header();
+    rect("header", panel, &header);
+    for button in actions.children() {
+        rect("  button", panel, &button);
+    }
+    let search = panel.search();
+    rect("search", panel, &search);
+    rect("search entry", panel, &search.entry());
+    rect("case", panel, &search.case_button());
+    rect("regex", panel, &search.regex_button());
+    let tree = panel.tree();
+    rect("tree", panel, &tree);
+    if let Some(scroll) = tree.parent() {
+        rect("scroll", panel, &scroll);
+    }
+    if let (Some(column), Some(first)) = (
+        tree.column(0),
+        panel.store().path(&panel.store().iter_first().unwrap()),
+    ) {
+        let area = tree.background_area(Some(&first), Some(&column));
+        println!(
+            "root row area {} {} {} {}",
+            area.x(),
+            area.y(),
+            area.width(),
+            area.height()
+        );
+        if let Some(cell) = column
+            .cells()
+            .get(1)
+            .and_then(|c| c.clone().downcast::<gtk::CellRendererText>().ok())
+        {
+            println!(
+                "text cell fixed {:?} font {}",
+                cell.fixed_size(),
+                panel.font_size()
+            );
+        }
+    }
+    let notes = panel.notes_widgets();
+    rect("notes_split", panel, &notes.split);
+    rect("notes_section", panel, &notes.section);
+    println!("paned position {}", notes.split.position());
+}
+
 fn main() {
     let options = parse();
+    // Keep GTK on the X11 display (Xvfb for QA) even when a Wayland session is inherited.
+    if std::env::var_os("GDK_BACKEND").is_none() {
+        std::env::set_var("GDK_BACKEND", "x11");
+    }
     gtk::init().expect("display");
     impro_ui::init();
     impro_explorer::init();
@@ -78,6 +143,7 @@ fn main() {
     let (width, height) = options.size.unwrap_or((300, 720));
     window.set_default_size(width, height);
     window.set_title("impro explorer");
+    window.set_decorated(options.decorated);
     window.add(&explorer);
     window.connect_destroy(|_| gtk::main_quit());
     window.show_all();
@@ -94,6 +160,7 @@ fn main() {
         let explorer = explorer.clone();
         let window = window.clone();
         let mut quiet = 0;
+        let geometry = options.geometry;
         glib::timeout_add_local(Duration::from_millis(60), move || {
             let busy = explorer.is_busy()
                 || explorer.search().is_searching()
@@ -104,6 +171,9 @@ fn main() {
                 return glib::ControlFlow::Continue;
             }
             println!("settled-ms={}", started.elapsed().as_millis());
+            if geometry {
+                print_geometry(&explorer);
+            }
             let Some(gdk_window) = window.window() else {
                 gtk::main_quit();
                 return glib::ControlFlow::Break;

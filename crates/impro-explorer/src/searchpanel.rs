@@ -24,6 +24,8 @@ pub type PathTextProvider = Rc<dyn Fn(&Path) -> Option<String>>;
 const DEBOUNCE: Duration = Duration::from_millis(200);
 /// Minimum interval between result batches posted by the worker.
 const BATCH_INTERVAL: Duration = Duration::from_millis(50);
+/// File-name rows appended in order before the rest are inserted back to front.
+const NAME_HEAD: usize = 300;
 /// Main-thread time spent rendering rows per step.
 const RENDER_BUDGET: Duration = Duration::from_millis(3);
 
@@ -53,9 +55,29 @@ enum Msg {
     },
 }
 
+/// Rows still to be inserted. Big items are resumable so a step never exceeds its budget.
 enum Item {
+    /// A file group whose header row is not inserted yet.
     Group(FileGroup),
-    Name(PathBuf),
+    /// The remaining match rows of an inserted group header.
+    Rows {
+        parent: gtk::TreeRowReference,
+        path: String,
+        matches: Vec<crate::search::Match>,
+        next: usize,
+    },
+    /// The file-name group (all names; rendered when the search is complete).
+    Names(Vec<PathBuf>),
+    /// Remaining file-name rows (head in order, then tail back to front after `anchor`).
+    NameRows(NameJob),
+}
+
+struct NameJob {
+    parent: gtk::TreeRowReference,
+    paths: Vec<PathBuf>,
+    pos: usize,
+    rev: usize,
+    anchor: Option<gtk::TreeIter>,
 }
 
 struct Widgets {
@@ -248,7 +270,11 @@ impl SearchPanel {
                 style_result(&tree, cell, model, iter);
             }
         });
+        // All rows share one height, so GTK need not measure them individually.
+        column.set_sizing(gtk::TreeViewColumnSizing::Fixed);
+        column.set_expand(true);
         tree.append_column(&column);
+        tree.set_fixed_height_mode(true);
         let scroll = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Automatic)
             .vscrollbar_policy(gtk::PolicyType::Automatic)
@@ -655,9 +681,10 @@ impl SearchPanel {
                 results.groups.push(group.clone());
                 queue.push_back(Item::Group(group));
             }
-            for name in batch.names {
-                results.file_names.push(name.clone());
-                queue.push_back(Item::Name(name));
+            results.file_names.extend(batch.names);
+            if batch.done && !results.file_names.is_empty() {
+                // One insertion pass for all names (see `step_names`).
+                queue.push_back(Item::Names(results.file_names.clone()));
             }
             results.truncated = batch.truncated;
             results.total_matches = batch.total_matches;
@@ -692,7 +719,9 @@ impl SearchPanel {
         let mut queue = imp.queue.borrow_mut();
         queue.clear();
         queue.extend(results.groups.into_iter().map(Item::Group));
-        queue.extend(results.file_names.into_iter().map(Item::Name));
+        if !imp.searching.get() && !results.file_names.is_empty() {
+            queue.push_back(Item::Names(results.file_names));
+        }
         drop(queue);
         imp.has_names_group.set(false);
         self.w().store.clear();
@@ -705,16 +734,23 @@ impl SearchPanel {
         if let Some(source) = imp.render_source.take() {
             source.remove();
         }
-        let started = Instant::now();
-        loop {
+        let deadline = Instant::now() + RENDER_BUDGET;
+        while Instant::now() < deadline {
             let item = imp.queue.borrow_mut().pop_front();
             let Some(item) = item else { break };
-            match item {
+            let rest = match item {
                 Item::Group(group) => self.insert_group(&group),
-                Item::Name(path) => self.insert_name(&path),
-            }
-            if started.elapsed() >= RENDER_BUDGET {
-                break;
+                Item::Rows {
+                    parent,
+                    path,
+                    matches,
+                    next,
+                } => self.step_rows(parent, path, matches, next, deadline),
+                Item::Names(paths) => self.start_names(paths),
+                Item::NameRows(job) => self.step_names(job, deadline),
+            };
+            if let Some(rest) = rest {
+                imp.queue.borrow_mut().push_front(rest);
             }
         }
         self.update_summary();
@@ -745,7 +781,8 @@ impl SearchPanel {
         }
     }
 
-    fn insert_group(&self, group: &FileGroup) {
+    /// Insert a group's header row; its match rows follow as a resumable item.
+    fn insert_group(&self, group: &FileGroup) -> Option<Item> {
         let w = self.w();
         let directory = Path::new(&group.relative_path)
             .parent()
@@ -770,15 +807,9 @@ impl SearchPanel {
             escape(&directory)
         );
         let path = group.path.to_string_lossy().into_owned();
-        // The file-name group always stays last.
-        let position = self
-            .imp()
-            .has_names_group
-            .get()
-            .then(|| (w.store.iter_n_children(None) - 1).max(0) as u32);
         let parent = w.store.insert_with_values(
             None,
-            position,
+            None,
             &[
                 (0, &"text-x-generic-symbolic"),
                 (1, &""),
@@ -790,7 +821,38 @@ impl SearchPanel {
                 (7, &"group"),
             ],
         );
-        for m in &group.matches {
+        let reference = gtk::TreeRowReference::new(&w.store, &util::path_of(&w.store, &parent))?;
+        Some(Item::Rows {
+            parent: reference,
+            path,
+            matches: group.matches.clone(),
+            next: 0,
+        })
+    }
+
+    /// Insert match rows below a group until the deadline; expand the group when complete.
+    fn step_rows(
+        &self,
+        parent: gtk::TreeRowReference,
+        path: String,
+        matches: Vec<crate::search::Match>,
+        mut next: usize,
+        deadline: Instant,
+    ) -> Option<Item> {
+        let w = self.w();
+        let tree_path = parent.path()?;
+        let parent_iter = w.store.iter(&tree_path)?;
+        while next < matches.len() {
+            if next % 4 == 3 && Instant::now() >= deadline {
+                return Some(Item::Rows {
+                    parent,
+                    path,
+                    matches,
+                    next,
+                });
+            }
+            let m = &matches[next];
+            next += 1;
             let preview = &m.line_text;
             let length = preview.chars().count();
             let start = m.column.saturating_sub(m.preview_offset);
@@ -805,7 +867,7 @@ impl SearchPanel {
                 escape(char_slice(preview, end, length))
             );
             w.store.insert_with_values(
-                Some(&parent),
+                Some(&parent_iter),
                 None,
                 &[
                     (0, &None::<&str>),
@@ -819,44 +881,66 @@ impl SearchPanel {
                 ],
             );
         }
-        w.tree.expand_row(&util::path_of(&w.store, &parent), false);
+        w.tree.expand_row(&tree_path, false);
         self.after_row_inserted();
+        None
     }
 
-    fn insert_name(&self, path: &Path) {
+    /// Insert the "File names" header; its rows follow as a resumable item.
+    fn start_names(&self, paths: Vec<PathBuf>) -> Option<Item> {
         let w = self.w();
-        let imp = self.imp();
-        let created = !imp.has_names_group.get();
-        let parent = if created {
-            imp.has_names_group.set(true);
-            w.store.insert_with_values(
-                None,
-                None,
-                &[
-                    (0, &"folder-saved-search-symbolic"),
-                    (1, &""),
-                    (2, &"<b>File names</b>"),
-                    (3, &""),
-                    (4, &0i32),
-                    (5, &0i32),
-                    (6, &0i32),
-                    (7, &"group"),
-                ],
-            )
-        } else {
-            match w
-                .store
-                .iter_nth_child(None, w.store.iter_n_children(None) - 1)
-            {
-                Some(parent) => parent,
-                None => return,
-            }
-        };
-        let relative = crate::search::relative_to(path, &imp.root.borrow());
-        w.store.insert_with_values(
-            Some(&parent),
+        self.imp().has_names_group.set(true);
+        let parent = w.store.insert_with_values(
+            None,
             None,
             &[
+                (0, &"folder-saved-search-symbolic"),
+                (1, &""),
+                (2, &"<b>File names</b>"),
+                (3, &""),
+                (4, &0i32),
+                (5, &0i32),
+                (6, &0i32),
+                (7, &"group"),
+            ],
+        );
+        let reference = gtk::TreeRowReference::new(&w.store, &util::path_of(&w.store, &parent))?;
+        Some(Item::NameRows(NameJob {
+            parent: reference,
+            rev: paths.len(),
+            paths,
+            pos: 0,
+            anchor: None,
+        }))
+    }
+
+    /// File-name rows. `GtkTreeStore` costs O(position) per insertion, so a long list is
+    /// built as: the first [`NAME_HEAD`] rows in order, then the rest from last to first
+    /// right after that head, which keeps every insertion O(head) and the order exact.
+    fn step_names(&self, mut job: NameJob, deadline: Instant) -> Option<Item> {
+        let w = self.w();
+        let tree_path = job.parent.path()?;
+        let parent = w.store.iter(&tree_path)?;
+        let root = self.imp().root.borrow().clone();
+        let head = job.paths.len().min(NAME_HEAD);
+        let mut counter = 0u32;
+        loop {
+            counter += 1;
+            if counter & 3 == 0 && Instant::now() >= deadline {
+                return Some(Item::NameRows(job));
+            }
+            let index = if job.pos < head {
+                job.pos += 1;
+                job.pos - 1
+            } else if job.rev > job.pos {
+                job.rev -= 1;
+                job.rev
+            } else {
+                break;
+            };
+            let path = &job.paths[index];
+            let relative = crate::search::relative_to(path, &root);
+            let values: [(u32, &dyn ToValue); 8] = [
                 (0, &"text-x-generic-symbolic"),
                 (1, &""),
                 (2, &escape(&relative)),
@@ -865,12 +949,21 @@ impl SearchPanel {
                 (5, &0i32),
                 (6, &0i32),
                 (7, &"file"),
-            ],
-        );
-        if created {
-            w.tree.expand_row(&util::path_of(&w.store, &parent), false);
+            ];
+            let row = if index < head {
+                let row = w.store.insert_with_values(Some(&parent), None, &values);
+                job.anchor = Some(row);
+                row
+            } else {
+                let row = w.store.insert_after(Some(&parent), job.anchor.as_ref());
+                w.store.set(&row, &values);
+                row
+            };
+            let _ = row;
         }
+        w.tree.expand_row(&tree_path, false);
         self.after_row_inserted();
+        None
     }
 
     fn after_row_inserted(&self) {
@@ -1065,7 +1158,9 @@ fn run_search(
             let _ = self.sender.send(Msg::Batch(batch));
         }
         fn progress(&mut self, results: &SearchResults) {
-            if !self.started || self.last.elapsed() >= BATCH_INTERVAL {
+            // The first hit goes out at once; later ones in time-spaced batches.
+            let first_hit = self.sent_groups == 0 && !results.groups.is_empty();
+            if !self.started || first_hit || self.last.elapsed() >= BATCH_INTERVAL {
                 self.flush(results, false);
             }
         }

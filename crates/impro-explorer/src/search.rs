@@ -114,13 +114,18 @@ pub fn read_text(path: &Path) -> Option<String> {
     if !meta.is_file() || meta.len() > MAX_FILE_SIZE as u64 {
         return None;
     }
-    let mut data = Vec::with_capacity(meta.len() as usize + 1);
-    std::fs::File::open(path)
-        .ok()?
-        .take(MAX_FILE_SIZE as u64 + 1)
+    let mut file = std::fs::File::open(path).ok()?;
+    // Binary files are rejected after their first block instead of being read whole.
+    let mut data = vec![0u8; (meta.len() as usize).min(8192)];
+    file.read_exact(&mut data).ok()?;
+    if data.contains(&0) {
+        return None;
+    }
+    data.reserve((meta.len() as usize).saturating_sub(data.len()) + 1);
+    file.take(MAX_FILE_SIZE as u64 + 1 - data.len() as u64)
         .read_to_end(&mut data)
         .ok()?;
-    if data.len() > MAX_FILE_SIZE || data[..data.len().min(8192)].contains(&0) {
+    if data.len() > MAX_FILE_SIZE {
         return None;
     }
     String::from_utf8(data).ok()

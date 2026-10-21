@@ -8,6 +8,8 @@ use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
+/// Rows of a fresh folder appended in order before the rest are inserted back to front.
+const HEAD_ROWS: usize = 400;
 /// Main-thread time spent merging rows per step.
 const APPLY_BUDGET: Duration = Duration::from_millis(3);
 
@@ -97,6 +99,10 @@ pub struct Apply {
     placeholder: Option<gtk::TreeIter>,
     cursor: Option<gtk::TreeIter>,
     to_expand: Vec<gtk::TreeRowReference>,
+    /// The folder had no rows: filled head first, then tail-to-head after `anchor`.
+    fresh: bool,
+    rev: usize,
+    anchor: Option<gtk::TreeIter>,
 }
 
 fn placeholder_values() -> [(u32, &'static dyn ToValue); 3] {
@@ -153,6 +159,9 @@ impl ExplorerPanel {
                 placeholder: None,
                 cursor: None,
                 to_expand: Vec::new(),
+                fresh: false,
+                rev: 0,
+                anchor: None,
             });
         }
         self.run_tasks();
@@ -199,6 +208,28 @@ impl ExplorerPanel {
         }
     }
 
+    /// Insert `entry` directly after `anchor` (O(1) in `GtkTreeStore`), or first when None.
+    fn insert_entry_after(
+        &self,
+        parent: &gtk::TreeIter,
+        anchor: Option<&gtk::TreeIter>,
+        entry: &Entry,
+    ) -> gtk::TreeIter {
+        let store = &self.w().store;
+        let icon = if entry.is_dir {
+            "folder"
+        } else {
+            "text-x-generic"
+        };
+        let values: [(u32, &dyn ToValue); 3] = [(0, &icon), (1, &entry.name), (2, &entry.path)];
+        let iter = store.insert_after(Some(parent), anchor);
+        store.set(&iter, &values);
+        if entry.is_dir {
+            store.insert_with_values(Some(&iter), None, &placeholder_values());
+        }
+        iter
+    }
+
     fn insert_entry(
         &self,
         parent: &gtk::TreeIter,
@@ -242,6 +273,12 @@ impl ExplorerPanel {
 
     /// Advance one merge by up to the deadline; `true` when the folder is fully merged
     /// (or its row vanished).
+    ///
+    /// A folder without rows (first load) is filled in two phases. `GtkTreeStore` walks the
+    /// sibling list on every append, so appending n rows costs O(n^2) (five seconds for
+    /// 50 000). Inserting right after a fixed anchor row is O(1): the first
+    /// [`HEAD_ROWS`] entries are appended in order, then the rest are inserted after that
+    /// anchor from the last to the first, which yields the final order in linear time.
     fn step_apply(&self, task: &mut Apply, deadline: Instant) -> bool {
         let w = self.w();
         let store = &w.store;
@@ -255,7 +292,15 @@ impl ExplorerPanel {
             task.started = true;
             match store.iter_children(Some(&parent)) {
                 Some(first) if util::string(store, &first, 2).is_empty() => {
-                    task.placeholder = Some(first)
+                    task.placeholder = Some(first);
+                    task.fresh = true;
+                    task.rev = task.entries.len();
+                }
+                None => {
+                    task.fresh = true;
+                    task.rev = task.entries.len();
+                    task.placeholder =
+                        Some(store.insert_with_values(Some(&parent), None, &placeholder_values()));
                 }
                 other => {
                     task.cursor = other;
@@ -266,55 +311,75 @@ impl ExplorerPanel {
                 }
             }
         }
+        let head = task.entries.len().min(HEAD_ROWS);
         let wanted_empty = self.imp().want_expanded.borrow().is_empty();
         let mut counter = 0u32;
-        while task.pos < task.entries.len() {
+        loop {
             counter += 1;
-            if counter & 15 == 0 && Instant::now() >= deadline {
+            if counter & 3 == 0 && Instant::now() >= deadline {
                 break;
             }
-            let entry = &task.entries[task.pos];
             let mut inserted: Option<gtk::TreeIter> = None;
             let mut kept: Option<gtk::TreeIter> = None;
-            match task.cursor.take() {
-                None => {
-                    inserted = Some(self.insert_entry(&parent, None, entry));
-                    task.pos += 1;
+            let index;
+            if task.fresh && task.pos >= head {
+                // Tail of a fresh folder: last entry first, right after the anchor row.
+                if task.rev <= task.pos {
+                    break;
                 }
-                Some(current) => {
-                    let current_path = util::string(store, &current, 2);
-                    if current_path == entry.path {
-                        let current_is_dir = util::string(store, &current, 0) == "folder";
-                        if current_is_dir == entry.is_dir {
-                            task.cursor = self.next_row(&current);
-                            kept = Some(current);
-                        } else {
-                            // A file became a folder (or back): replace the row.
-                            inserted = Some(self.insert_entry(&parent, Some(&current), entry));
-                            task.cursor = self.remove_row(&current);
+                task.rev -= 1;
+                index = task.rev;
+                inserted = Some(self.insert_entry_after(
+                    &parent,
+                    task.anchor.as_ref(),
+                    &task.entries[index],
+                ));
+            } else if task.pos < task.entries.len() {
+                index = task.pos;
+                let entry = &task.entries[index];
+                match task.cursor.take() {
+                    None => {
+                        let row = self.insert_entry(&parent, None, entry);
+                        if task.fresh {
+                            task.anchor = Some(row);
                         }
+                        inserted = Some(row);
                         task.pos += 1;
-                    } else {
-                        let current_entry = Entry {
-                            is_dir: util::string(store, &current, 0) == "folder",
-                            name: util::string(store, &current, 1),
-                            key: String::new(),
-                            path: current_path,
-                        };
-                        let current_entry = Entry {
-                            key: crate::search::fold(&current_entry.name),
-                            ..current_entry
-                        };
-                        if order(&current_entry, entry, task.folders_first) == Ordering::Less {
-                            // Gone from disk.
-                            task.cursor = self.remove_row(&current);
-                        } else {
-                            inserted = Some(self.insert_entry(&parent, Some(&current), entry));
+                    }
+                    Some(current) => {
+                        let current_path = util::string(store, &current, 2);
+                        if current_path == entry.path {
+                            let current_is_dir = util::string(store, &current, 0) == "folder";
+                            if current_is_dir == entry.is_dir {
+                                task.cursor = self.next_row(&current);
+                                kept = Some(current);
+                            } else {
+                                // A file became a folder (or back): replace the row.
+                                inserted = Some(self.insert_entry(&parent, Some(&current), entry));
+                                task.cursor = self.remove_row(&current);
+                            }
                             task.pos += 1;
-                            task.cursor = Some(current);
+                        } else {
+                            let name = util::string(store, &current, 1);
+                            let current_entry = Entry {
+                                is_dir: util::string(store, &current, 0) == "folder",
+                                key: crate::search::fold(&name),
+                                name,
+                                path: current_path,
+                            };
+                            if order(&current_entry, entry, task.folders_first) == Ordering::Less {
+                                // Gone from disk.
+                                task.cursor = self.remove_row(&current);
+                            } else {
+                                inserted = Some(self.insert_entry(&parent, Some(&current), entry));
+                                task.pos += 1;
+                                task.cursor = Some(current);
+                            }
                         }
                     }
                 }
+            } else {
+                break;
             }
             if inserted.is_some() || kept.is_some() {
                 // Keep the placeholder until real rows exist, or GTK collapses the row.
@@ -322,6 +387,7 @@ impl ExplorerPanel {
                     store.remove(&placeholder);
                 }
             }
+            let entry = &task.entries[index];
             if !wanted_empty && entry.is_dir {
                 if let Some(row) = inserted.as_ref().or(kept.as_ref()) {
                     if self
@@ -340,7 +406,11 @@ impl ExplorerPanel {
                 }
             }
         }
-        let finished = task.pos >= task.entries.len();
+        let finished = if task.fresh {
+            task.pos >= head && task.rev <= task.pos
+        } else {
+            task.pos >= task.entries.len()
+        };
         if finished {
             // Everything left over vanished from disk.
             while let Some(current) = task.cursor.take() {

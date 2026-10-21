@@ -947,3 +947,115 @@ fn test_set_of_expanded_paths_helper_is_consistent() {
         assert_eq!(f.panel.expanded_paths(), expected);
     });
 }
+
+/// Folders of various sizes around the head/tail boundary load in exact sorted order.
+#[test]
+fn test_large_folders_load_in_order_and_refresh_merges_in_place() {
+    run(|| {
+        for count in [0usize, 1, 399, 400, 401, 2500] {
+            let f = setup();
+            let big = f.p("big");
+            std::fs::create_dir(&big).unwrap();
+            for i in 0..count {
+                // Mixed case, digits and a few folders exercise the folder/name ordering.
+                let name = if i % 97 == 0 {
+                    format!("dir{i:05}")
+                } else if i % 3 == 0 {
+                    format!("File_{i:05}.dat")
+                } else {
+                    format!("file_{i:05}.dat")
+                };
+                if i % 97 == 0 {
+                    std::fs::create_dir(big.join(&name)).unwrap();
+                } else {
+                    std::fs::File::create(big.join(&name)).unwrap();
+                }
+            }
+            f.panel.refresh();
+            wait_idle(&f.panel);
+            expand(&f.panel, &big);
+            let listed = names(&f.panel, &big);
+            let mut expected: Vec<(bool, String, String)> = std::fs::read_dir(&big)
+                .unwrap()
+                .map(|e| {
+                    let e = e.unwrap();
+                    let name = e.file_name().to_string_lossy().into_owned();
+                    (!e.file_type().unwrap().is_dir(), name.to_lowercase(), name)
+                })
+                .collect();
+            expected.sort();
+            let expected: Vec<String> = expected.into_iter().map(|(_, _, n)| n).collect();
+            assert_eq!(listed, expected, "{count} entries");
+            // Folders keep their placeholder child, files have none.
+            let rows = children(&f.panel, &big);
+            for row in rows.iter().step_by(61) {
+                let path = PathBuf::from(row[2].clone().unwrap());
+                let is_dir = row[0].as_deref() == Some("folder");
+                let child_rows = f
+                    .panel
+                    .store()
+                    .iter_n_children(f.panel.find_row(&path).as_ref());
+                assert_eq!(child_rows, i32::from(is_dir), "{}", path.display());
+            }
+            if count >= 399 {
+                // Merge a change into the big folder without rebuilding it.
+                std::fs::remove_file(big.join(&expected[expected.len() / 2])).unwrap();
+                std::fs::File::create(big.join("added_in_the_middle.dat")).unwrap();
+                f.panel.refresh();
+                wait_idle(&f.panel);
+                let listed = names(&f.panel, &big);
+                assert_eq!(listed.len(), expected.len(), "{count}: one out, one in");
+                assert!(listed.contains(&"added_in_the_middle.dat".to_owned()));
+                assert!(!listed.contains(&expected[expected.len() / 2]));
+                let mut resorted = listed.clone();
+                resorted.sort_by_key(|n| {
+                    (
+                        !std::path::Path::new(&big).join(n).is_dir(),
+                        n.to_lowercase(),
+                        n.clone(),
+                    )
+                });
+                assert_eq!(listed, resorted, "{count}: order after merge");
+            }
+        }
+    });
+}
+
+#[test]
+fn test_big_folder_stays_responsive_while_loading() {
+    run(|| {
+        let f = setup();
+        let big = f.p("big");
+        std::fs::create_dir(&big).unwrap();
+        for i in 0..6000 {
+            std::fs::File::create(big.join(format!("file_{i:05}"))).unwrap();
+        }
+        f.panel.refresh();
+        wait_idle(&f.panel);
+        let row = f.panel.find_row(&big).unwrap();
+        let tree_path = impro_explorer::util::path_of(&f.panel.store(), &row);
+        let longest = std::cell::Cell::new(std::time::Duration::ZERO);
+        let ticks = std::cell::Cell::new(0u32);
+        f.panel.tree().expand_row(&tree_path, false);
+        let context = glib::MainContext::default();
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        while f.panel.is_busy() && std::time::Instant::now() < deadline {
+            let started = std::time::Instant::now();
+            if context.iteration(false) {
+                longest.set(longest.get().max(started.elapsed()));
+                ticks.set(ticks.get() + 1);
+            } else {
+                std::thread::sleep(std::time::Duration::from_micros(300));
+            }
+        }
+        assert_eq!(names(&f.panel, &big).len(), 6000);
+        // The listing arrives in many slices rather than one blocking insertion. (A debug
+        // build is several times slower than the release numbers in the report.)
+        assert!(ticks.get() >= 3, "{} dispatches", ticks.get());
+        assert!(
+            longest.get() < std::time::Duration::from_millis(250),
+            "{:?}",
+            longest.get()
+        );
+    });
+}

@@ -1143,6 +1143,62 @@ fn test_search_toggles_have_compact_geometry_and_accessible_names() {
 }
 
 #[test]
+fn test_many_file_names_render_in_exact_order_after_the_content_groups() {
+    run(|| {
+        let f = setup();
+        for i in 0..1500 {
+            f.files
+                .write(&format!("names/item_{i:04}.txt"), "unrelated");
+        }
+        f.panel.search_now(Some("item_"));
+        wait_scan(&f.panel);
+        let results = f.panel.results();
+        assert_eq!(results.file_names.len(), 1500);
+        assert!(results.groups.is_empty());
+        let store = f.panel.store();
+        let group = store.iter_first().unwrap();
+        assert_eq!(
+            impro_explorer::util::string(&store, &group, 2),
+            "<b>File names</b>"
+        );
+        assert_eq!(store.iter_n_children(Some(&group)), 1500);
+        let rows: Vec<String> = (0..1500)
+            .map(|i| {
+                let child = store.iter_nth_child(Some(&group), i).unwrap();
+                impro_explorer::util::string(&store, &child, 3)
+            })
+            .collect();
+        let expected: Vec<String> = results
+            .file_names
+            .iter()
+            .map(|p| p.to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(rows, expected);
+        assert!(f
+            .panel
+            .tree()
+            .row_expanded(&gtk::TreePath::from_indicesv(&[0])));
+        assert_eq!(f.panel.summary().text(), "1500 file name results");
+    });
+}
+
+#[test]
+fn test_binary_files_are_rejected_without_reading_them_whole() {
+    let f = Files::new();
+    // A megabyte of data with a NUL in the first block: rejected by the leading check.
+    let mut binary = vec![b'x'; MAX_FILE_SIZE];
+    binary[100] = 0;
+    let path = f.write("blob.bin", binary);
+    assert_eq!(read_text(&path), None);
+    // A NUL after the first 8 KiB is tolerated, as in the original.
+    let mut late = vec![b'y'; 20_000];
+    late[15_000] = 0;
+    let path = f.write("late.dat", late);
+    assert!(read_text(&path).is_some());
+    assert_eq!(read_text(&f.write("empty", "")), Some(String::new()));
+}
+
+#[test]
 fn test_incremental_render_appends_without_clearing_and_keeps_file_names_last() {
     run(|| {
         let f = setup();
