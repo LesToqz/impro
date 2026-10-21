@@ -9,9 +9,27 @@
 //!
 //! [`fuzzy`] exposes character-indexed matching, stable ranking, an incremental
 //! [`FuzzyIndex`], escaped bold markup, path ranges and prompt geometry.
+pub mod overlay;
+mod prompt;
 mod titlebar;
+pub use overlay::{Notice, OverlayHost};
+mod palettes;
+pub use palettes::{Command, CommandPalette, QuickSwitcher};
+pub use prompt::{Prompt, PromptItem, ResultRow};
 pub mod fuzzy;
-pub use fuzzy::{fold, highlight_markup, name_start, prompt_geometry, rank, split_path_ranges, FuzzyIndex, MAX_RESULTS};
-pub use titlebar::TitleBar;
-pub fn init() {impro_ui::register_css("chrome",css);}
-pub fn css(ui:&impro_core::themes::UiColors)->String {titlebar::css(ui)}
+pub use fuzzy::{
+    fold, highlight_markup, name_start, prompt_geometry, rank, split_path_ranges, FuzzyIndex,
+    MAX_RESULTS,
+};
+pub use titlebar::{TitleBar, GLYPH_OPACITY, HEADER_HEIGHT, WINDOW_BUTTON_WIDTH, WINDOW_ICON_SIZE};
+pub fn init() {
+    impro_ui::register_css("chrome", css);
+}
+pub fn css(ui: &impro_core::themes::UiColors) -> String {
+    format!(
+        "{}{}{}",
+        titlebar::css(ui),
+        prompt::css(ui),
+        overlay::css(ui)
+    )
+}
