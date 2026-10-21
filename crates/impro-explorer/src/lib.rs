@@ -1,6 +1,7 @@
 //! Explorer components; implemented by the owning port task.
 pub mod gitstatus;
 pub mod pool;
+pub mod search;
 
 pub fn init() {
     impro_ui::register_css("explorer", css);
