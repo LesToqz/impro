@@ -120,7 +120,28 @@ extern "C" {
 }
 
 extern "C" {
-    pub fn vte_terminal_get_cursor_position(t: *mut VteTerminal, column: *mut libc::c_long, row: *mut libc::c_long);
-    pub fn vte_terminal_get_text_range_format(t: *mut VteTerminal, format: c_uint, start_row: libc::c_long, start_column: libc::c_long, end_row: libc::c_long, end_column: libc::c_long, length: *mut usize) -> *mut c_char;
-    pub fn vte_pty_get_size(pty: *mut VtePty, rows: *mut c_int, columns: *mut c_int, error: *mut *mut glib_sys::GError) -> glib_sys::gboolean;
+    pub fn vte_terminal_get_cursor_position(
+        t: *mut VteTerminal,
+        column: *mut libc::c_long,
+        row: *mut libc::c_long,
+    );
+    pub fn vte_terminal_get_text_range_format(
+        t: *mut VteTerminal,
+        format: c_uint,
+        start_row: libc::c_long,
+        start_column: libc::c_long,
+        end_row: libc::c_long,
+        end_column: libc::c_long,
+        length: *mut usize,
+    ) -> *mut c_char;
+    pub fn vte_pty_get_size(
+        pty: *mut VtePty,
+        rows: *mut c_int,
+        columns: *mut c_int,
+        error: *mut *mut glib_sys::GError,
+    ) -> glib_sys::gboolean;
+}
+extern "C" {
+    pub fn vte_terminal_get_cursor_shape(t: *mut VteTerminal) -> c_uint;
+    pub fn vte_terminal_get_cursor_blink_mode(t: *mut VteTerminal) -> c_uint;
 }
