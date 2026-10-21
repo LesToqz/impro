@@ -1,0 +1,5718 @@
+{
+  "refs": "8cfacd96d8cebf073d7121a2e427f246fd771f37 refs/heads/experiment/graph-polish\n57df3694614dcf94980f04a914625a2818b17c27 refs/heads/feature/api\nac3b6cc7bca0d99427fca84f2ea6379a9773fb98 refs/heads/feature/auth\nf3f34c99704a32047f83f7a7f9ab4256d15d07f2 refs/heads/feature/ui\n4d06aaa99877ae3f25cb26b509943d050a683276 refs/heads/hotfix/critical\nd277012dd5f0e9805df88f7a9d1be7843b225d33 refs/heads/master\n787a50a3297c5bf48c7afa0e7b6ea69d188c573b refs/tags/v0.1\n2a8f1b4f283df01ecc276b9cb5e55a4e0b7e0880 refs/tags/v0.2",
+  "graph": {
+    "ok": true,
+    "error": null,
+    "repo": {
+      "name": "",
+      "root": "",
+      "default_branch": "master"
+    },
+    "head": {
+      "hash": "d277012dd5f0e9805df88f7a9d1be7843b225d33",
+      "branch": "master",
+      "detached": false
+    },
+    "dirty": {
+      "changed": 2
+    },
+    "total": 30,
+    "truncated": false,
+    "commits": [
+      {
+        "hash": "8cfacd96d8cebf073d7121a2e427f246fd771f37",
+        "short": "8cfacd9",
+        "parents": [
+          "caff39185591d9c7fd49542009929f0e86b499a6"
+        ],
+        "subject": "Experiment with graph polish 2",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1739080800,
+        "tz": 0,
+        "cts": 1739080800,
+        "refs": [
+          {
+            "name": "experiment/graph-polish",
+            "kind": "branch"
+          }
+        ],
+        "merged_name": null
+      },
+      {
+        "hash": "caff39185591d9c7fd49542009929f0e86b499a6",
+        "short": "caff391",
+        "parents": [
+          "952210e8876b35759474e2aba4a6c7af05068eee"
+        ],
+        "subject": "Experiment with graph polish 1",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738972800,
+        "tz": 0,
+        "cts": 1738972800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "d277012dd5f0e9805df88f7a9d1be7843b225d33",
+        "short": "d277012",
+        "parents": [
+          "af2ae9fb982a5be246d2105b9e6ab0ba7b0b2c9f"
+        ],
+        "subject": "Prepare the release",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738864800,
+        "tz": 0,
+        "cts": 1738864800,
+        "refs": [
+          {
+            "name": "master",
+            "kind": "branch",
+            "current": true
+          }
+        ],
+        "merged_name": null
+      },
+      {
+        "hash": "af2ae9fb982a5be246d2105b9e6ab0ba7b0b2c9f",
+        "short": "af2ae9f",
+        "parents": [
+          "a6fd1375167b036489fe52d3cc7231dbb67437ea",
+          "4d06aaa99877ae3f25cb26b509943d050a683276"
+        ],
+        "subject": "Merge pull request #47 from acme/hotfix/critical",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738756800,
+        "tz": 0,
+        "cts": 1738756800,
+        "refs": [],
+        "merged_name": "hotfix/critical"
+      },
+      {
+        "hash": "4d06aaa99877ae3f25cb26b509943d050a683276",
+        "short": "4d06aaa",
+        "parents": [
+          "024df6740bf69d8735e532ed3043b1cc89ef10a6"
+        ],
+        "subject": "Cover timeout regression",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738648800,
+        "tz": 0,
+        "cts": 1738648800,
+        "refs": [
+          {
+            "name": "hotfix/critical",
+            "kind": "branch"
+          }
+        ],
+        "merged_name": null
+      },
+      {
+        "hash": "024df6740bf69d8735e532ed3043b1cc89ef10a6",
+        "short": "024df67",
+        "parents": [
+          "559170ed8eb6c5f65bc15f1f109003ebb0c33494"
+        ],
+        "subject": "Handle cancellation",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738540800,
+        "tz": 0,
+        "cts": 1738540800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "559170ed8eb6c5f65bc15f1f109003ebb0c33494",
+        "short": "559170e",
+        "parents": [
+          "cddd09d673006a22741051b3a721484ce34236d9"
+        ],
+        "subject": "Bound worker requests",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738432800,
+        "tz": 0,
+        "cts": 1738432800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "cddd09d673006a22741051b3a721484ce34236d9",
+        "short": "cddd09d",
+        "parents": [
+          "978cd26c2bae8fdcf0cf61ce1790e0e91c0adbfd"
+        ],
+        "subject": "Reproduce timeout",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738324800,
+        "tz": 0,
+        "cts": 1738324800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "a6fd1375167b036489fe52d3cc7231dbb67437ea",
+        "short": "a6fd137",
+        "parents": [
+          "952210e8876b35759474e2aba4a6c7af05068eee"
+        ],
+        "subject": "Tune graph spacing",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738216800,
+        "tz": 0,
+        "cts": 1738216800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "952210e8876b35759474e2aba4a6c7af05068eee",
+        "short": "952210e",
+        "parents": [
+          "8f983b13ae7e9690da8c13884570a8197099c69a"
+        ],
+        "subject": "Publish package metadata",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738108800,
+        "tz": 0,
+        "cts": 1738108800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "8f983b13ae7e9690da8c13884570a8197099c69a",
+        "short": "8f983b1",
+        "parents": [
+          "9a9c4b700a23b1fab30e4d1b71188dd7df547079"
+        ],
+        "subject": "Rename the getting started guide",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738000800,
+        "tz": 0,
+        "cts": 1738000800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "9a9c4b700a23b1fab30e4d1b71188dd7df547079",
+        "short": "9a9c4b7",
+        "parents": [
+          "978cd26c2bae8fdcf0cf61ce1790e0e91c0adbfd",
+          "f3f34c99704a32047f83f7a7f9ab4256d15d07f2"
+        ],
+        "subject": "Merge branch 'feature/ui'",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737784800,
+        "tz": 0,
+        "cts": 1737784800,
+        "refs": [
+          {
+            "name": "v0.2",
+            "kind": "tag"
+          }
+        ],
+        "merged_name": "feature/ui"
+      },
+      {
+        "hash": "f3f34c99704a32047f83f7a7f9ab4256d15d07f2",
+        "short": "f3f34c9",
+        "parents": [
+          "c09bb1925ada1e5b53404887361b03769c18c75c"
+        ],
+        "subject": "Polish graph controls",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737676800,
+        "tz": 0,
+        "cts": 1737676800,
+        "refs": [
+          {
+            "name": "feature/ui",
+            "kind": "branch"
+          }
+        ],
+        "merged_name": null
+      },
+      {
+        "hash": "c09bb1925ada1e5b53404887361b03769c18c75c",
+        "short": "c09bb19",
+        "parents": [
+          "a3c5fd7a25294cf1239ad21f562a176fea03ac8a"
+        ],
+        "subject": "Style commit cards",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737568800,
+        "tz": 0,
+        "cts": 1737568800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "a3c5fd7a25294cf1239ad21f562a176fea03ac8a",
+        "short": "a3c5fd7",
+        "parents": [
+          "2f237dfeb4b220f09341e5710198670a3310e420"
+        ],
+        "subject": "Add graph palette",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737460800,
+        "tz": 0,
+        "cts": 1737460800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "978cd26c2bae8fdcf0cf61ce1790e0e91c0adbfd",
+        "short": "978cd26",
+        "parents": [
+          "2f237dfeb4b220f09341e5710198670a3310e420"
+        ],
+        "subject": "Support mixed line endings",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737352800,
+        "tz": 0,
+        "cts": 1737352800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "2f237dfeb4b220f09341e5710198670a3310e420",
+        "short": "2f237df",
+        "parents": [
+          "d64586edb9b89571e3460e52739c35117865fc7e"
+        ],
+        "subject": "Make the launcher executable",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737244800,
+        "tz": 0,
+        "cts": 1737244800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "d64586edb9b89571e3460e52739c35117865fc7e",
+        "short": "d64586e",
+        "parents": [
+          "d91939339677ccde6af533a0bcc1cffad3d05802",
+          "ac3b6cc7bca0d99427fca84f2ea6379a9773fb98",
+          "57df3694614dcf94980f04a914625a2818b17c27"
+        ],
+        "subject": "Merge pull request #42 from acme/feature/auth",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737136800,
+        "tz": 0,
+        "cts": 1737136800,
+        "refs": [],
+        "merged_name": "feature/auth"
+      },
+      {
+        "hash": "57df3694614dcf94980f04a914625a2818b17c27",
+        "short": "57df369",
+        "parents": [
+          "337bcf991d036c330e5d4e9db9837db7bac2526c"
+        ],
+        "subject": "Document endpoints",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736920800,
+        "tz": 0,
+        "cts": 1736920800,
+        "refs": [
+          {
+            "name": "feature/api",
+            "kind": "branch"
+          }
+        ],
+        "merged_name": null
+      },
+      {
+        "hash": "337bcf991d036c330e5d4e9db9837db7bac2526c",
+        "short": "337bcf9",
+        "parents": [
+          "294ddcf3db40bb164bbf9a3883faed43dbea6417"
+        ],
+        "subject": "Handle API errors",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736812800,
+        "tz": 0,
+        "cts": 1736812800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "294ddcf3db40bb164bbf9a3883faed43dbea6417",
+        "short": "294ddcf",
+        "parents": [
+          "7e305af4e2683d9c3a5acbf0528435d7e7cdf3cb"
+        ],
+        "subject": "Add retries",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736704800,
+        "tz": 0,
+        "cts": 1736704800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "7e305af4e2683d9c3a5acbf0528435d7e7cdf3cb",
+        "short": "7e305af",
+        "parents": [
+          "dfb004626912a65b764610c074239ef4d88556ae"
+        ],
+        "subject": "Create API client",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736596800,
+        "tz": 0,
+        "cts": 1736596800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "ac3b6cc7bca0d99427fca84f2ea6379a9773fb98",
+        "short": "ac3b6cc",
+        "parents": [
+          "01bedce746425fbe2633179f8f39c2da604cb7b3"
+        ],
+        "subject": "Add access checks",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736488800,
+        "tz": 0,
+        "cts": 1736488800,
+        "refs": [
+          {
+            "name": "feature/auth",
+            "kind": "branch"
+          }
+        ],
+        "merged_name": null
+      },
+      {
+        "hash": "01bedce746425fbe2633179f8f39c2da604cb7b3",
+        "short": "01bedce",
+        "parents": [
+          "fd5f4061be80ed54ea516c8696d7848fffeaad9c"
+        ],
+        "subject": "Validate sessions",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736380800,
+        "tz": 0,
+        "cts": 1736380800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "fd5f4061be80ed54ea516c8696d7848fffeaad9c",
+        "short": "fd5f406",
+        "parents": [
+          "787a50a3297c5bf48c7afa0e7b6ea69d188c573b"
+        ],
+        "subject": "Add sign in",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736272800,
+        "tz": 0,
+        "cts": 1736272800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "d91939339677ccde6af533a0bcc1cffad3d05802",
+        "short": "d919393",
+        "parents": [
+          "dba5df54c409a61eb8e491e62a1d39b663cd0cd2"
+        ],
+        "subject": "Remove legacy setup",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737028800,
+        "tz": 0,
+        "cts": 1737028800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "dba5df54c409a61eb8e491e62a1d39b663cd0cd2",
+        "short": "dba5df5",
+        "parents": [
+          "dfb004626912a65b764610c074239ef4d88556ae"
+        ],
+        "subject": "Improve greetings and startup",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736164800,
+        "tz": 0,
+        "cts": 1736164800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "dfb004626912a65b764610c074239ef4d88556ae",
+        "short": "dfb0046",
+        "parents": [
+          "787a50a3297c5bf48c7afa0e7b6ea69d188c573b"
+        ],
+        "subject": "Configure graph defaults",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736056800,
+        "tz": 0,
+        "cts": 1736056800,
+        "refs": [],
+        "merged_name": null
+      },
+      {
+        "hash": "787a50a3297c5bf48c7afa0e7b6ea69d188c573b",
+        "short": "787a50a",
+        "parents": [
+          "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a"
+        ],
+        "subject": "Document the project",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1735840800,
+        "tz": 0,
+        "cts": 1735840800,
+        "refs": [
+          {
+            "name": "v0.1",
+            "kind": "tag"
+          }
+        ],
+        "merged_name": null
+      },
+      {
+        "hash": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+        "short": "8d1f18a",
+        "parents": [],
+        "subject": "Create workspace",
+        "author": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1735732800,
+        "tz": 0,
+        "cts": 1735732800,
+        "refs": [],
+        "merged_name": null
+      }
+    ]
+  },
+  "details": [
+    {
+      "ok": true,
+      "error": null,
+      "hash": "8cfacd96d8cebf073d7121a2e427f246fd771f37",
+      "short": "8cfacd9",
+      "parents": [
+        "caff39185591d9c7fd49542009929f0e86b499a6"
+      ],
+      "subject": "Experiment with graph polish 2",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1739080800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1739080800,
+        "tz": 0
+      },
+      "refs": [
+        {
+          "name": "experiment/graph-polish",
+          "kind": "branch"
+        }
+      ],
+      "merge": false,
+      "diff_base": "caff39185591d9c7fd49542009929f0e86b499a6",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/experiment.js",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 1,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "-",
+                  "o": 1,
+                  "n": null,
+                  "text": "export const smoothLanes = 1;",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "export const smoothLanes = 2;",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "caff39185591d9c7fd49542009929f0e86b499a6",
+      "short": "caff391",
+      "parents": [
+        "952210e8876b35759474e2aba4a6c7af05068eee"
+      ],
+      "subject": "Experiment with graph polish 1",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738972800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1738972800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "952210e8876b35759474e2aba4a6c7af05068eee",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/experiment.js",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 1,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "export const smoothLanes = 1;",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "d277012dd5f0e9805df88f7a9d1be7843b225d33",
+      "short": "d277012",
+      "parents": [
+        "af2ae9fb982a5be246d2105b9e6ab0ba7b0b2c9f"
+      ],
+      "subject": "Prepare the release",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738864800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1738864800,
+        "tz": 0
+      },
+      "refs": [
+        {
+          "name": "master",
+          "kind": "branch"
+        }
+      ],
+      "merge": false,
+      "diff_base": "af2ae9fb982a5be246d2105b9e6ab0ba7b0b2c9f",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "README.md",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 3,
+              "new_start": 1,
+              "new_lines": 3,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 1,
+                  "n": 1,
+                  "text": "# Acme workspace",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 2,
+                  "n": 2,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 3,
+                  "n": null,
+                  "text": "Explore commits, branches and changes.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "Version 0.2 is ready.",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "af2ae9fb982a5be246d2105b9e6ab0ba7b0b2c9f",
+      "short": "af2ae9f",
+      "parents": [
+        "a6fd1375167b036489fe52d3cc7231dbb67437ea",
+        "4d06aaa99877ae3f25cb26b509943d050a683276"
+      ],
+      "subject": "Merge pull request #47 from acme/hotfix/critical",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738756800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1738756800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": true,
+      "diff_base": "a6fd1375167b036489fe52d3cc7231dbb67437ea",
+      "stats": {
+        "files": 1,
+        "additions": 5,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "reliability.py",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 5,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 5,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "\"\"\"Bound network work.\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "TIMEOUT = 2",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 4,
+                  "text": "def ready():",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 5,
+                  "text": "    return True",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "4d06aaa99877ae3f25cb26b509943d050a683276",
+      "short": "4d06aaa",
+      "parents": [
+        "024df6740bf69d8735e532ed3043b1cc89ef10a6"
+      ],
+      "subject": "Cover timeout regression",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738648800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1738648800,
+        "tz": 0
+      },
+      "refs": [
+        {
+          "name": "hotfix/critical",
+          "kind": "branch"
+        }
+      ],
+      "merge": false,
+      "diff_base": "024df6740bf69d8735e532ed3043b1cc89ef10a6",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "reliability.py",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 5,
+              "new_start": 1,
+              "new_lines": 5,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 1,
+                  "n": 1,
+                  "text": "\"\"\"Bound network work.\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 2,
+                  "n": null,
+                  "text": "TIMEOUT = 3",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "TIMEOUT = 2",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 3,
+                  "n": 3,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 4,
+                  "n": 4,
+                  "text": "def ready():",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 5,
+                  "n": 5,
+                  "text": "    return True",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "024df6740bf69d8735e532ed3043b1cc89ef10a6",
+      "short": "024df67",
+      "parents": [
+        "559170ed8eb6c5f65bc15f1f109003ebb0c33494"
+      ],
+      "subject": "Handle cancellation",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738540800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1738540800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "559170ed8eb6c5f65bc15f1f109003ebb0c33494",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "reliability.py",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 5,
+              "new_start": 1,
+              "new_lines": 5,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 1,
+                  "n": 1,
+                  "text": "\"\"\"Bound network work.\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 2,
+                  "n": null,
+                  "text": "TIMEOUT = 4",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "TIMEOUT = 3",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 3,
+                  "n": 3,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 4,
+                  "n": 4,
+                  "text": "def ready():",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 5,
+                  "n": 5,
+                  "text": "    return True",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "559170ed8eb6c5f65bc15f1f109003ebb0c33494",
+      "short": "559170e",
+      "parents": [
+        "cddd09d673006a22741051b3a721484ce34236d9"
+      ],
+      "subject": "Bound worker requests",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738432800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1738432800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "cddd09d673006a22741051b3a721484ce34236d9",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "reliability.py",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 5,
+              "new_start": 1,
+              "new_lines": 5,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 1,
+                  "n": 1,
+                  "text": "\"\"\"Bound network work.\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 2,
+                  "n": null,
+                  "text": "TIMEOUT = 5",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "TIMEOUT = 4",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 3,
+                  "n": 3,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 4,
+                  "n": 4,
+                  "text": "def ready():",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 5,
+                  "n": 5,
+                  "text": "    return True",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "cddd09d673006a22741051b3a721484ce34236d9",
+      "short": "cddd09d",
+      "parents": [
+        "978cd26c2bae8fdcf0cf61ce1790e0e91c0adbfd"
+      ],
+      "subject": "Reproduce timeout",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738324800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1738324800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "978cd26c2bae8fdcf0cf61ce1790e0e91c0adbfd",
+      "stats": {
+        "files": 1,
+        "additions": 5,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "reliability.py",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 5,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 5,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "\"\"\"Bound network work.\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "TIMEOUT = 5",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 4,
+                  "text": "def ready():",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 5,
+                  "text": "    return True",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "a6fd1375167b036489fe52d3cc7231dbb67437ea",
+      "short": "a6fd137",
+      "parents": [
+        "952210e8876b35759474e2aba4a6c7af05068eee"
+      ],
+      "subject": "Tune graph spacing",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738216800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1738216800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "952210e8876b35759474e2aba4a6c7af05068eee",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/layout.json",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 1,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "{\"lanes\": \"compact\", \"note\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "952210e8876b35759474e2aba4a6c7af05068eee",
+      "short": "952210e",
+      "parents": [
+        "8f983b13ae7e9690da8c13884570a8197099c69a"
+      ],
+      "subject": "Publish package metadata",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738108800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1738108800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "8f983b13ae7e9690da8c13884570a8197099c69a",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "package.json",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 1,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "-",
+                  "o": 1,
+                  "n": null,
+                  "text": "{\"name\": \"acme\", \"version\": \"0.1.0\"}",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "{\"name\": \"acme\", \"version\": \"0.2.0\"}",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "8f983b13ae7e9690da8c13884570a8197099c69a",
+      "short": "8f983b1",
+      "parents": [
+        "9a9c4b700a23b1fab30e4d1b71188dd7df547079"
+      ],
+      "subject": "Rename the getting started guide",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1738000800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1738000800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "9a9c4b700a23b1fab30e4d1b71188dd7df547079",
+      "stats": {
+        "files": 1,
+        "additions": 2,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "docs/getting-started.md",
+          "old_path": "docs/guide.md",
+          "status": "renamed",
+          "similarity": 83,
+          "mode_change": null,
+          "binary": false,
+          "additions": 2,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 3,
+              "old_lines": 3,
+              "new_start": 3,
+              "new_lines": 5,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 3,
+                  "n": 3,
+                  "text": "Use the new client.",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 4,
+                  "n": 4,
+                  "text": "Explore branches and inspect commits in the graph.",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 5,
+                  "n": 5,
+                  "text": "The commit tab shows source changes and syntax colours.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 6,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 7,
+                  "text": "Start with the graph view.",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "9a9c4b700a23b1fab30e4d1b71188dd7df547079",
+      "short": "9a9c4b7",
+      "parents": [
+        "978cd26c2bae8fdcf0cf61ce1790e0e91c0adbfd",
+        "f3f34c99704a32047f83f7a7f9ab4256d15d07f2"
+      ],
+      "subject": "Merge branch 'feature/ui'",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737784800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1737784800,
+        "tz": 0
+      },
+      "refs": [
+        {
+          "name": "v0.2",
+          "kind": "tag"
+        }
+      ],
+      "merge": true,
+      "diff_base": "978cd26c2bae8fdcf0cf61ce1790e0e91c0adbfd",
+      "stats": {
+        "files": 2,
+        "additions": 3,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/graph.css",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 2,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 2,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": ":root { --accent: #7c8cff; }",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": ".commit { padding: 10px; color: white; }",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "src/view.js",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 1,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "export const zoom = 3;",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "f3f34c99704a32047f83f7a7f9ab4256d15d07f2",
+      "short": "f3f34c9",
+      "parents": [
+        "c09bb1925ada1e5b53404887361b03769c18c75c"
+      ],
+      "subject": "Polish graph controls",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737676800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1737676800,
+        "tz": 0
+      },
+      "refs": [
+        {
+          "name": "feature/ui",
+          "kind": "branch"
+        }
+      ],
+      "merge": false,
+      "diff_base": "c09bb1925ada1e5b53404887361b03769c18c75c",
+      "stats": {
+        "files": 2,
+        "additions": 2,
+        "deletions": 2
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/graph.css",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 2,
+              "new_start": 1,
+              "new_lines": 2,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 1,
+                  "n": 1,
+                  "text": ":root { --accent: #7c8cff; }",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 2,
+                  "n": null,
+                  "text": ".commit { padding: 9px; color: white; }",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": ".commit { padding: 10px; color: white; }",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "src/view.js",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 1,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "-",
+                  "o": 1,
+                  "n": null,
+                  "text": "export const zoom = 2;",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "export const zoom = 3;",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "c09bb1925ada1e5b53404887361b03769c18c75c",
+      "short": "c09bb19",
+      "parents": [
+        "a3c5fd7a25294cf1239ad21f562a176fea03ac8a"
+      ],
+      "subject": "Style commit cards",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737568800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1737568800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "a3c5fd7a25294cf1239ad21f562a176fea03ac8a",
+      "stats": {
+        "files": 2,
+        "additions": 2,
+        "deletions": 2
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/graph.css",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 2,
+              "new_start": 1,
+              "new_lines": 2,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 1,
+                  "n": 1,
+                  "text": ":root { --accent: #7c8cff; }",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 2,
+                  "n": null,
+                  "text": ".commit { padding: 8px; color: white; }",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": ".commit { padding: 9px; color: white; }",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "src/view.js",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 1,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "-",
+                  "o": 1,
+                  "n": null,
+                  "text": "export const zoom = 1;",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "export const zoom = 2;",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "a3c5fd7a25294cf1239ad21f562a176fea03ac8a",
+      "short": "a3c5fd7",
+      "parents": [
+        "2f237dfeb4b220f09341e5710198670a3310e420"
+      ],
+      "subject": "Add graph palette",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737460800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1737460800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "2f237dfeb4b220f09341e5710198670a3310e420",
+      "stats": {
+        "files": 2,
+        "additions": 3,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/graph.css",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 2,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 2,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": ":root { --accent: #7c8cff; }",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": ".commit { padding: 8px; color: white; }",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "src/view.js",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 1,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "export const zoom = 1;",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "978cd26c2bae8fdcf0cf61ce1790e0e91c0adbfd",
+      "short": "978cd26",
+      "parents": [
+        "2f237dfeb4b220f09341e5710198670a3310e420"
+      ],
+      "subject": "Support mixed line endings",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737352800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1737352800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "2f237dfeb4b220f09341e5710198670a3310e420",
+      "stats": {
+        "files": 2,
+        "additions": 3,
+        "deletions": 2
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "no-newline.txt",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 1,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "-",
+                  "o": 1,
+                  "n": null,
+                  "text": "last line",
+                  "k": []
+                },
+                {
+                  "t": "\\",
+                  "o": null,
+                  "n": null,
+                  "text": "\\ No newline at end of file",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "still no final newline",
+                  "k": []
+                },
+                {
+                  "t": "\\",
+                  "o": null,
+                  "n": null,
+                  "text": "\\ No newline at end of file",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "windows.txt",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 2,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 2,
+              "new_start": 1,
+              "new_lines": 3,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 1,
+                  "n": 1,
+                  "text": "first\r",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 2,
+                  "n": null,
+                  "text": "second\r",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "updated\r",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "third\r",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "2f237dfeb4b220f09341e5710198670a3310e420",
+      "short": "2f237df",
+      "parents": [
+        "d64586edb9b89571e3460e52739c35117865fc7e"
+      ],
+      "subject": "Make the launcher executable",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737244800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1737244800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "d64586edb9b89571e3460e52739c35117865fc7e",
+      "stats": {
+        "files": 1,
+        "additions": 0,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "app.py",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": [
+            "100644",
+            "100755"
+          ],
+          "binary": false,
+          "additions": 0,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": []
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "d64586edb9b89571e3460e52739c35117865fc7e",
+      "short": "d64586e",
+      "parents": [
+        "d91939339677ccde6af533a0bcc1cffad3d05802",
+        "ac3b6cc7bca0d99427fca84f2ea6379a9773fb98",
+        "57df3694614dcf94980f04a914625a2818b17c27"
+      ],
+      "subject": "Merge pull request #42 from acme/feature/auth",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737136800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1737136800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": true,
+      "diff_base": "d91939339677ccde6af533a0bcc1cffad3d05802",
+      "stats": {
+        "files": 2,
+        "additions": 10,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "auth.py",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 6,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 6,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "\"\"\"Authentication helpers.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "Session implementation 2.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 4,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 5,
+                  "text": "def allowed(user):",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 6,
+                  "text": "    return bool(user)",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "src/api.js",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 4,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 4,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "// API client revision 3",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "export async function fetchItems() {",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "  return fetch(\"/api/items\");",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 4,
+                  "text": "}",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "57df3694614dcf94980f04a914625a2818b17c27",
+      "short": "57df369",
+      "parents": [
+        "337bcf991d036c330e5d4e9db9837db7bac2526c"
+      ],
+      "subject": "Document endpoints",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736920800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1736920800,
+        "tz": 0
+      },
+      "refs": [
+        {
+          "name": "feature/api",
+          "kind": "branch"
+        }
+      ],
+      "merge": false,
+      "diff_base": "337bcf991d036c330e5d4e9db9837db7bac2526c",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/api.js",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 4,
+              "new_start": 1,
+              "new_lines": 4,
+              "section": "",
+              "lines": [
+                {
+                  "t": "-",
+                  "o": 1,
+                  "n": null,
+                  "text": "// API client revision 2",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "// API client revision 3",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 2,
+                  "n": 2,
+                  "text": "export async function fetchItems() {",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 3,
+                  "n": 3,
+                  "text": "  return fetch(\"/api/items\");",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 4,
+                  "n": 4,
+                  "text": "}",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "337bcf991d036c330e5d4e9db9837db7bac2526c",
+      "short": "337bcf9",
+      "parents": [
+        "294ddcf3db40bb164bbf9a3883faed43dbea6417"
+      ],
+      "subject": "Handle API errors",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736812800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1736812800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "294ddcf3db40bb164bbf9a3883faed43dbea6417",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/api.js",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 4,
+              "new_start": 1,
+              "new_lines": 4,
+              "section": "",
+              "lines": [
+                {
+                  "t": "-",
+                  "o": 1,
+                  "n": null,
+                  "text": "// API client revision 1",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "// API client revision 2",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 2,
+                  "n": 2,
+                  "text": "export async function fetchItems() {",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 3,
+                  "n": 3,
+                  "text": "  return fetch(\"/api/items\");",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 4,
+                  "n": 4,
+                  "text": "}",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "294ddcf3db40bb164bbf9a3883faed43dbea6417",
+      "short": "294ddcf",
+      "parents": [
+        "7e305af4e2683d9c3a5acbf0528435d7e7cdf3cb"
+      ],
+      "subject": "Add retries",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736704800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1736704800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "7e305af4e2683d9c3a5acbf0528435d7e7cdf3cb",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/api.js",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 4,
+              "new_start": 1,
+              "new_lines": 4,
+              "section": "",
+              "lines": [
+                {
+                  "t": "-",
+                  "o": 1,
+                  "n": null,
+                  "text": "// API client revision 0",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "// API client revision 1",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 2,
+                  "n": 2,
+                  "text": "export async function fetchItems() {",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 3,
+                  "n": 3,
+                  "text": "  return fetch(\"/api/items\");",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 4,
+                  "n": 4,
+                  "text": "}",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "7e305af4e2683d9c3a5acbf0528435d7e7cdf3cb",
+      "short": "7e305af",
+      "parents": [
+        "dfb004626912a65b764610c074239ef4d88556ae"
+      ],
+      "subject": "Create API client",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736596800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1736596800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "dfb004626912a65b764610c074239ef4d88556ae",
+      "stats": {
+        "files": 1,
+        "additions": 4,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "src/api.js",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 4,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 4,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "// API client revision 0",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "export async function fetchItems() {",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "  return fetch(\"/api/items\");",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 4,
+                  "text": "}",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "ac3b6cc7bca0d99427fca84f2ea6379a9773fb98",
+      "short": "ac3b6cc",
+      "parents": [
+        "01bedce746425fbe2633179f8f39c2da604cb7b3"
+      ],
+      "subject": "Add access checks",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736488800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1736488800,
+        "tz": 0
+      },
+      "refs": [
+        {
+          "name": "feature/auth",
+          "kind": "branch"
+        }
+      ],
+      "merge": false,
+      "diff_base": "01bedce746425fbe2633179f8f39c2da604cb7b3",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "auth.py",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 5,
+              "new_start": 1,
+              "new_lines": 5,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 1,
+                  "n": 1,
+                  "text": "\"\"\"Authentication helpers.",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 2,
+                  "n": null,
+                  "text": "Session implementation 1.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "Session implementation 2.",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 3,
+                  "n": 3,
+                  "text": "\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 4,
+                  "n": 4,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 5,
+                  "n": 5,
+                  "text": "def allowed(user):",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "01bedce746425fbe2633179f8f39c2da604cb7b3",
+      "short": "01bedce",
+      "parents": [
+        "fd5f4061be80ed54ea516c8696d7848fffeaad9c"
+      ],
+      "subject": "Validate sessions",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736380800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1736380800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "fd5f4061be80ed54ea516c8696d7848fffeaad9c",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "auth.py",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 5,
+              "new_start": 1,
+              "new_lines": 5,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 1,
+                  "n": 1,
+                  "text": "\"\"\"Authentication helpers.",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 2,
+                  "n": null,
+                  "text": "Session implementation 0.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "Session implementation 1.",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 3,
+                  "n": 3,
+                  "text": "\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 4,
+                  "n": 4,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 5,
+                  "n": 5,
+                  "text": "def allowed(user):",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "fd5f4061be80ed54ea516c8696d7848fffeaad9c",
+      "short": "fd5f406",
+      "parents": [
+        "787a50a3297c5bf48c7afa0e7b6ea69d188c573b"
+      ],
+      "subject": "Add sign in",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736272800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1736272800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "787a50a3297c5bf48c7afa0e7b6ea69d188c573b",
+      "stats": {
+        "files": 1,
+        "additions": 6,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "auth.py",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 6,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 6,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "\"\"\"Authentication helpers.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "Session implementation 0.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 4,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 5,
+                  "text": "def allowed(user):",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 6,
+                  "text": "    return bool(user)",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "d91939339677ccde6af533a0bcc1cffad3d05802",
+      "short": "d919393",
+      "parents": [
+        "dba5df54c409a61eb8e491e62a1d39b663cd0cd2"
+      ],
+      "subject": "Remove legacy setup",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1737028800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1737028800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "dba5df54c409a61eb8e491e62a1d39b663cd0cd2",
+      "stats": {
+        "files": 2,
+        "additions": 5,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "docs/guide.md",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 5,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 5,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "# Migration",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "Use the new client.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 4,
+                  "text": "Explore branches and inspect commits in the graph.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 5,
+                  "text": "The commit tab shows source changes and syntax colours.",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "obsolete.txt",
+          "old_path": null,
+          "status": "deleted",
+          "similarity": null,
+          "mode_change": [
+            "100644",
+            "000000"
+          ],
+          "binary": false,
+          "additions": 0,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 1,
+              "new_start": 0,
+              "new_lines": 0,
+              "section": "",
+              "lines": [
+                {
+                  "t": "-",
+                  "o": 1,
+                  "n": null,
+                  "text": "Remove this after the migration.",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "dba5df54c409a61eb8e491e62a1d39b663cd0cd2",
+      "short": "dba5df5",
+      "parents": [
+        "dfb004626912a65b764610c074239ef4d88556ae"
+      ],
+      "subject": "Improve greetings and startup",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736164800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1736164800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "dfb004626912a65b764610c074239ef4d88556ae",
+      "stats": {
+        "files": 1,
+        "additions": 2,
+        "deletions": 2
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "app.py",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 2,
+          "deletions": 2,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 5,
+              "old_lines": 7,
+              "new_start": 5,
+              "new_lines": 7,
+              "section": "The graph shows the story behind each change.",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 5,
+                  "n": 5,
+                  "text": "\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 6,
+                  "n": 6,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 7,
+                  "n": 7,
+                  "text": "def greet(name):",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 8,
+                  "n": null,
+                  "text": "    return f\"Hello, {name}\"",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 8,
+                  "text": "    return f\"Welcome, {name}\"",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 9,
+                  "n": 9,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 10,
+                  "n": 10,
+                  "text": "# context line 0",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 11,
+                  "n": 11,
+                  "text": "# context line 1",
+                  "k": []
+                }
+              ]
+            },
+            {
+              "old_start": 33,
+              "old_lines": 6,
+              "new_start": 33,
+              "new_lines": 6,
+              "section": "def greet(name):",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 33,
+                  "n": 33,
+                  "text": "# context line 23",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 34,
+                  "n": 34,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 35,
+                  "n": 35,
+                  "text": "def main():",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 36,
+                  "n": null,
+                  "text": "    print(greet(\"world\"))",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 36,
+                  "text": "    print(greet(\"Acme\"))",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 37,
+                  "n": 37,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 38,
+                  "n": 38,
+                  "text": "main()",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "dfb004626912a65b764610c074239ef4d88556ae",
+      "short": "dfb0046",
+      "parents": [
+        "787a50a3297c5bf48c7afa0e7b6ea69d188c573b"
+      ],
+      "subject": "Configure graph defaults",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1736056800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1736056800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": "787a50a3297c5bf48c7afa0e7b6ea69d188c573b",
+      "stats": {
+        "files": 1,
+        "additions": 4,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "config.json",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 4,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 4,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "{",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "  \"theme\": \"dark\",",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "  \"graph\": true",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 4,
+                  "text": "}",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "787a50a3297c5bf48c7afa0e7b6ea69d188c573b",
+      "short": "787a50a",
+      "parents": [
+        "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a"
+      ],
+      "subject": "Document the project",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1735840800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1735840800,
+        "tz": 0
+      },
+      "refs": [
+        {
+          "name": "v0.1",
+          "kind": "tag"
+        }
+      ],
+      "merge": false,
+      "diff_base": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "stats": {
+        "files": 1,
+        "additions": 1,
+        "deletions": 1
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "README.md",
+          "old_path": null,
+          "status": "modified",
+          "similarity": null,
+          "mode_change": null,
+          "binary": false,
+          "additions": 1,
+          "deletions": 1,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 1,
+              "old_lines": 3,
+              "new_start": 1,
+              "new_lines": 3,
+              "section": "",
+              "lines": [
+                {
+                  "t": " ",
+                  "o": 1,
+                  "n": 1,
+                  "text": "# Acme workspace",
+                  "k": []
+                },
+                {
+                  "t": " ",
+                  "o": 2,
+                  "n": 2,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "-",
+                  "o": 3,
+                  "n": null,
+                  "text": "A graph demo.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "Explore commits, branches and changes.",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "error": null,
+      "hash": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "short": "8d1f18a",
+      "parents": [],
+      "subject": "Create workspace",
+      "body": "",
+      "author": {
+        "name": "Ada Example",
+        "email": "ada@example.test",
+        "ts": 1735732800,
+        "tz": 0
+      },
+      "committer": {
+        "name": "Grace Example",
+        "email": "grace@example.test",
+        "ts": 1735732800,
+        "tz": 0
+      },
+      "refs": [],
+      "merge": false,
+      "diff_base": null,
+      "stats": {
+        "files": 9,
+        "additions": 47,
+        "deletions": 0
+      },
+      "truncated": false,
+      "files": [
+        {
+          "path": "README.md",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 3,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 3,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "# Acme workspace",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "A graph demo.",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "app.py",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 38,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 38,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "#!/usr/bin/env python3",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "\"\"\"A small demo application.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 3,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 4,
+                  "text": "The graph shows the story behind each change.",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 5,
+                  "text": "\"\"\"",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 6,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 7,
+                  "text": "def greet(name):",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 8,
+                  "text": "    return f\"Hello, {name}\"",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 9,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 10,
+                  "text": "# context line 0",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 11,
+                  "text": "# context line 1",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 12,
+                  "text": "# context line 2",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 13,
+                  "text": "# context line 3",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 14,
+                  "text": "# context line 4",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 15,
+                  "text": "# context line 5",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 16,
+                  "text": "# context line 6",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 17,
+                  "text": "# context line 7",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 18,
+                  "text": "# context line 8",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 19,
+                  "text": "# context line 9",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 20,
+                  "text": "# context line 10",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 21,
+                  "text": "# context line 11",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 22,
+                  "text": "# context line 12",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 23,
+                  "text": "# context line 13",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 24,
+                  "text": "# context line 14",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 25,
+                  "text": "# context line 15",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 26,
+                  "text": "# context line 16",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 27,
+                  "text": "# context line 17",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 28,
+                  "text": "# context line 18",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 29,
+                  "text": "# context line 19",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 30,
+                  "text": "# context line 20",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 31,
+                  "text": "# context line 21",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 32,
+                  "text": "# context line 22",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 33,
+                  "text": "# context line 23",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 34,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 35,
+                  "text": "def main():",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 36,
+                  "text": "    print(greet(\"world\"))",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 37,
+                  "text": "",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 38,
+                  "text": "main()",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "docs/Привет мир.md",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 1,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "# Привет, мир 🌍",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "empty.txt",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 0,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": []
+        },
+        {
+          "path": "no-newline.txt",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 1,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "last line",
+                  "k": []
+                },
+                {
+                  "t": "\\",
+                  "o": null,
+                  "n": null,
+                  "text": "\\ No newline at end of file",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "obsolete.txt",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 1,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "Remove this after the migration.",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "package.json",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 1,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 1,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "{\"name\": \"acme\", \"version\": \"0.1.0\"}",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "public/icon.png",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": true,
+          "additions": 0,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": []
+        },
+        {
+          "path": "windows.txt",
+          "old_path": null,
+          "status": "added",
+          "similarity": null,
+          "mode_change": [
+            "000000",
+            "100644"
+          ],
+          "binary": false,
+          "additions": 2,
+          "deletions": 0,
+          "too_large": false,
+          "language": null,
+          "hunks": [
+            {
+              "old_start": 0,
+              "old_lines": 0,
+              "new_start": 1,
+              "new_lines": 2,
+              "section": "",
+              "lines": [
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 1,
+                  "text": "first\r",
+                  "k": []
+                },
+                {
+                  "t": "+",
+                  "o": null,
+                  "n": 2,
+                  "text": "second\r",
+                  "k": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "rev": "8cfacd96d8cebf073d7121a2e427f246fd771f37",
+      "path": "src/experiment.js",
+      "result": {
+        "ok": true,
+        "path": "src/experiment.js",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "export const smoothLanes = 2;",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "caff39185591d9c7fd49542009929f0e86b499a6",
+      "path": "src/experiment.js",
+      "result": {
+        "ok": true,
+        "path": "src/experiment.js",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "export const smoothLanes = 1;",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "d277012dd5f0e9805df88f7a9d1be7843b225d33",
+      "path": "README.md",
+      "result": {
+        "ok": true,
+        "path": "README.md",
+        "start": 1,
+        "end": 3,
+        "lines": [
+          {
+            "n": 1,
+            "text": "# Acme workspace",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "Version 0.2 is ready.",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "af2ae9fb982a5be246d2105b9e6ab0ba7b0b2c9f",
+      "path": "reliability.py",
+      "result": {
+        "ok": true,
+        "path": "reliability.py",
+        "start": 1,
+        "end": 5,
+        "lines": [
+          {
+            "n": 1,
+            "text": "\"\"\"Bound network work.\"\"\"",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "TIMEOUT = 2",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "def ready():",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "    return True",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "4d06aaa99877ae3f25cb26b509943d050a683276",
+      "path": "reliability.py",
+      "result": {
+        "ok": true,
+        "path": "reliability.py",
+        "start": 1,
+        "end": 5,
+        "lines": [
+          {
+            "n": 1,
+            "text": "\"\"\"Bound network work.\"\"\"",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "TIMEOUT = 2",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "def ready():",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "    return True",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "024df6740bf69d8735e532ed3043b1cc89ef10a6",
+      "path": "reliability.py",
+      "result": {
+        "ok": true,
+        "path": "reliability.py",
+        "start": 1,
+        "end": 5,
+        "lines": [
+          {
+            "n": 1,
+            "text": "\"\"\"Bound network work.\"\"\"",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "TIMEOUT = 3",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "def ready():",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "    return True",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "559170ed8eb6c5f65bc15f1f109003ebb0c33494",
+      "path": "reliability.py",
+      "result": {
+        "ok": true,
+        "path": "reliability.py",
+        "start": 1,
+        "end": 5,
+        "lines": [
+          {
+            "n": 1,
+            "text": "\"\"\"Bound network work.\"\"\"",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "TIMEOUT = 4",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "def ready():",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "    return True",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "cddd09d673006a22741051b3a721484ce34236d9",
+      "path": "reliability.py",
+      "result": {
+        "ok": true,
+        "path": "reliability.py",
+        "start": 1,
+        "end": 5,
+        "lines": [
+          {
+            "n": 1,
+            "text": "\"\"\"Bound network work.\"\"\"",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "TIMEOUT = 5",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "def ready():",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "    return True",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "a6fd1375167b036489fe52d3cc7231dbb67437ea",
+      "path": "src/layout.json",
+      "result": {
+        "ok": true,
+        "path": "src/layout.json",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "{\"lanes\": \"compact\", \"note\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "952210e8876b35759474e2aba4a6c7af05068eee",
+      "path": "package.json",
+      "result": {
+        "ok": true,
+        "path": "package.json",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "{\"name\": \"acme\", \"version\": \"0.2.0\"}",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "8f983b13ae7e9690da8c13884570a8197099c69a",
+      "path": "docs/getting-started.md",
+      "result": {
+        "ok": true,
+        "path": "docs/getting-started.md",
+        "start": 1,
+        "end": 7,
+        "lines": [
+          {
+            "n": 1,
+            "text": "# Migration",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "Use the new client.",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "Explore branches and inspect commits in the graph.",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "The commit tab shows source changes and syntax colours.",
+            "k": []
+          },
+          {
+            "n": 6,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 7,
+            "text": "Start with the graph view.",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "9a9c4b700a23b1fab30e4d1b71188dd7df547079",
+      "path": "src/graph.css",
+      "result": {
+        "ok": true,
+        "path": "src/graph.css",
+        "start": 1,
+        "end": 2,
+        "lines": [
+          {
+            "n": 1,
+            "text": ":root { --accent: #7c8cff; }",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": ".commit { padding: 10px; color: white; }",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "9a9c4b700a23b1fab30e4d1b71188dd7df547079",
+      "path": "src/view.js",
+      "result": {
+        "ok": true,
+        "path": "src/view.js",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "export const zoom = 3;",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "f3f34c99704a32047f83f7a7f9ab4256d15d07f2",
+      "path": "src/graph.css",
+      "result": {
+        "ok": true,
+        "path": "src/graph.css",
+        "start": 1,
+        "end": 2,
+        "lines": [
+          {
+            "n": 1,
+            "text": ":root { --accent: #7c8cff; }",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": ".commit { padding: 10px; color: white; }",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "f3f34c99704a32047f83f7a7f9ab4256d15d07f2",
+      "path": "src/view.js",
+      "result": {
+        "ok": true,
+        "path": "src/view.js",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "export const zoom = 3;",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "c09bb1925ada1e5b53404887361b03769c18c75c",
+      "path": "src/graph.css",
+      "result": {
+        "ok": true,
+        "path": "src/graph.css",
+        "start": 1,
+        "end": 2,
+        "lines": [
+          {
+            "n": 1,
+            "text": ":root { --accent: #7c8cff; }",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": ".commit { padding: 9px; color: white; }",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "c09bb1925ada1e5b53404887361b03769c18c75c",
+      "path": "src/view.js",
+      "result": {
+        "ok": true,
+        "path": "src/view.js",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "export const zoom = 2;",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "a3c5fd7a25294cf1239ad21f562a176fea03ac8a",
+      "path": "src/graph.css",
+      "result": {
+        "ok": true,
+        "path": "src/graph.css",
+        "start": 1,
+        "end": 2,
+        "lines": [
+          {
+            "n": 1,
+            "text": ":root { --accent: #7c8cff; }",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": ".commit { padding: 8px; color: white; }",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "a3c5fd7a25294cf1239ad21f562a176fea03ac8a",
+      "path": "src/view.js",
+      "result": {
+        "ok": true,
+        "path": "src/view.js",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "export const zoom = 1;",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "978cd26c2bae8fdcf0cf61ce1790e0e91c0adbfd",
+      "path": "no-newline.txt",
+      "result": {
+        "ok": true,
+        "path": "no-newline.txt",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "still no final newline",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "978cd26c2bae8fdcf0cf61ce1790e0e91c0adbfd",
+      "path": "windows.txt",
+      "result": {
+        "ok": true,
+        "path": "windows.txt",
+        "start": 1,
+        "end": 3,
+        "lines": [
+          {
+            "n": 1,
+            "text": "first\r",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "updated\r",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "third\r",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "2f237dfeb4b220f09341e5710198670a3310e420",
+      "path": "app.py",
+      "result": {
+        "ok": true,
+        "path": "app.py",
+        "start": 1,
+        "end": 38,
+        "lines": [
+          {
+            "n": 1,
+            "text": "#!/usr/bin/env python3",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "\"\"\"A small demo application.",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "The graph shows the story behind each change.",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "\"\"\"",
+            "k": []
+          },
+          {
+            "n": 6,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 7,
+            "text": "def greet(name):",
+            "k": []
+          },
+          {
+            "n": 8,
+            "text": "    return f\"Welcome, {name}\"",
+            "k": []
+          },
+          {
+            "n": 9,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 10,
+            "text": "# context line 0",
+            "k": []
+          },
+          {
+            "n": 11,
+            "text": "# context line 1",
+            "k": []
+          },
+          {
+            "n": 12,
+            "text": "# context line 2",
+            "k": []
+          },
+          {
+            "n": 13,
+            "text": "# context line 3",
+            "k": []
+          },
+          {
+            "n": 14,
+            "text": "# context line 4",
+            "k": []
+          },
+          {
+            "n": 15,
+            "text": "# context line 5",
+            "k": []
+          },
+          {
+            "n": 16,
+            "text": "# context line 6",
+            "k": []
+          },
+          {
+            "n": 17,
+            "text": "# context line 7",
+            "k": []
+          },
+          {
+            "n": 18,
+            "text": "# context line 8",
+            "k": []
+          },
+          {
+            "n": 19,
+            "text": "# context line 9",
+            "k": []
+          },
+          {
+            "n": 20,
+            "text": "# context line 10",
+            "k": []
+          },
+          {
+            "n": 21,
+            "text": "# context line 11",
+            "k": []
+          },
+          {
+            "n": 22,
+            "text": "# context line 12",
+            "k": []
+          },
+          {
+            "n": 23,
+            "text": "# context line 13",
+            "k": []
+          },
+          {
+            "n": 24,
+            "text": "# context line 14",
+            "k": []
+          },
+          {
+            "n": 25,
+            "text": "# context line 15",
+            "k": []
+          },
+          {
+            "n": 26,
+            "text": "# context line 16",
+            "k": []
+          },
+          {
+            "n": 27,
+            "text": "# context line 17",
+            "k": []
+          },
+          {
+            "n": 28,
+            "text": "# context line 18",
+            "k": []
+          },
+          {
+            "n": 29,
+            "text": "# context line 19",
+            "k": []
+          },
+          {
+            "n": 30,
+            "text": "# context line 20",
+            "k": []
+          },
+          {
+            "n": 31,
+            "text": "# context line 21",
+            "k": []
+          },
+          {
+            "n": 32,
+            "text": "# context line 22",
+            "k": []
+          },
+          {
+            "n": 33,
+            "text": "# context line 23",
+            "k": []
+          },
+          {
+            "n": 34,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 35,
+            "text": "def main():",
+            "k": []
+          },
+          {
+            "n": 36,
+            "text": "    print(greet(\"Acme\"))",
+            "k": []
+          },
+          {
+            "n": 37,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 38,
+            "text": "main()",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "d64586edb9b89571e3460e52739c35117865fc7e",
+      "path": "auth.py",
+      "result": {
+        "ok": true,
+        "path": "auth.py",
+        "start": 1,
+        "end": 6,
+        "lines": [
+          {
+            "n": 1,
+            "text": "\"\"\"Authentication helpers.",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "Session implementation 2.",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "\"\"\"",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "def allowed(user):",
+            "k": []
+          },
+          {
+            "n": 6,
+            "text": "    return bool(user)",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "d64586edb9b89571e3460e52739c35117865fc7e",
+      "path": "src/api.js",
+      "result": {
+        "ok": true,
+        "path": "src/api.js",
+        "start": 1,
+        "end": 4,
+        "lines": [
+          {
+            "n": 1,
+            "text": "// API client revision 3",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "export async function fetchItems() {",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "  return fetch(\"/api/items\");",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "}",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "57df3694614dcf94980f04a914625a2818b17c27",
+      "path": "src/api.js",
+      "result": {
+        "ok": true,
+        "path": "src/api.js",
+        "start": 1,
+        "end": 4,
+        "lines": [
+          {
+            "n": 1,
+            "text": "// API client revision 3",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "export async function fetchItems() {",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "  return fetch(\"/api/items\");",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "}",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "337bcf991d036c330e5d4e9db9837db7bac2526c",
+      "path": "src/api.js",
+      "result": {
+        "ok": true,
+        "path": "src/api.js",
+        "start": 1,
+        "end": 4,
+        "lines": [
+          {
+            "n": 1,
+            "text": "// API client revision 2",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "export async function fetchItems() {",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "  return fetch(\"/api/items\");",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "}",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "294ddcf3db40bb164bbf9a3883faed43dbea6417",
+      "path": "src/api.js",
+      "result": {
+        "ok": true,
+        "path": "src/api.js",
+        "start": 1,
+        "end": 4,
+        "lines": [
+          {
+            "n": 1,
+            "text": "// API client revision 1",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "export async function fetchItems() {",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "  return fetch(\"/api/items\");",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "}",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "7e305af4e2683d9c3a5acbf0528435d7e7cdf3cb",
+      "path": "src/api.js",
+      "result": {
+        "ok": true,
+        "path": "src/api.js",
+        "start": 1,
+        "end": 4,
+        "lines": [
+          {
+            "n": 1,
+            "text": "// API client revision 0",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "export async function fetchItems() {",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "  return fetch(\"/api/items\");",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "}",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "ac3b6cc7bca0d99427fca84f2ea6379a9773fb98",
+      "path": "auth.py",
+      "result": {
+        "ok": true,
+        "path": "auth.py",
+        "start": 1,
+        "end": 6,
+        "lines": [
+          {
+            "n": 1,
+            "text": "\"\"\"Authentication helpers.",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "Session implementation 2.",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "\"\"\"",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "def allowed(user):",
+            "k": []
+          },
+          {
+            "n": 6,
+            "text": "    return bool(user)",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "01bedce746425fbe2633179f8f39c2da604cb7b3",
+      "path": "auth.py",
+      "result": {
+        "ok": true,
+        "path": "auth.py",
+        "start": 1,
+        "end": 6,
+        "lines": [
+          {
+            "n": 1,
+            "text": "\"\"\"Authentication helpers.",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "Session implementation 1.",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "\"\"\"",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "def allowed(user):",
+            "k": []
+          },
+          {
+            "n": 6,
+            "text": "    return bool(user)",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "fd5f4061be80ed54ea516c8696d7848fffeaad9c",
+      "path": "auth.py",
+      "result": {
+        "ok": true,
+        "path": "auth.py",
+        "start": 1,
+        "end": 6,
+        "lines": [
+          {
+            "n": 1,
+            "text": "\"\"\"Authentication helpers.",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "Session implementation 0.",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "\"\"\"",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "def allowed(user):",
+            "k": []
+          },
+          {
+            "n": 6,
+            "text": "    return bool(user)",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "d91939339677ccde6af533a0bcc1cffad3d05802",
+      "path": "docs/guide.md",
+      "result": {
+        "ok": true,
+        "path": "docs/guide.md",
+        "start": 1,
+        "end": 5,
+        "lines": [
+          {
+            "n": 1,
+            "text": "# Migration",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "Use the new client.",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "Explore branches and inspect commits in the graph.",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "The commit tab shows source changes and syntax colours.",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "d91939339677ccde6af533a0bcc1cffad3d05802",
+      "path": "obsolete.txt",
+      "result": {
+        "ok": false,
+        "path": "obsolete.txt",
+        "start": 1,
+        "end": 200,
+        "lines": [],
+        "error": "missing-path"
+      }
+    },
+    {
+      "rev": "dba5df54c409a61eb8e491e62a1d39b663cd0cd2",
+      "path": "app.py",
+      "result": {
+        "ok": true,
+        "path": "app.py",
+        "start": 1,
+        "end": 38,
+        "lines": [
+          {
+            "n": 1,
+            "text": "#!/usr/bin/env python3",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "\"\"\"A small demo application.",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "The graph shows the story behind each change.",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "\"\"\"",
+            "k": []
+          },
+          {
+            "n": 6,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 7,
+            "text": "def greet(name):",
+            "k": []
+          },
+          {
+            "n": 8,
+            "text": "    return f\"Welcome, {name}\"",
+            "k": []
+          },
+          {
+            "n": 9,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 10,
+            "text": "# context line 0",
+            "k": []
+          },
+          {
+            "n": 11,
+            "text": "# context line 1",
+            "k": []
+          },
+          {
+            "n": 12,
+            "text": "# context line 2",
+            "k": []
+          },
+          {
+            "n": 13,
+            "text": "# context line 3",
+            "k": []
+          },
+          {
+            "n": 14,
+            "text": "# context line 4",
+            "k": []
+          },
+          {
+            "n": 15,
+            "text": "# context line 5",
+            "k": []
+          },
+          {
+            "n": 16,
+            "text": "# context line 6",
+            "k": []
+          },
+          {
+            "n": 17,
+            "text": "# context line 7",
+            "k": []
+          },
+          {
+            "n": 18,
+            "text": "# context line 8",
+            "k": []
+          },
+          {
+            "n": 19,
+            "text": "# context line 9",
+            "k": []
+          },
+          {
+            "n": 20,
+            "text": "# context line 10",
+            "k": []
+          },
+          {
+            "n": 21,
+            "text": "# context line 11",
+            "k": []
+          },
+          {
+            "n": 22,
+            "text": "# context line 12",
+            "k": []
+          },
+          {
+            "n": 23,
+            "text": "# context line 13",
+            "k": []
+          },
+          {
+            "n": 24,
+            "text": "# context line 14",
+            "k": []
+          },
+          {
+            "n": 25,
+            "text": "# context line 15",
+            "k": []
+          },
+          {
+            "n": 26,
+            "text": "# context line 16",
+            "k": []
+          },
+          {
+            "n": 27,
+            "text": "# context line 17",
+            "k": []
+          },
+          {
+            "n": 28,
+            "text": "# context line 18",
+            "k": []
+          },
+          {
+            "n": 29,
+            "text": "# context line 19",
+            "k": []
+          },
+          {
+            "n": 30,
+            "text": "# context line 20",
+            "k": []
+          },
+          {
+            "n": 31,
+            "text": "# context line 21",
+            "k": []
+          },
+          {
+            "n": 32,
+            "text": "# context line 22",
+            "k": []
+          },
+          {
+            "n": 33,
+            "text": "# context line 23",
+            "k": []
+          },
+          {
+            "n": 34,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 35,
+            "text": "def main():",
+            "k": []
+          },
+          {
+            "n": 36,
+            "text": "    print(greet(\"Acme\"))",
+            "k": []
+          },
+          {
+            "n": 37,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 38,
+            "text": "main()",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "dfb004626912a65b764610c074239ef4d88556ae",
+      "path": "config.json",
+      "result": {
+        "ok": true,
+        "path": "config.json",
+        "start": 1,
+        "end": 4,
+        "lines": [
+          {
+            "n": 1,
+            "text": "{",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "  \"theme\": \"dark\",",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "  \"graph\": true",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "}",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "787a50a3297c5bf48c7afa0e7b6ea69d188c573b",
+      "path": "README.md",
+      "result": {
+        "ok": true,
+        "path": "README.md",
+        "start": 1,
+        "end": 3,
+        "lines": [
+          {
+            "n": 1,
+            "text": "# Acme workspace",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "Explore commits, branches and changes.",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "path": "README.md",
+      "result": {
+        "ok": true,
+        "path": "README.md",
+        "start": 1,
+        "end": 3,
+        "lines": [
+          {
+            "n": 1,
+            "text": "# Acme workspace",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "A graph demo.",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "path": "app.py",
+      "result": {
+        "ok": true,
+        "path": "app.py",
+        "start": 1,
+        "end": 38,
+        "lines": [
+          {
+            "n": 1,
+            "text": "#!/usr/bin/env python3",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "\"\"\"A small demo application.",
+            "k": []
+          },
+          {
+            "n": 3,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 4,
+            "text": "The graph shows the story behind each change.",
+            "k": []
+          },
+          {
+            "n": 5,
+            "text": "\"\"\"",
+            "k": []
+          },
+          {
+            "n": 6,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 7,
+            "text": "def greet(name):",
+            "k": []
+          },
+          {
+            "n": 8,
+            "text": "    return f\"Hello, {name}\"",
+            "k": []
+          },
+          {
+            "n": 9,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 10,
+            "text": "# context line 0",
+            "k": []
+          },
+          {
+            "n": 11,
+            "text": "# context line 1",
+            "k": []
+          },
+          {
+            "n": 12,
+            "text": "# context line 2",
+            "k": []
+          },
+          {
+            "n": 13,
+            "text": "# context line 3",
+            "k": []
+          },
+          {
+            "n": 14,
+            "text": "# context line 4",
+            "k": []
+          },
+          {
+            "n": 15,
+            "text": "# context line 5",
+            "k": []
+          },
+          {
+            "n": 16,
+            "text": "# context line 6",
+            "k": []
+          },
+          {
+            "n": 17,
+            "text": "# context line 7",
+            "k": []
+          },
+          {
+            "n": 18,
+            "text": "# context line 8",
+            "k": []
+          },
+          {
+            "n": 19,
+            "text": "# context line 9",
+            "k": []
+          },
+          {
+            "n": 20,
+            "text": "# context line 10",
+            "k": []
+          },
+          {
+            "n": 21,
+            "text": "# context line 11",
+            "k": []
+          },
+          {
+            "n": 22,
+            "text": "# context line 12",
+            "k": []
+          },
+          {
+            "n": 23,
+            "text": "# context line 13",
+            "k": []
+          },
+          {
+            "n": 24,
+            "text": "# context line 14",
+            "k": []
+          },
+          {
+            "n": 25,
+            "text": "# context line 15",
+            "k": []
+          },
+          {
+            "n": 26,
+            "text": "# context line 16",
+            "k": []
+          },
+          {
+            "n": 27,
+            "text": "# context line 17",
+            "k": []
+          },
+          {
+            "n": 28,
+            "text": "# context line 18",
+            "k": []
+          },
+          {
+            "n": 29,
+            "text": "# context line 19",
+            "k": []
+          },
+          {
+            "n": 30,
+            "text": "# context line 20",
+            "k": []
+          },
+          {
+            "n": 31,
+            "text": "# context line 21",
+            "k": []
+          },
+          {
+            "n": 32,
+            "text": "# context line 22",
+            "k": []
+          },
+          {
+            "n": 33,
+            "text": "# context line 23",
+            "k": []
+          },
+          {
+            "n": 34,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 35,
+            "text": "def main():",
+            "k": []
+          },
+          {
+            "n": 36,
+            "text": "    print(greet(\"world\"))",
+            "k": []
+          },
+          {
+            "n": 37,
+            "text": "",
+            "k": []
+          },
+          {
+            "n": 38,
+            "text": "main()",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "path": "docs/Привет мир.md",
+      "result": {
+        "ok": true,
+        "path": "docs/Привет мир.md",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "# Привет, мир 🌍",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "path": "empty.txt",
+      "result": {
+        "ok": true,
+        "path": "empty.txt",
+        "start": 1,
+        "end": 0,
+        "lines": []
+      }
+    },
+    {
+      "rev": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "path": "no-newline.txt",
+      "result": {
+        "ok": true,
+        "path": "no-newline.txt",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "last line",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "path": "obsolete.txt",
+      "result": {
+        "ok": true,
+        "path": "obsolete.txt",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "Remove this after the migration.",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "path": "package.json",
+      "result": {
+        "ok": true,
+        "path": "package.json",
+        "start": 1,
+        "end": 1,
+        "lines": [
+          {
+            "n": 1,
+            "text": "{\"name\": \"acme\", \"version\": \"0.1.0\"}",
+            "k": []
+          }
+        ]
+      }
+    },
+    {
+      "rev": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "path": "public/icon.png",
+      "result": {
+        "ok": false,
+        "path": "public/icon.png",
+        "start": 1,
+        "end": 200,
+        "lines": [],
+        "error": "binary"
+      }
+    },
+    {
+      "rev": "8d1f18ac640624fa1ce0feb44e2e4fa9dda12f3a",
+      "path": "windows.txt",
+      "result": {
+        "ok": true,
+        "path": "windows.txt",
+        "start": 1,
+        "end": 2,
+        "lines": [
+          {
+            "n": 1,
+            "text": "first\r",
+            "k": []
+          },
+          {
+            "n": 2,
+            "text": "second\r",
+            "k": []
+          }
+        ]
+      }
+    }
+  ]
+}

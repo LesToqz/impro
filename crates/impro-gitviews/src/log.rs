@@ -362,11 +362,21 @@ pub fn read_refs(
 /// Graph JSON in topological order; default limit is 1,500 when `None`.
 pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
     let deadline = Instant::now() + TIMEOUT;
-    let absolute = if root.is_absolute() {
+    let joined = if root.is_absolute() {
         root.to_path_buf()
     } else {
         std::env::current_dir().unwrap_or_default().join(root)
     };
+    let mut absolute = std::path::PathBuf::new();
+    for part in joined.components() {
+        match part {
+            std::path::Component::CurDir => {}
+            std::path::Component::ParentDir => {
+                absolute.pop();
+            }
+            part => absolute.push(part.as_os_str()),
+        }
+    }
     let mut result = json!({"ok":false,"error":null,"repo":{"name":clean(absolute.file_name().unwrap_or_default().as_encoded_bytes(),None,false,false),"root":clean(absolute.as_os_str().as_encoded_bytes(),None,false,true),"default_branch":null},"head":{"hash":null,"branch":null,"detached":false},"dirty":null,"total":0,"truncated":false,"commits":[]});
     let mut work = || -> Result<(), GitError> {
         let r = &mut result;
@@ -451,10 +461,11 @@ pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
             parse_log_stream,
         )?;
         for c in &mut commits {
-            c["refs"] = json!(refs
-                .get(c["hash"].as_str().unwrap_or_default())
-                .cloned()
-                .unwrap_or_default());
+            c["refs"] = Value::Array(
+                refs.get(c["hash"].as_str().unwrap_or_default())
+                    .cloned()
+                    .unwrap_or_default(),
+            );
         }
         let total = match run(
             root,
@@ -511,7 +522,7 @@ pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
         }
         r["truncated"] = json!(total > commits.len());
         r["total"] = json!(total);
-        r["commits"] = json!(commits);
+        r["commits"] = Value::Array(commits);
         r["ok"] = json!(true);
         Ok(())
     };

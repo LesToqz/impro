@@ -382,7 +382,7 @@ pub fn commit_detail(
                             &patch[starts[index]..starts[end]],
                             limits.max_lines_per_file.clamp(0, 100000) as usize,
                         );
-                        file["hunks"] = json!(hunks);
+                        file["hunks"] = Value::Array(hunks);
                         file["too_large"] = json!(large);
                         truncated |= cut;
                     }
@@ -393,7 +393,7 @@ pub fn commit_detail(
             }
             truncated |= clipped;
         }
-        result["files"] = json!(files);
+        result["files"] = Value::Array(files);
         result["truncated"] = json!(truncated);
         Ok(result)
     };
@@ -483,7 +483,7 @@ pub fn file_context(
         Ok((lines, end)) => {
             result["ok"] = json!(true);
             result["end"] = json!(end);
-            result["lines"] = json!(lines);
+            result["lines"] = Value::Array(lines);
         }
         Err(e) => result["error"] = json!(e.0),
     }

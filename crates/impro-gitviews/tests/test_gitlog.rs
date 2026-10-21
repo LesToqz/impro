@@ -403,3 +403,40 @@ fn timing_impro_and_five_thousand_commits() {
         assert!(parse < Duration::from_millis(40));
     }
 }
+
+#[test]
+fn test_showcase_reference_json_parity() {
+    let expected: serde_json::Value =
+        serde_json::from_str(include_str!("support/reference.json")).unwrap();
+    let t = Temp::new();
+    let r = showcase(&t.0);
+    assert_eq!(r.git(&["show-ref"]), expected["refs"]);
+    let mut graph = log::collect_graph(&t.0, None);
+    graph["repo"]["root"] = json!("");
+    graph["repo"]["name"] = json!("");
+    assert_eq!(graph, expected["graph"]);
+    for detail in expected["details"].as_array().unwrap() {
+        let actual = diff::commit_detail(
+            &t.0,
+            detail["hash"].as_str().unwrap(),
+            diff::Limits::default(),
+            None,
+        );
+        assert_eq!(&actual, detail, "commit {}", detail["hash"]);
+    }
+    for context in expected["contexts"].as_array().unwrap() {
+        let actual = diff::file_context(
+            &t.0,
+            context["rev"].as_str().unwrap(),
+            context["path"].as_str().unwrap(),
+            1,
+            200,
+            None,
+        );
+        assert_eq!(
+            actual, context["result"],
+            "context {}:{}",
+            context["rev"], context["path"]
+        );
+    }
+}
