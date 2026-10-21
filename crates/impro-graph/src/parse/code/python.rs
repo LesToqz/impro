@@ -118,7 +118,8 @@ impl<'a> Lexer<'a> {
                     return Some((Tok::Name(&self.text[start..self.i]), self.line));
                 }
                 _ if c.is_ascii_digit() => {
-                    while self.i < b.len() && (b[self.i].is_ascii_alphanumeric() || b[self.i] == b'_')
+                    while self.i < b.len()
+                        && (b[self.i].is_ascii_alphanumeric() || b[self.i] == b'_')
                     {
                         self.i += 1;
                     }
@@ -154,7 +155,10 @@ impl<'a> Lexer<'a> {
 }
 
 /// Parses `a.b.c` and returns it joined with dots.
-fn dotted<'a>(lx: &mut Lexer<'a>, first: Option<(Tok<'a>, u32)>) -> (String, Option<(Tok<'a>, u32)>) {
+fn dotted<'a>(
+    lx: &mut Lexer<'a>,
+    first: Option<(Tok<'a>, u32)>,
+) -> (String, Option<(Tok<'a>, u32)>) {
     let mut name = String::new();
     let mut tok = first;
     loop {
@@ -215,7 +219,9 @@ pub fn imports(text: &str) -> Vec<CodeRef> {
                 }
                 let (module, after) = dotted(&mut lx, cur);
                 cur = after;
-                if !matches!(cur, Some((Tok::Name("import"), _))) || (level.is_empty() && module.is_empty()) {
+                if !matches!(cur, Some((Tok::Name("import"), _)))
+                    || (level.is_empty() && module.is_empty())
+                {
                     pending = cur;
                     continue;
                 }
@@ -271,7 +277,10 @@ mod tests {
     use super::*;
 
     fn specs(text: &str) -> Vec<(String, u32)> {
-        imports(text).into_iter().map(|r| (r.spec, r.line)).collect()
+        imports(text)
+            .into_iter()
+            .map(|r| (r.spec, r.line))
+            .collect()
     }
 
     #[test]
@@ -280,17 +289,15 @@ mod tests {
             "import a.b, c as d\nfrom a.b import c\nfrom . import x\nfrom ..m import y\n# import nope\ns=\"import nope\"",
         );
         let names: Vec<_> = refs.iter().map(|r| r.0.as_str()).collect();
-        assert_eq!(
-            names,
-            ["a.b", "c", "a.b", "a.b.c", ".x", "..m", "..m.y"]
-        );
+        assert_eq!(names, ["a.b", "c", "a.b", "a.b.c", ".x", "..m", "..m.y"]);
         assert_eq!(refs[0].1, 1);
         assert_eq!(refs.last().unwrap().1, 4);
     }
 
     #[test]
     fn strings_comments_and_docstrings_hide_imports() {
-        let text = "\"\"\"\nimport hidden\n\"\"\"\nx = 'import nope'\n# from a import b\nimport real\n";
+        let text =
+            "\"\"\"\nimport hidden\n\"\"\"\nx = 'import nope'\n# from a import b\nimport real\n";
         assert_eq!(specs(text), [("real".to_string(), 6)]);
     }
 
@@ -298,10 +305,7 @@ mod tests {
     fn nested_statements_and_one_liners() {
         let text = "def f():\n    import inner\n    if x: import one_liner\ntry:\n    from pkg import (a,\n        b as c)\nexcept ImportError:\n    pass\n";
         let names: Vec<_> = specs(text).into_iter().map(|r| r.0).collect();
-        assert_eq!(
-            names,
-            ["inner", "one_liner", "pkg", "pkg.a", "pkg.b"]
-        );
+        assert_eq!(names, ["inner", "one_liner", "pkg", "pkg.a", "pkg.b"]);
     }
 
     #[test]

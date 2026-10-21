@@ -43,7 +43,10 @@ fn settle_checked(l: &mut Layout) -> usize {
     let ticks = l.settle(1200);
     assert!(l.settled(), "did not settle after {ticks} ticks");
     for i in 0..l.len() {
-        assert!(l.x()[i].is_finite() && l.y()[i].is_finite(), "finite positions");
+        assert!(
+            l.x()[i].is_finite() && l.y()[i].is_finite(),
+            "finite positions"
+        );
         assert!(l.vx()[i].hypot(l.vy()[i]) < 4.0, "small residual velocity");
     }
     ticks
@@ -52,18 +55,30 @@ fn settle_checked(l: &mut Layout) -> usize {
 #[test]
 fn forces_map_controls_linearly() {
     let f = ForceParams::default();
-    assert_eq!((f.center, f.link, f.distance, f.repel), (0.12, 0.35, 160.0, -720.0));
+    assert_eq!(
+        (f.center, f.link, f.distance, f.repel),
+        (0.12, 0.35, 160.0, -720.0)
+    );
     let off = ForceParams::from_controls(0.0, 0.0, 160.0, 0.0);
     assert_eq!((off.center, off.link, off.repel), (0.0, 0.0, 0.0));
-    assert_eq!(ForceParams::from_controls(0.12, 0.35, 160.0, 12.0).repel, -1440.0);
+    assert_eq!(
+        ForceParams::from_controls(0.12, 0.35, 160.0, 12.0).repel,
+        -1440.0
+    );
     // clamped and sanitised
     let wild = ForceParams::from_controls(f64::NAN, 1e9, -5.0, f64::INFINITY);
     assert_eq!(wild.center, 0.12);
     assert_eq!(wild.link, 1.5);
     assert_eq!(wild.distance, 48.0);
     assert_eq!(wild.repel, -720.0);
-    assert_eq!(ForceParams::from_controls(9.0, 0.0, 160.0, 100.0).center, 0.6);
-    assert_eq!(ForceParams::from_controls(0.0, 0.0, 160.0, 100.0).repel, -2880.0);
+    assert_eq!(
+        ForceParams::from_controls(9.0, 0.0, 160.0, 100.0).center,
+        0.6
+    );
+    assert_eq!(
+        ForceParams::from_controls(0.0, 0.0, 160.0, 100.0).repel,
+        -2880.0
+    );
 }
 
 #[test]
@@ -114,7 +129,13 @@ fn structural_edits_reheat_but_identical_graphs_do_not() {
 
 #[test]
 fn chain_ring_hub_and_clusters_settle_finitely() {
-    for g in [chain(28), ring(36), hub(41), clustered(180, 31), Graph::from_pairs(30, &[])] {
+    for g in [
+        chain(28),
+        ring(36),
+        hub(41),
+        clustered(180, 31),
+        Graph::from_pairs(30, &[]),
+    ] {
         let mut l = loaded(&g);
         settle_checked(&mut l);
     }
@@ -161,12 +182,19 @@ fn updates_keep_state_of_surviving_nodes() {
         .map(|i| (l.ids()[i].clone(), l.x()[i], l.y()[i], l.vx()[i], l.vy()[i]))
         .collect();
     // drop the first four nodes, add four new ones
-    let pairs: Vec<_> = (0..38u32).filter(|i| *i >= 4 && *i < 37).map(|i| (i, i + 1)).collect();
+    let pairs: Vec<_> = (0..38u32)
+        .filter(|i| *i >= 4 && *i < 37)
+        .map(|i| (i, i + 1))
+        .collect();
     let g2 = Graph::from_pairs(36, &pairs);
     assert!(l.set_graph(&g2));
     for (id, x, y, vx, vy) in &before {
         if let Some(i) = l.index_of(id) {
-            assert_eq!((l.x()[i], l.y()[i], l.vx()[i], l.vy()[i]), (*x, *y, *vx, *vy), "{id}");
+            assert_eq!(
+                (l.x()[i], l.y()[i], l.vx()[i], l.vy()[i]),
+                (*x, *y, *vx, *vy),
+                "{id}"
+            );
         }
     }
     assert!(l.index_of("n000000.md").is_some(), "ids are reused by name");
@@ -197,13 +225,29 @@ fn barnes_hut_is_exact_for_a_few_points_and_handles_coincident_points() {
     assert_eq!(t.order().len(), xs.len());
     let exact = brute_acceleration(&xs, &ys, -50.0, MIN_DISTANCE2);
     for i in 0..xs.len() {
-        let a = t.acceleration(i as u32, xs[i], ys[i], &xs, &ys, -50.0, 1.0 / (THETA * THETA), MIN_DISTANCE2);
+        let a = t.acceleration(
+            i as u32,
+            xs[i],
+            ys[i],
+            &xs,
+            &ys,
+            -50.0,
+            1.0 / (THETA * THETA),
+            MIN_DISTANCE2,
+        );
         assert!(a.0.is_finite() && a.1.is_finite());
-        assert!((a.0 - exact[i].0).abs() < 0.2 * exact[i].0.abs() + 0.05, "{i}: {a:?} {:?}", exact[i]);
+        assert!(
+            (a.0 - exact[i].0).abs() < 0.2 * exact[i].0.abs() + 0.05,
+            "{i}: {a:?} {:?}",
+            exact[i]
+        );
     }
     let mut empty = QuadTree::default();
     empty.build(&[], &[]);
-    assert_eq!(empty.acceleration(0, 0.0, 0.0, &[], &[], -1.0, 2.0, 64.0), (0.0, 0.0));
+    assert_eq!(
+        empty.acceleration(0, 0.0, 0.0, &[], &[], -1.0, 2.0, 64.0),
+        (0.0, 0.0)
+    );
 }
 
 #[test]
@@ -263,7 +307,11 @@ fn new_nodes_start_in_a_bounded_disc() {
     let g = chain(128);
     let l = loaded(&g);
     let r = (72.0f32 * 72.0 * 128.0 / std::f32::consts::PI).sqrt();
-    assert!(l.x().iter().zip(l.y()).all(|(x, y)| x.hypot(*y) <= r + 1e-3));
+    assert!(l
+        .x()
+        .iter()
+        .zip(l.y())
+        .all(|(x, y)| x.hypot(*y) <= r + 1e-3));
 }
 
 #[test]

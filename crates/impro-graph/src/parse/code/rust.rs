@@ -55,7 +55,13 @@ impl<'a> Lexer<'a> {
             if b[j] == b'\n' {
                 self.line += 1;
             }
-            if b[j] == b'"' && b[j + 1..].iter().take(hashes).filter(|c| **c == b'#').count() == hashes
+            if b[j] == b'"'
+                && b[j + 1..]
+                    .iter()
+                    .take(hashes)
+                    .filter(|c| **c == b'#')
+                    .count()
+                    == hashes
                 && b.len() >= j + 1 + hashes
             {
                 self.i = j + 1 + hashes;
@@ -116,12 +122,15 @@ impl<'a> Lexer<'a> {
                 c if c.is_ascii_alphabetic() || c == b'_' || c >= 0x80 => {
                     let start = self.i;
                     while self.i < b.len()
-                        && (b[self.i].is_ascii_alphanumeric() || b[self.i] == b'_' || b[self.i] >= 0x80)
+                        && (b[self.i].is_ascii_alphanumeric()
+                            || b[self.i] == b'_'
+                            || b[self.i] >= 0x80)
                     {
                         self.i += 1;
                     }
                     let word = &self.text[start..self.i];
-                    if matches!(word, "r" | "br" | "cr") && matches!(b.get(self.i), Some(b'#') | Some(b'"'))
+                    if matches!(word, "r" | "br" | "cr")
+                        && matches!(b.get(self.i), Some(b'#') | Some(b'"'))
                         && self.skip_raw()
                     {
                         continue;
@@ -129,7 +138,9 @@ impl<'a> Lexer<'a> {
                     return Some((Tok::Ident(word), self.line));
                 }
                 c if c.is_ascii_digit() => {
-                    while self.i < b.len() && (b[self.i].is_ascii_alphanumeric() || b[self.i] == b'_') {
+                    while self.i < b.len()
+                        && (b[self.i].is_ascii_alphanumeric() || b[self.i] == b'_')
+                    {
                         self.i += 1;
                     }
                 }
@@ -221,7 +232,11 @@ fn use_tree<'a>(
 }
 
 pub fn imports(text: &str) -> Vec<CodeRef> {
-    let mut lx = Lexer { text, i: 0, line: 1 };
+    let mut lx = Lexer {
+        text,
+        i: 0,
+        line: 1,
+    };
     let mut out = Vec::new();
     let mut tok = lx.next();
     while let Some((t, line)) = tok {
@@ -273,7 +288,10 @@ mod tests {
     use super::*;
 
     fn specs(text: &str) -> Vec<(String, CodeKind)> {
-        imports(text).into_iter().map(|r| (r.spec, r.kind)).collect()
+        imports(text)
+            .into_iter()
+            .map(|r| (r.spec, r.kind))
+            .collect()
     }
 
     #[test]

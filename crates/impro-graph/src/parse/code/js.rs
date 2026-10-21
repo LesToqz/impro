@@ -20,7 +20,8 @@ impl<'a> Cursor<'a> {
             match self.s.get(self.i) {
                 Some(c) if c.is_ascii_whitespace() => self.i += 1,
                 Some(b'/') if self.s.get(self.i + 1) == Some(&b'/') => {
-                    self.i = memchr::memchr(b'\n', &self.s[self.i..]).map_or(self.s.len(), |n| self.i + n);
+                    self.i = memchr::memchr(b'\n', &self.s[self.i..])
+                        .map_or(self.s.len(), |n| self.i + n);
                 }
                 Some(b'/') if self.s.get(self.i + 1) == Some(&b'*') => {
                     self.i = memchr::memmem::find(&self.s[self.i + 2..], b"*/")
@@ -197,7 +198,10 @@ mod tests {
     use super::*;
 
     fn specs(text: &str) -> Vec<(String, u32)> {
-        imports(text).into_iter().map(|r| (r.spec, r.line)).collect()
+        imports(text)
+            .into_iter()
+            .map(|r| (r.spec, r.line))
+            .collect()
     }
 
     #[test]
@@ -240,7 +244,8 @@ mod tests {
 
     #[test]
     fn vue_blocks() {
-        let text = "<template><div/></template>\n<script>\nimport Foo from './Foo.vue'\n</script>\n";
+        let text =
+            "<template><div/></template>\n<script>\nimport Foo from './Foo.vue'\n</script>\n";
         assert_eq!(specs(text), [("./Foo.vue".to_string(), 3)]);
     }
 }

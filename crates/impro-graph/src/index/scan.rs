@@ -62,8 +62,14 @@ impl ScanConfig {
     }
 
     fn worker_count(&self, jobs: usize) -> usize {
-        let auto = std::thread::available_parallelism().map_or(2, |n| n.get()).min(8);
-        let n = if self.threads == 0 { auto } else { self.threads };
+        let auto = std::thread::available_parallelism()
+            .map_or(2, |n| n.get())
+            .min(8);
+        let n = if self.threads == 0 {
+            auto
+        } else {
+            self.threads
+        };
         n.clamp(1, 32).min(jobs.max(1))
     }
 }
@@ -170,7 +176,12 @@ fn times(m: &fs::Metadata) -> Option<f64> {
     }
 }
 
-fn read_checked(root: &Path, rel: &str, config: &ScanConfig, check_ancestors: bool) -> Option<FileEntry> {
+fn read_checked(
+    root: &Path,
+    rel: &str,
+    config: &ScanConfig,
+    check_ancestors: bool,
+) -> Option<FileEntry> {
     let abs = root.join(rel);
     if check_ancestors {
         let mut cur = root.to_path_buf();

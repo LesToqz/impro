@@ -134,7 +134,11 @@ fn graph_fingerprint(graph: &Graph) -> u64 {
         acc = acc.wrapping_add(h(&["n", &n.id]));
     }
     for &(s, t) in &graph.pairs {
-        acc = acc.wrapping_add(h(&["e", &graph.nodes[s as usize].id, &graph.nodes[t as usize].id]));
+        acc = acc.wrapping_add(h(&[
+            "e",
+            &graph.nodes[s as usize].id,
+            &graph.nodes[t as usize].id,
+        ]));
     }
     acc
 }
@@ -376,7 +380,11 @@ impl Layout {
     }
 
     pub fn set_alpha_target(&mut self, target: f64) {
-        self.alpha_target = if target.is_finite() { target.clamp(0.0, 1.0) } else { 0.0 };
+        self.alpha_target = if target.is_finite() {
+            target.clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
     }
 
     /// True when cooling is finished and nothing keeps the simulation hot.

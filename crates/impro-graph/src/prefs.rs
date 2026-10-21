@@ -256,9 +256,21 @@ pub fn normalize(value: &Value) -> GraphPrefs {
         show_orphans: boolean(get("showOrphans"), d.show_orphans),
         show_code: boolean(get("showCode"), d.show_code),
         show_arrow: boolean(get("showArrow"), d.show_arrow),
-        text_fade_multiplier: number(get("textFadeMultiplier"), "textFadeMultiplier", d.text_fade_multiplier),
-        node_size_multiplier: number(get("nodeSizeMultiplier"), "nodeSizeMultiplier", d.node_size_multiplier),
-        line_size_multiplier: number(get("lineSizeMultiplier"), "lineSizeMultiplier", d.line_size_multiplier),
+        text_fade_multiplier: number(
+            get("textFadeMultiplier"),
+            "textFadeMultiplier",
+            d.text_fade_multiplier,
+        ),
+        node_size_multiplier: number(
+            get("nodeSizeMultiplier"),
+            "nodeSizeMultiplier",
+            d.node_size_multiplier,
+        ),
+        line_size_multiplier: number(
+            get("lineSizeMultiplier"),
+            "lineSizeMultiplier",
+            d.line_size_multiplier,
+        ),
         center_strength: number(get("centerStrength"), "centerStrength", d.center_strength),
         repel_strength: number(get("repelStrength"), "repelStrength", d.repel_strength),
         link_strength: number(get("linkStrength"), "linkStrength", d.link_strength),
@@ -269,7 +281,8 @@ pub fn normalize(value: &Value) -> GraphPrefs {
         collapse_forces: boolean(get("collapse-forces"), d.collapse_forces),
         collapse_color_groups: boolean(get("collapse-color-groups"), d.collapse_color_groups),
         scale: number(get("scale"), "scale", d.scale),
-        local_depth: number(get("localDepth"), "localDepth", d.local_depth as f64).round_ties_even() as u32,
+        local_depth: number(get("localDepth"), "localDepth", d.local_depth as f64).round_ties_even()
+            as u32,
         local_incoming: boolean(get("localIncoming"), d.local_incoming),
         local_outgoing: boolean(get("localOutgoing"), d.local_outgoing),
         close: boolean(get("close"), d.close),
@@ -330,7 +343,10 @@ impl GraphPrefs {
         m.insert("collapse-filter".into(), self.collapse_filter.into());
         m.insert("collapse-display".into(), self.collapse_display.into());
         m.insert("collapse-forces".into(), self.collapse_forces.into());
-        m.insert("collapse-color-groups".into(), self.collapse_color_groups.into());
+        m.insert(
+            "collapse-color-groups".into(),
+            self.collapse_color_groups.into(),
+        );
         m.insert("scale".into(), num(self.scale));
         m.insert("localDepth".into(), Value::from(self.local_depth));
         m.insert("localIncoming".into(), self.local_incoming.into());
@@ -438,7 +454,10 @@ mod tests {
             assert_eq!(pair[0].as_f64(), Some(lo), "{key}");
             assert_eq!(pair[1].as_f64(), Some(hi), "{key}");
         }
-        assert_eq!(fx["limits"].as_object().map(|o| o.len()), Some(LIMITS.len()));
+        assert_eq!(
+            fx["limits"].as_object().map(|o| o.len()),
+            Some(LIMITS.len())
+        );
         for (key, step) in STEPS {
             assert_eq!(fx["steps"][key].as_f64(), step, "{key}");
         }
@@ -475,12 +494,17 @@ mod tests {
         assert_eq!(normalize(&json!({"localDepth": 1.4})).local_depth, 1);
         assert_eq!(normalize(&json!({"localDepth": 5.6})).local_depth, 6);
         // other numbers stay continuous
-        assert_eq!(normalize(&json!({"linkDistance": 161.3})).link_distance, 161.3);
+        assert_eq!(
+            normalize(&json!({"linkDistance": 161.3})).link_distance,
+            161.3
+        );
     }
 
     #[test]
     fn unknown_keys_drop_and_booleans_need_booleans() {
-        let p = normalize(&json!({"mystery": 1, "showTags": 1, "showCode": "yes", "close": true, "search": 3}));
+        let p = normalize(
+            &json!({"mystery": 1, "showTags": 1, "showCode": "yes", "close": true, "search": 3}),
+        );
         assert!(!p.show_tags);
         assert!(p.show_code);
         assert!(p.close);
@@ -511,8 +535,13 @@ mod tests {
         let many: Vec<Value> = (0..20)
             .map(|i| json!({"query": format!("q{i}"), "color": "#000000"}))
             .collect();
-        assert_eq!(normalize(&json!({"colorGroups": many})).color_groups.len(), 12);
-        assert!(normalize(&json!({"colorGroups": "no"})).color_groups.is_empty());
+        assert_eq!(
+            normalize(&json!({"colorGroups": many})).color_groups.len(),
+            12
+        );
+        assert!(normalize(&json!({"colorGroups": "no"}))
+            .color_groups
+            .is_empty());
     }
 
     #[test]
@@ -538,7 +567,10 @@ mod tests {
         assert_eq!(new_rule_color(0, false), "#256bb1");
         assert_ne!(new_rule_color(0, true), new_rule_color(1, true));
         let first = new_rule_rgb(0, true);
-        assert!((first & 255) > (first >> 16 & 255), "blue dominates the first rule");
+        assert!(
+            (first & 255) > (first >> 16 & 255),
+            "blue dominates the first rule"
+        );
         let light = new_rule_rgb(0, false);
         let sum = |c: u32| (c >> 16 & 255) + (c >> 8 & 255) + (c & 255);
         assert!(sum(light) < sum(first));
@@ -563,11 +595,16 @@ mod tests {
         assert_eq!(f.link, 0.35);
         assert_eq!(f.distance, 160.0);
         assert_eq!(f.repel, -720.0);
-        let mut p = GraphPrefs::default();
-        p.repel_strength = 0.0;
-        assert_eq!(p.forces().repel, 0.0);
-        p.repel_strength = 12.0;
-        assert_eq!(p.forces().repel, -1440.0);
+        let off = GraphPrefs {
+            repel_strength: 0.0,
+            ..GraphPrefs::default()
+        };
+        assert_eq!(off.forces().repel, 0.0);
+        let twelve = GraphPrefs {
+            repel_strength: 12.0,
+            ..GraphPrefs::default()
+        };
+        assert_eq!(twelve.forces().repel, -1440.0);
     }
 
     #[test]
@@ -584,7 +621,10 @@ mod tests {
         assert!(p.collapse_filter && p.reduce_motion);
         assert!(!p.show_tags && p.color_groups.is_empty());
         assert_eq!(p.link_distance, 160.0);
-        assert_eq!(p.local_depth, 5, "traversal is untouched outside local mode");
+        assert_eq!(
+            p.local_depth, 5,
+            "traversal is untouched outside local mode"
+        );
         assert!(!p.local_outgoing);
         let mut q = before;
         q.reset(true);

@@ -178,7 +178,12 @@ impl Camera {
 
     /// Fits a world rectangle with `margin` pixels around it.
     pub fn fit(&mut self, bounds: (f32, f32, f32, f32), width: f64, height: f64, margin: f64) {
-        let (x0, y0, x1, y1) = (bounds.0 as f64, bounds.1 as f64, bounds.2 as f64, bounds.3 as f64);
+        let (x0, y0, x1, y1) = (
+            bounds.0 as f64,
+            bounds.1 as f64,
+            bounds.2 as f64,
+            bounds.3 as f64,
+        );
         let (w, h) = ((x1 - x0).max(1.0), (y1 - y0).max(1.0));
         let zoom = clamp_zoom(((width - 2.0 * margin) / w).min((height - 2.0 * margin) / h));
         self.zoom = zoom;
@@ -391,7 +396,10 @@ mod tests {
     fn zoom_keeps_the_anchor_world_point_fixed() {
         for (pan, before, after, anchor) in [(28.0, 1.0, 2.0, 180.0), (-14.0, 0.2, 0.7, 500.0)] {
             let world = (anchor - pan) / before;
-            close(zoom_about(pan, before, after, anchor) + world * after, anchor);
+            close(
+                zoom_about(pan, before, after, anchor) + world * after,
+                anchor,
+            );
         }
         let mut cam = Camera {
             pan_x: 30.0,
@@ -441,7 +449,10 @@ mod tests {
         let mut g = HitGrid::new();
         g.rebuild(&xs, &ys, &rs);
         assert_eq!(g.hit(&xs, &ys, &rs, 2.0, 0.0, 0.0), Some(1));
-        assert_eq!(g.hit_ranked(&xs, &ys, &rs, 2.0, 0.0, 0.0, |i| 1 - i as u32), Some(0));
+        assert_eq!(
+            g.hit_ranked(&xs, &ys, &rs, 2.0, 0.0, 0.0, |i| 1 - i as u32),
+            Some(0)
+        );
         assert_eq!(g.hit(&xs, &ys, &rs, 9.0, 0.0, 0.0), None);
         assert_eq!(g.hit(&xs, &ys, &rs, 9.0, 0.0, 4.0), Some(1));
         assert_eq!(g.hit(&xs, &ys, &rs, f32::NAN, 0.0, 0.0), None);
@@ -455,7 +466,9 @@ mod tests {
     fn hit_grid_agrees_with_brute_force() {
         let mut seed = 7u64;
         let mut rnd = || {
-            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            seed = seed
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             ((seed >> 33) as f32) / (1u64 << 31) as f32
         };
         let n = 500;

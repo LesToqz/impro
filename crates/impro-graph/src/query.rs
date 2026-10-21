@@ -44,7 +44,10 @@ enum Field {
 #[derive(Debug, Clone)]
 enum Matcher {
     /// Lowercased needle; `ascii` selects the allocation-free search.
-    Text { needle: String, ascii: bool },
+    Text {
+        needle: String,
+        ascii: bool,
+    },
     Regex(Option<Regex>),
     /// Lowercased tag without `#`.
     Tag(String),
@@ -94,7 +97,10 @@ fn tokenize(query: &str) -> Vec<&str> {
             j = k + 1;
         }
         let end = match b.get(j) {
-            Some(b'"') => b[j + 1..].iter().position(|c| *c == b'"').map(|p| j + p + 2),
+            Some(b'"') => b[j + 1..]
+                .iter()
+                .position(|c| *c == b'"')
+                .map(|p| j + p + 2),
             Some(b'/') => regex_end(b, j),
             _ => None,
         };

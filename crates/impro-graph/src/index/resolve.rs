@@ -3,9 +3,7 @@
 
 use std::collections::HashMap;
 
-use super::entry::{
-    FileEntry, FileId, RefMode, Resolved, NOTE_EXTENSIONS,
-};
+use super::entry::{FileEntry, FileId, RefMode, Resolved, NOTE_EXTENSIONS};
 use crate::parse::text::{basename, dirname, extension, is_external, stem};
 
 /// Case-folded lookup tables, maintained incrementally by the index.
@@ -68,9 +66,7 @@ pub struct Resolver<'a> {
 
 impl<'a> Resolver<'a> {
     fn path_of(&self, id: FileId) -> &str {
-        self.files[id.index()]
-            .as_ref()
-            .map_or("", |f| &f.path)
+        self.files[id.index()].as_ref().map_or("", |f| &f.path)
     }
 
     /// Exact (case-insensitive) project path; `joined` is already normalised.
@@ -89,7 +85,13 @@ impl<'a> Resolver<'a> {
     }
 
     /// First probe `base + suffix` that exists.
-    fn with_suffixes(&self, scratch: &mut String, base: &str, rel: &str, suffixes: &[&str]) -> Option<FileId> {
+    fn with_suffixes(
+        &self,
+        scratch: &mut String,
+        base: &str,
+        rel: &str,
+        suffixes: &[&str],
+    ) -> Option<FileId> {
         if !join_norm(scratch, base, rel) {
             return None;
         }
@@ -107,10 +109,7 @@ impl<'a> Resolver<'a> {
     /// Resolves `target` written in `source`; also reports how many files
     /// matched a bare wiki name (0 when another strategy applied).
     pub fn resolve(&self, source: &str, target: &str, mode: RefMode) -> Resolved {
-        let target = target
-            .split(['#', '^', '?'])
-            .next()
-            .unwrap_or("");
+        let target = target.split(['#', '^', '?']).next().unwrap_or("");
         let web = matches!(
             mode,
             RefMode::Wiki | RefMode::Markdown | RefMode::Html | RefMode::Style
@@ -131,13 +130,12 @@ impl<'a> Resolver<'a> {
             RefMode::Python => self.python(folder, target, &mut scratch),
             RefMode::Script => self.script(folder, target, &mut scratch),
             RefMode::Style => self.style(source, folder, target, &mut scratch),
-            RefMode::Html => self.from_folder_or_root(folder, target, &mut scratch),
+            RefMode::Html => self.html_target(folder, target, &mut scratch),
             RefMode::RustMod => self.rust_mod(source, target, &mut scratch),
             RefMode::RustUse => self.rust_use(source, target, &mut scratch),
-            RefMode::Shell | RefMode::Include => {
-                self.exact_join(&mut scratch, folder, target)
-                    .or_else(|| self.exact_join(&mut scratch, "", target))
-            }
+            RefMode::Shell | RefMode::Include => self
+                .exact_join(&mut scratch, folder, target)
+                .or_else(|| self.exact_join(&mut scratch, "", target)),
             RefMode::Ruby => {
                 let sfx: &[&str] = if extension(target).is_empty() {
                     &[".rb", ""]
@@ -174,7 +172,12 @@ impl<'a> Resolver<'a> {
         }
         found.sort_by_cached_key(|id| {
             let p = self.path_of(*id);
-            (dirname(p) != folder, p.chars().count(), lower(p), p.to_string())
+            (
+                dirname(p) != folder,
+                p.chars().count(),
+                lower(p),
+                p.to_string(),
+            )
         });
         found.dedup();
         found
@@ -204,7 +207,7 @@ impl<'a> Resolver<'a> {
             .or_else(|| self.exact_join(scratch, "", rel))
     }
 
-    fn from_folder_or_root(&self, folder: &str, target: &str, scratch: &mut String) -> Option<FileId> {
+    fn html_target(&self, folder: &str, target: &str, scratch: &mut String) -> Option<FileId> {
         match target.strip_prefix('/') {
             Some(rest) => self.exact_join(scratch, "", rest),
             None => self.exact_join(scratch, folder, target),
@@ -244,7 +247,12 @@ impl<'a> Resolver<'a> {
             return Some(id);
         }
         // ESM style `./x.js` that is really `x.ts`
-        for (from, to) in [(".js", ".ts"), (".jsx", ".tsx"), (".mjs", ".mts"), (".cjs", ".cts")] {
+        for (from, to) in [
+            (".js", ".ts"),
+            (".jsx", ".tsx"),
+            (".mjs", ".mts"),
+            (".cjs", ".cts"),
+        ] {
             if let Some(stem) = spec.strip_suffix(from) {
                 let swapped = format!("{stem}{to}");
                 if let Some(id) = self.exact_join(scratch, folder, &swapped) {
@@ -261,12 +269,21 @@ impl<'a> Resolver<'a> {
         if let Some(id) = self.with_suffixes(scratch, folder, spec, &SCRIPT_EXTENSIONS) {
             return Some(id);
         }
-        let dir_index: Vec<String> = SCRIPT_EXTENSIONS.iter().map(|e| format!("/index{e}")).collect();
+        let dir_index: Vec<String> = SCRIPT_EXTENSIONS
+            .iter()
+            .map(|e| format!("/index{e}"))
+            .collect();
         let refs: Vec<&str> = dir_index.iter().map(String::as_str).collect();
         self.with_suffixes(scratch, folder, spec, &refs)
     }
 
-    fn style(&self, source: &str, folder: &str, spec: &str, scratch: &mut String) -> Option<FileId> {
+    fn style(
+        &self,
+        source: &str,
+        folder: &str,
+        spec: &str,
+        scratch: &mut String,
+    ) -> Option<FileId> {
         let (base_dir, rel) = match spec.strip_prefix('/') {
             Some(r) => ("", r),
             None => (folder, spec),
@@ -288,12 +305,13 @@ impl<'a> Resolver<'a> {
             None => (String::new(), full.clone()),
         };
         let has_ext = !extension(&name).is_empty();
-        let exts: &[&str] = if has_ext { &[""] } else { &[".scss", ".sass", ".css"] };
+        let exts: &[&str] = if has_ext {
+            &[""]
+        } else {
+            &[".scss", ".sass", ".css"]
+        };
         for e in exts {
-            let candidates = [
-                format!("{name}{e}"),
-                format!("_{name}{e}"),
-            ];
+            let candidates = [format!("{name}{e}"), format!("_{name}{e}")];
             for c in candidates {
                 if let Some(id) = self.exact_join(scratch, &dir, &c) {
                     return Some(id);
@@ -429,7 +447,11 @@ mod tests {
             let e = parse_entry(Arc::from(*p), text.to_string(), None);
             let id = FileId(i as u32);
             lookup.by_path.insert(lower(p).into(), id);
-            lookup.by_name.entry(lower(basename(p)).into()).or_default().push(id);
+            lookup
+                .by_name
+                .entry(lower(basename(p)).into())
+                .or_default()
+                .push(id);
             for a in &e.aliases {
                 lookup.by_alias.entry(lower(a).into()).or_default().push(id);
             }
@@ -474,13 +496,19 @@ mod tests {
             ("a/space name.md", ""),
             ("plain", ""),
             ("a/other.markdown", ""),
-            ("alias.md", "---\naliases: [Nickname, \"Other Name\"]\n---\n"),
+            (
+                "alias.md",
+                "---\naliases: [Nickname, \"Other Name\"]\n---\n",
+            ),
         ]);
         let w = RefMode::Wiki;
         let m = RefMode::Markdown;
         assert_eq!(f.r("a/Source.md", "note", w), Some("a/Note.md"));
         assert_eq!(f.r("a/Source.md", "some/x", w), Some("some/X.md"));
-        assert_eq!(f.r("a/Source.md", "space name.md", m), Some("a/space name.md"));
+        assert_eq!(
+            f.r("a/Source.md", "space name.md", m),
+            Some("a/space name.md")
+        );
         assert_eq!(f.r("a/Source.md", "../Note.md", m), Some("Note.md"));
         assert_eq!(f.r("a/Source.md", "nickname", w), Some("alias.md"));
         assert_eq!(f.r("a/Source.md", "other name", w), Some("alias.md"));
@@ -511,15 +539,15 @@ mod tests {
         assert!(r.ambiguous);
         assert_eq!(f.r("src.md", "T", RefMode::Wiki), Some("a/T.md"));
         assert_eq!(f.r("b/x.md", "T", RefMode::Wiki), Some("b/T.md"));
-        assert_eq!(f.r("z/deep/er/x.md", "t", RefMode::Wiki), Some("z/deep/er/T.md"));
+        assert_eq!(
+            f.r("z/deep/er/x.md", "t", RefMode::Wiki),
+            Some("z/deep/er/T.md")
+        );
     }
 
     #[test]
     fn filenames_precede_aliases() {
-        let f = fixture(&[
-            ("Real.md", ""),
-            ("other.md", "---\nalias: Real\n---\n"),
-        ]);
+        let f = fixture(&[("Real.md", ""), ("other.md", "---\nalias: Real\n---\n")]);
         assert_eq!(f.r("x.md", "Real", RefMode::Wiki), Some("Real.md"));
     }
 
@@ -538,7 +566,10 @@ mod tests {
         assert_eq!(f.r("pkg/main.py", "root", p), Some("root.py"));
         // root before source folder
         assert_eq!(f.r("pkg/main.py", "util", p), Some("util.py"));
-        assert_eq!(f.r("pkg/main.py", "module", p), Some("src/module/__init__.py"));
+        assert_eq!(
+            f.r("pkg/main.py", "module", p),
+            Some("src/module/__init__.py")
+        );
         assert_eq!(f.r("pkg/main.py", ".sibling", p), Some("pkg/sibling.py"));
         assert_eq!(f.r("pkg/main.py", "..outer", p), Some("outer.py"));
         assert_eq!(f.r("pkg/main.py", "external", p), None);
@@ -560,15 +591,39 @@ mod tests {
             ("web/s/main.scss", ""),
             ("web/s/theme/_index.scss", ""),
         ]);
-        assert_eq!(f.r("web/main.ts", "./mod", RefMode::Script), Some("web/mod.ts"));
-        assert_eq!(f.r("web/main.ts", "./sub", RefMode::Script), Some("web/sub/index.js"));
-        assert_eq!(f.r("web/main.ts", "./style.css", RefMode::Script), Some("web/style.css"));
-        assert_eq!(f.r("web/main.ts", "./util.js", RefMode::Script), Some("web/util.ts"));
+        assert_eq!(
+            f.r("web/main.ts", "./mod", RefMode::Script),
+            Some("web/mod.ts")
+        );
+        assert_eq!(
+            f.r("web/main.ts", "./sub", RefMode::Script),
+            Some("web/sub/index.js")
+        );
+        assert_eq!(
+            f.r("web/main.ts", "./style.css", RefMode::Script),
+            Some("web/style.css")
+        );
+        assert_eq!(
+            f.r("web/main.ts", "./util.js", RefMode::Script),
+            Some("web/util.ts")
+        );
         assert_eq!(f.r("web/main.ts", "external", RefMode::Script), None);
-        assert_eq!(f.r("web/style.css", "other.css", RefMode::Style), Some("web/other.css"));
-        assert_eq!(f.r("web/style.css", "img.png", RefMode::Style), Some("web/img.png"));
-        assert_eq!(f.r("web/s/main.scss", "part", RefMode::Style), Some("web/s/_part.scss"));
-        assert_eq!(f.r("web/s/main.scss", "theme", RefMode::Style), Some("web/s/theme/_index.scss"));
+        assert_eq!(
+            f.r("web/style.css", "other.css", RefMode::Style),
+            Some("web/other.css")
+        );
+        assert_eq!(
+            f.r("web/style.css", "img.png", RefMode::Style),
+            Some("web/img.png")
+        );
+        assert_eq!(
+            f.r("web/s/main.scss", "part", RefMode::Style),
+            Some("web/s/_part.scss")
+        );
+        assert_eq!(
+            f.r("web/s/main.scss", "theme", RefMode::Style),
+            Some("web/s/theme/_index.scss")
+        );
         assert_eq!(f.r("web/page.html", "../A.md", RefMode::Html), Some("A.md"));
         assert_eq!(f.r("web/page.html", "/A.md", RefMode::Html), Some("A.md"));
     }
@@ -584,14 +639,38 @@ mod tests {
         ]);
         let m = RefMode::RustMod;
         let u = RefMode::RustUse;
-        assert_eq!(f.r("crates/x/src/lib.rs", "a", m), Some("crates/x/src/a.rs"));
-        assert_eq!(f.r("crates/x/src/lib.rs", "c", m), Some("crates/x/src/c/mod.rs"));
-        assert_eq!(f.r("crates/x/src/a.rs", "b", m), Some("crates/x/src/a/b.rs"));
-        assert_eq!(f.r("crates/x/src/c/mod.rs", "d", m), Some("crates/x/src/c/d.rs"));
-        assert_eq!(f.r("crates/x/src/c/d.rs", "crate::a::b::Thing", u), Some("crates/x/src/a/b.rs"));
-        assert_eq!(f.r("crates/x/src/c/d.rs", "super::Item", u), Some("crates/x/src/c/mod.rs"));
-        assert_eq!(f.r("crates/x/src/c/d.rs", "crate::Item", u), Some("crates/x/src/lib.rs"));
-        assert_eq!(f.r("crates/x/src/a.rs", "self::b", u), Some("crates/x/src/a/b.rs"));
+        assert_eq!(
+            f.r("crates/x/src/lib.rs", "a", m),
+            Some("crates/x/src/a.rs")
+        );
+        assert_eq!(
+            f.r("crates/x/src/lib.rs", "c", m),
+            Some("crates/x/src/c/mod.rs")
+        );
+        assert_eq!(
+            f.r("crates/x/src/a.rs", "b", m),
+            Some("crates/x/src/a/b.rs")
+        );
+        assert_eq!(
+            f.r("crates/x/src/c/mod.rs", "d", m),
+            Some("crates/x/src/c/d.rs")
+        );
+        assert_eq!(
+            f.r("crates/x/src/c/d.rs", "crate::a::b::Thing", u),
+            Some("crates/x/src/a/b.rs")
+        );
+        assert_eq!(
+            f.r("crates/x/src/c/d.rs", "super::Item", u),
+            Some("crates/x/src/c/mod.rs")
+        );
+        assert_eq!(
+            f.r("crates/x/src/c/d.rs", "crate::Item", u),
+            Some("crates/x/src/lib.rs")
+        );
+        assert_eq!(
+            f.r("crates/x/src/a.rs", "self::b", u),
+            Some("crates/x/src/a/b.rs")
+        );
         assert_eq!(f.r("crates/x/src/lib.rs", "crate::Item", u), None);
         assert_eq!(f.r("crates/x/src/a.rs", "std::io", u), None);
     }
@@ -607,8 +686,14 @@ mod tests {
             ("rb/x.rb", ""),
             ("rb/y.rb", ""),
         ]);
-        assert_eq!(f.r("bin/run.sh", "./lib.sh", RefMode::Shell), Some("bin/lib.sh"));
-        assert_eq!(f.r("bin/run.sh", "conf/env.sh", RefMode::Shell), Some("conf/env.sh"));
+        assert_eq!(
+            f.r("bin/run.sh", "./lib.sh", RefMode::Shell),
+            Some("bin/lib.sh")
+        );
+        assert_eq!(
+            f.r("bin/run.sh", "conf/env.sh", RefMode::Shell),
+            Some("conf/env.sh")
+        );
         assert_eq!(f.r("c/a.c", "a.h", RefMode::Include), Some("c/a.h"));
         assert_eq!(f.r("rb/x.rb", "y", RefMode::Ruby), Some("rb/y.rb"));
     }

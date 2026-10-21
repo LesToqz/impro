@@ -5,14 +5,15 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::index::{EdgeKind, FileEntry, FileId, FileKind, ProjectIndex, CODE_EXTENSIONS, NOTE_EXTENSIONS};
+use crate::index::{
+    EdgeKind, FileEntry, FileId, FileKind, ProjectIndex, CODE_EXTENSIONS, NOTE_EXTENSIONS,
+};
 use crate::model::{Ambiguity, Edge, Graph, Node, NodeKind};
 use crate::parse::text::extension;
 use crate::prefs::GraphPrefs;
 use crate::query::{Doc, Query, Tags};
 
-/// Most colour rules honoured.
-pub const MAX_COLOR_RULES: usize = 12;
+pub use crate::prefs::MAX_COLOR_RULES;
 /// Default cap on drawn nodes.
 pub const DEFAULT_MAX_NODES: usize = 3000;
 
@@ -158,9 +159,7 @@ pub fn build_with_focus(index: &ProjectIndex, opts: &GraphOptions, keep: Option<
 
     let sources: Vec<(FileId, &FileEntry)> = index
         .iter()
-        .filter(|(id, f)| {
-            f.kind != FileKind::Attachment && node_of_file[id.index()] != NONE
-        })
+        .filter(|(id, f)| f.kind != FileKind::Attachment && node_of_file[id.index()] != NONE)
         .collect();
     for (sid, f) in sources {
         let src = node_of_file[sid.index()];
@@ -295,8 +294,8 @@ pub fn build_with_focus(index: &ProjectIndex, opts: &GraphOptions, keep: Option<
                 continue;
             }
             let doc = doc_of(index, d);
-            let strict_skip = opts.strict_filters
-                && matches!(d.kind, NodeKind::Tag | NodeKind::Unresolved);
+            let strict_skip =
+                opts.strict_filters && matches!(d.kind, NodeKind::Tag | NodeKind::Unresolved);
             group[i] = rules
                 .iter()
                 .enumerate()
@@ -325,7 +324,10 @@ pub fn build_with_focus(index: &ProjectIndex, opts: &GraphOptions, keep: Option<
     if truncated {
         let mut degree = vec![0u32; drafts.len()];
         let mut last = (NONE, NONE);
-        for e in edges.iter().filter(|e| alive[e.src as usize] && alive[e.dst as usize]) {
+        for e in edges
+            .iter()
+            .filter(|e| alive[e.src as usize] && alive[e.dst as usize])
+        {
             if last != (e.src, e.dst) {
                 degree[e.src as usize] += 1;
                 degree[e.dst as usize] += 1;
@@ -392,7 +394,8 @@ pub fn build_with_focus(index: &ProjectIndex, opts: &GraphOptions, keep: Option<
             let r = f.refs.get(ri)?;
             let dest = f.resolved.get(ri)?.dest?;
             let (sn, dn) = (node_of_file[sid.index()], node_of_file[dest.index()]);
-            if sn == NONE || dn == NONE || remap[sn as usize] == NONE || remap[dn as usize] == NONE {
+            if sn == NONE || dn == NONE || remap[sn as usize] == NONE || remap[dn as usize] == NONE
+            {
                 return None;
             }
             let target = r.target.split(['#', '^', '?']).next().unwrap_or("");
@@ -469,7 +472,7 @@ pub fn layers_from(
     layer[focus] = 0;
     let mut frontier = vec![focus];
     let mut next = Vec::new();
-    for step in 1..=depth.max(1).min(250) {
+    for step in 1..=depth.clamp(1, 250) {
         next.clear();
         for &u in &frontier {
             if outgoing {

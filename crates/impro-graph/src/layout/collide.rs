@@ -1,5 +1,6 @@
 //! Overlap removal between equally sized circles using a hashed uniform grid.
 
+#[derive(Default)]
 pub struct CollideGrid {
     head: Vec<i32>,
     next: Vec<i32>,
@@ -7,19 +8,6 @@ pub struct CollideGrid {
     cell_y: Vec<i32>,
     px: Vec<f32>,
     py: Vec<f32>,
-}
-
-impl Default for CollideGrid {
-    fn default() -> Self {
-        CollideGrid {
-            head: Vec::new(),
-            next: Vec::new(),
-            cell_x: Vec::new(),
-            cell_y: Vec::new(),
-            px: Vec::new(),
-            py: Vec::new(),
-        }
-    }
 }
 
 fn hash(cx: i32, cy: i32, mask: usize) -> usize {

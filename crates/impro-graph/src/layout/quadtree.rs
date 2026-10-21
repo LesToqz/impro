@@ -176,7 +176,11 @@ impl QuadTree {
             let dy = c.cy - yi;
             let d2 = dx * dx + dy * dy;
             if c.size2 * inv_theta2 < d2 {
-                let l = if d2 < min_d2 { (min_d2 * d2).sqrt() } else { d2 };
+                let l = if d2 < min_d2 {
+                    (min_d2 * d2).sqrt()
+                } else {
+                    d2
+                };
                 let f = c.mass * strength / l;
                 ax += dx * f;
                 ay += dy * f;
@@ -200,7 +204,11 @@ impl QuadTree {
                         dy = if i < j { 0.5 } else { -0.5 };
                     }
                     let d2 = dx * dx + dy * dy;
-                    let l = if d2 < min_d2 { (min_d2 * d2).sqrt() } else { d2 };
+                    let l = if d2 < min_d2 {
+                        (min_d2 * d2).sqrt()
+                    } else {
+                        d2
+                    };
                     let f = strength / l;
                     ax += dx * f;
                     ay += dy * f;
@@ -230,7 +238,11 @@ pub fn brute_acceleration(xs: &[f32], ys: &[f32], strength: f32, min_d2: f32) ->
                     dy = if i < j { 0.5 } else { -0.5 };
                 }
                 let d2 = dx * dx + dy * dy;
-                let l = if d2 < min_d2 { (min_d2 * d2).sqrt() } else { d2 };
+                let l = if d2 < min_d2 {
+                    (min_d2 * d2).sqrt()
+                } else {
+                    d2
+                };
                 let f = strength / l;
                 ax += dx * f;
                 ay += dy * f;

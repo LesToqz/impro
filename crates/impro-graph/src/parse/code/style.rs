@@ -32,7 +32,8 @@ fn url_arg(text: &str, i: usize) -> Option<(&str, usize)> {
         return Some(r);
     }
     let mut j = i;
-    while j < s.len() && !s[j].is_ascii_whitespace() && !matches!(s[j], b')' | b'\'' | b'"' | b';') {
+    while j < s.len() && !s[j].is_ascii_whitespace() && !matches!(s[j], b')' | b'\'' | b'"' | b';')
+    {
         j += 1;
     }
     (j > i).then(|| (&text[i..j], j))
@@ -93,8 +94,10 @@ pub fn css_imports(text: &str, line_comments: bool) -> Vec<CodeRef> {
                 }
                 i = k.max(i);
             }
-            b'u' | b'U' if text[i..].len() >= 4 && text[i..i + 4].eq_ignore_ascii_case("url(")
-                && (i == 0 || !is_word(s[i - 1])) =>
+            b'u' | b'U'
+                if text[i..].len() >= 4
+                    && text[i..i + 4].eq_ignore_ascii_case("url(")
+                    && (i == 0 || !is_word(s[i - 1])) =>
             {
                 if let Some((spec, end)) = url_arg(text, i + 4) {
                     push(spec, i, &mut out);
@@ -174,8 +177,12 @@ mod tests {
 
     #[test]
     fn css_imports_and_urls() {
-        let t = "@import \"other.css\"; a {x:url(img.png)} b {x:url(\"data:x\")} @import url('u.css');";
-        assert_eq!(specs(css_imports(t, false)), ["other.css", "img.png", "u.css"]);
+        let t =
+            "@import \"other.css\"; a {x:url(img.png)} b {x:url(\"data:x\")} @import url('u.css');";
+        assert_eq!(
+            specs(css_imports(t, false)),
+            ["other.css", "img.png", "u.css"]
+        );
     }
 
     #[test]
@@ -195,7 +202,9 @@ mod tests {
         assert_eq!(specs(html_refs(t)), ["page.html", "img.png"]);
         assert_eq!(specs(html_refs("<img src=photo.png>")), ["photo.png"]);
         assert_eq!(
-            specs(html_refs("<!-- <img src=hidden.png> --><SCRIPT SRC = 'a.js'></SCRIPT>")),
+            specs(html_refs(
+                "<!-- <img src=hidden.png> --><SCRIPT SRC = 'a.js'></SCRIPT>"
+            )),
             ["a.js"]
         );
         assert!(html_refs("<p>resource = 3</p>").is_empty());

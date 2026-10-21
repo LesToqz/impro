@@ -268,7 +268,11 @@ pub fn ref_keys(r: &Ref, out: &mut Vec<String>) -> bool {
             true
         }
         _ => {
-            let comp = target.trim_end_matches('/').rsplit('/').next().unwrap_or("");
+            let comp = target
+                .trim_end_matches('/')
+                .rsplit('/')
+                .next()
+                .unwrap_or("");
             if comp.is_empty() || comp == "." || comp == ".." {
                 return false;
             }

@@ -453,8 +453,18 @@ mod tests {
         assert_eq!(
             l,
             [
-                Line { a: 0, b: 1, a_to_b: true, b_to_a: true },
-                Line { a: 0, b: 4, a_to_b: true, b_to_a: false },
+                Line {
+                    a: 0,
+                    b: 1,
+                    a_to_b: true,
+                    b_to_a: true
+                },
+                Line {
+                    a: 0,
+                    b: 4,
+                    a_to_b: true,
+                    b_to_a: false
+                },
             ]
         );
     }

@@ -113,7 +113,10 @@ fn opening(text: &str) -> Option<usize> {
 }
 
 fn is_closing(line: &str) -> bool {
-    let rest = match line.strip_prefix("---").or_else(|| line.strip_prefix("...")) {
+    let rest = match line
+        .strip_prefix("---")
+        .or_else(|| line.strip_prefix("..."))
+    {
         Some(r) => r,
         None => return false,
     };
