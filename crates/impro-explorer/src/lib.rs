@@ -65,7 +65,17 @@
 //! [`SKIP_DIRS`] (also `search::skip_dirs_sorted()`), `search::search`,
 //! `search::search_stream`, `search::find_in_text`, `search::iter_project_files`,
 //! `search::list_project_files(root, show_hidden, limit)` (the quick switcher listing) and
-//! the result types.
+//! the result types (`SearchOptions`, `SearchResults`, `FileGroup`, `Match`, `SearchError`).
+//! These helpers are blocking: the host must call them on a worker, using `pool::spawn`
+//! and `pool::CancelToken` when appropriate.
+//!
+//! Tree inspection helpers are `is_busy`, `is_loaded`, `find_row`, `selected_path`,
+//! `select`, `expanded_paths` and `target_folder`. State getters mirror the settings
+//! setters (`show_hidden`, `confirm_delete`, `delete_mode`, `open_after_create`,
+//! `font_size`, `folders_first`, `compact`, `git_colors`, `git_enabled`). Notes expose
+//! `notes_section_visible`, `notes_collapsed`, `notes_height`, `selected_note`,
+//! `select_note`, `reveal_note` and `active_file`. Remaining hidden methods and model
+//! handles support diagnostics/tests; hosts should use the signals and commands above.
 //!
 //! ## Git status ([`gitstatus`], no GTK)
 //! `collect_status`, `parse_porcelain`, `Snapshot`, `Status`, `Kind`.
