@@ -248,3 +248,124 @@ fn test_open_folder_updates_markdown_root_and_live_notes() {
         assert!(h.w.note_toolbar(&tab).is_some());
     });
 }
+
+#[test]
+fn test_explorer_focus_opens_switcher() {
+    run(|| {
+        let h = Harness::new();
+        h.w.explorer.focus_tree();
+        assert!(key(&h.w, "<Control>p"));
+        assert!(h.w.quick_switcher().is_some());
+        assert!(h.w.overlay.prompt().is_some());
+    });
+}
+#[test]
+fn test_palette_lists_note_commands_and_runs_them() {
+    run(|| {
+        let h = Harness::new();
+        let tab = h.open("note.md", "");
+        h.w.editor.set_markdown_mode("source", None).unwrap();
+        h.command("Notes: Checklist");
+        assert_eq!(tab.text(), "- [ ] ");
+        let plain = h.open("plain.rs", "fn main() {}\n");
+        h.command("Notes: Bold");
+        assert_eq!(plain.text(), "fn main() {}\n");
+        assert!(h
+            .w
+            .overlay
+            .notices()
+            .iter()
+            .any(|n| n.text().starts_with("Open a note or Markdown file")));
+        h.w.toggle_explorer();
+        h.command("Notes: Show notes");
+        assert!(h.w.explorer.notes_section_visible());
+    });
+}
+#[test]
+fn test_live_markdown_setting_dispatch() {
+    run(|| {
+        let h = Harness::new();
+        h.w.set_setting("md_live_preview", false.into(), false)
+            .unwrap();
+        let tab = h.open("guide.md", "# Guide\n");
+        assert_eq!(tab.markdown_mode(), Some("source"));
+        h.w.set_setting("md_live_preview", true.into(), false)
+            .unwrap();
+        assert!(h.w.editor.md_live_preview());
+    });
+}
+#[test]
+fn test_startup_applies_stored_values() {
+    run(|| {
+        let mut values = impro_core::settings::defaults().clone();
+        values.insert("theme".into(), "impro-light".into());
+        values.insert("editor_font_size".into(), 14.into());
+        values.insert("line_numbers".into(), false.into());
+        values.insert("terminal_autostart".into(), false.into());
+        values.insert("show_hidden".into(), false.into());
+        values.insert("indent_width".into(), 2.into());
+        let h = Harness::with(values);
+        assert_eq!(h.w.theme_id(), "impro-light");
+        assert_eq!(h.w.editor.font_size(), 14);
+        assert!(!h.w.editor.line_numbers());
+        assert!(!h.w.explorer.show_hidden());
+        assert_eq!(h.w.editor.indent_width(), 2);
+        assert_eq!(h.w.terminal_bottom.pane_count(), 0);
+        assert!(!h.w.terminal_bottom.get_visible());
+    });
+}
+#[test]
+fn test_settings_window_shows_current_values_and_real_hotkeys() {
+    run(|| {
+        let h = Harness::new();
+        h.w.set_setting("line_numbers", false.into(), false)
+            .unwrap();
+        h.w.open_settings(Some("hotkeys"));
+        assert_eq!(
+            h.w.settings_dialog().unwrap().values()["line_numbers"],
+            false
+        );
+        assert!(h
+            .w
+            .hotkeys()
+            .contains(&("File: Save".into(), "Ctrl+S".into())));
+        assert!(!h
+            .w
+            .hotkeys()
+            .contains(&("Save file".into(), "Ctrl+S".into())));
+    });
+}
+#[test]
+fn test_accent_roles_are_derived_contrast_safe() {
+    run(|| {
+        let h = Harness::new();
+        for id in ["impro-dark", "impro-light"] {
+            h.w.set_theme(id, false);
+            h.w.set_setting("accent", "#22a55b".into(), false).unwrap();
+            let theme = impro_ui::current_theme().unwrap();
+            assert!(impro_core::themes::contrast(&theme.ui["accent_text"], &theme.ui["bg"]) >= 3.0);
+            assert!(
+                impro_core::themes::contrast(&theme.ui["accent_fg"], &theme.ui["accent"]) >= 3.0
+            );
+        }
+    });
+}
+#[test]
+fn test_full_window_smoke_under_both_themes() {
+    run(|| {
+        let h = Harness::new();
+        h.open("smoke.py", "print('hello')\n");
+        for theme in ["impro-dark", "impro-light"] {
+            h.w.set_theme(theme, false);
+            h.w.open_quick_switcher();
+            assert!(h.w.overlay.prompt().is_some());
+            h.w.open_command_palette();
+            assert!(h.w.command_palette().is_some());
+            h.w.overlay.hide_prompt();
+            h.w.notify("Hello", "info");
+            frame(&h.w.window);
+            assert!(h.w.overlay.notices().iter().any(|n| n.text() == "Hello"));
+            h.w.overlay.clear_notices();
+        }
+    });
+}

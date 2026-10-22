@@ -192,3 +192,17 @@ pub fn stable_prompt(pane: &impro_terminal::Pane) {
             .any(|line| line == "history-once")
     });
 }
+
+pub fn terminal_history(pane: &impro_terminal::Pane) -> String {
+    let terminal = pane.terminal.as_ref().unwrap();
+    terminal
+        .text_range_format(
+            impro_vte::Format::Text,
+            0,
+            0,
+            terminal.cursor_position().1 + terminal.row_count(),
+            terminal.column_count(),
+        )
+        .unwrap_or_default()
+        .to_string()
+}

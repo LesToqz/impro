@@ -55,6 +55,19 @@ fn test_graph_live_text_saved_closed_paths_and_tree_changes() {
                 .iter()
                 .any(|id| id.contains("missing"))
         });
+        h.w.editor.set_dialog_hook(Some(std::rc::Rc::new(|_, _| {
+            impro_editor::Response::Discard
+        })));
+        assert!(result(|cb| h.w.editor.close_current(cb)));
+        poll(|| {
+            !testing::node_ids(&view)
+                .iter()
+                .any(|id| id.contains("missing"))
+        });
+        h.w.editor.open_file(tab.path());
+        wait_path(&h.w, &tab.path());
+        let tab = h.w.editor.current_tab().unwrap();
+        tab.buffer.set_text("[[missing]]\n");
         assert!(result(|cb| h.w.editor.save_current(cb)));
         h.write("fresh.md", "[[b]]\n");
         h.w.explorer.refresh();
@@ -117,5 +130,23 @@ fn test_error_notice_once_and_cleanup() {
         let before = view.frame_stats().frames;
         drain();
         assert_eq!(view.frame_stats().frames, before);
+    });
+}
+
+#[test]
+fn test_graph_create_action_validates_and_opens_project_note() {
+    run(|| {
+        let h = Harness::new();
+        h.w.create_graph_note("Created");
+        let path = h.dir.path().join("Created.md");
+        wait_path(&h.w, &path);
+        assert!(path.is_file());
+        h.w.create_graph_note("../escape");
+        assert!(h
+            .w
+            .overlay
+            .notices()
+            .iter()
+            .any(|n| n.text() == "Graph note names must be simple file names."));
     });
 }

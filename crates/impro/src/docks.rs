@@ -43,10 +43,8 @@ impl MainWindow {
             let weak = self.weak();
             let p = panel.downgrade();
             panel.add_button().connect_choose(move |kind| {
-                if kind != "terminal" {
-                    if let (Some(this), Some(panel)) = (weak.upgrade().map(Self), p.upgrade()) {
-                        this.add_dock_pane(&panel, kind);
-                    }
+                if let (Some(this), Some(panel)) = (weak.upgrade().map(Self), p.upgrade()) {
+                    this.add_dock_pane(&panel, kind);
                 }
             });
             let weak = self.weak();

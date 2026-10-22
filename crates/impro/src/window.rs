@@ -34,6 +34,7 @@ pub struct WindowWidgets {
     pub menu_bar: gtk::MenuBar,
     pub overlay: OverlayHost,
     pub(crate) root: RefCell<PathBuf>,
+    root_revision: Cell<u64>,
     pub(crate) values: RefCell<settings::Values>,
     pub(crate) commands: RefCell<Vec<Command>>,
     pub(crate) settings_dialog: RefCell<Option<SettingsDialog>>,
@@ -149,6 +150,7 @@ impl MainWindow {
             menu_bar,
             overlay,
             root: RefCell::new(root),
+            root_revision: Cell::new(0),
             values: RefCell::new(values),
             commands: RefCell::new(Vec::new()),
             settings_dialog: RefCell::new(None),
@@ -611,6 +613,8 @@ impl MainWindow {
         });
     }
     pub fn set_root(&self, path: impl AsRef<Path>) {
+        let revision = self.root_revision.get() + 1;
+        self.root_revision.set(revision);
         let path = path.as_ref().to_path_buf();
         let weak = self.weak();
         self.worker(
@@ -625,6 +629,9 @@ impl MainWindow {
             },
             move |result| {
                 if let Some(this) = weak.upgrade().map(Self) {
+                    if this.root_revision.get() != revision {
+                        return;
+                    }
                     match result {
                         Ok(root) => this.apply_root(root),
                         Err(error) => this.notify(&error.to_string(), "error"),

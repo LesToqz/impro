@@ -197,7 +197,15 @@ fn main() {
             assert!(!h.w.terminal_right.has_gitgraph());
             h.w.open_gitgraph();
             assert_eq!(h.w.gitgraph_views().len(), 1);
-            h.w.open_commit(&head);
+            let encoded = serde_json::to_string(&head).unwrap();
+            poll(|| {
+                js(
+                    graph.webview(),
+                    &format!("ImproGit._debug.screenPos({encoded})"),
+                )
+                .is_array()
+            });
+            js(graph.webview(), &format!("(() => {{ const c=document.querySelector('canvas'),r=c.getBoundingClientRect(),p=ImproGit._debug.screenPos({encoded}); for (const type of ['pointerdown','pointerup']) c.dispatchEvent(new PointerEvent(type,{{clientX:r.left+p[0],clientY:r.top+p[1],pointerId:1,button:0,buttons:type==='pointerdown'?1:0,bubbles:true}})); return true; }})()"));
             poll(|| h.w.commit_views().len() == 1);
             let commit = h.w.commit_views()[0].clone();
             poll(|| commit.is_ready() && commit.last_data().is_some());
@@ -280,7 +288,11 @@ fn main() {
                 assert!(commit.is_closed());
                 assert_eq!(graph.root(), other.path());
             } else if mode == "links" {
-                h.w.open_commit_file(&h.dir.path().join("a.py"), 1);
+                poll(|| js(commit.webview(), "!!document.querySelector('.file-name')") == true);
+                js(
+                    commit.webview(),
+                    "document.querySelector('.file-name').click(); true",
+                );
                 wait_path(&h.w, &h.dir.path().join("a.py"));
                 assert_eq!(h.w.editor.current_tab().unwrap().cursor(), 0);
                 h.w.open_commit_file(&h.dir.path().join("removed.py"), 1);
@@ -310,7 +322,11 @@ fn main() {
                     h.w.editor.notebook().page_num(&tab.page),
                     Some(h.w.editor.notebook().n_pages() - 1)
                 );
-                h.w.open_commit(&parent);
+                js(
+                    commit.webview(),
+                    "document.querySelector('.parent').click(); true",
+                );
+                poll(|| h.w.selected_commit().as_deref() == Some(parent.as_str()));
                 assert_eq!(h.w.commit_views().len(), 2);
                 h.w.open_commit(&head[..7]);
                 poll(|| h.w.pending_commits() == 0);
@@ -401,6 +417,33 @@ fn performance() {
     // Event-driven deadline; this one-shot belongs only to the measurement harness.
     let done = Rc::new(std::cell::Cell::new(false));
     let finished = done.clone();
+    poll(|| {
+        !h.w.explorer.git_running()
+            && !h.w.explorer.git_timeout_pending()
+            && h.w.editor.tabs().iter().all(|t| !t.highlighter.pending())
+            && h.w
+                .terminal_bottom
+                .panes()
+                .iter()
+                .all(|p| p.gate.as_ref().is_none_or(|g| !g.has_pending_sources()))
+    });
+    let graph_threads = std::fs::read_dir("/proc/self/task")
+        .unwrap()
+        .flatten()
+        .filter(|entry| {
+            std::fs::read_to_string(entry.path().join("comm"))
+                .is_ok_and(|name| name.starts_with("impro-graph"))
+        })
+        .count();
+    let web_processes = descendants(std::process::id())
+        .into_iter()
+        .filter(|pid| {
+            std::fs::read_to_string(format!("/proc/{pid}/comm"))
+                .is_ok_and(|name| name.starts_with("WebKit"))
+        })
+        .count();
+    assert_eq!(graph_threads, 0);
+    assert_eq!(web_processes, 0);
     glib::timeout_add_local_once(Duration::from_secs(10), move || finished.set(true));
     let before = cpu_ticks();
     let started = Instant::now();
@@ -410,7 +453,7 @@ fn performance() {
     let idle_ticks = cpu_ticks() - before;
     println!(
         "{}",
-        json!({"open_to_paint_ms":open_ms,"switch_to_paint_ms":switch_ms,"toggle_to_paint_ms":toggle_ms,"max_allocation_us":h.w.max_allocation_us(),"idle_ticks":idle_ticks,"idle_seconds":started.elapsed().as_secs_f64(),"motion_active":impro_ui::motion::active_count(),"motion_clock":impro_ui::motion::clock_attached()})
+        json!({"open_to_paint_ms":open_ms,"switch_to_paint_ms":switch_ms,"toggle_to_paint_ms":toggle_ms,"max_allocation_us":h.w.max_allocation_us(),"idle_ticks":idle_ticks,"idle_seconds":started.elapsed().as_secs_f64(),"motion_active":impro_ui::motion::active_count(),"motion_clock":impro_ui::motion::clock_attached(),"web_processes_before_git":web_processes,"graph_threads_before_open":graph_threads})
     );
 }
 
@@ -454,4 +497,18 @@ fn controls() {
         }
     }
     println!("scenario-ok controls");
+}
+
+fn descendants(pid: u32) -> Vec<u32> {
+    let children =
+        std::fs::read_to_string(format!("/proc/{pid}/task/{pid}/children")).unwrap_or_default();
+    let mut result = Vec::new();
+    for child in children
+        .split_whitespace()
+        .filter_map(|pid| pid.parse::<u32>().ok())
+    {
+        result.push(child);
+        result.extend(descendants(child));
+    }
+    result
 }

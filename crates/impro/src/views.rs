@@ -152,18 +152,7 @@ impl MainWindow {
         let weak = self.weak();
         view.connect_create_note(move |name| {
             if let Some(this) = weak.upgrade().map(Self) {
-                if !this.require_feature("notes") {
-                    return;
-                }
-                let weak = this.weak();
-                this.explorer.create_note(
-                    name,
-                    Some(Box::new(move |result| {
-                        if let (Some(this), Ok(path)) = (weak.upgrade().map(Self), result) {
-                            this.editor.open_file(path);
-                        }
-                    })),
-                );
+                this.create_graph_note(name);
             }
         });
         let weak = self.weak();
@@ -260,6 +249,37 @@ impl MainWindow {
         let view = self.open_graph()?;
         view.open_local_with_depth(&path, 1);
         Some(view)
+    }
+    pub fn create_graph_note(&self, name: &str) {
+        if name.trim().is_empty() || name.contains(['/', '\\']) || name.contains("..") {
+            self.notify("Graph note names must be simple file names.", "info");
+            return;
+        }
+        let name = if name.to_ascii_lowercase().ends_with(".md") {
+            name.to_owned()
+        } else {
+            format!("{name}.md")
+        };
+        let root = self.root();
+        let weak = self.weak();
+        self.worker(
+            move || impro_core::fsops::create_file(root, &name),
+            move |result| {
+                if let Some(this) = weak.upgrade().map(Self) {
+                    match result {
+                        Ok(path) => {
+                            this.explorer.refresh();
+                            for view in this.graph_views() {
+                                view.file_saved(&path);
+                            }
+                            this.restore_terminal_fullscreen();
+                            this.editor.open_file(path);
+                        }
+                        Err(error) => this.notify(&error.to_string(), "info"),
+                    }
+                }
+            },
+        );
     }
     pub fn rebuild_graph(&self) {
         if self.require_feature("graph") {

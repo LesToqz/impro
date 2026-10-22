@@ -264,9 +264,16 @@ fn test_both_dock_drags_preserve_six_prompts() {
                 .chain(h.w.terminal_right.panes())
                 .collect();
         poll(|| panes.iter().all(|p| p.pid().is_some()));
+        frame(&h.w.window);
+        poll(|| {
+            panes
+                .iter()
+                .all(|p| p.gate.as_ref().is_none_or(|g| !g.has_pending_sources()))
+        });
         for pane in &panes {
             stable_prompt(pane);
         }
+        let original = (h.w.dock_bottom.position(), h.w.dock.position());
         for (bottom, right) in [(300, 400), (450, 600), (350, 450), (550, 700), (300, 400)] {
             h.w.dock_bottom.set_position(bottom);
             h.w.dock.set_position(right);
@@ -277,16 +284,165 @@ fn test_both_dock_drags_preserve_six_prompts() {
                     .all(|p| p.gate.as_ref().is_none_or(|g| !g.has_pending_sources()))
             });
         }
+        h.w.dock_bottom.set_position(original.0);
+        h.w.dock.set_position(original.1);
+        frame(&h.w.window);
+        poll(|| {
+            panes
+                .iter()
+                .all(|p| p.gate.as_ref().is_none_or(|g| !g.has_pending_sources()))
+        });
         for pane in panes {
             assert_eq!(
-                terminal_text(&pane)
+                terminal_history(&pane)
                     .lines()
-                    .filter(|line| *line == "history-once")
+                    .filter(|line| line.trim() == "history-once")
                     .count(),
-                1
+                1,
+                "{:?}",
+                terminal_history(&pane)
             );
             assert!(terminal_text(&pane).contains("impro-check> "));
         }
         assert!(h.w.max_allocation_us() < 4000);
+    });
+}
+
+#[test]
+fn test_show_right_before_realize() {
+    run(|| {
+        let h = Harness::new();
+        let w = impro::MainWindow::with_values(&h.app, h.dir.path(), h.w.values());
+        assert!(!w.window.is_realized());
+        w.toggle_terminal_right();
+        w.show();
+        poll(|| w.layout_ready());
+        assert!(w.terminal_right.allocated_width() >= 380);
+        unsafe {
+            w.window.destroy();
+        }
+    });
+}
+#[test]
+fn test_show_during_last_exit_animation_respawns() {
+    run(|| {
+        let h = Harness::new();
+        h.w.set_setting("reduce_motion", false.into(), false)
+            .unwrap();
+        h.w.terminal_bottom.close_current();
+        h.w.show_dock(&h.w.terminal_bottom);
+        poll(|| h.w.terminal_bottom.closing_panes().is_empty());
+        assert!(h.w.terminal_bottom.get_visible());
+        assert_eq!(h.w.terminal_bottom.terminal_count(), 1);
+    });
+}
+#[test]
+fn test_bottom_divider_collapses_editor_and_restores() {
+    run(|| {
+        let h = Harness::new();
+        h.w.dock_bottom.set_position(0);
+        frame(&h.w.window);
+        assert!(!h.w.editor.is_mapped());
+        h.w.dock_bottom.set_position(300);
+        frame(&h.w.window);
+        assert!(h.w.editor.is_mapped());
+        assert!(h.w.editor.allocated_height() >= 150);
+    });
+}
+#[test]
+fn test_right_divider_collapses_left_part_and_restores() {
+    run(|| {
+        let h = Harness::new();
+        h.w.toggle_terminal_right();
+        poll(|| h.w.layout_ready());
+        frame(&h.w.window);
+        h.w.dock.set_position(0);
+        frame(&h.w.window);
+        assert!(!h.w.dock_bottom.is_mapped());
+        assert!(h.w.terminal_right.is_mapped());
+        h.w.dock.set_position(450);
+        frame(&h.w.window);
+        assert!(h.w.dock_bottom.is_mapped());
+        assert_eq!(h.w.sidebar.position(), 300);
+    });
+}
+#[test]
+fn test_both_collapsed_then_restored() {
+    run(|| {
+        let h = Harness::new();
+        h.w.toggle_terminal_right();
+        poll(|| h.w.layout_ready());
+        frame(&h.w.window);
+        h.w.dock_bottom.set_position(0);
+        h.w.dock.set_position(0);
+        frame(&h.w.window);
+        assert!(!h.w.editor.is_mapped());
+        h.w.dock_bottom.set_position(300);
+        h.w.dock.set_position(450);
+        frame(&h.w.window);
+        assert!(h.w.editor.is_mapped());
+        assert!(h.w.terminal_bottom.is_mapped());
+    });
+}
+#[test]
+fn test_collapse_scenario_logs_no_gtk_critical() {
+    run(|| {
+        let h = Harness::new();
+        h.w.toggle_terminal_right();
+        poll(|| h.w.layout_ready());
+        for (bottom, right) in [
+            (0, 700),
+            (10000, 700),
+            (300, 0),
+            (300, 10000),
+            (0, 0),
+            (300, 450),
+        ] {
+            h.w.dock_bottom.set_position(bottom);
+            h.w.dock.set_position(right);
+            frame(&h.w.window);
+        }
+        h.w.terminal_right.toggle_maximize();
+        h.w.terminal_right.restore();
+        frame(&h.w.window);
+        assert!(h.w.editor.is_mapped());
+    });
+}
+#[test]
+fn test_settings_theme_selection_persistence_and_reopen() {
+    run(|| {
+        let h = Harness::new();
+        h.w.set_theme("impro-light", true);
+        impro_settings_ui::flush();
+        let w = impro::MainWindow::new(&h.app, h.dir.path());
+        assert!(!w.window.is_realized());
+        assert_eq!(w.theme_id(), "impro-light");
+        assert_eq!(
+            w.editor.chrome(),
+            impro_core::themes::get_theme(Some("impro-light")).chrome
+        );
+        w.open_settings(None);
+        assert_eq!(w.settings_dialog().unwrap().theme_id(), "impro-light");
+        unsafe {
+            w.window.destroy();
+        }
+    });
+}
+#[test]
+fn test_quit_confirmation() {
+    run(|| {
+        let h = Harness::new();
+        let tab = h.open("folder/quit.py", "original\n");
+        tab.buffer.set_text("unsaved\n");
+        h.w.editor
+            .set_dialog_hook(Some(std::rc::Rc::new(|_, _| impro_editor::Response::Save)));
+        std::fs::remove_file(tab.path()).unwrap();
+        std::fs::remove_dir(tab.path().parent().unwrap()).unwrap();
+        std::fs::write(tab.path().parent().unwrap(), "blocked").unwrap();
+        h.w.request_quit();
+        poll(|| !h.w.editor.is_busy());
+        assert!(h.w.window.get_visible());
+        assert!(h.w.editor.has_unsaved());
+        assert!(!h.w.overlay.notices().is_empty());
     });
 }

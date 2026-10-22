@@ -219,3 +219,143 @@ fn test_window_wires_editor_save_and_focus_refresh() {
         assert_eq!(h.w.explorer.active_file(), Some(tab.path()));
     });
 }
+
+#[test]
+fn test_notes_section_editor_and_tree_operations_stay_in_sync() {
+    run(|| {
+        let h = Harness::new();
+        h.w.explorer.create_note("First", None);
+        let path = h.dir.path().join(".impro/Notes/First.md");
+        wait_path(&h.w, &path);
+        let tab = h.w.editor.current_tab().unwrap();
+        let renamed = path.with_file_name("Renamed.md");
+        h.w.explorer.rename(&path, "Renamed.md", Box::new(|_| {}));
+        wait_path(&h.w, &renamed);
+        poll(|| h.w.explorer.selected_note() == Some(renamed.clone()));
+        h.w.explorer.reveal_note();
+        poll(|| h.w.explorer.selected_path() == Some(renamed.clone()));
+        h.w.explorer.delete(&renamed, true, Box::new(|_| {}));
+        poll(|| tab.deleted());
+        poll(|| h.w.explorer.notes_widgets().store.iter_n_children(None) == 0);
+        h.w.explorer.set_open_after_create(false);
+        h.w.explorer.create_note("Quiet", None);
+        poll(|| h.dir.path().join(".impro/Notes/Quiet.md").exists());
+        assert_eq!(h.w.editor.current_path(), Some(renamed));
+    });
+}
+#[test]
+fn test_background_exit_preserves_editor_focus() {
+    run(|| {
+        let h = Harness::new();
+        h.shell(false);
+        h.w.terminal_bottom.new_terminal();
+        poll(|| {
+            h.w.terminal_bottom
+                .panes()
+                .last()
+                .is_some_and(|p| p.pid().is_some())
+        });
+        let exiting = h.w.terminal_bottom.panes()[1].clone();
+        let tab = h.open("focus.rs", "");
+        tab.view.grab_focus();
+        exiting.terminal.as_ref().unwrap().feed_child(b"exit\n");
+        poll(|| h.w.terminal_bottom.terminal_count() == 1);
+        assert_eq!(h.w.window.focused_widget(), Some(tab.view.clone().upcast()));
+    });
+}
+#[test]
+fn test_folder_change_only_affects_new_shells() {
+    run(|| {
+        let h = Harness::new();
+        let old = h.shell(false);
+        let other = tempfile::tempdir().unwrap();
+        h.w.set_root(other.path());
+        poll(|| h.w.root() == other.path());
+        h.w.terminal_bottom.new_terminal();
+        poll(|| {
+            h.w.terminal_bottom
+                .panes()
+                .last()
+                .is_some_and(|p| p.pid().is_some())
+        });
+        let new = h.w.terminal_bottom.panes()[1].clone();
+        for (pane, expected) in [(&old, h.dir.path()), (&new, other.path())] {
+            pane.terminal.as_ref().unwrap().feed_child(b"pwd\n");
+            poll(|| {
+                terminal_text(pane)
+                    .lines()
+                    .any(|line| line == expected.to_string_lossy())
+            });
+        }
+    });
+}
+#[test]
+fn test_fullscreen_menu_accelerator_and_key() {
+    run(|| {
+        let h = Harness::new();
+        h.accelerate("<Control><Shift>F11");
+        assert!(h.w.is_terminal_fullscreen());
+        h.accelerate("<Control><Shift>F11");
+        assert!(!h.w.is_terminal_fullscreen());
+        let tab = h.open("keys.rs", "");
+        tab.view.grab_focus();
+        key(&h.w, "<Control><Shift>F11");
+        assert!(h.w.is_terminal_fullscreen());
+        key(&h.w, "<Control><Shift>F11");
+        assert!(!h.w.is_terminal_fullscreen());
+    });
+}
+#[test]
+fn test_editor_focus_receives_commands_before_menu() {
+    run(|| {
+        let h = Harness::new();
+        let tab = h.open("keys.py", "value = 1\n");
+        tab.view.grab_focus();
+        tab.buffer.place_cursor(&tab.buffer.start_iter());
+        let e = event(&h.w.window, "<Control>slash");
+        let e: &gdk::Event = &e;
+        h.w.window.emit_by_name::<bool>("key-press-event", &[e]);
+        assert!(tab.text().starts_with('#'));
+        assert!(result(|cb| h.w.editor.save_current(cb)));
+        let e = event(&h.w.window, "<Control>w");
+        let e: &gdk::Event = &e;
+        h.w.window.emit_by_name::<bool>("key-press-event", &[e]);
+        poll(|| h.w.editor.tabs().is_empty());
+    });
+}
+#[test]
+fn test_explorer_line_37_offscreen_screenshot() {
+    run(|| {
+        let h = Harness::new();
+        let text = (0..160)
+            .map(|i| format!("line {i}: enough characters to place the caret beyond thirty-two\n"))
+            .collect::<String>();
+        let path = h.write("explorer.py", &text);
+        h.w.explorer
+            .emit_by_name::<()>("file-activated", &[&path.to_str().unwrap()]);
+        wait_path(&h.w, &path);
+        h.w.open_file_at(&path, 36, 32, 0);
+        let tab = h.w.editor.current_tab().unwrap();
+        poll(|| tab.chrome.painted_rows().iter().any(|row| row.line == 36));
+        assert!(h.w.editor.status().text().contains("Ln 37, Col 33"));
+        let image = h.dir.path().join("line37.png");
+        frame(&h.w.window);
+        impro::app::capture_window(&h.w.window, &image).unwrap();
+        assert!(std::fs::metadata(image).unwrap().len() > 1000);
+    });
+}
+
+#[test]
+fn test_rapid_folder_choices_keep_the_latest_root() {
+    run(|| {
+        let h = Harness::new();
+        let first = tempfile::tempdir().unwrap();
+        let second = tempfile::tempdir().unwrap();
+        h.w.set_root(first.path());
+        h.w.set_root(second.path());
+        poll(|| h.w.root() == second.path());
+        drain();
+        assert_eq!(h.w.explorer.root(), second.path());
+        assert_eq!(h.w.terminal_bottom.cwd(), second.path());
+    });
+}

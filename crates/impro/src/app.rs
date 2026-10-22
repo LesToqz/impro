@@ -3,7 +3,7 @@ use crate::MainWindow;
 use gtk::prelude::*;
 use impro_core::{identity, settings};
 use std::{
-    cell::Cell,
+    cell::{Cell, RefCell},
     path::{Path, PathBuf},
     rc::Rc,
     time::Instant,
@@ -23,6 +23,7 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
     timing("application", started);
     app.connect_startup(move |_| timing("gtk-startup", started));
     let failed = Rc::new(Cell::new(false));
+    let preferences = Rc::new(RefCell::new(preferences));
     let activation_failed = failed.clone();
     let screenshot_failed = failed.clone();
     app.connect_activate(move |app| {
@@ -35,9 +36,16 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
             return;
         }
         timing("activate", started);
-        let owner = MainWindow::with_values(app, &root, preferences.clone());
+        let owner = MainWindow::with_values(app, &root, preferences.borrow().clone());
         timing("window-built", started);
         let window = &owner.window;
+        let state = preferences.clone();
+        let keep = RefCell::new(Some(owner.clone()));
+        window.connect_destroy(move |_| {
+            if let Some(owner) = keep.borrow_mut().take() {
+                *state.borrow_mut() = owner.values();
+            }
+        });
         if let Some(path) = qa_path.as_ref() {
             install_screenshot_helper(window, path.clone(), started, screenshot_failed.clone());
         }

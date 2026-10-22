@@ -421,6 +421,9 @@ impl MainWindow {
             self.editor.save_current(|_| {});
             return true;
         }
+        if state == ctrl && [k::w, k::slash].contains(&lower) && self.focus_in(&self.editor) {
+            return self.window.propagate_key_event(event);
+        }
         if state == shift && lower == k::m && self.focus_in(&self.editor) {
             self.toggle_markdown_view();
             return true;

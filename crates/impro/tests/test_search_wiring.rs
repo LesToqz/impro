@@ -174,3 +174,115 @@ fn test_ctrl_zero_resets_to_configured_editor_size_and_settings_update_it() {
         assert_eq!(h.w.editor.font_size(), 13);
     });
 }
+
+#[test]
+fn test_search_box_is_first_under_header() {
+    run(|| {
+        let h = Harness::new();
+        let children = h.w.explorer.children();
+        assert_eq!(children.len(), 2);
+        assert!(children[0]
+            .style_context()
+            .has_class("impro-explorer-header"));
+        let split = children[1].clone().downcast::<gtk::Paned>().unwrap();
+        assert_eq!(split.child1(), Some(h.w.explorer.search().upcast()));
+    });
+}
+#[test]
+fn test_typing_shows_results_and_escape_restores_tree() {
+    run(|| {
+        let h = Harness::new();
+        let tab = h.open("a.py", "needle\n");
+        h.w.search_in_files();
+        let search = h.w.explorer.search();
+        search.entry().set_text("needle");
+        poll(|| !search.is_searching() && search.results().total_matches == 1);
+        let e = event(&h.w.window, "Escape");
+        let e: &gdk::Event = &e;
+        h.w.window.emit_by_name::<bool>("key-press-event", &[e]);
+        assert!(search.query().is_empty());
+        assert_eq!(h.w.window.focused_widget(), Some(tab.view.clone().upcast()));
+    });
+}
+#[test]
+fn test_escape_without_tabs_focuses_tree() {
+    run(|| {
+        let h = Harness::new();
+        h.write("a.py", "needle\n");
+        h.w.explorer.focus_search(Some("needle"));
+        let e = event(&h.w.window, "Escape");
+        let e: &gdk::Event = &e;
+        h.w.window.emit_by_name::<bool>("key-press-event", &[e]);
+        assert_eq!(
+            h.w.window.focused_widget(),
+            Some(h.w.explorer.tree().upcast())
+        );
+    });
+}
+#[test]
+fn test_active_tab_group_first_and_switching_resorts() {
+    run(|| {
+        let h = Harness::new();
+        let a = h.open("a.py", "needle\n");
+        let b = h.open("b.py", "needle\n");
+        h.w.explorer.focus_search(Some("needle"));
+        let search = h.w.explorer.search();
+        poll(|| !search.is_searching() && search.results().groups.len() == 2);
+        assert_eq!(search.results().groups[0].path, b.path());
+        h.w.editor.open_file(a.path());
+        poll(|| search.results().groups[0].path == a.path());
+    });
+}
+#[test]
+fn test_current_file_signal() {
+    run(|| {
+        let h = Harness::new();
+        let a = h.open("a.py", "");
+        let b = h.open("b.py", "");
+        h.w.editor.open_file(a.path());
+        assert_eq!(h.w.explorer.active_file(), Some(a.path()));
+        assert!(result(|cb| h.w.editor.close_current(cb)));
+        assert_eq!(h.w.explorer.active_file(), Some(b.path()));
+        assert!(result(|cb| h.w.editor.close_current(cb)));
+        assert_eq!(h.w.explorer.active_file(), None);
+    });
+}
+#[test]
+fn test_rename_and_delete_refresh_results() {
+    run(|| {
+        let h = Harness::new();
+        let tab = h.open("a.py", "needle\n");
+        let b = h.write("b.py", "needle\n");
+        h.w.explorer.focus_search(Some("needle"));
+        let search = h.w.explorer.search();
+        poll(|| !search.is_searching() && search.results().groups.len() == 2);
+        h.w.explorer.rename(&b, "c.py", Box::new(|_| {}));
+        poll(|| {
+            !search.is_searching()
+                && search
+                    .results()
+                    .groups
+                    .iter()
+                    .any(|g| g.path.ends_with("c.py"))
+        });
+        h.w.explorer.delete(&tab.path(), true, Box::new(|_| {}));
+        poll(|| !search.is_searching() && search.results().groups.len() == 1);
+        assert!(tab.deleted());
+    });
+}
+#[test]
+fn test_explorer_font_size_reaches_result_rows() {
+    run(|| {
+        let h = Harness::new();
+        h.w.set_setting("explorer_font_size", 14.into(), false)
+            .unwrap();
+        let search = h.w.explorer.search();
+        for column in search.tree().columns() {
+            for cell in column.cells() {
+                if cell.find_property("size-points").is_some() {
+                    assert_eq!(cell.property::<f64>("size-points"), 14.0);
+                }
+            }
+        }
+    });
+}
