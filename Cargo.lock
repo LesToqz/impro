@@ -578,7 +578,15 @@ dependencies = [
 name = "impro-gitviews"
 version = "0.1.0"
 dependencies = [
+ "gdk",
+ "gio",
+ "glib",
+ "gtk",
+ "impro-core",
+ "javascriptcore-rs",
  "serde_json",
+ "tempfile",
+ "webkit2gtk",
 ]
 
 [[package]]

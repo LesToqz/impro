@@ -5,3 +5,14 @@ edition = "2021"
 
 [dependencies]
 serde_json = "1.0.145"
+gtk.workspace = true
+gdk.workspace = true
+glib.workspace = true
+gio.workspace = true
+webkit2gtk = { workspace = true, features = ["v2_40"] }
+impro-core.workspace = true
+
+javascriptcore = { package = "javascriptcore-rs", version = "1.1" }
+
+[dev-dependencies]
+tempfile.workspace = true
