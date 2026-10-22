@@ -27,7 +27,7 @@ const BATCH_INTERVAL: Duration = Duration::from_millis(50);
 /// File-name rows appended in order before the rest are inserted back to front.
 const NAME_HEAD: usize = 300;
 /// Main-thread time spent rendering rows per step.
-const RENDER_BUDGET: Duration = Duration::from_millis(3);
+const RENDER_BUDGET: Duration = Duration::from_millis(2);
 
 /// CSS of the search panel for the default theme (the original's `SEARCH_CSS`).
 pub fn search_css() -> String {
@@ -263,7 +263,6 @@ impl SearchPanel {
         label.set_ypad(2);
         label.set_ellipsize(pango::EllipsizeMode::End);
         util::pack(&column, &label, true);
-        util::attribute(&column, &label, "markup", 2);
         let tree_weak = tree.downgrade();
         util::data_func(&column, &label, move |cell, model, iter| {
             if let Some(tree) = tree_weak.upgrade() {
@@ -718,7 +717,7 @@ impl SearchPanel {
             results.total_files = batch.total_files;
         }
         imp.searching.set(!batch.done);
-        self.render_step();
+        self.schedule_render();
         true
     }
 
@@ -766,7 +765,7 @@ impl SearchPanel {
             let item = imp.queue.borrow_mut().pop_front();
             let Some(item) = item else { break };
             let rest = match item {
-                Item::Group(group) => self.insert_group(&group),
+                Item::Group(group) => self.insert_group(group),
                 Item::Rows {
                     parent,
                     path,
@@ -782,18 +781,28 @@ impl SearchPanel {
         }
         self.update_summary();
         if !imp.queue.borrow().is_empty() {
-            let weak = self.downgrade();
-            let source = glib::idle_add_local_full(glib::Priority::DEFAULT_IDLE, move || {
-                if let Some(panel) = weak.upgrade() {
-                    panel.imp().render_source.take();
-                    panel.render_step();
-                }
-                glib::ControlFlow::Break
-            });
-            *imp.render_source.borrow_mut() = Some(source);
+            self.schedule_render();
         } else if imp.focus_first.get() && !imp.searching.get() {
             imp.focus_first.set(false);
         }
+    }
+
+    // A channel dispatch may drain many worker messages. Coalesce all of them
+    // into one independent idle slice, so their rendering budgets cannot add up.
+    fn schedule_render(&self) {
+        let imp = self.imp();
+        if imp.render_source.borrow().is_some() || imp.destroyed.get() {
+            return;
+        }
+        let weak = self.downgrade();
+        let source = glib::idle_add_local_full(glib::Priority::LOW, move || {
+            if let Some(panel) = weak.upgrade() {
+                panel.imp().render_source.take();
+                panel.render_step();
+            }
+            glib::ControlFlow::Break
+        });
+        *imp.render_source.borrow_mut() = Some(source);
     }
 
     fn focus_first_row(&self) {
@@ -809,7 +818,7 @@ impl SearchPanel {
     }
 
     /// Insert a group's header row; its match rows follow as a resumable item.
-    fn insert_group(&self, group: &FileGroup) -> Option<Item> {
+    fn insert_group(&self, group: FileGroup) -> Option<Item> {
         let w = self.w();
         let directory = Path::new(&group.relative_path)
             .parent()
@@ -852,7 +861,7 @@ impl SearchPanel {
         Some(Item::Rows {
             parent: reference,
             path,
-            matches: group.matches.clone(),
+            matches: group.matches,
             next: 0,
         })
     }
@@ -870,7 +879,7 @@ impl SearchPanel {
         let tree_path = parent.path()?;
         let parent_iter = w.store.iter(&tree_path)?;
         while next < matches.len() {
-            if next % 4 == 3 && Instant::now() >= deadline {
+            if Instant::now() >= deadline {
                 return Some(Item::Rows {
                     parent,
                     path,
@@ -950,10 +959,8 @@ impl SearchPanel {
         let parent = w.store.iter(&tree_path)?;
         let root = self.imp().root.borrow().clone();
         let head = job.paths.len().min(NAME_HEAD);
-        let mut counter = 0u32;
         loop {
-            counter += 1;
-            if counter & 3 == 0 && Instant::now() >= deadline {
+            if Instant::now() >= deadline {
                 return Some(Item::NameRows(job));
             }
             let index = if job.pos < head {
