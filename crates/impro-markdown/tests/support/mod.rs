@@ -196,3 +196,42 @@ pub fn emit_key(
         .as_ref()
         .emit_by_name::<bool>("key-press-event", &[&event])
 }
+/// Dispatch a real button event (press/release) to `window` through GTK's main event path.
+pub fn send_button(kind: gdk::EventType, window: &gdk::Window, x: f64, y: f64, button: u32) {
+    use glib::translate::*;
+    let mut event = gdk::Event::new(kind);
+    unsafe {
+        let raw: *mut gdk::ffi::GdkEvent = event.to_glib_none_mut().0;
+        (*raw).button.window = ToGlibPtr::<*mut gdk::ffi::GdkWindow>::to_glib_full(window);
+        (*raw).button.send_event = 1;
+        (*raw).button.x = x;
+        (*raw).button.y = y;
+        (*raw).button.button = button;
+    }
+    let seat = gdk::Display::default().and_then(|d| d.default_seat());
+    if let Some(seat) = seat {
+        event.set_device(seat.pointer().as_ref());
+    }
+    gtk::main_do_event(&mut event);
+}
+/// A bare event of `kind` (focus, scroll, button...) for emitting on a widget.
+pub fn bare_event(kind: gdk::EventType) -> gdk::Event {
+    gdk::Event::new(kind)
+}
+/// A button event with window, position and pointer device set.
+pub fn button_event_at(kind: gdk::EventType, window: &gdk::Window, x: f64, y: f64, button: u32) -> gdk::Event {
+    use glib::translate::*;
+    let mut event = gdk::Event::new(kind);
+    unsafe {
+        let raw: *mut gdk::ffi::GdkEvent = event.to_glib_none_mut().0;
+        (*raw).button.window = ToGlibPtr::<*mut gdk::ffi::GdkWindow>::to_glib_full(window);
+        (*raw).button.send_event = 1;
+        (*raw).button.x = x;
+        (*raw).button.y = y;
+        (*raw).button.button = button;
+    }
+    if let Some(seat) = gdk::Display::default().and_then(|d| d.default_seat()) {
+        event.set_device(seat.pointer().as_ref());
+    }
+    event
+}
