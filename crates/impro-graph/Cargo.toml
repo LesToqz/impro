@@ -17,11 +17,13 @@ gtk = { workspace = true, features = ["v3_24"] }
 gdk.workspace = true
 glib.workspace = true
 gio.workspace = true
-cairo-rs.workspace = true
+cairo-rs = { workspace = true, features = ["png"] }
 pango.workspace = true
+atk = "~0.18.2"
 pangocairo.workspace = true
 impro-core.workspace = true
 impro-ui.workspace = true
 
 [dev-dependencies]
 tempfile = "3"
+gdk-pixbuf.workspace = true

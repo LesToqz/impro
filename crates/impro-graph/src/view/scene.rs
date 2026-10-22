@@ -117,7 +117,9 @@ pub struct Scene {
     near_stale: bool,
     // interaction
     pub hover: Option<usize>,
+    /// The node held by the pointer (highlighted; pinned once it is moved).
     pub drag: Option<usize>,
+    dragging: bool,
     pub active: Option<usize>,
     active_id: Option<Arc<str>>,
     // appearance
@@ -192,6 +194,7 @@ impl Scene {
             near_stale: true,
             hover: None,
             drag: None,
+            dragging: false,
             active: None,
             active_id: None,
             disp: Display {
@@ -350,6 +353,9 @@ impl Scene {
             .and_then(|id| self.graph.index_of(id));
         self.hover = hover_id.and_then(|id| self.graph.index_of(&id));
         self.drag = drag_id.and_then(|id| self.graph.index_of(&id));
+        if self.drag.is_none() {
+            self.dragging = false;
+        }
         let fresh_alpha = if self.style.reduce_motion { 1.0 } else { 0.0 };
         for i in 0..n {
             match old_of_new[i] {
@@ -541,22 +547,43 @@ impl Scene {
         self.set_hover(hit)
     }
 
-    /// Pins a node at a world position while it is dragged.
-    pub fn drag_to(&mut self, i: usize, wx: f32, wy: f32) {
-        if self.drag == Some(i) {
-            self.layout.drag_to(i, wx, wy);
-        } else {
+    /// The pointer presses a node: it is highlighted but not yet moved.
+    pub fn press_node(&mut self, i: usize) {
+        if i < self.len() {
             self.drag = Some(i);
-            self.layout.begin_drag(i, wx, wy);
+            self.dragging = false;
         }
     }
 
+    /// Pins the held node at a world position while it is dragged; the
+    /// layout stays warm until [`Scene::end_drag`].
+    pub fn drag_to(&mut self, i: usize, wx: f32, wy: f32) {
+        if i >= self.len() {
+            return;
+        }
+        self.drag = Some(i);
+        if self.dragging {
+            self.layout.drag_to(i, wx, wy);
+        } else {
+            self.dragging = true;
+            self.layout.begin_drag(i, wx, wy);
+        }
+        // the marker follows the pointer at once, not at the next tick
+        self.layout.set_position(i, wx, wy);
+    }
+
+    pub fn is_dragging(&self) -> bool {
+        self.dragging
+    }
+
+    /// Releases the held node; the layout cools again.
     pub fn end_drag(&mut self) {
         if let Some(i) = self.drag.take() {
-            if i < self.len() {
+            if self.dragging && i < self.len() {
                 self.layout.end_drag(i);
             }
         }
+        self.dragging = false;
     }
 
     // ---- stepping --------------------------------------------------------

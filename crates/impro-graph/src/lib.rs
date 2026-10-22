@@ -34,3 +34,16 @@ pub use index::{CancelToken, IndexChange, ProjectIndex, ScanConfig};
 pub use layout::{ForceParams, Layout};
 pub use model::{Graph, Node, NodeKind};
 pub use prefs::{normalize, GraphPrefs};
+
+/// Registers the view's style sheet with the shared style; call once before
+/// the first theme is applied.
+pub fn init() {
+    impro_ui::register_css("graph.view", view::css);
+}
+
+/// The view's style sheet for a theme's UI colours.
+pub fn css(ui: &impro_core::themes::UiColors) -> String {
+    view::css(ui)
+}
+
+pub use view::{GraphType, GraphView, OpenMode, ViewOptions};

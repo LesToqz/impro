@@ -371,7 +371,10 @@ mod tests {
         assert_eq!(local.layers.map(|l| l.len()), Some(local.graph.nodes.len()));
         host.build(request(2, Mode::Notes));
         let notes = wait(&rx).result.expect("graph").graph;
-        assert!(notes.nodes.iter().all(|n| n.id.starts_with(".impro/Notes/")));
+        assert!(notes
+            .nodes
+            .iter()
+            .all(|n| n.id.starts_with(".impro/Notes/")));
         host.build(request(3, Mode::Empty));
         assert!(wait(&rx).result.expect("graph").graph.is_empty());
         host.shutdown();

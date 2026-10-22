@@ -1,0 +1,88 @@
+@define-color impro_graph_bg {bg};
+@define-color impro_graph_text {text};
+@define-color impro_graph_muted {muted};
+@define-color impro_graph_accent {accent};
+@define-color impro_graph_panel {panel};
+@define-color impro_graph_border {border};
+@define-color impro_graph_hover {hover};
+@define-color impro_graph_track {track};
+@define-color impro_graph_input {input};
+
+.impro-graph { background: {bg}; color: {text}; font-size: 13px; }
+.impro-graph-canvas:focus { outline: none; }
+
+.impro-graph-status { color: {muted}; font-size: 13px; padding: 24px; }
+.impro-graph-notice { margin: 12px; padding: 3px 10px; border-radius: 11px; font-size: 12px;
+    color: {muted}; background: {panel}; border: 1px solid {border}; }
+
+.impro-graph-chip { background: {bg}; border: 1px solid transparent; border-radius: 8px; padding: 6px; }
+.impro-graph-panel { background: {panel}; border: 1px solid {border}; border-radius: 8px;
+    box-shadow: 0 2px 8px {shadow}; }
+.impro-graph-panel scrolledwindow, .impro-graph-panel viewport { background: transparent; border: 0; }
+.impro-graph-panel scrollbar { background: transparent; border: 0; }
+.impro-graph-panel scrollbar slider { min-width: 6px; min-height: 6px; border-radius: 3px;
+    background: {track}; border: 0; margin: 0; }
+.impro-graph-panel scrollbar trough { background: transparent; border: 0; }
+
+button.impro-graph-icon-button, button.impro-graph-icon-button:hover,
+button.impro-graph-icon-button:active, button.impro-graph-icon-button:checked {
+    min-width: 18px; min-height: 18px; padding: 4px; margin: 0; border: 0; border-radius: 5px;
+    background: transparent; background-image: none; box-shadow: none; color: {muted}; }
+button.impro-graph-icon-button:hover { background: {hover}; color: {text}; }
+button.impro-graph-icon-button:checked, button.impro-graph-icon-button.impro-graph-active { color: {accent}; }
+button.impro-graph-icon-button:focus { box-shadow: 0 0 0 2px {accent}; }
+.impro-graph-small button.impro-graph-icon-button { padding: 3px; }
+
+.impro-graph-section { border-bottom: 1px solid {border}; }
+.impro-graph-section:last-child { border-bottom: 0; }
+.impro-graph-section-head { padding: 6px 12px; min-height: 26px; font-size: 13px; font-weight: 500;
+    color: {text}; }
+.impro-graph-section-head.impro-graph-first { padding-right: 72px; }
+.impro-graph-section-event:focus { box-shadow: inset 0 0 0 2px {accent}; }
+.impro-graph-section-body { padding: 0 12px 8px 12px; }
+.impro-graph-section:last-child .impro-graph-section-body { padding-bottom: 16px; }
+
+.impro-graph-row { padding: 6px 0; margin-bottom: 4px; }
+.impro-graph-name { color: {text}; font-size: 13px; }
+.impro-graph-value { color: {muted}; font-size: 12px; }
+
+entry.impro-graph-entry { min-height: 26px; padding: 0 26px 0 8px; margin: 0; font-size: 13px;
+    color: {text}; background: {input}; background-image: none; border: 1px solid {border};
+    border-radius: 5px; box-shadow: none; caret-color: {text}; }
+entry.impro-graph-entry:focus { border-color: {accent}; box-shadow: none; }
+entry.impro-graph-entry selection { background: {accent}; color: {bg}; }
+.impro-graph-group entry.impro-graph-entry { padding-right: 8px; }
+
+scale.impro-graph-scale { padding: 0; min-height: 18px; }
+scale.impro-graph-scale trough { min-height: 4px; border-radius: 2px; border: 0; background: {track}; }
+scale.impro-graph-scale highlight { min-height: 4px; border-radius: 2px; border: 0; background: {accent}; }
+scale.impro-graph-scale slider { min-width: 14px; min-height: 14px; margin: -5px 0; border-radius: 50%;
+    background: #ffffff; background-image: none; border: 0; box-shadow: 0 1px 3px alpha(#000000, 0.4); }
+scale.impro-graph-scale:focus slider { box-shadow: 0 0 0 2px {accent}; }
+
+button.impro-graph-button, button.impro-graph-button:hover, button.impro-graph-button:active {
+    min-height: 26px; padding: 0 8px; border-radius: 5px; border: 1px solid {border};
+    background: {input}; background-image: none; color: {text}; box-shadow: none; font-size: 13px; }
+button.impro-graph-button:hover { background: {hover}; }
+button.impro-graph-button:focus { border-color: {accent}; }
+button.impro-graph-button.impro-graph-active { border-color: {accent}; color: {accent}; }
+
+button.impro-graph-swatch, button.impro-graph-swatch:hover, button.impro-graph-swatch:active {
+    min-width: 18px; min-height: 18px; padding: 0; margin: 0; border-radius: 9px;
+    border: 0; background: transparent; background-image: none; box-shadow: none; }
+button.impro-graph-swatch:focus { box-shadow: 0 0 0 2px {accent}; }
+.impro-graph-group { padding-bottom: 6px; }
+.impro-graph-add { margin: 4px 0 10px 0; }
+
+popover.impro-graph-popover, .impro-graph-popover { background: {panel}; border: 1px solid {border};
+    border-radius: 8px; box-shadow: 0 4px 14px {shadow}; color: {text}; }
+.impro-graph-popover.impro-graph-menu { padding: 4px; box-shadow: 0 6px 18px {shadow}; }
+.impro-graph-menu-title { padding: 4px 10px 6px 10px; font-size: 12px; color: {muted}; }
+button.impro-graph-menu-item, button.impro-graph-menu-item:hover, button.impro-graph-menu-item:active {
+    min-height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent;
+    background-image: none; box-shadow: none; color: {text}; }
+button.impro-graph-menu-item:hover, button.impro-graph-menu-item:focus { background: {hover}; }
+separator.impro-graph-menu-separator { min-height: 1px; margin: 4px 6px; background: {border}; }
+.impro-graph-custom { color: {muted}; font-size: 12px; padding-top: 4px; }
+button.impro-graph-radio-item .impro-graph-radio { min-width: 14px; min-height: 14px;
+    border-radius: 7px; border: 2px solid {track}; }

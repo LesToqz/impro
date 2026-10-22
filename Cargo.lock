@@ -593,8 +593,10 @@ dependencies = [
 name = "impro-graph"
 version = "0.1.0"
 dependencies = [
+ "atk",
  "cairo-rs",
  "gdk",
+ "gdk-pixbuf",
  "gio",
  "glib",
  "gtk",
