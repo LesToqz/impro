@@ -1,5 +1,6 @@
 //! Paired full-window scenes; protocol documented in scripts/parity/README.md.
 use crate::common::*;
+use crate::js;
 use gtk::prelude::*;
 use std::{
     path::PathBuf,
@@ -7,11 +8,32 @@ use std::{
 };
 
 fn capture(widget: &impl IsA<gtk::Widget>, path: &std::path::Path) -> Vec<u8> {
-    impro::app::capture_window(widget, path).unwrap();
+    if std::env::args().nth(2).as_deref() == Some("explorer-menu") {
+        let widget = widget.as_ref();
+        let (_, x, y) = widget.window().unwrap().origin();
+        let root = gdk::Screen::default().unwrap().root_window().unwrap();
+        root.pixbuf(x, y, widget.allocated_width(), widget.allocated_height())
+            .unwrap()
+            .savev(path, "png", &[])
+            .unwrap();
+    } else {
+        impro::app::capture_window(widget, path).unwrap();
+    }
     std::fs::read(path).unwrap()
 }
 
 pub fn run() {
+    fn labels(widget: &gtk::Widget, output: &mut Vec<String>) {
+        if let Some(label) = widget.downcast_ref::<gtk::Label>() {
+            let text = label.text().to_string();
+            if !text.is_empty() {
+                output.push(text);
+            }
+        }
+        if let Some(container) = widget.downcast_ref::<gtk::Container>() {
+            container.forall(|child| labels(child, output));
+        }
+    }
     let args: Vec<_> = std::env::args().collect();
     let scene = args.get(2).expect("scene name").as_str();
     if scene.starts_with("notes-") {
@@ -61,9 +83,25 @@ pub fn run() {
                 w.explorer.rename_dialog();
             }
             if scene == "explorer-hover" {
-                w.explorer
-                    .tree()
-                    .set_state_flags(gtk::StateFlags::PRELIGHT, false);
+                let tree = w.explorer.tree();
+                let path = tree
+                    .model()
+                    .unwrap()
+                    .path(&w.explorer.find_row(&root.join("main.py")).unwrap())
+                    .unwrap();
+                let area = tree.background_area(Some(&path), None::<&gtk::TreeViewColumn>);
+                let (_, x, y) = tree.bin_window().unwrap().origin();
+                tree.display()
+                    .default_seat()
+                    .unwrap()
+                    .pointer()
+                    .unwrap()
+                    .warp(
+                        &gdk::Screen::default().unwrap(),
+                        x + 100,
+                        y + area.y() + area.height() / 2,
+                    );
+                frame(&w.window);
             }
         }
         "search-results" | "search-empty" => {
@@ -143,15 +181,55 @@ pub fn run() {
             w.set_setting("gitgraph_orientation", orientation.into(), false)
                 .unwrap();
             w.open_gitgraph();
-            poll(|| w.gitgraph_views().iter().all(|v| v.is_ready() && v.last_data().is_some()));
+            poll(|| {
+                w.gitgraph_views()
+                    .iter()
+                    .all(|v| v.is_ready() && v.last_data().is_some())
+            });
+            for view in w.gitgraph_views() {
+                poll(|| view.timings().data_to_paint.is_some());
+                poll(|| js(view.webview(), "ImproGit.stats().commits") == 2);
+            }
             if name.starts_with("commit-") {
-                w.open_commit("HEAD");
+                w.open_commit(&std::env::var("IMPRO_PARITY_HEAD").unwrap());
                 poll(|| w.pending_commits() == 0 && !w.commit_views().is_empty());
-                poll(|| w.commit_views().iter().all(|v| v.is_ready() && v.last_data().is_some()));
+                poll(|| {
+                    w.commit_views().iter().all(|v| {
+                        v.is_ready()
+                            && v.last_data().is_some()
+                            && v.timings().data_to_paint.is_some()
+                    })
+                });
             }
         }
         "graph" => {
-            w.open_graph();
+            let graph = w.open_graph().unwrap();
+            poll(|| graph.summary().files_indexed > 0 && graph.widget().allocated_width() > 1 && graph.panel().root.allocated_width() > 1);
+            let summary = graph.summary();
+            let ui = impro_ui::current_theme().unwrap().ui.clone();
+            let palette = impro_graph::view::palette::Palette::from_theme(
+                &ui,
+                &ui["accent"],
+                impro_core::settings::accent_presets(),
+            );
+            let mut controls = Vec::new();
+            labels(graph.panel().root.upcast_ref(), &mut controls);
+            let structure = serde_json::json!({
+                "control_labels": controls,
+                "control_panel_width": graph.panel().root.allocated_width(),
+                "nodes": summary.nodes, "edges": summary.lines,
+                "defaults": graph.prefs().to_value(),
+                "panel_open": graph.panel_open(),
+                "legend": {"fill":palette.fill.to_hex(),"tag":palette.tag.to_hex(),
+                    "attachment":palette.attachment.to_hex(),"unresolved":palette.unresolved.to_hex(),
+                    "code":palette.code.to_hex()},
+                "panel_size": [graph.widget().allocated_width(), graph.widget().allocated_height()],
+            });
+            std::fs::write(
+                output.with_extension("json"),
+                serde_json::to_vec_pretty(&structure).unwrap(),
+            )
+            .unwrap();
         }
         _ => panic!("unknown parity scene {scene}"),
     }
@@ -190,7 +268,10 @@ pub fn run() {
     let deadline = Instant::now() + Duration::from_secs(8);
     let mut previous = Vec::new();
     let mut stable = 0;
-    while stable < 4 {
+    if scene == "graph" {
+        capture(&target, &output);
+    }
+    while scene != "graph" && stable < 4 {
         assert!(Instant::now() < deadline, "scene did not settle");
         frame(&w.window);
         let pixels = capture(&target, &output);

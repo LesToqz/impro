@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Read-only reference adapter. Discover its package; drive the real GTK window."""
 import argparse
+import dataclasses
 import importlib
 import json
 import os
@@ -41,6 +42,7 @@ def main():
     values = json.loads(os.environ['IMPRO_PARITY_SETTINGS'])
     # Resolve reference theme ids from its own registry, never by a literal prefix.
     themes = module('themes')
+    themes.THEMES = tuple(dataclasses.replace(t, name=re.sub(re.escape(package), 'impro', t.name, flags=re.I)) for t in themes.THEMES)
     theme = themes.get_theme(themes.DEFAULT_THEME_ID.rsplit('-',1)[0]+'-'+args.theme)
     settings.load = lambda: dict(values, theme=theme.id)
     native = Gtk.Settings.get_default()
@@ -68,6 +70,13 @@ def main():
         widget.disconnect(signal)
         while context.pending():
             context.iteration(False)
+    def javascript(web, script):
+        done = []
+        def evaluated(view, result, _):
+            done.append(json.loads(view.evaluate_javascript_finish(result).to_json(0)))
+        web.evaluate_javascript(script, -1, None, None, None, evaluated, None)
+        poll(lambda: done)
+        return done[0]
     def open_file(name):
         w.editor.open_file(str(args.root/name))
         poll(lambda: any(t.path == str(args.root/name) for t in w.editor.tabs))
@@ -84,7 +93,12 @@ def main():
         w.explorer.tree.get_selection().select_iter(w.explorer._find(str(args.root/'main.py')))
         w.explorer.focus_tree()
         if scene == 'explorer-hover':
-            w.explorer.tree.set_state_flags(Gtk.StateFlags.PRELIGHT, False)
+            tree = w.explorer.tree
+            path = tree.get_model().get_path(w.explorer._find(str(args.root/'main.py')))
+            area = tree.get_background_area(path, None)
+            _, x, y = tree.get_bin_window().get_origin()
+            tree.get_display().get_default_seat().get_pointer().warp(Gdk.Screen.get_default(), x+100, y+area.y+area.height//2)
+            frame()
         if scene == 'explorer-menu':
             w.explorer.tree.emit('popup-menu')
     elif scene in ('search-results','search-empty'):
@@ -137,12 +151,35 @@ def main():
         w._values['gitgraph_orientation'] = scene.split('-')[1]
         w.open_gitgraph()
         poll(lambda: all(v._ready and v.last_data is not None for v in w._gitgraph_views()))
+        api = "Object.keys(window).filter(k=>k.toLowerCase().endsWith('git')).map(k=>window[k]).find(v=>v && typeof v.stats==='function')"
+        for view in w._gitgraph_views():
+            poll(lambda: javascript(view.webview, "(()=>{const a="+api+";return a ? a.stats().commits : 0})()") == 2)
         if scene.startswith('commit-'):
-            w.open_commit('HEAD')
+
+            w.open_commit(os.environ['IMPRO_PARITY_HEAD'])
             poll(lambda: not w._commit_pending and w._commit_views)
             poll(lambda: all(v._ready and v.last_data is not None for v in w._commit_views.values()))
     elif scene == 'graph':
-        w.open_graph()
+        graph = w.open_graph()
+        poll(lambda: graph._ready and graph.last_data is not None)
+        graph.post('pause')
+        data = graph.last_data
+        colors = module('graphview').graph_colors(w.theme.ui, w.theme.ui['accent'])
+        structure = dict(nodes=len(data['nodes']),edges=len({tuple(sorted((e['s'], e['t']))) for e in data['links']}),
+                         defaults=dict(graph._settings, reduceMotion=w._values['reduce_motion']),panel_open=not graph._settings['close'],
+                         panel_size=[graph.get_allocated_width(),graph.get_allocated_height()],
+                         legend={key: colors['node' if key == 'fill' else 'node_'+key]
+                                 for key in ['fill','tag','attachment','unresolved','code']})
+        # Read labels and geometry from the real WebView controls, without
+        # relying on the reference's JavaScript global name.
+        done = []
+        def evaluated(web, result, _):
+            value = web.evaluate_javascript_finish(result)
+            structure.update(json.loads(value.to_json(0)))
+            done.append(True)
+        graph.webview.evaluate_javascript("JSON.parse(JSON.stringify({control_labels:Array.from(document.querySelectorAll('#controls .sec-head>span:not(.chev), #controls .name, #controls .groups-new, #controls .row>.btn')).flatMap(e=>e.childElementCount ? Array.from(e.children).map(s=>s.textContent.trim()) : [e.textContent.trim()]),control_panel_width:document.querySelector('#controls').getBoundingClientRect().width}))", -1, None, None, None, evaluated, None)
+        poll(lambda: done)
+        args.output.with_suffix('.json').write_text(json.dumps(structure,indent=2))
     else:
         raise ValueError('unknown scene '+scene)
 
@@ -156,6 +193,13 @@ def main():
         if isinstance(widget, Gtk.Container):
             widget.forall(normalize)
     def finish():
+        if scene.startswith('commit-'):
+            for view in w._commit_views.values():
+                poll(lambda: javascript(view.webview, "!!document.querySelector('.file-name')"))
+                javascript(view.webview, "window.__parityPaint=0;requestAnimationFrame(()=>requestAnimationFrame(()=>{window.__parityPaint=1}));true")
+                poll(lambda: javascript(view.webview, 'window.__parityPaint') == 1)
+        if scene == 'editor-selection-find':
+            poll(lambda: w.editor.selected_text() == 'greet')
         poll(lambda: all(not t.highlighter.pending for t in w.editor.tabs))
         for panel in (w.terminal_bottom,w.terminal_right):
             panel.set_cursor_blink(False)
@@ -174,7 +218,11 @@ def main():
                 raise RuntimeError('scene did not settle')
             frame(target)
             Gdk.Display.get_default().sync()
-            pixbuf = Gdk.pixbuf_get_from_window(target.get_window(),0,0,target.get_allocated_width(),target.get_allocated_height())
+            surface, x, y = target.get_window(), 0, 0
+            if scene == 'explorer-menu':
+                _, x, y = surface.get_origin()
+                surface = Gdk.Screen.get_default().get_root_window()
+            pixbuf = Gdk.pixbuf_get_from_window(surface,x,y,target.get_allocated_width(),target.get_allocated_height())
             pixels = bytes(pixbuf.get_pixels())
             stable = stable+1 if pixels == previous else 0
             previous = pixels

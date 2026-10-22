@@ -1,7 +1,7 @@
 # Window parity captures
 
 Build once with `cargo build --release -p impro --examples`. Install system
-Python GTK3/VTE/WebKit bindings and Pillow (`python3-pil`). The PNG comparator
+Python GTK3/VTE/WebKit bindings, `python3-gi-cairo`, and Pillow (`python3-pil`). The PNG comparator
 also supports RGB/RGBA 8-bit PNGs with only Python's standard library.
 
 Run `IMPRO_REFERENCE_DIR=/path/to/reference bash scripts/parity/run.sh --smoke`.
@@ -24,3 +24,8 @@ No masks or pixel tolerance apply. Differences include all RGBA channels; bboxes
 use exclusive right/bottom coordinates. `regions` are connected occupied 32px
 tiles, while `bbox` is the exact extent of changed pixels. Mean channel error
 includes alpha. PNG output includes source pairs, side-by-side and raw diff.
+
+On a VM without system install rights, extract the matching `python3-gi-cairo`
+package locally and set `IMPRO_PARITY_GI_PATH` to its `gi` directory. The adapter
+adds that directory to the installed GI package search path. A missing Cairo
+bridge fails before window creation.

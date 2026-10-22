@@ -23,7 +23,7 @@ SCENES = [
 ]
 
 
-def fixture(root):
+def fixture(root, reference=None):
     files = {
         'main.py': '# Example\nimport json\n\ndef greet(name: str) -> str:\n    return f"Hello {name}"\n\nprint(greet("world"))\n',
         'README.md': '# Example\n\nA small **project** with a [link](main.py).\n',
@@ -33,6 +33,10 @@ def fixture(root):
         '.impro/Notes/Welcome.md': '# Welcome\n\nRead [[Second]].\n',
         '.impro/Notes/Second.md': '# Second\n\nBack to [[Welcome]].\n',
     }
+    if reference:
+        source = reference/'tests/fixtures/gitcommit_reference.json'
+        payload = json.loads(source.read_text())
+        files['history.json'] = json.dumps(payload['stats'], indent=2)+'\n'
     for name, content in files.items():
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -56,6 +60,10 @@ def repository(root):
         (root/'main.py').write_text((root/'main.py').read_text()+'\nVALUE = 2\n')
         git('add','main.py')
         git('commit','-qm','Prepare release')
+    else:
+        text = (root/'main.py').read_text()
+        if not text.endswith('VALUE = 2\n'):
+            (root/'main.py').write_text(text+'\nVALUE = 2\n')
     return git('rev-parse','HEAD').decode().strip()
 
 
@@ -82,7 +90,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     root = out/'project'
     root.mkdir(exist_ok=True)
-    fixture(root)
+    fixture(root, Path(args.reference))
     head = repository(root)
     # A tiny noninteractive shell startup, outside the fixture project.
     shell = out/'shell'
@@ -97,7 +105,7 @@ def main():
     env = dict(os.environ, XDG_CONFIG_HOME=str(config), GDK_SCALE=args.scale,
                GDK_DPI_SCALE='1', IMPRO_REDUCE_MOTION='1', SHELL=str(shell), ENV='/dev/null',
                PS1='$ ', LC_ALL='C.UTF-8', TZ='UTC', NO_AT_BRIDGE='1',
-               IMPRO_PARITY_SETTINGS=json.dumps(values))
+               IMPRO_PARITY_SETTINGS=json.dumps(values), IMPRO_PARITY_HEAD=head)
     driver = Path(__file__).with_name('reference.py')
     rows = []
     started = time.monotonic()
@@ -110,7 +118,12 @@ def main():
                 command = ([str(binary),'scene',scene,str(root),str(image),'impro-'+theme] if side == 'impro' else
                     ['/usr/bin/python3',str(driver),'--reference',str(Path(args.reference).resolve()),
                      '--scene',scene,'--root',str(root),'--output',str(image),'--theme',theme])
-                process = subprocess.run(command, env=env, capture_output=True, timeout=45)
+                try:
+                    process = subprocess.run(command, env=env, capture_output=True, timeout=45)
+                except subprocess.TimeoutExpired as error:
+                    (out/(stem+'-'+side+'.log')).write_bytes((error.stdout or b'')+(error.stderr or b''))
+                    row.update(status='error', side=side, detail='capture timed out after 45s')
+                    break
                 (out/(stem+'-'+side+'.log')).write_bytes(process.stdout+process.stderr)
                 if process.returncode == 77:
                     row.update(status='unsupported', side=side)
@@ -121,9 +134,17 @@ def main():
                 row[side+'_sha256'] = hashlib.sha256(image.read_bytes()).hexdigest()
             else:
                 try:
-                    row.update(compare(out/(stem+'-reference.png'),out/(stem+'-impro.png'),out/stem))
-                    row['status'] = 'compared'
-                except ValueError as error:
+                    if scene == 'graph':
+                        structures = {side:json.loads((out/(stem+'-'+side+'.json')).read_text()) for side in ['reference','impro']}
+                        row['structure'] = structures
+                        row['structure_differences'] = [key for key in structures['reference'] if structures['reference'][key] != structures['impro'].get(key)]
+                        # Keep review images, but do not score unrelated layouts.
+                        compare(out/(stem+'-reference.png'),out/(stem+'-impro.png'),out/stem)
+                        row['status'] = 'structural'
+                    else:
+                        row.update(compare(out/(stem+'-reference.png'),out/(stem+'-impro.png'),out/stem))
+                        row['status'] = 'compared'
+                except (ValueError, FileNotFoundError) as error:
                     row.update(status='error', detail=str(error))
             rows.append(row)
             print(json.dumps(row, sort_keys=True), flush=True)
