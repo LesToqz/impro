@@ -130,7 +130,6 @@ impl Inner {
             "monospace"
         };
         let state = StyleState {
-            syntax: syntax.clone(),
             chrome: chrome.clone(),
             size,
             bg: bg.clone(),
@@ -144,7 +143,11 @@ impl Inner {
         };
         self.style.replace(state.clone());
         let mut palette = ui.clone();
-        for (key, value) in [("foreground", &fg), ("overlay", &overlay), ("muted", &muted)] {
+        for (key, value) in [
+            ("foreground", &fg),
+            ("overlay", &overlay),
+            ("muted", &muted),
+        ] {
             palette.insert(key.into(), value.clone());
         }
         for key in ["accent", "accent_text", "border", "sidebar_bg"] {
@@ -191,7 +194,10 @@ impl Inner {
                     ("scale", (f64::from(pixels) / 15.0).to_value()),
                     ("font-features", "kern=1".to_value()),
                     ("stretch", pango::Stretch::SemiCondensed.to_value()),
-                    ("pixels-above-lines", above_of(&format!("h{level}")).to_value()),
+                    (
+                        "pixels-above-lines",
+                        above_of(&format!("h{level}")).to_value(),
+                    ),
                     ("pixels-below-lines", 0.to_value()),
                 ],
             );
@@ -228,7 +234,10 @@ impl Inner {
             "codeblock",
             &[
                 ("family", code_font.to_value()),
-                ("size-points", (8.0f64).max(f64::from(size) - 1.25).to_value()),
+                (
+                    "size-points",
+                    (8.0f64).max(f64::from(size) - 1.25).to_value(),
+                ),
                 ("paragraph-background", surface.to_value()),
                 ("foreground", fg.to_value()),
                 ("pixels-above-lines", 3.to_value()),
@@ -286,7 +295,12 @@ impl Inner {
                     ("foreground-set", valid.to_value()),
                     (
                         "weight",
-                        (if style.is_some_and(|s| s.bold) { 700 } else { 400 }).to_value(),
+                        (if style.is_some_and(|s| s.bold) {
+                            700
+                        } else {
+                            400
+                        })
+                        .to_value(),
                     ),
                     (
                         "style",
@@ -300,7 +314,9 @@ impl Inner {
                 ],
             );
         }
-        if let (Some(table), Some(checked)) = (self.buffer.tag_table(), self.tags.borrow().get("checked")) {
+        if let (Some(table), Some(checked)) =
+            (self.buffer.tag_table(), self.tags.borrow().get("checked"))
+        {
             checked.set_priority(table.size() - 1);
         }
         self.sync_accent();

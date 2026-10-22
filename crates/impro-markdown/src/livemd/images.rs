@@ -21,7 +21,7 @@ pub struct Loaded {
 }
 
 /// Work for the background thread.
-pub(super) enum Job {
+pub(crate) enum Job {
     Image {
         id: u64,
         slot: usize,
@@ -38,7 +38,7 @@ pub(super) enum Job {
         highlighter: CodeHighlighter,
     },
 }
-struct RawImage {
+pub(super) struct RawImage {
     bytes: glib::Bytes,
     width: i32,
     height: i32,
@@ -65,7 +65,7 @@ pub(super) enum Msg {
 
 /// The worker thread and its return channel (both created on first use).
 #[derive(Default)]
-pub(super) struct Jobs {
+pub(crate) struct Jobs {
     sender: RefCell<Option<mpsc::Sender<(u64, Job)>>>,
     source: RefCell<Option<glib::SourceId>>,
     generation: Cell<u64>,
@@ -95,11 +95,15 @@ impl Jobs {
         let mut sender = self.sender.borrow_mut();
         if sender.is_none() {
             let (jobs, queue) = mpsc::channel::<(u64, Job)>();
+            #[allow(deprecated)]
             let (back, front) = glib::MainContext::channel::<Msg>(glib::Priority::DEFAULT_IDLE);
             let weak = weak.clone();
             let source = front.attach(None, move |msg| {
                 if let Some(inner) = weak.upgrade() {
-                    inner.jobs.in_flight.set(inner.jobs.in_flight.get().saturating_sub(1));
+                    inner
+                        .jobs
+                        .in_flight
+                        .set(inner.jobs.in_flight.get().saturating_sub(1));
                     inner.deliver(msg);
                 }
                 glib::ControlFlow::Continue
@@ -302,9 +306,12 @@ impl Inner {
             blocks.spans[index].0 + blocks.items[index].images[slot].rel_b
         };
         let hidden = self.tag("hidden");
-        self.buffer.apply_tag(&hidden, &self.iter(a + 1), &self.iter(end));
-        self.buffer.apply_tag(&tag, &self.iter(a), &self.iter(a + 1));
-        self.buffer.remove_tag(&hidden, &self.iter(a), &self.iter(a + 1));
+        self.buffer
+            .apply_tag(&hidden, &self.iter(a + 1), &self.iter(end));
+        self.buffer
+            .apply_tag(&tag, &self.iter(a), &self.iter(a + 1));
+        self.buffer
+            .remove_tag(&hidden, &self.iter(a), &self.iter(a + 1));
         let stale_pad = {
             let mut blocks = self.blocks.borrow_mut();
             let deco = &mut blocks.items[index];
@@ -325,7 +332,8 @@ impl Inner {
         };
         if let Some(pad) = stale_pad {
             let start = self.blocks.borrow().spans[index].0;
-            self.buffer.remove_tag(&pad, &self.iter(start), &self.iter(start + 1));
+            self.buffer
+                .remove_tag(&pad, &self.iter(start), &self.iter(start + 1));
         }
         // Realize now when the block already has widgets (it is near the viewport).
         let realized = !self.blocks.borrow().items[index].widgets.is_empty();
@@ -368,12 +376,17 @@ impl Inner {
                 .iter()
                 .filter(|b| b.painted && !b.widgets.is_empty())
                 .flat_map(|b| {
-                    b.images.iter().enumerate().filter_map(move |(k, i)| match &i.state {
-                        ImageState::Ready(l) if l.pixbuf.width() != width.min(l.natural_width) => {
-                            Some((b.id, k, i.target.clone()))
-                        }
-                        _ => None,
-                    })
+                    b.images
+                        .iter()
+                        .enumerate()
+                        .filter_map(move |(k, i)| match &i.state {
+                            ImageState::Ready(l)
+                                if l.pixbuf.width() != width.min(l.natural_width) =>
+                            {
+                                Some((b.id, k, i.target.clone()))
+                            }
+                            _ => None,
+                        })
                 })
                 .collect()
         };
@@ -465,7 +478,13 @@ impl Inner {
     }
 
     /// Reservation tag for a decoded image at paint time (cache hit on repaint).
-    pub(super) fn reserve_image(&self, out: &mut super::paint::Out, slot: usize, block_start: i32, lead: i32) {
+    pub(super) fn reserve_image(
+        &self,
+        out: &mut super::paint::Out,
+        slot: usize,
+        block_start: i32,
+        lead: i32,
+    ) {
         let image = &out.images[slot];
         let ImageState::Ready(loaded) = &image.state else {
             return;
@@ -475,10 +494,13 @@ impl Inner {
         let end = block_start + image.rel_b;
         let first = image.rel_a == 0;
         let hidden = self.tag("hidden");
-        self.buffer.apply_tag(&hidden, &self.iter(a + 1), &self.iter(end));
+        self.buffer
+            .apply_tag(&hidden, &self.iter(a + 1), &self.iter(end));
         let tag = self.image_tag(height, if first { lead } else { 0 });
-        self.buffer.apply_tag(&tag, &self.iter(a), &self.iter(a + 1));
-        self.buffer.remove_tag(&hidden, &self.iter(a), &self.iter(a + 1));
+        self.buffer
+            .apply_tag(&tag, &self.iter(a), &self.iter(a + 1));
+        self.buffer
+            .remove_tag(&hidden, &self.iter(a), &self.iter(a + 1));
         out.tags.push(tag.clone());
         if !out.applied.contains(&hidden) {
             out.applied.push(hidden);

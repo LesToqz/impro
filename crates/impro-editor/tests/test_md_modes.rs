@@ -11,7 +11,7 @@ use std::{path::PathBuf, rc::Rc};
 const GUIDE: &str = "# Project guide\n\nA **formatted** paragraph.\n\n- [ ] Review changes\n\n[Documentation](https://example.org)\n";
 
 struct Fx {
-    dir: tempfile::TempDir,
+    _dir: tempfile::TempDir,
     root: PathBuf,
     panel: EditorPanel,
     window: gtk::Window,
@@ -34,7 +34,7 @@ impl Fx {
         poll(|| !panel.is_busy());
         pump(30);
         Self {
-            dir,
+            _dir: dir,
             root,
             panel,
             window,
@@ -68,7 +68,8 @@ impl Fx {
             (*raw).key.keyval = *key;
             (*raw).key.state = state.bits();
         }
-        self.panel.handle_key(&event.downcast::<gdk::EventKey>().unwrap())
+        self.panel
+            .handle_key(&event.downcast::<gdk::EventKey>().unwrap())
     }
     fn status(&self) -> String {
         self.panel.status().text()
@@ -87,7 +88,10 @@ fn find_class(widget: &gtk::Widget, class: &str) -> Option<gtk::Widget> {
         return Some(widget.clone());
     }
     let container = widget.clone().downcast::<gtk::Container>().ok()?;
-    container.children().iter().find_map(|c| find_class(c, class))
+    container
+        .children()
+        .iter()
+        .find_map(|c| find_class(c, class))
 }
 fn toggle_of(tab: &EditorTab) -> Option<gtk::Box> {
     find_class(tab.page.upcast_ref(), "md-toggle").and_then(|w| w.downcast().ok())
@@ -125,10 +129,14 @@ fn test_project_buttons_editability_rendering_and_buffer_survival() {
         assert!(preview.is_active());
         assert!(fx.status().contains("Markdown (Preview)"));
         // Even the block holding the insertion mark stays fully rendered.
-        assert!(tab.buffer.start_iter().has_tag(&live(&tab).tag("hidden").unwrap()));
+        assert!(tab
+            .buffer
+            .start_iter()
+            .has_tag(&live(&tab).tag("hidden").unwrap()));
         assert_eq!(tab.chrome.width(), 0);
         let original = text(&tab);
-        tab.view.emit_by_name::<()>("insert-at-cursor", &[&"blocked"]);
+        tab.view
+            .emit_by_name::<()>("insert-at-cursor", &[&"blocked"]);
         fx.key(k::Return, gdk::ModifierType::empty());
         fx.panel.edit("tab");
         for (index, block) in live(&tab).blocks().iter().enumerate() {
@@ -153,7 +161,8 @@ fn test_project_buttons_editability_rendering_and_buffer_survival() {
         assert!(tab.chrome.width() > 0);
         poll(|| !tab.highlighter.pending());
         assert!(fx.status().contains("Markdown (Code)"));
-        tab.view.emit_by_name::<()>("insert-at-cursor", &[&"unsaved "]);
+        tab.view
+            .emit_by_name::<()>("insert-at-cursor", &[&"unsaved "]);
         let edited = text(&tab);
         assert_ne!(edited, original);
         preview.clicked();
@@ -268,7 +277,8 @@ fn test_root_switch_reclassifies_existing_tabs_without_losing_edits() {
         // Capture the visible position after switching back to the edited tab.
         adjustment.set_value(scroll);
         let focus = fx.window.focused_widget();
-        fx.panel.set_root(Some(&second_root.join("..").join("second")));
+        fx.panel
+            .set_root(Some(&second_root.join("..").join("second")));
         poll(|| !fx.panel.is_busy());
         fx.ready(&first);
         assert_eq!(fx.panel.root(), Some(second_root.clone()));
@@ -349,9 +359,16 @@ fn test_theme_geometry_and_screenshots() {
                 if let Some(folder) = &folder {
                     let window = fx.window.window().unwrap();
                     let pixbuf = window
-                        .pixbuf(0, 0, fx.window.allocated_width(), fx.window.allocated_height())
+                        .pixbuf(
+                            0,
+                            0,
+                            fx.window.allocated_width(),
+                            fx.window.allocated_height(),
+                        )
                         .unwrap();
-                    pixbuf.savev(folder.join(format!("{name}-{mode}.png")), "png", &[]).unwrap();
+                    pixbuf
+                        .savev(folder.join(format!("{name}-{mode}.png")), "png", &[])
+                        .unwrap();
                 }
             }
         }

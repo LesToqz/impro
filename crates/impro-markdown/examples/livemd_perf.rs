@@ -56,9 +56,14 @@ fn table_note(bytes: usize) -> String {
     let mut n = 0;
     while out.len() < bytes {
         n += 1;
-        out.push_str(&format!("### Table {n}\n\n| Name | Value | Notes |\n| --- | ---: | :---: |\n"));
+        out.push_str(&format!(
+            "### Table {n}\n\n| Name | Value | Notes |\n| --- | ---: | :---: |\n"
+        ));
         for row in 0..20 {
-            out.push_str(&format!("| item {n}-{row} | {} | **note** {row} |\n", row * 7));
+            out.push_str(&format!(
+                "| item {n}-{row} | {} | **note** {row} |\n",
+                row * 7
+            ));
         }
         out.push('\n');
     }
@@ -146,13 +151,18 @@ fn typing(run: &Run, label: &str) {
         let start = Instant::now();
         pending.set(Some(start));
         tab.buffer.begin_user_action();
-        tab.buffer.insert_at_cursor(&text[index % text.len()..index % text.len() + 1]);
+        tab.buffer
+            .insert_at_cursor(&text[index % text.len()..index % text.len() + 1]);
         tab.buffer.end_user_action();
         inserts.push(ms(start.elapsed()));
         tab.view.queue_draw();
         until(|| samples.borrow().len() > index);
         if index % 40 == 0 && std::env::var_os("PERF_TRACE").is_some() {
-            eprintln!("typed {index}: insert {:.1}ms total {:.1}ms", inserts[index], ms(start.elapsed()));
+            eprintln!(
+                "typed {index}: insert {:.1}ms total {:.1}ms",
+                inserts[index],
+                ms(start.elapsed())
+            );
         }
     }
     tab.view.disconnect(handler);
@@ -213,7 +223,10 @@ fn idle_cpu(label: &str) {
     );
 }
 fn cpu_time() -> f64 {
-    let mut value = libc::timespec { tv_sec: 0, tv_nsec: 0 };
+    let mut value = libc::timespec {
+        tv_sec: 0,
+        tv_nsec: 0,
+    };
     unsafe { libc::clock_gettime(libc::CLOCK_PROCESS_CPUTIME_ID, &mut value) };
     value.tv_sec as f64 + value.tv_nsec as f64 / 1e9
 }
@@ -269,7 +282,11 @@ fn main() {
         std::fs::write(&path, text).unwrap();
         run.panel.open_file(&path);
         let begin = Instant::now();
-        until(|| run.panel.current_tab().is_some_and(|t| livemd::for_view(&t.view).is_some_and(|l| l.enabled() && l.block_count() > 0)));
+        until(|| {
+            run.panel.current_tab().is_some_and(|t| {
+                livemd::for_view(&t.view).is_some_and(|l| l.enabled() && l.block_count() > 0)
+            })
+        });
         let tab = run.panel.current_tab().unwrap();
         let live = livemd::for_view(&tab.view).unwrap();
         let adjustment = tab.source_scroll.vadjustment();

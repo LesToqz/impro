@@ -216,7 +216,12 @@ impl Inner {
         self.view.set_left_margin(margin);
         self.view.set_right_margin(margin);
         if self.margin.replace(margin) == margin {
-            let widgets = self.blocks.borrow().items.iter().any(|b| !b.widgets.is_empty());
+            let widgets = self
+                .blocks
+                .borrow()
+                .items
+                .iter()
+                .any(|b| !b.widgets.is_empty());
             if changed || widgets {
                 self.queue_layout();
             }
@@ -227,7 +232,12 @@ impl Inner {
             .borrow()
             .iter()
             .filter_map(|(name, tag)| {
-                let inset = name.strip_prefix("indent-")?.split('-').next()?.parse().ok()?;
+                let inset = name
+                    .strip_prefix("indent-")?
+                    .split('-')
+                    .next()?
+                    .parse()
+                    .ok()?;
                 Some((inset, tag.clone()))
             })
             .collect();
@@ -235,7 +245,12 @@ impl Inner {
             tag.set_property("left-margin", margin + inset);
             tag.set_property("right-margin", margin + if inset == 16 { 16 } else { 0 });
         }
-        let widgets = self.blocks.borrow().items.iter().any(|b| !b.widgets.is_empty());
+        let widgets = self
+            .blocks
+            .borrow()
+            .items
+            .iter()
+            .any(|b| !b.widgets.is_empty());
         if changed || widgets {
             self.queue_layout();
         }
@@ -473,11 +488,11 @@ impl Inner {
         self.spent.set(std::time::Duration::ZERO);
         self.painted_burst.set(0);
         let weak = self.weak.clone();
-        let id = glib::idle_add_local_full(glib::Priority::from(priority), move || match weak
-            .upgrade()
-        {
-            Some(s) => s.step(),
-            None => glib::ControlFlow::Break,
+        let id = glib::idle_add_local_full(glib::Priority::from(priority), move || {
+            match weak.upgrade() {
+                Some(s) => s.step(),
+                None => glib::ControlFlow::Break,
+            }
         });
         *self.idle.borrow_mut() = Some((id, priority));
     }
@@ -492,7 +507,11 @@ impl Inner {
             self.idle.borrow_mut().take();
             return glib::ControlFlow::Break;
         }
-        let interactive = self.idle.borrow().as_ref().is_some_and(|(_, p)| *p < BACKGROUND);
+        let interactive = self
+            .idle
+            .borrow()
+            .as_ref()
+            .is_some_and(|(_, p)| *p < BACKGROUND);
         let mut viewport: Option<Option<(usize, usize)>> = None;
         loop {
             if started.elapsed() >= SLICE {
@@ -559,7 +578,11 @@ impl Inner {
             start = iter.offset();
         }
         let blocks = self.blocks.borrow();
-        let mut index = if blocks.len() > 0 { blocks.index(start) } else { 0 };
+        let mut index = if blocks.len() > 0 {
+            blocks.index(start)
+        } else {
+            0
+        };
         while index > 0 && blocks.spans[index - 1].0 == start {
             index -= 1;
         }
@@ -735,7 +758,6 @@ impl Inner {
             }
             let focus = blocks.index(focus);
             *self.aim.borrow_mut() = Aim {
-                focus,
                 down: focus,
                 up: focus as isize - 1,
                 flip: false,

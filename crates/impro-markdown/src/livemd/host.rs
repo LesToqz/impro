@@ -17,7 +17,11 @@ impl TableHost for Host {
     fn silent(&self, enter: bool) {
         if let Some(s) = self.inner.upgrade() {
             let count = s.silent.get();
-            s.silent.set(if enter { count + 1 } else { count.saturating_sub(1) });
+            s.silent.set(if enter {
+                count + 1
+            } else {
+                count.saturating_sub(1)
+            });
         }
     }
     fn replacement(&self, block: &TableBlock, widget: &gtk::Widget, height: i32) {

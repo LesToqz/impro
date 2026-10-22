@@ -25,7 +25,10 @@ fn main() {
     std::fs::write(&note, &text).expect("note");
     if let Ok(source) = std::env::var("IMPRO_DEMO_ASSETS") {
         for entry in std::fs::read_dir(source).into_iter().flatten().flatten() {
-            let _ = std::fs::copy(entry.path(), note.parent().expect("notes dir").join(entry.file_name()));
+            let _ = std::fs::copy(
+                entry.path(),
+                note.parent().expect("notes dir").join(entry.file_name()),
+            );
         }
     }
     gtk::init().expect("GTK display");
@@ -33,7 +36,10 @@ fn main() {
     impro_editor::init();
     impro_markdown::init();
     let theme = impro_core::themes::get_theme(
-        std::env::var("IMPRO_DEMO_THEME").ok().as_deref().or(Some("impro-dark")),
+        std::env::var("IMPRO_DEMO_THEME")
+            .ok()
+            .as_deref()
+            .or(Some("impro-dark")),
     );
     impro_ui::apply_style(Some(theme)).expect("theme CSS");
     let panel = EditorPanel::new(Some(&root));

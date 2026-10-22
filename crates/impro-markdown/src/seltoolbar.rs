@@ -23,11 +23,26 @@ use std::{
 const ENABLED_KEY: &str = "impro-selection-toolbar-enabled";
 const CONTROLS: [(&str, &str, &str, &str); 7] = [
     ("bold", "Bold (Ctrl+B)", "format-text-bold-symbolic", "B"),
-    ("italic", "Italic (Ctrl+I)", "format-text-italic-symbolic", "I"),
-    ("strike", "Strikethrough (~~)", "format-text-strikethrough-symbolic", "S"),
+    (
+        "italic",
+        "Italic (Ctrl+I)",
+        "format-text-italic-symbolic",
+        "I",
+    ),
+    (
+        "strike",
+        "Strikethrough (~~)",
+        "format-text-strikethrough-symbolic",
+        "S",
+    ),
     ("inline_code", "Inline code (`)", "", "‹›"),
     ("link", "Link ([text](url))", "insert-link-symbolic", "↗"),
-    ("turn", "Turn into (Text, H1, H2, H3, lists, quote)", "", "H⌄"),
+    (
+        "turn",
+        "Turn into (Text, H1, H2, H3, lists, quote)",
+        "",
+        "H⌄",
+    ),
     ("copy", "Copy (Ctrl+C)", "edit-copy-symbolic", "⧉"),
 ];
 
@@ -146,13 +161,14 @@ impl SelectionToolbar {
             button.set_can_focus(false);
             button.set_relief(gtk::ReliefStyle::None);
             button.set_size_request(28, 28);
-            let child: gtk::Widget = if !icon.is_empty() && theme.as_ref().is_some_and(|t| t.has_icon(icon)) {
-                let image = gtk::Image::from_icon_name(Some(icon), gtk::IconSize::Menu);
-                image.set_pixel_size(16);
-                image.upcast()
-            } else {
-                gtk::Label::new(Some(glyph)).upcast()
-            };
+            let child: gtk::Widget =
+                if !icon.is_empty() && theme.as_ref().is_some_and(|t| t.has_icon(icon)) {
+                    let image = gtk::Image::from_icon_name(Some(icon), gtk::IconSize::Menu);
+                    image.set_pixel_size(16);
+                    image.upcast()
+                } else {
+                    gtk::Label::new(Some(glyph)).upcast()
+                };
             button.add(&child);
             button.set_tooltip_text(Some(tooltip));
             if let Some(accessible) = button.accessible() {
@@ -286,7 +302,9 @@ impl SelectionToolbar {
 
 impl Inner {
     fn track<O: IsA<glib::Object>>(&self, object: &O, id: glib::SignalHandlerId) {
-        self.handlers.borrow_mut().push((object.clone().upcast(), id));
+        self.handlers
+            .borrow_mut()
+            .push((object.clone().upcast(), id));
     }
 
     fn connect(&self) {
@@ -383,7 +401,10 @@ impl Inner {
             }
         });
         self.track(view, id);
-        if let Some(parent) = view.parent().and_then(|p| p.downcast::<gtk::ScrolledWindow>().ok()) {
+        if let Some(parent) = view
+            .parent()
+            .and_then(|p| p.downcast::<gtk::ScrolledWindow>().ok())
+        {
             for adjustment in [parent.vadjustment(), parent.hadjustment()] {
                 let w = self.weak.clone();
                 let id = adjustment.connect_value_changed(move |_| {
@@ -401,7 +422,11 @@ impl Inner {
         for (object, id) in self.top_handlers.borrow_mut().drain(..) {
             object.disconnect(id);
         }
-        let Some(top) = self.view.toplevel().and_then(|t| t.downcast::<gtk::Window>().ok()) else {
+        let Some(top) = self
+            .view
+            .toplevel()
+            .and_then(|t| t.downcast::<gtk::Window>().ok())
+        else {
             return;
         };
         let w = self.weak.clone();
@@ -416,7 +441,9 @@ impl Inner {
             }
             glib::Propagation::Proceed
         });
-        self.top_handlers.borrow_mut().push((top.clone().upcast(), id));
+        self.top_handlers
+            .borrow_mut()
+            .push((top.clone().upcast(), id));
         let w = self.weak.clone();
         let id = top.connect_focus_out_event(move |_, _| {
             if let Some(s) = w.upgrade() {
@@ -429,7 +456,11 @@ impl Inner {
 
     fn hook_slash(&self) {
         let slash = slashmenu::for_view(&self.view).map(|m| m.popover());
-        let hooked = self.slash_hook.borrow().as_ref().and_then(|(w, _)| w.upgrade());
+        let hooked = self
+            .slash_hook
+            .borrow()
+            .as_ref()
+            .and_then(|(w, _)| w.upgrade());
         if hooked == slash {
             return;
         }
@@ -515,7 +546,8 @@ impl Inner {
         }
         let mut rect;
         if first.y() == last.y() {
-            if last.x() + last.width() <= visible.x() || first.x() >= visible.x() + visible.width() {
+            if last.x() + last.width() <= visible.x() || first.x() >= visible.x() + visible.width()
+            {
                 return None;
             }
             let x = first.x().max(visible.x());
@@ -529,12 +561,14 @@ impl Inner {
                     rect = self.view.iter_location(&iter);
                 }
             }
-            let x = visible.x().max(rect.x().min(visible.x() + visible.width() - 1));
+            let x = visible
+                .x()
+                .max(rect.x().min(visible.x() + visible.width() - 1));
             rect = gdk::Rectangle::new(x, rect.y(), rect.width().max(1), rect.height());
         }
-        let (x, y) = self
-            .view
-            .buffer_to_window_coords(gtk::TextWindowType::Widget, rect.x(), rect.y());
+        let (x, y) =
+            self.view
+                .buffer_to_window_coords(gtk::TextWindowType::Widget, rect.x(), rect.y());
         Some(gdk::Rectangle::new(x, y, rect.width(), rect.height()))
     }
 
@@ -572,7 +606,8 @@ impl Inner {
             .text(&self.buffer.start_iter(), &self.buffer.end_iter(), true)
             .map(|s| s.to_string())
             .unwrap_or_default();
-        let active = notes::selection_formats(&document, selection.0 as usize, selection.1 as usize);
+        let active =
+            notes::selection_formats(&document, selection.0 as usize, selection.1 as usize);
         for (command, button) in &self.buttons {
             let context = button.style_context();
             if active.contains_key(command) {
@@ -583,7 +618,11 @@ impl Inner {
             if let Some(accessible) = button.accessible() {
                 gtk::prelude::AtkObjectExt::set_description(
                     &accessible,
-                    if active.contains_key(command) { "Active" } else { "" },
+                    if active.contains_key(command) {
+                        "Active"
+                    } else {
+                        ""
+                    },
                 );
             }
         }
@@ -629,9 +668,12 @@ impl Inner {
             .text(&self.buffer.start_iter(), &self.buffer.end_iter(), true)
             .map(|s| s.to_string())
             .unwrap_or_default();
-        let Ok(edit) =
-            notes::apply_selection_command(command, &document, selection.0 as isize, selection.1 as isize)
-        else {
+        let Ok(edit) = notes::apply_selection_command(
+            command,
+            &document,
+            selection.0 as isize,
+            selection.1 as isize,
+        ) else {
             return;
         };
         self.editing.set(true);

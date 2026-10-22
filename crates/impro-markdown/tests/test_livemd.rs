@@ -78,7 +78,9 @@ impl Fx {
                 (rect.y(), rect.y() + rect.height())
             })
             .collect();
-        (0..rows.len() - 1).map(|i| rows[i + 1].0 - rows[i].1).collect()
+        (0..rows.len() - 1)
+            .map(|i| rows[i + 1].0 - rows[i].1)
+            .collect()
     }
 }
 fn char_len(text: &str) -> i32 {
@@ -138,7 +140,10 @@ fn test_placeholder_tracks_empty_caret_line_and_mode_without_source_edits() {
         let placeholder = fx.live.placeholder().expect("placeholder");
         assert_eq!(placeholder.text(), "Type '/' for commands");
         assert!(placeholder.is_visible());
-        let caret = fx.tab.buffer.iter_at_mark(&fx.tab.buffer.get_insert().unwrap());
+        let caret = fx
+            .tab
+            .buffer
+            .iter_at_mark(&fx.tab.buffer.get_insert().unwrap());
         assert!(!caret.has_tag(&fx.live.tag("blank").unwrap()));
         fx.at(fx.index_of("text") + 1);
         fx.ready();
@@ -168,14 +173,11 @@ fn test_code_copy_reveals_on_card_hover_and_hides_when_pointer_leaves() {
         let tools = fx.widgets("tools")[0].clone();
         let button = livemd::tools_copy_button(&tools).expect("copy button");
         assert_eq!(button.opacity(), 0.0);
-        let rect = fx
-            .tab
-            .view
-            .iter_location(&fx.tab.buffer.iter_at_offset(11));
-        let (x, y) = fx
-            .tab
-            .view
-            .buffer_to_window_coords(gtk::TextWindowType::Widget, rect.x(), rect.y());
+        let rect = fx.tab.view.iter_location(&fx.tab.buffer.iter_at_offset(11));
+        let (x, y) =
+            fx.tab
+                .view
+                .buffer_to_window_coords(gtk::TextWindowType::Widget, rect.x(), rect.y());
         fx.live.pointer_moved(f64::from(x), f64::from(y));
         assert_eq!(button.opacity(), 1.0);
         fx.live.pointer_left(false);
@@ -188,7 +190,10 @@ fn test_code_copy_reveals_on_card_hover_and_hides_when_pointer_leaves() {
 struct Lcg(u64);
 impl Lcg {
     fn below(&mut self, n: usize) -> usize {
-        self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        self.0 = self
+            .0
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         ((self.0 >> 33) as usize) % n
     }
 }
@@ -226,14 +231,24 @@ fn test_scripted_edits_always_equal_expected_source() {
             let joined: String = fx.live.blocks().iter().map(|b| b.text.clone()).collect();
             assert_eq!(joined, want, "{index}");
             let blocks = fx.live.blocks();
-            assert!(blocks.iter().zip(blocks.iter().skip(1)).all(|(x, y)| x.end == y.start), "{index}");
+            assert!(
+                blocks
+                    .iter()
+                    .zip(blocks.iter().skip(1))
+                    .all(|(x, y)| x.end == y.start),
+                "{index}"
+            );
         }
         let saved = Rc::new(RefCell::new(None));
         let flag = saved.clone();
-        fx.h.panel.save_current(move |ok| *flag.borrow_mut() = Some(ok));
+        fx.h.panel
+            .save_current(move |ok| *flag.borrow_mut() = Some(ok));
         poll(|| saved.borrow().is_some());
         assert_eq!(*saved.borrow(), Some(true));
-        assert_eq!(std::fs::read_to_string(&fx.path).unwrap(), expected.iter().collect::<String>());
+        assert_eq!(
+            std::fs::read_to_string(&fx.path).unwrap(),
+            expected.iter().collect::<String>()
+        );
     });
 }
 
@@ -247,7 +262,10 @@ fn test_checkbox_is_one_undoable_edit() {
             .iter()
             .filter_map(|w| w.clone().downcast::<gtk::CheckButton>().ok())
             .collect();
-        assert_eq!(boxes.iter().map(|c| c.is_active()).collect::<Vec<_>>(), [false, true]);
+        assert_eq!(
+            boxes.iter().map(|c| c.is_active()).collect::<Vec<_>>(),
+            [false, true]
+        );
         assert!(boxes.iter().all(|c| c.is_sensitive()));
         let history = fx.tab.history_len();
         boxes[0].clicked();
@@ -289,7 +307,7 @@ fn test_list_continuation_termination_indent_and_backspace() {
             assert_eq!(fx.text(), format!("{source}{continuation}"));
         }
         fx.open("- item", "indent.md");
-        fx.h.panel.set_indent(false, 2);
+        let _ = fx.h.panel.set_indent(false, 2);
         fx.key(k::Tab);
         assert_eq!(fx.text(), "  - item");
         assert_eq!(fx.tab.cursor(), 8);
@@ -319,10 +337,20 @@ fn test_fenced_copy_exact_code_highlighting_and_feedback() {
         let boxes = fx.widgets("tools");
         assert_eq!(boxes.len(), 3);
         let clipboard = gtk::Clipboard::default(&gdk::Display::default().unwrap()).unwrap();
-        for (tools, expected) in boxes.iter().zip(["def f():\n\treturn \"<&>\"\n", "printf hi\n", ""]) {
+        for (tools, expected) in
+            boxes
+                .iter()
+                .zip(["def f():\n\treturn \"<&>\"\n", "printf hi\n", ""])
+        {
             let button = livemd::tools_copy_button(tools).unwrap();
             button.clicked();
-            assert_eq!(clipboard.wait_for_text().map(|s| s.to_string()).unwrap_or_default(), expected);
+            assert_eq!(
+                clipboard
+                    .wait_for_text()
+                    .map(|s| s.to_string())
+                    .unwrap_or_default(),
+                expected
+            );
             assert_eq!(button.label().unwrap(), "Copied");
         }
         poll(|| {
@@ -360,7 +388,12 @@ fn test_tables_grid_alignment_wrapping_escaped_pipes_and_entry() {
             assert!(cell.widget.style_context().has_class("live-table-header"));
         }
         assert_eq!(view.cell(1, 1).unwrap().label.text(), "left | right");
-        assert!(view.cell(1, 0).unwrap().label.label().contains("<b>bold</b>"));
+        assert!(view
+            .cell(1, 0)
+            .unwrap()
+            .label
+            .label()
+            .contains("<b>bold</b>"));
         // Entering a cell keeps the grid and never reveals the source.
         let cell = view.cell(1, 1).unwrap();
         let event = {
@@ -409,25 +442,33 @@ fn test_links_plain_click_ctrl_click_hover_and_wiki() {
         std::fs::write(&other, "other").unwrap();
         let opened = Rc::new(RefCell::new(Vec::<String>::new()));
         let log = opened.clone();
-        fx.live
-            .set_uri_opener(Some(Rc::new(move |uri| log.borrow_mut().push(uri.to_string()))));
+        fx.live.set_uri_opener(Some(Rc::new(move |uri| {
+            log.borrow_mut().push(uri.to_string())
+        })));
         assert!(fx.live.activate_link("https://example.org"));
         assert_eq!(*opened.borrow(), ["https://example.org"]);
         assert!(fx.live.activate_link("[[other]]"));
         poll(|| fx.h.panel.tab_for_path(&other).is_some());
         // A plain click on a rendered link follows it; a revealed one needs Ctrl.
-        assert!(fx.live.press_link(Some(("https://example.org".into(), false)), false));
-        assert!(!fx.live.press_link(Some(("https://example.org".into(), true)), false));
-        assert!(fx.live.press_link(Some(("https://example.org".into(), true)), true));
+        assert!(fx
+            .live
+            .press_link(Some(("https://example.org".into(), false)), false));
+        assert!(!fx
+            .live
+            .press_link(Some(("https://example.org".into(), true)), false));
+        assert!(fx
+            .live
+            .press_link(Some(("https://example.org".into(), true)), true));
         assert_eq!(opened.borrow().len(), 3);
         // Hovering a link switches the pointer cursor.
         fx.live.pointer_moved(60.0, 40.0);
         let window = TextViewExt::window(&fx.tab.view, gtk::TextWindowType::Text).unwrap();
         let rect = fx.tab.view.iter_location(&fx.tab.buffer.iter_at_offset(3));
-        let (x, y) = fx
-            .tab
-            .view
-            .buffer_to_window_coords(gtk::TextWindowType::Widget, rect.x() + 2, rect.y() + 3);
+        let (x, y) = fx.tab.view.buffer_to_window_coords(
+            gtk::TextWindowType::Widget,
+            rect.x() + 2,
+            rect.y() + 3,
+        );
         let link = fx.live.link_at(f64::from(x), f64::from(y));
         assert_eq!(link, Some(("https://example.org".into(), false)));
         fx.live.pointer_moved(f64::from(x), f64::from(y));
@@ -439,13 +480,15 @@ fn test_links_plain_click_ctrl_click_hover_and_wiki() {
 fn test_local_images_placeholder_and_no_network() {
     run(|| {
         let h = Harness::new();
-        let pixbuf = gdk_pixbuf::Pixbuf::new(gdk_pixbuf::Colorspace::Rgb, false, 8, 30, 20).unwrap();
+        let pixbuf =
+            gdk_pixbuf::Pixbuf::new(gdk_pixbuf::Colorspace::Rgb, false, 8, 30, 20).unwrap();
         pixbuf.fill(0x3366_99ff);
         pixbuf.savev(h.path("image.png"), "png", &[]).unwrap();
         let source = "![local](image.png)\n\n![missing](none.png)\n\n![remote](https://example.org/x.png)\n\nend";
         let tab = h.open("note.md", source);
         let live = live_of(&tab);
-        tab.buffer.place_cursor(&tab.buffer.iter_at_offset(char_len(source)));
+        tab.buffer
+            .place_cursor(&tab.buffer.iter_at_offset(char_len(source)));
         settle(&live);
         poll(|| live.jobs_in_flight() == 0);
         settle(&live);
@@ -462,12 +505,19 @@ fn test_local_images_placeholder_and_no_network() {
 #[test]
 fn test_incremental_5000_lines_and_typing_burst() {
     run(|| {
-        let source = format!("# Heading\n\n{}\nend", "paragraph **bold** and `code`\n".repeat(4997));
+        let source = format!(
+            "# Heading\n\n{}\nend",
+            "paragraph **bold** and `code`\n".repeat(4997)
+        );
         let fx = Fx::new(&source);
         assert_eq!(fx.live.block_count(), 5001);
         fx.live.position();
         assert!(fx.live.detail_labels().len() < 100);
-        assert!(fx.live.max_slice_time() < std::time::Duration::from_millis(16), "{:?}", fx.live.max_slice_time());
+        assert!(
+            fx.live.max_slice_time() < std::time::Duration::from_millis(16),
+            "{:?}",
+            fx.live.max_slice_time()
+        );
         let before = fx.live.painted_blocks();
         fx.at(fx.index_of("paragraph") + 4);
         fx.ready();
@@ -479,8 +529,12 @@ fn test_incremental_5000_lines_and_typing_burst() {
             beat.set(beat.get() + 1);
             glib::ControlFlow::Continue
         });
+        #[allow(clippy::explicit_counter_loop)]
         for c in "typing burst".chars() {
-            let mut cursor = fx.tab.buffer.iter_at_mark(&fx.tab.buffer.get_insert().unwrap());
+            let mut cursor = fx
+                .tab
+                .buffer
+                .iter_at_mark(&fx.tab.buffer.get_insert().unwrap());
             fx.tab.buffer.insert(&mut cursor, &c.to_string());
             expected.insert(at, c);
             at += 1;
@@ -488,7 +542,11 @@ fn test_incremental_5000_lines_and_typing_burst() {
         fx.ready();
         heartbeat.remove();
         assert_eq!(fx.text(), expected.iter().collect::<String>());
-        assert!(fx.live.painted_blocks() - before < 20, "{}", fx.live.painted_blocks() - before);
+        assert!(
+            fx.live.painted_blocks() - before < 20,
+            "{}",
+            fx.live.painted_blocks() - before
+        );
         assert!(ticks.get() > 0);
         assert!(fx.live.max_slice_time() < std::time::Duration::from_millis(16));
     });
@@ -522,7 +580,13 @@ fn test_theme_font_accent_and_sample_screenshots() {
         let theme = last.unwrap();
         let before: gdk::RGBA = fx.live.tag("link").unwrap().property("foreground-rgba");
         impro_ui::apply_theme(theme, Some("#36995f"), None, None).unwrap();
-        poll(|| fx.live.tag("link").unwrap().property::<gdk::RGBA>("foreground-rgba") != before);
+        poll(|| {
+            fx.live
+                .tag("link")
+                .unwrap()
+                .property::<gdk::RGBA>("foreground-rgba")
+                != before
+        });
         let accent = impro_ui::current_theme().unwrap().ui["accent_text"].clone();
         let link: gdk::RGBA = fx.live.tag("link").unwrap().property("foreground-rgba");
         assert_eq!(link, gdk::RGBA::parse(&accent).unwrap());
@@ -541,9 +605,13 @@ fn test_theme_font_accent_and_sample_screenshots() {
 #[test]
 fn test_blocks_keep_their_rhythm_without_pixels_below_lines() {
     run(|| {
-        let mut fx = Fx::new("plain\nnext\n# head\ntail\n> quote\n> more\n- item\n- item2\n1. one\n2. two\n");
+        let mut fx = Fx::new(
+            "plain\nnext\n# head\ntail\n> quote\n> more\n- item\n- item2\n1. one\n2. two\n",
+        );
         assert_eq!(
-            fx.gaps(&["plain", "next", "head", "tail", "quote", "more", "item\n", "item2", "one", "two"]),
+            fx.gaps(&[
+                "plain", "next", "head", "tail", "quote", "more", "item\n", "item2", "one", "two"
+            ]),
             [8, 24, 12, 16, 20, 12, 8, 8, 8]
         );
         fx.open("## head\n### sub\n", "headings.md");
@@ -554,7 +622,9 @@ fn test_blocks_keep_their_rhythm_without_pixels_below_lines() {
 fn below_tags(buffer: &gtk::TextBuffer) -> Vec<gtk::TextTag> {
     let mut found = Vec::new();
     buffer.tag_table().unwrap().foreach(|tag| {
-        if tag.property::<bool>("pixels-below-lines-set") && tag.property::<i32>("pixels-below-lines") != 0 {
+        if tag.property::<bool>("pixels-below-lines-set")
+            && tag.property::<i32>("pixels-below-lines") != 0
+        {
             found.push(tag.clone());
         }
     });
@@ -565,7 +635,8 @@ fn below_tags(buffer: &gtk::TextBuffer) -> Vec<gtk::TextTag> {
 fn test_no_tag_or_view_leaves_a_gap_below_a_line() {
     run(|| {
         let h = Harness::new();
-        let pixbuf = gdk_pixbuf::Pixbuf::new(gdk_pixbuf::Colorspace::Rgb, false, 8, 30, 20).unwrap();
+        let pixbuf =
+            gdk_pixbuf::Pixbuf::new(gdk_pixbuf::Colorspace::Rgb, false, 8, 30, 20).unwrap();
         pixbuf.fill(0x3366_99ff);
         pixbuf.savev(h.path("pic.png"), "png", &[]).unwrap();
         let source = "# one\n# two\n\n- a\n  - b\n- [ ] c\n\n> q\n> > r\n\n---\n\n![pic](pic.png)\n\n```py\nx\ny\n```\n```\nz\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\n[l](https://example.org) `c` **b**\n";
@@ -602,15 +673,23 @@ fn test_neighbours_follow_edits_to_the_block_above() {
         fx.tab.buffer.delete(&mut a, &mut b);
         fx.ready();
         assert_eq!(fx.gaps(&["alpha", "beta"]), [8]);
-        fx.tab.buffer.insert(&mut fx.tab.buffer.iter_at_offset(6), "> quote\n");
+        fx.tab
+            .buffer
+            .insert(&mut fx.tab.buffer.iter_at_offset(6), "> quote\n");
         fx.ready();
         assert_eq!(fx.gaps(&["alpha", "quote", "beta"]), [16, 12]);
-        let (mut a, mut b) = (fx.tab.buffer.iter_at_offset(6), fx.tab.buffer.iter_at_offset(14));
+        let (mut a, mut b) = (
+            fx.tab.buffer.iter_at_offset(6),
+            fx.tab.buffer.iter_at_offset(14),
+        );
         fx.tab.buffer.delete(&mut a, &mut b);
         fx.ready();
         assert_eq!(fx.text(), "alpha\nbeta\n");
         assert_eq!(fx.gaps(&["alpha", "beta"]), [8]);
-        assert_eq!(fx.live.blocks().iter().map(|b| b.lead).collect::<Vec<_>>(), [0, 6]);
+        assert_eq!(
+            fx.live.blocks().iter().map(|b| b.lead).collect::<Vec<_>>(),
+            [0, 6]
+        );
     });
 }
 
@@ -658,7 +737,9 @@ fn test_code_card_paints_one_uniform_surface_down_to_its_footer() {
             .pixbuf(0, 0, window.allocated_width(), window.allocated_height())
             .unwrap();
         let a = card.allocation();
-        let (x, y) = card.translate_coordinates(window, a.width() - 60, 0).unwrap();
+        let (x, y) = card
+            .translate_coordinates(window, a.width() - 60, 0)
+            .unwrap();
         let data = pixels.read_pixel_bytes();
         let bytes = data.as_ref();
         let (stride, channels) = (pixels.rowstride(), pixels.n_channels());

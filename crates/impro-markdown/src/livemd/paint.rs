@@ -164,9 +164,7 @@ impl Inner {
                     d.images
                         .iter()
                         .filter_map(|i| match &i.state {
-                            ImageState::Ready(loaded) => {
-                                Some((i.target.clone(), loaded.clone()))
-                            }
+                            ImageState::Ready(loaded) => Some((i.target.clone(), loaded.clone())),
                             _ => None,
                         })
                         .collect::<Vec<_>>()
@@ -216,12 +214,22 @@ impl Inner {
         let hidden = self.tag("hidden");
         let end = b - i32::from(text.ends_with('\n'));
         if end > a + 1 {
-            self.buffer.apply_tag(&hidden, &self.iter(a + 1), &self.iter(end));
+            self.buffer
+                .apply_tag(&hidden, &self.iter(a + 1), &self.iter(end));
             out.mark(&hidden);
         }
         let tag = gtk::TextTag::new(None);
         tag.set_property("size-points", 1.0f64);
-        tag.set_property("foreground", self.style.borrow().chrome.get("gutter_bg").cloned().unwrap_or_default().as_str());
+        tag.set_property(
+            "foreground",
+            self.style
+                .borrow()
+                .chrome
+                .get("gutter_bg")
+                .cloned()
+                .unwrap_or_default()
+                .as_str(),
+        );
         tag.set_property("pixels-above-lines", height + lead);
         tag.set_property("pixels-below-lines", 0);
         if let Some(t) = self.buffer.tag_table() {
@@ -235,7 +243,8 @@ impl Inner {
             let pad = self.pad_tag(self.view_gaps.get().0 + self.view_gaps.get().1);
             self.apply_tag(out, &pad, a + 1, b);
         }
-        self.buffer.apply_tag(&tag, &self.iter(a), &self.iter(a + 1));
+        self.buffer
+            .apply_tag(&tag, &self.iter(a), &self.iter(a + 1));
     }
 
     fn paint_table(&self, out: &mut Out, id: u64, text: &str, a: i32, b: i32, lead: i32) {
@@ -267,12 +276,21 @@ impl Inner {
         self.apply_named(out, "codeblock", a, b);
         self.indent(out, Kind::Codeblock, a, b, 16, 0);
         let hidden = self.tag("hidden");
-        self.apply_tag(out, &hidden, a, a.max(start - i32::from(first.ends_with('\n'))));
+        self.apply_tag(
+            out,
+            &hidden,
+            a,
+            a.max(start - i32::from(first.ends_with('\n'))),
+        );
         if closed {
             self.apply_tag(out, &hidden, end, b - i32::from(text.ends_with('\n')));
         }
         self.apply_named(out, "code-opening", a, start);
-        let interior = if closed { lines.len() as i32 - 2 } else { lines.len() as i32 - 1 };
+        let interior = if closed {
+            lines.len() as i32 - 2
+        } else {
+            lines.len() as i32 - 1
+        };
         out.spacing = Some("code-opening");
         if interior > 1 {
             let second = lines[1].chars().count() as i32;
@@ -347,7 +365,8 @@ impl Inner {
         self.unpainted.set(self.unpainted.get().saturating_sub(1));
         if let Some(above) = pad_tag {
             let tag = self.pad_tag(above);
-            self.buffer.apply_tag(&tag, &self.iter(a), &self.iter(a + 1));
+            self.buffer
+                .apply_tag(&tag, &self.iter(a), &self.iter(a + 1));
             let mut blocks = self.blocks.borrow_mut();
             if let Some(deco) = blocks.items.get_mut(index) {
                 deco.pad = Some(tag.clone());
@@ -389,7 +408,8 @@ impl Inner {
         // Replace the pad tag on the first character.
         let old_pad = self.blocks.borrow_mut().items[index].pad.take();
         if let Some(pad) = old_pad {
-            self.buffer.remove_tag(&pad, &self.iter(span.0), &self.iter(span.0 + 1));
+            self.buffer
+                .remove_tag(&pad, &self.iter(span.0), &self.iter(span.0 + 1));
         }
         if let (Some(name), true) = (spacing, lead != 0) {
             let tag = self.pad_tag(above_of(name) + lead);
@@ -517,4 +537,3 @@ impl Inner {
         unsafe { widget.destroy() };
     }
 }
-

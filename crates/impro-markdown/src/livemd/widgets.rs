@@ -1,9 +1,6 @@
 //! Realizing the widgets a painted block asked for: list markers, task boxes,
 //! quote bars, dividers, images, code cards and tables.
-use super::{
-    model::Want,
-    CodeInfo, ImageState, Inner, Role, Slot,
-};
+use super::{model::Want, CodeInfo, ImageState, Inner, Role, Slot};
 use gtk::prelude::*;
 use std::rc::Rc;
 
@@ -100,15 +97,24 @@ impl Inner {
                     image_index += 1;
                     let state = {
                         let blocks = self.blocks.borrow();
-                        blocks.items.get(index).and_then(|d| d.images.get(k)).map(|i| match &i.state {
-                            ImageState::Ready(l) => Some(l.pixbuf.clone()),
-                            _ => None,
-                        })
+                        blocks
+                            .items
+                            .get(index)
+                            .and_then(|d| d.images.get(k))
+                            .map(|i| match &i.state {
+                                ImageState::Ready(l) => Some(l.pixbuf.clone()),
+                                _ => None,
+                            })
                     };
                     match state {
                         Some(Some(pixbuf)) => {
                             let image = gtk::Image::from_pixbuf(Some(&pixbuf));
-                            slots.push(self.attach(image.upcast_ref(), rel, Role::Image, pixbuf.height()));
+                            slots.push(self.attach(
+                                image.upcast_ref(),
+                                rel,
+                                Role::Image,
+                                pixbuf.height(),
+                            ));
                         }
                         Some(None) => self.request_image(id, k),
                         None => {}
@@ -156,7 +162,11 @@ impl Inner {
         let tables = self.tables.borrow().clone();
         if let Some(tables) = &tables {
             // Keep the table that holds the cell being edited.
-            if tables.views().iter().any(|v| v.block().id == id && v.focused()) {
+            if tables
+                .views()
+                .iter()
+                .any(|v| v.block().id == id && v.focused())
+            {
                 return;
             }
         }
@@ -256,7 +266,9 @@ impl Inner {
         });
         let (weak, strong, host) = (self.weak.clone(), Rc::downgrade(&state), tools.downgrade());
         button.connect_focus_out_event(move |_, _| {
-            if let (Some(s), Some(t), Some(host)) = (weak.upgrade(), strong.upgrade(), host.upgrade()) {
+            if let (Some(s), Some(t), Some(host)) =
+                (weak.upgrade(), strong.upgrade(), host.upgrade())
+            {
                 let hovered = s.hover_tools.borrow().as_ref() == Some(host.upcast_ref());
                 s.reveal_copy(&t, hovered);
             }
@@ -299,7 +311,7 @@ impl Inner {
         let at = start + relative;
         let first = self.iter(at);
         let value = if first.char() == Some(' ') { "x" } else { " " };
-        let mut last = first.clone();
+        let mut last = first;
         last.forward_char();
         self.buffer.begin_user_action();
         let (mut a, mut b) = (first, last);

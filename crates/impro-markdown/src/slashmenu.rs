@@ -38,7 +38,10 @@ pub fn match_score(command: &SlashCommand, query: &str) -> Option<usize> {
             scores.push(0);
         } else if value.starts_with(&query) {
             scores.push(10 + length - needle.len());
-        } else if WORD.find_iter(&value).any(|w| w.as_str().starts_with(&query)) {
+        } else if WORD
+            .find_iter(&value)
+            .any(|w| w.as_str().starts_with(&query))
+        {
             scores.push(100 + length);
         } else {
             let hay: Vec<char> = value.chars().collect();
@@ -272,7 +275,9 @@ impl SlashMenu {
 
 impl Inner {
     fn connect_to<O: IsA<glib::Object>>(&self, object: &O, id: glib::SignalHandlerId) {
-        self.handlers.borrow_mut().push((object.clone().upcast(), id));
+        self.handlers
+            .borrow_mut()
+            .push((object.clone().upcast(), id));
     }
 
     fn build(&self, container: &gtk::Box) {
@@ -327,11 +332,9 @@ impl Inner {
         });
         self.connect_to(view, id);
         let w = self.weak.clone();
-        let id = view.connect_key_press_event(move |_, event| {
-            match w.upgrade() {
-                Some(s) if s.handle_key(event) => glib::Propagation::Stop,
-                _ => glib::Propagation::Proceed,
-            }
+        let id = view.connect_key_press_event(move |_, event| match w.upgrade() {
+            Some(s) if s.handle_key(event) => glib::Propagation::Stop,
+            _ => glib::Propagation::Proceed,
         });
         self.connect_to(view, id);
         let w = self.weak.clone();
@@ -373,7 +376,10 @@ impl Inner {
         });
         self.connect_to(view, id);
         self.hierarchy_changed();
-        if let Some(parent) = view.parent().and_then(|p| p.downcast::<gtk::ScrolledWindow>().ok()) {
+        if let Some(parent) = view
+            .parent()
+            .and_then(|p| p.downcast::<gtk::ScrolledWindow>().ok())
+        {
             for adjustment in [parent.vadjustment(), parent.hadjustment()] {
                 let w = self.weak.clone();
                 let id = adjustment.connect_value_changed(move |_| {
@@ -390,7 +396,11 @@ impl Inner {
         if let Some((object, id)) = self.top_handler.borrow_mut().take() {
             object.disconnect(id);
         }
-        if let Some(top) = self.view.toplevel().and_then(|t| t.downcast::<gtk::Window>().ok()) {
+        if let Some(top) = self
+            .view
+            .toplevel()
+            .and_then(|t| t.downcast::<gtk::Window>().ok())
+        {
             let w = self.weak.clone();
             let id = top.connect_button_press_event(move |_, event| {
                 let Some(s) = w.upgrade() else {
@@ -499,7 +509,11 @@ impl Inner {
             return;
         }
         let document = self.text();
-        let before = char_slice(&document, (offset - 1).max(0) as usize, offset.max(0) as usize);
+        let before = char_slice(
+            &document,
+            (offset - 1).max(0) as usize,
+            offset.max(0) as usize,
+        );
         if (offset > 0 && !before.chars().next().is_some_and(char::is_whitespace))
             || in_code(&document, offset.max(0) as usize)
         {
@@ -552,7 +566,10 @@ impl Inner {
             return;
         }
         let query = char_slice(&document, start + 1, cursor).to_string();
-        if query.ends_with(' ') && self.matches.borrow().is_empty() && !self.query.borrow().is_empty() {
+        if query.ends_with(' ')
+            && self.matches.borrow().is_empty()
+            && !self.query.borrow().is_empty()
+        {
             self.close();
             return;
         }
@@ -571,9 +588,9 @@ impl Inner {
         }
         if let Some(mark) = self.buffer.get_insert() {
             let rect = self.view.iter_location(&self.buffer.iter_at_mark(&mark));
-            let (x, y) = self
-                .view
-                .buffer_to_window_coords(gtk::TextWindowType::Widget, rect.x(), rect.y());
+            let (x, y) =
+                self.view
+                    .buffer_to_window_coords(gtk::TextWindowType::Widget, rect.x(), rect.y());
             let target = gdk::Rectangle::new(x, y, rect.width().max(1), rect.height());
             self.popover.set_pointing_to(&target);
         }
@@ -636,7 +653,11 @@ impl Inner {
             let row = gtk::ListBoxRow::new();
             row.set_can_focus(false);
             let container = self.labels(command.label, command.hint, command.secondary);
-            let theme = if self.icons.get() { gtk::IconTheme::default() } else { None };
+            let theme = if self.icons.get() {
+                gtk::IconTheme::default()
+            } else {
+                None
+            };
             let icon = command
                 .icons
                 .iter()
@@ -680,9 +701,10 @@ impl Inner {
         let row = &rows[at];
         self.list.select_row(Some(row));
         let allocation = row.allocation();
-        self.scroll
-            .vadjustment()
-            .clamp_page(f64::from(allocation.y()), f64::from(allocation.y() + allocation.height()));
+        self.scroll.vadjustment().clamp_page(
+            f64::from(allocation.y()),
+            f64::from(allocation.y() + allocation.height()),
+        );
     }
 
     fn activate_row(&self, row: &gtk::ListBoxRow) {
@@ -722,7 +744,10 @@ impl Inner {
         };
         let buffer = &self.buffer;
         buffer.begin_user_action();
-        let (mut a, mut b) = (buffer.iter_at_offset(first as i32), buffer.iter_at_offset(cursor as i32));
+        let (mut a, mut b) = (
+            buffer.iter_at_offset(first as i32),
+            buffer.iter_at_offset(cursor as i32),
+        );
         buffer.delete(&mut a, &mut b);
         let (mut a, mut b) = (
             buffer.iter_at_offset(edit.start as i32),
@@ -758,7 +783,9 @@ impl Inner {
             return false;
         }
         if event.state().intersects(
-            gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::MOD1_MASK | gdk::ModifierType::SUPER_MASK,
+            gdk::ModifierType::CONTROL_MASK
+                | gdk::ModifierType::MOD1_MASK
+                | gdk::ModifierType::SUPER_MASK,
         ) {
             self.close();
             return false;
@@ -773,7 +800,8 @@ impl Inner {
             self.select(0);
         } else if key == k::End {
             self.select(count - 1);
-        } else if key == k::Return || key == k::KP_Enter || key == k::Tab || key == k::ISO_Left_Tab {
+        } else if key == k::Return || key == k::KP_Enter || key == k::Tab || key == k::ISO_Left_Tab
+        {
             self.execute(None);
         } else if key == k::Escape {
             self.close();
@@ -791,7 +819,7 @@ impl Inner {
         } else if key == k::BackSpace {
             if let Some(mark) = self.buffer.get_insert() {
                 let mut cursor = self.buffer.iter_at_mark(&mark);
-                let mut before = cursor.clone();
+                let mut before = cursor;
                 before.backward_char();
                 self.buffer.begin_user_action();
                 self.buffer.delete(&mut before, &mut cursor);
@@ -844,7 +872,8 @@ impl Inner {
         }
         unsafe { self.popover.destroy() };
         REGISTRY.with(|r| {
-            r.borrow_mut().retain(|(_, w)| w.upgrade().is_some_and(|i| !std::ptr::eq(&*i, self)));
+            r.borrow_mut()
+                .retain(|(_, w)| w.upgrade().is_some_and(|i| !std::ptr::eq(&*i, self)));
         });
     }
 }

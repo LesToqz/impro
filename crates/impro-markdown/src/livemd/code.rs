@@ -5,8 +5,25 @@ use gtk::prelude::*;
 use std::hash::{Hash, Hasher};
 
 const LANGUAGES: [&str; 19] = [
-    "", "python", "javascript", "typescript", "json", "html", "css", "bash", "sql", "markdown",
-    "yaml", "toml", "rust", "go", "c", "cpp", "java", "ruby", "mermaid",
+    "",
+    "python",
+    "javascript",
+    "typescript",
+    "json",
+    "html",
+    "css",
+    "bash",
+    "sql",
+    "markdown",
+    "yaml",
+    "toml",
+    "rust",
+    "go",
+    "c",
+    "cpp",
+    "java",
+    "ruby",
+    "mermaid",
 ];
 
 fn hash_of(text: &str) -> u64 {
@@ -83,7 +100,10 @@ impl Inner {
             let Some(info) = &deco.code else {
                 return;
             };
-            (blocks.spans[index].0, blocks.spans[index].0 + info.first_len)
+            (
+                blocks.spans[index].0,
+                blocks.spans[index].0 + info.first_len,
+            )
         };
         let _ = start;
         let mut applied = Vec::new();
@@ -120,7 +140,11 @@ impl Inner {
         };
         let text = self
             .buffer
-            .text(&self.iter(start + first_len), &self.iter(start + end_rel), true)
+            .text(
+                &self.iter(start + first_len),
+                &self.iter(start + end_rel),
+                true,
+            )
             .map(|s| s.to_string())
             .unwrap_or_default();
         if let Some(display) = gdk::Display::default() {
@@ -154,7 +178,10 @@ impl Inner {
             unsafe { old.destroy() };
         }
         let popover = gtk::Popover::new(Some(anchor));
-        popover.set_property("transitions-enabled", impro_ui::motion::animations_enabled());
+        popover.set_property(
+            "transitions-enabled",
+            impro_ui::motion::animations_enabled(),
+        );
         *self.language_popover.borrow_mut() = Some(popover.clone());
         let container = gtk::Box::new(gtk::Orientation::Vertical, 6);
         container.set_border_width(8);
@@ -167,7 +194,11 @@ impl Inner {
         for language in LANGUAGES {
             let row = gtk::ListBoxRow::new();
             unsafe { row.set_data("language", language.to_string()) };
-            let label = gtk::Label::new(Some(if language.is_empty() { "Plain text" } else { language }));
+            let label = gtk::Label::new(Some(if language.is_empty() {
+                "Plain text"
+            } else {
+                language
+            }));
             label.set_xalign(0.0);
             label.set_margin_start(8);
             label.set_margin_end(8);
@@ -179,7 +210,11 @@ impl Inner {
         let query = search.clone();
         choices.set_filter_func(Some(Box::new(move |row| {
             let language = row_language(row);
-            let shown = if language.is_empty() { "Plain text" } else { &language };
+            let shown = if language.is_empty() {
+                "Plain text"
+            } else {
+                &language
+            };
             shown.to_lowercase().contains(&query.text().to_lowercase())
         })));
         let list = choices.clone();
@@ -262,7 +297,8 @@ impl Inner {
         let cursor = self.caret();
         popover.popdown();
         let span = (b - a) as i64;
-        let cursor_after = (start as i64).max(cursor as i64 + language.chars().count() as i64 - span);
+        let cursor_after =
+            (start as i64).max(cursor as i64 + language.chars().count() as i64 - span);
         self.apply_edit(&blockedit::Edit {
             start: a as usize,
             end: b as usize,
@@ -280,4 +316,3 @@ fn row_language(row: &gtk::ListBoxRow) -> String {
             .unwrap_or_default()
     }
 }
-

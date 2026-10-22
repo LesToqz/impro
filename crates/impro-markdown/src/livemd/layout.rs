@@ -1,10 +1,6 @@
 //! Caret handling, widget realization and placement, details (pills and the
 //! empty-line placeholder) and the document tail.
-use super::{
-    model::BOTTOM_MARGIN,
-    structure::INTERACTIVE,
-    Aim, Inner, Kind, Role, Slot, BAND,
-};
+use super::{model::BOTTOM_MARGIN, structure::INTERACTIVE, Aim, Inner, Kind, Role, Slot, BAND};
 use crate::{blockedit, mdview};
 use gtk::prelude::*;
 use std::collections::BTreeSet;
@@ -36,7 +32,7 @@ impl Inner {
         let offset = self.caret();
         let mut first = self.iter(offset);
         first.set_line_offset(0);
-        let mut last = first.clone();
+        let mut last = first;
         if !last.ends_line() {
             last.forward_to_line_end();
         }
@@ -59,7 +55,7 @@ impl Inner {
         match &block {
             Some((Kind::Codeblock, closed, text, a, b)) if !rebuilding => {
                 let opening = a + text.split('\n').next().unwrap_or("").chars().count() as i32 + 1;
-                let last_line = text.split_inclusive('\n').last().unwrap_or("");
+                let last_line = text.split_inclusive('\n').next_back().unwrap_or("");
                 let closing = if *closed {
                     b - last_line.chars().count() as i32
                 } else {
@@ -76,7 +72,11 @@ impl Inner {
                     && offset <= *b
                     && (offset < *b || !text.ends_with('\n'))
                 {
-                    target = if closing > opening { closing - 1 } else { opening - 1 };
+                    target = if closing > opening {
+                        closing - 1
+                    } else {
+                        opening - 1
+                    };
                 }
             }
             Some((Kind::Codeblock | Kind::Table, ..)) => {}
@@ -89,7 +89,11 @@ impl Inner {
                     }
                 } else if mdview::_RULE.is_match(&line) && start < offset && offset < end {
                     let half = line.chars().count() as f64 / 2.0;
-                    target = if f64::from(offset - start) < half { start } else { end };
+                    target = if f64::from(offset - start) < half {
+                        start
+                    } else {
+                        end
+                    };
                 }
             }
         }
@@ -195,18 +199,21 @@ impl Inner {
             return;
         }
         let weak = self.weak.clone();
-        let id = glib::idle_add_local_full(glib::Priority::from(super::structure::BACKGROUND_PRIORITY), move || {
-            let Some(s) = weak.upgrade() else {
-                return glib::ControlFlow::Break;
-            };
-            if s.fill_tables() {
-                glib::ControlFlow::Continue
-            } else {
-                s.fill_idle.borrow_mut().take();
-                s.queue_layout();
-                glib::ControlFlow::Break
-            }
-        });
+        let id = glib::idle_add_local_full(
+            glib::Priority::from(super::structure::BACKGROUND_PRIORITY),
+            move || {
+                let Some(s) = weak.upgrade() else {
+                    return glib::ControlFlow::Break;
+                };
+                if s.fill_tables() {
+                    glib::ControlFlow::Continue
+                } else {
+                    s.fill_idle.borrow_mut().take();
+                    s.queue_layout();
+                    glib::ControlFlow::Break
+                }
+            },
+        );
         *self.fill_idle.borrow_mut() = Some(id);
     }
 
@@ -474,7 +481,11 @@ impl Inner {
                     }
                     let side = matches!(slot.role, Role::CodeSideLeft | Role::CodeSideRight);
                     if side {
-                        x += if slot.role == Role::CodeSideLeft { 1 } else { width - 16 };
+                        x += if slot.role == Role::CodeSideLeft {
+                            1
+                        } else {
+                            width - 16
+                        };
                         y = line_y + line_height;
                         height = 1.max(bottom_y - y);
                     }
@@ -571,7 +582,10 @@ impl Inner {
             (begin..end)
                 .flat_map(|i| {
                     let start = blocks.spans[i].0;
-                    blocks.items[i].pills.iter().map(move |&(a, b)| (start + a, start + b))
+                    blocks.items[i]
+                        .pills
+                        .iter()
+                        .map(move |&(a, b)| (start + a, start + b))
                 })
                 .collect()
         };
@@ -612,12 +626,18 @@ impl Inner {
             self.place_detail(&label, rect.x() - 3, rect.y() - 1);
             used += 1;
         }
-        let rest: Vec<gtk::Label> = self.detail_labels.borrow().iter().skip(used).cloned().collect();
+        let rest: Vec<gtk::Label> = self
+            .detail_labels
+            .borrow()
+            .iter()
+            .skip(used)
+            .cloned()
+            .collect();
         for label in rest {
             label.hide();
         }
         let cursor = self.iter(self.caret());
-        let mut line_start = cursor.clone();
+        let mut line_start = cursor;
         line_start.set_line_offset(0);
         let after_block = {
             let blocks = self.blocks.borrow();

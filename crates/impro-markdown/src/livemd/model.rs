@@ -63,7 +63,9 @@ pub enum Step {
     Block(Scanned),
     /// The block starting here ran off the end of the text; refetch from `from`
     /// with a longer chunk.
-    More { from: i32 },
+    More {
+        from: i32,
+    },
     /// Nothing is left in this chunk.
     Done,
 }
@@ -266,7 +268,10 @@ fn expand_len(text: &str) -> usize {
 }
 
 /// Nesting level of a list item of indent `depth` from the blocks before it.
-pub fn list_level<'a>(previous: impl Iterator<Item = (&'a str, usize, usize)>, depth: usize) -> usize {
+pub fn list_level<'a>(
+    previous: impl Iterator<Item = (&'a str, usize, usize)>,
+    depth: usize,
+) -> usize {
     if depth == 0 {
         return 0;
     }
@@ -357,7 +362,11 @@ pub fn plan_inline(plan: &mut LinePlan, env: &InlineEnv, text: &str, base: i32, 
         let b = base + map.at(whole.end());
         let active = revealed(a, b);
         let delimiter = m.get(8);
-        if delimiter.is_some() && urls.iter().any(|&(f, l)| f <= whole.start() && whole.start() < l) {
+        if delimiter.is_some()
+            && urls
+                .iter()
+                .any(|&(f, l)| f <= whole.start() && whole.start() < l)
+        {
             continue;
         }
         covered.push((whole.start(), whole.end()));
@@ -379,7 +388,8 @@ pub fn plan_inline(plan: &mut LinePlan, env: &InlineEnv, text: &str, base: i32, 
             let target = target.trim_matches(['<', '>']);
             let start = base + map.at(label.start());
             let end = base + map.at(label.end());
-            plan.ops.push(Op::Tag(if image { "image" } else { "link" }, start, end));
+            plan.ops
+                .push(Op::Tag(if image { "image" } else { "link" }, start, end));
             if !image {
                 plan.links.push(LinkSpan {
                     a: relative(a),
@@ -434,14 +444,23 @@ pub fn plan_inline(plan: &mut LinePlan, env: &InlineEnv, text: &str, base: i32, 
                 plan.ops.push(Op::Hidden(b - n, b));
             }
             if let Some(body) = m.get(9) {
-                plan_inline(plan, env, body.as_str(), base + map.at(body.start()), depth + 1);
+                plan_inline(
+                    plan,
+                    env,
+                    body.as_str(),
+                    base + map.at(body.start()),
+                    depth + 1,
+                );
             }
         }
     }
     for (regex, wiki) in [(&*WIKI, true), (&*URL, false)] {
         for m in regex.captures_iter(text) {
             let whole = m.get(0).expect("whole match");
-            if covered.iter().any(|&(s, e)| s <= whole.start() && whole.start() < e) {
+            if covered
+                .iter()
+                .any(|&(s, e)| s <= whole.start() && whole.start() < e)
+            {
                 continue;
             }
             let a = base + map.at(whole.start());
@@ -450,7 +469,10 @@ pub fn plan_inline(plan: &mut LinePlan, env: &InlineEnv, text: &str, base: i32, 
             let target = if wiki {
                 format!("[[{}]]", &m[1])
             } else {
-                whole.as_str().trim_end_matches(['.', ',', ';', '!', '?', ')']).to_string()
+                whole
+                    .as_str()
+                    .trim_end_matches(['.', ',', ';', '!', '?', ')'])
+                    .to_string()
             };
             plan.ops.push(Op::Tag("link", a, b));
             plan.links.push(LinkSpan {
@@ -553,7 +575,8 @@ where
         let content_start = start + skipped;
         let task = item.get(3);
         if task.is_some_and(|t| t.as_str().eq_ignore_ascii_case("x")) {
-            plan.ops.push(Op::Tag("checked", content_start, start + line_chars));
+            plan.ops
+                .push(Op::Tag("checked", content_start, start + line_chars));
         }
         plan.ops.push(Op::Hidden(start, content_start));
         let x = depth as i32 * 12;
@@ -614,7 +637,10 @@ mod tests {
     use super::*;
 
     fn kinds(text: &str) -> Vec<(Kind, String)> {
-        split_blocks(text).into_iter().map(|b| (b.kind, b.text)).collect()
+        split_blocks(text)
+            .into_iter()
+            .map(|b| (b.kind, b.text))
+            .collect()
     }
 
     #[test]
@@ -694,8 +720,14 @@ mod tests {
             std::iter::empty,
         );
         let targets: Vec<_> = plan.links.iter().map(|l| l.target.as_str()).collect();
-        assert_eq!(targets, ["https://example.org", "[[note]]", "https://x.org"]);
-        assert!(plan.wants.iter().any(|(_, w)| matches!(w, Want::Image { target, .. } if target == "a.png")));
+        assert_eq!(
+            targets,
+            ["https://example.org", "[[note]]", "https://x.org"]
+        );
+        assert!(plan
+            .wants
+            .iter()
+            .any(|(_, w)| matches!(w, Want::Image { target, .. } if target == "a.png")));
     }
 
     #[test]

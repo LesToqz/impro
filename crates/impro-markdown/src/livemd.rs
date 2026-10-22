@@ -203,6 +203,7 @@ impl Deco {
 #[derive(Default)]
 pub(crate) struct Blocks {
     pub spans: Vec<(i32, i32)>,
+    #[allow(clippy::vec_box)]
     pub items: Vec<Box<Deco>>,
 }
 impl Blocks {
@@ -277,7 +278,6 @@ pub(crate) struct Work {
 /// Where painting continues: outward from a focus block.
 #[derive(Default)]
 pub(crate) struct Aim {
-    pub focus: usize,
     pub down: usize,
     pub up: isize,
     pub flip: bool,
@@ -285,8 +285,7 @@ pub(crate) struct Aim {
 }
 /// Colours and fonts derived by `set_style`.
 #[derive(Default, Clone)]
-pub(crate) struct StyleState {
-    pub syntax: impro_core::themes::SyntaxColors,
+pub struct StyleState {
     pub chrome: impro_core::themes::UiColors,
     pub size: i32,
     pub bg: String,
@@ -298,11 +297,14 @@ pub(crate) struct StyleState {
     pub body_font: String,
     pub code_font: String,
 }
+/// How web links open.
+pub type UriOpener = Rc<dyn Fn(&str)>;
 type Idle = Option<(glib::SourceId, i32)>;
 
 pub(crate) type LiveInner = Inner;
 
 pub(crate) struct Inner {
+    #[allow(dead_code)]
     pub id: u64,
     pub view: gtk::TextView,
     pub buffer: gtk::TextBuffer,
@@ -354,7 +356,7 @@ pub(crate) struct Inner {
     pub band: Cell<(usize, usize)>,
     pub hint: Cell<Option<i32>>,
     pub margin: Cell<i32>,
-    pub uri_opener: RefCell<Option<Rc<dyn Fn(&str)>>>,
+    pub uri_opener: RefCell<Option<UriOpener>>,
     pub last_scan: Cell<usize>,
     pub epoch: Cell<u64>,
     pub jobs: images::Jobs,
@@ -509,7 +511,7 @@ impl LiveMarkdown {
         self.0.toolbar.replace(toolbar);
     }
     /// Replace how web links open (default: the desktop's URI handler).
-    pub fn set_uri_opener(&self, opener: Option<Rc<dyn Fn(&str)>>) {
+    pub fn set_uri_opener(&self, opener: Option<UriOpener>) {
         self.0.uri_opener.replace(opener);
     }
     /// Plain text unless a highlighter is installed.
@@ -714,10 +716,6 @@ impl Inner {
     pub fn caret(&self) -> i32 {
         self.offset_of(&self.insert_mark)
     }
-    /// Insert-mark offset, but only while the view accepts edits.
-    pub fn editable_caret(&self) -> Option<i32> {
-        self.view.is_editable().then(|| self.caret())
-    }
     pub fn char_count(&self) -> i32 {
         self.buffer.char_count()
     }
@@ -734,9 +732,5 @@ impl Inner {
         if took > self.max_slice.get() {
             self.max_slice.set(took);
         }
-    }
-    pub fn block_index_at(&self, offset: i32) -> Option<usize> {
-        let blocks = self.blocks.borrow();
-        (blocks.len() > 0).then(|| blocks.index(offset))
     }
 }

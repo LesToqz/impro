@@ -27,9 +27,9 @@ impl Inner {
     }
 
     pub(super) fn link_at(&self, x: f64, y: f64) -> Option<(String, bool)> {
-        let (bx, by) = self
-            .view
-            .window_to_buffer_coords(gtk::TextWindowType::Widget, x as i32, y as i32);
+        let (bx, by) =
+            self.view
+                .window_to_buffer_coords(gtk::TextWindowType::Widget, x as i32, y as i32);
         let index = self.block_at(by)?;
         if self.blocks.borrow().items[index].links.is_empty() {
             return None;
@@ -51,7 +51,10 @@ impl Inner {
         }
         let (x, y) = event.position();
         let link = self.link_at(x, y);
-        self.press_with(link, event.state().contains(gdk::ModifierType::CONTROL_MASK))
+        self.press_with(
+            link,
+            event.state().contains(gdk::ModifierType::CONTROL_MASK),
+        )
     }
 
     pub(super) fn press_with(&self, link: Option<(String, bool)>, ctrl: bool) -> bool {
@@ -124,7 +127,10 @@ impl Inner {
                     opener(&uri);
                     return true;
                 }
-                let top = self.view.toplevel().and_then(|t| t.downcast::<gtk::Window>().ok());
+                let top = self
+                    .view
+                    .toplevel()
+                    .and_then(|t| t.downcast::<gtk::Window>().ok());
                 gtk::show_uri_on_window(top.as_ref(), &uri, 0).is_ok()
             }
         }
@@ -163,7 +169,11 @@ impl Inner {
         let Some((a, b)) = self.buffer.selection_bounds() else {
             return;
         };
-        let text = self.buffer.text(&a, &b, true).map(|s| s.to_string()).unwrap_or_default();
+        let text = self
+            .buffer
+            .text(&a, &b, true)
+            .map(|s| s.to_string())
+            .unwrap_or_default();
         if let Some(display) = gdk::Display::default() {
             if let Some(clipboard) = gtk::Clipboard::default(&display) {
                 clipboard.set_text(&text);
@@ -190,7 +200,12 @@ impl Inner {
         true
     }
 
-    pub(super) fn edit_key(&self, event: &gdk::EventKey, indent_tabs: bool, indent_width: i32) -> bool {
+    pub(super) fn edit_key(
+        &self,
+        event: &gdk::EventKey,
+        indent_tabs: bool,
+        indent_width: i32,
+    ) -> bool {
         use gdk::keys::constants as k;
         if !self.enabled.get() || !self.view.is_editable() {
             return false;
@@ -209,7 +224,7 @@ impl Inner {
         let cursor = self.caret();
         let mut first = self.iter(cursor);
         first.set_line_offset(0);
-        let mut last = first.clone();
+        let mut last = first;
         if !last.ends_line() {
             last.forward_to_line_end();
         }
@@ -223,7 +238,12 @@ impl Inner {
             (blocks.len() > 0).then(|| {
                 let index = blocks.index(cursor);
                 let deco = &blocks.items[index];
-                (deco.kind, deco.closed, deco.text.clone(), blocks.spans[index].0)
+                (
+                    deco.kind,
+                    deco.closed,
+                    deco.text.clone(),
+                    blocks.spans[index].0,
+                )
             })
         };
         let in_code = matches!(&block, Some((Kind::Codeblock, ..)));
@@ -255,7 +275,11 @@ impl Inner {
                 }
             }
         }
-        let prefix = if in_code { None } else { blockedit::prefix(&line) };
+        let prefix = if in_code {
+            None
+        } else {
+            blockedit::prefix(&line)
+        };
         let content = first.offset() + prefix.as_ref().map_or(0, |p| p.end as i32);
         if key == k::Home && prefix.is_some() {
             return self.move_cursor(content, shift);
@@ -362,12 +386,24 @@ impl Inner {
             }
             if outdent {
                 let spaces = line.len() - line.trim_start_matches(' ').len();
-                let amount = if line.starts_with('\t') { 1 } else { width.min(spaces) };
+                let amount = if line.starts_with('\t') {
+                    1
+                } else {
+                    width.min(spaces)
+                };
                 return line[amount..].to_string();
             }
-            format!("{}{}", if tabs { "\t".into() } else { " ".repeat(width) }, line)
+            format!(
+                "{}{}",
+                if tabs { "\t".into() } else { " ".repeat(width) },
+                line
+            )
         };
-        let replacement = lines.iter().map(|l| replace(l)).collect::<Vec<_>>().join("\n");
+        let replacement = lines
+            .iter()
+            .map(|l| replace(l))
+            .collect::<Vec<_>>()
+            .join("\n");
         let offset = first.offset();
         self.buffer.begin_user_action();
         let (mut a, mut b) = (first, last);
@@ -375,7 +411,8 @@ impl Inner {
         let mut at = self.iter(offset);
         self.buffer.insert(&mut at, &replacement);
         let end = offset + replacement.chars().count() as i32;
-        self.buffer.select_range(&self.iter(end), &self.iter(offset));
+        self.buffer
+            .select_range(&self.iter(end), &self.iter(offset));
         self.buffer.end_user_action();
         true
     }

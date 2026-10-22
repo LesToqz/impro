@@ -4,7 +4,10 @@ use gdk::keys::constants as k;
 use gtk::prelude::*;
 use impro_core::notes::{self, SLASH_COMMANDS};
 use impro_editor::EditorTab;
-use impro_markdown::{livemd, slashmenu::{self, SlashMenu}};
+use impro_markdown::{
+    livemd,
+    slashmenu::{self, SlashMenu},
+};
 use std::{path::PathBuf, rc::Rc};
 use support::*;
 
@@ -48,8 +51,7 @@ impl Fx {
         pump(40);
     }
     fn key(&self, key: gdk::keys::Key) -> bool {
-        let handled = emit_key(&self.tab.view, key, gdk::ModifierType::empty());
-        handled
+        emit_key(&self.tab.view, key, gdk::ModifierType::empty())
     }
 }
 impl Drop for Fx {
@@ -85,7 +87,9 @@ fn test_trigger_rules() {
         pump(40);
         assert!(!fx.menu().opened());
         fx.reset("");
-        fx.tab.view.emit_by_name::<()>("preedit-changed", &[&"compose"]);
+        fx.tab
+            .view
+            .emit_by_name::<()>("preedit-changed", &[&"compose"]);
         fx.type_text("/");
         assert!(!fx.menu().opened());
         fx.tab.view.emit_by_name::<()>("preedit-changed", &[&""]);
@@ -124,7 +128,11 @@ fn test_filter_ranking_and_group_headers() {
             fx.reset("");
             fx.type_text(&format!("/{query}"));
             assert_eq!(fx.menu().matches()[0].id, first, "{query}");
-            assert_eq!(row_text(&fx.menu().list().children()[0]), "Filtered results", "{query}");
+            assert_eq!(
+                row_text(&fx.menu().list().children()[0]),
+                "Filtered results",
+                "{query}"
+            );
         }
         fx.reset("");
         fx.type_text("/");
@@ -234,7 +242,13 @@ fn test_enter_tab_mouse_and_two_undo_actions() {
                     let a = row.allocation();
                     let window = fx.menu().list().window().unwrap();
                     for kind in [gdk::EventType::ButtonPress, gdk::EventType::ButtonRelease] {
-                        send_button(kind, &window, f64::from(a.x() + 10), f64::from(a.y() + 10), 1);
+                        send_button(
+                            kind,
+                            &window,
+                            f64::from(a.x() + 10),
+                            f64::from(a.y() + 10),
+                            1,
+                        );
                     }
                     pump(40);
                 }
@@ -262,14 +276,24 @@ fn test_every_command_is_one_undo_and_keeps_text() {
                 let len = before.chars().count() as isize;
                 let expected = command.edit(before, len, Some(len)).unwrap();
                 fx.menu().execute(Some(command));
-                assert_eq!(fx.text(), expected.apply(before), "{} {before:?}", command.id);
+                assert_eq!(
+                    fx.text(),
+                    expected.apply(before),
+                    "{} {before:?}",
+                    command.id
+                );
                 let actual = fx
                     .tab
                     .buffer
                     .selection_bounds()
                     .map(|(a, b)| (a.offset() as usize, b.offset() as usize))
                     .unwrap_or((fx.tab.cursor() as usize, fx.tab.cursor() as usize));
-                assert_eq!(actual, (expected.select_start, expected.select_end), "{}", command.id);
+                assert_eq!(
+                    actual,
+                    (expected.select_start, expected.select_end),
+                    "{}",
+                    command.id
+                );
                 fx.tab.undo(false);
                 assert_eq!(fx.text(), format!("{before}{query}"), "{}", command.id);
                 fx.tab.undo(false);
@@ -292,7 +316,11 @@ fn test_live_blocks_render_and_checkbox_works() {
             pump(160);
             let live = livemd::for_view(&fx.tab.view).unwrap();
             settle(&live);
-            let blocks: Vec<_> = live.blocks().into_iter().filter(|b| b.kind == kind).collect();
+            let blocks: Vec<_> = live
+                .blocks()
+                .into_iter()
+                .filter(|b| b.kind == kind)
+                .collect();
             assert!(!blocks.is_empty(), "{query}");
             let widgets: Vec<gtk::Widget> = blocks
                 .iter()
@@ -337,7 +365,9 @@ fn test_caret_scroll_at_bottom_and_reduce_motion() {
     run(|| {
         let fx = Fx::new();
         fx.reset(&"line\n".repeat(80));
-        fx.tab.view.scroll_mark_onscreen(&fx.tab.buffer.get_insert().unwrap());
+        fx.tab
+            .view
+            .scroll_mark_onscreen(&fx.tab.buffer.get_insert().unwrap());
         pump(40);
         fx.type_text("/");
         assert!(fx.menu().opened());
@@ -474,7 +504,10 @@ fn test_screenshots() {
                 if let Some(folder) = &folder {
                     let window = fx.h.window.window().unwrap();
                     let pixbuf = window.pixbuf(0, 0, 780, 740).unwrap();
-                    let name = format!("{theme_id}-{}.png", if query.is_empty() { "all" } else { query });
+                    let name = format!(
+                        "{theme_id}-{}.png",
+                        if query.is_empty() { "all" } else { query }
+                    );
                     pixbuf.savev(folder.join(name), "png", &[]).unwrap();
                 }
                 assert!(fx.menu().opened());

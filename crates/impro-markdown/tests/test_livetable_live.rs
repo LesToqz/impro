@@ -5,10 +5,7 @@ use gdk::keys::constants as k;
 use gtk::prelude::*;
 use impro_core::notes;
 use impro_editor::EditorTab;
-use impro_markdown::{
-    livemd::LiveMarkdown,
-    livetable::TableView,
-};
+use impro_markdown::{livemd::LiveMarkdown, livetable::TableView};
 use std::rc::Rc;
 use support::*;
 
@@ -142,7 +139,11 @@ fn test_slash_table_focuses_the_first_header_cell_with_text_selected() {
         poll(|| view.focused());
         assert_eq!(fx.at(&view), (0, 0));
         assert_eq!(fx.selection(&view), [0, "Column 1".len() as i32]);
-        view.editor().unwrap().buffer().unwrap().delete_selection(true, true);
+        view.editor()
+            .unwrap()
+            .buffer()
+            .unwrap()
+            .delete_selection(true, true);
         fx.type_text("Name");
         assert_eq!(fx.text(), notes::SLASH_TABLE.replace("Column 1", "Name"));
         fx.key(k::z, ctrl());
@@ -174,7 +175,8 @@ fn test_grid_stays_rendered_with_the_caret_inside_and_source_hidden() {
         let start = source.find('|').unwrap() as i32;
         let char_at = |needle: &str| source[..source.find(needle).unwrap()].chars().count() as i32;
         for offset in [start, start + 5, char_at("| 3"), char_at("\nend") - 1] {
-            fx.buffer().place_cursor(&fx.buffer().iter_at_offset(offset));
+            fx.buffer()
+                .place_cursor(&fx.buffer().iter_at_offset(offset));
             fx.ready(true);
             assert_eq!(fx.view().block().id, view.block().id);
             assert!(fx.hidden(start + 1));
@@ -182,11 +184,20 @@ fn test_grid_stays_rendered_with_the_caret_inside_and_source_hidden() {
         }
         poll(|| view.built_rows() == view.row_count());
         let rows: Vec<Vec<String>> = (0..3)
-            .map(|r| (0..2).map(|c| view.cell(r, c).unwrap().label.text().to_string()).collect())
+            .map(|r| {
+                (0..2)
+                    .map(|c| view.cell(r, c).unwrap().label.text().to_string())
+                    .collect()
+            })
             .collect();
         assert_eq!(rows, [["A", "B"], ["1", "2"], ["3", "4"]]);
         assert_eq!(view.cell(0, 1).unwrap().label.xalign(), 1.0);
-        assert!(view.cell(0, 0).unwrap().widget.style_context().has_class("live-table-header"));
+        assert!(view
+            .cell(0, 0)
+            .unwrap()
+            .widget
+            .style_context()
+            .has_class("live-table-header"));
         assert_eq!(fx.text(), source);
     });
 }
@@ -206,7 +217,12 @@ fn test_typing_rewrites_only_its_row_and_keeps_grid_and_focus() {
         assert_eq!(fx.at(&view), (1, 1));
         let joined: String = fx.live.blocks().iter().map(|b| b.text.clone()).collect();
         assert_eq!(joined, fx.text());
-        let block = fx.live.blocks().into_iter().find(|b| b.kind == "table").unwrap();
+        let block = fx
+            .live
+            .blocks()
+            .into_iter()
+            .find(|b| b.kind == "table")
+            .unwrap();
         assert_eq!(block.text, view.text());
         let text = fx.text();
         let two = text[..text.find("20").unwrap()].chars().count() as i32;
@@ -243,7 +259,11 @@ fn test_typing_burst_is_one_undo_step_and_undo_redo_refocus_the_cell() {
         assert_eq!(fx.text(), source.replace("| 3 |", "| 3abc |"));
         poll(|| fx.view().focused());
         let editor = fx.view().editor().unwrap();
-        emit_key(editor.text_view(), k::z, ctrl() | gdk::ModifierType::SHIFT_MASK);
+        emit_key(
+            editor.text_view(),
+            k::z,
+            ctrl() | gdk::ModifierType::SHIFT_MASK,
+        );
         fx.ready(true);
         assert_eq!(fx.text(), source.replace("| 3 |", "| 3abc |"));
         assert_ne!(view.block().id, fx.view().block().id);
@@ -258,7 +278,10 @@ fn test_external_buffer_edit_refreshes_the_grid() {
         let start = source[..source.find('3').unwrap()].chars().count() as i32;
         let buffer = fx.buffer();
         buffer.begin_user_action();
-        let (mut a, mut b) = (buffer.iter_at_offset(start), buffer.iter_at_offset(start + 1));
+        let (mut a, mut b) = (
+            buffer.iter_at_offset(start),
+            buffer.iter_at_offset(start + 1),
+        );
         buffer.delete(&mut a, &mut b);
         buffer.insert(&mut buffer.iter_at_offset(start), "three");
         buffer.end_user_action();
@@ -309,7 +332,10 @@ fn test_keyboard_navigation_between_cells_rows_and_out_of_the_table() {
         go(k::Down, none());
         assert!(fx.tab.view.is_focus());
         let text = fx.text();
-        assert_eq!(fx.tab.cursor(), text[..text.find("\nafter").unwrap()].chars().count() as i32);
+        assert_eq!(
+            fx.tab.cursor(),
+            text[..text.find("\nafter").unwrap()].chars().count() as i32
+        );
         fx.focus(1, 1);
         go(k::Escape, none());
         assert!(fx.tab.view.is_focus());
@@ -364,7 +390,9 @@ fn test_in_place_row_edits_keep_the_spacing_of_a_fresh_render() {
         assert_eq!(table_to_end(&fx) - edited, 0);
         let mut found = Vec::new();
         fx.buffer().tag_table().unwrap().foreach(|tag| {
-            if tag.property::<bool>("pixels-below-lines-set") && tag.property::<i32>("pixels-below-lines") != 0 {
+            if tag.property::<bool>("pixels-below-lines-set")
+                && tag.property::<i32>("pixels-below-lines") != 0
+            {
                 found.push(tag.clone());
             }
         });
@@ -393,14 +421,17 @@ fn test_main_caret_entering_from_above_or_below_lands_in_a_cell() {
         let at = |needle: &str| source[..source.find(needle).unwrap()].chars().count() as i32;
         fx.buffer().place_cursor(&fx.buffer().iter_at_offset(1));
         fx.ready(true);
-        fx.buffer().place_cursor(&fx.buffer().iter_at_offset(at("|")));
+        fx.buffer()
+            .place_cursor(&fx.buffer().iter_at_offset(at("|")));
         let view = fx.view();
         poll(|| view.focused());
         assert_eq!(fx.at(&view), (0, 0));
         fx.tab.view.grab_focus();
-        fx.buffer().place_cursor(&fx.buffer().iter_at_offset(at("end")));
+        fx.buffer()
+            .place_cursor(&fx.buffer().iter_at_offset(at("end")));
         fx.ready(true);
-        fx.buffer().place_cursor(&fx.buffer().iter_at_offset(at("|")));
+        fx.buffer()
+            .place_cursor(&fx.buffer().iter_at_offset(at("|")));
         let view = fx.view();
         poll(|| view.focused());
         assert_eq!(fx.at(&view), (2, 0));
@@ -414,22 +445,61 @@ fn test_structure_menu_actions_are_single_undo_steps_without_rebuilds() {
         let fx = Fx::open(&source);
         let view = fx.focus(1, 0);
         let steps: [(&str, &str, usize, &str); 9] = [
-            ("row", "after", 1, "| A | B |\n| --- | ---: |\n| 1 | 2 |\n|  |  |\n| 3 | 4 |\n"),
-            ("row", "down", 1, "| A | B |\n| --- | ---: |\n|  |  |\n| 1 | 2 |\n| 3 | 4 |\n"),
+            (
+                "row",
+                "after",
+                1,
+                "| A | B |\n| --- | ---: |\n| 1 | 2 |\n|  |  |\n| 3 | 4 |\n",
+            ),
+            (
+                "row",
+                "down",
+                1,
+                "| A | B |\n| --- | ---: |\n|  |  |\n| 1 | 2 |\n| 3 | 4 |\n",
+            ),
             ("row", "delete", 1, TABLE),
-            ("column", "before", 0, "|  | A | B |\n| --- | --- | ---: |\n|  | 1 | 2 |\n|  | 3 | 4 |\n"),
-            ("column", "align-center", 0, "|  | A | B |\n| :---: | --- | ---: |\n|  | 1 | 2 |\n|  | 3 | 4 |\n"),
-            ("column", "down", 0, "| A |  | B |\n| --- | :---: | ---: |\n| 1 |  | 2 |\n| 3 |  | 4 |\n"),
+            (
+                "column",
+                "before",
+                0,
+                "|  | A | B |\n| --- | --- | ---: |\n|  | 1 | 2 |\n|  | 3 | 4 |\n",
+            ),
+            (
+                "column",
+                "align-center",
+                0,
+                "|  | A | B |\n| :---: | --- | ---: |\n|  | 1 | 2 |\n|  | 3 | 4 |\n",
+            ),
+            (
+                "column",
+                "down",
+                0,
+                "| A |  | B |\n| --- | :---: | ---: |\n| 1 |  | 2 |\n| 3 |  | 4 |\n",
+            ),
             ("column", "delete", 1, TABLE),
-            ("column", "clear", 1, "| A | B |\n| --- | ---: |\n| 1 |  |\n| 3 |  |\n"),
-            ("row", "clear", 0, "|  |  |\n| --- | ---: |\n| 1 |  |\n| 3 |  |\n"),
+            (
+                "column",
+                "clear",
+                1,
+                "| A | B |\n| --- | ---: |\n| 1 |  |\n| 3 |  |\n",
+            ),
+            (
+                "row",
+                "clear",
+                0,
+                "|  |  |\n| --- | ---: |\n| 1 |  |\n| 3 |  |\n",
+            ),
         ];
         let mut history = Vec::new();
         for (axis, action, index, expected) in steps {
             history.push(fx.text());
             view.act(axis, action, index);
             pump(30);
-            assert_eq!(fx.text(), format!("x\n\n{expected}\nend\n"), "{axis} {action}");
+            assert_eq!(
+                fx.text(),
+                format!("x\n\n{expected}\nend\n"),
+                "{axis} {action}"
+            );
             assert_eq!(fx.view().block().id, view.block().id);
             assert!(view.focused());
             let joined: String = fx.live.blocks().iter().map(|b| b.text.clone()).collect();
@@ -465,7 +535,10 @@ fn test_add_bars_append_a_row_and_a_column() {
 #[test]
 fn test_malformed_tables_render_and_edit_without_errors() {
     run(|| {
-        let wide = (0..40).map(|i| i.to_string()).collect::<Vec<_>>().join(" | ");
+        let wide = (0..40)
+            .map(|i| i.to_string())
+            .collect::<Vec<_>>()
+            .join(" | ");
         let source = format!(
             "| a | `x|y` | c |\n| --- | --- | --- |\n\n| a | b | c |\n| --- | --- | --- |\n| short |\n| 1 | `2|3` | 4 | 5 |\n\n| no rule |\n| row |\n\n| only | header |\n| :---: | --- |\n\n| {wide} |\n|{} \n\nend\n",
             " --- |".repeat(40)
@@ -479,19 +552,31 @@ fn test_malformed_tables_render_and_edit_without_errors() {
             poll(|| v.built_rows() == v.row_count());
         }
         let cells = |view: &TableView, row: usize| -> Vec<String> {
-            (0..view.column_count()).map(|c| view.cell(row, c).unwrap().source()).collect()
+            (0..view.column_count())
+                .map(|c| view.cell(row, c).unwrap().source())
+                .collect()
         };
         assert_eq!(cells(&views[0], 1), ["short", "", ""]);
         assert_eq!(cells(&views[0], 2), ["1", "`2", "3`"]);
         views[0].focus_cell(1, 2, None, None);
         poll(|| views[0].focused());
-        views[0].editor().unwrap().buffer().unwrap().insert_at_cursor("z");
+        views[0]
+            .editor()
+            .unwrap()
+            .buffer()
+            .unwrap()
+            .insert_at_cursor("z");
         pump(30);
         assert!(fx.text().contains("| short |  | z |\n"));
         assert!(fx.text().contains("| 1 | `2|3` | 4 | 5 |"));
         views[1].focus_cell(0, 0, None, None);
         poll(|| views[1].focused());
-        views[1].editor().unwrap().buffer().unwrap().insert_at_cursor("!");
+        views[1]
+            .editor()
+            .unwrap()
+            .buffer()
+            .unwrap()
+            .insert_at_cursor("!");
         pump(30);
         assert!(fx.text().contains("| only! | header |\n| :---: | --- |\n"));
         assert_eq!(fx.text().matches("| no rule |\n| row |").count(), 1);
@@ -506,16 +591,27 @@ fn test_two_hundred_rows_build_in_bounded_slices_and_type_fast() {
         let fx = Fx::open(&source);
         let view = fx.view();
         poll(|| view.built_rows() == view.row_count());
-        assert!(view.max_slice_time() < std::time::Duration::from_millis(16), "{:?}", view.max_slice_time());
+        assert!(
+            view.max_slice_time() < std::time::Duration::from_millis(16),
+            "{:?}",
+            view.max_slice_time()
+        );
         fx.focus(100, 0);
         let started = std::time::Instant::now();
         for _ in 0..20 {
-            view.editor().unwrap().buffer().unwrap().insert_at_cursor("x");
+            view.editor()
+                .unwrap()
+                .buffer()
+                .unwrap()
+                .insert_at_cursor("x");
         }
         pump(20);
         assert!(started.elapsed() < std::time::Duration::from_secs(2));
         let text = fx.text();
-        let line = text.lines().find(|l| l.contains(&"x".repeat(20))).expect("edited row");
+        let line = text
+            .lines()
+            .find(|l| l.contains(&"x".repeat(20)))
+            .expect("edited row");
         assert!(line.contains("r99") && line.contains("v99"), "{line}");
     });
 }

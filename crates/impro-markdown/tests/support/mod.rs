@@ -234,7 +234,13 @@ pub fn bare_event(kind: gdk::EventType) -> gdk::Event {
     gdk::Event::new(kind)
 }
 /// A button event with window, position and pointer device set.
-pub fn button_event_at(kind: gdk::EventType, window: &gdk::Window, x: f64, y: f64, button: u32) -> gdk::Event {
+pub fn button_event_at(
+    kind: gdk::EventType,
+    window: &gdk::Window,
+    x: f64,
+    y: f64,
+    button: u32,
+) -> gdk::Event {
     use glib::translate::*;
     let mut event = gdk::Event::new(kind);
     unsafe {

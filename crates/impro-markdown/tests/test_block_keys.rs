@@ -4,7 +4,10 @@ mod support;
 use gdk::keys::constants as k;
 use gtk::prelude::*;
 use impro_editor::EditorTab;
-use impro_markdown::{blockedit, livemd::{self, LiveMarkdown}};
+use impro_markdown::{
+    blockedit,
+    livemd::{self, LiveMarkdown},
+};
 use std::rc::Rc;
 use support::*;
 
@@ -35,7 +38,9 @@ impl Fx {
     fn reset(&self, text: &str, cursor: Option<i32>) {
         self.tab.buffer.set_text(text);
         let at = cursor.unwrap_or(text.chars().count() as i32);
-        self.tab.buffer.place_cursor(&self.tab.buffer.iter_at_offset(at));
+        self.tab
+            .buffer
+            .place_cursor(&self.tab.buffer.iter_at_offset(at));
         self.ready();
     }
     fn key(&self, key: gdk::keys::Key, state: gdk::ModifierType) -> bool {
@@ -131,7 +136,11 @@ fn test_active_prefixes_and_inline_span_visibility() {
             assert!(fx.tab.cursor() > 0, "{source}");
             assert!(!fx.tab.buffer.has_selection(), "{source}");
             if source.contains("[x]") {
-                assert!(fx.tab.buffer.iter_at_offset(7).has_tag(&fx.live.tag("checked").unwrap()));
+                assert!(fx
+                    .tab
+                    .buffer
+                    .iter_at_offset(7)
+                    .has_tag(&fx.live.tag("checked").unwrap()));
             }
         }
         let source = "- **one** and *two*";
@@ -147,7 +156,10 @@ fn test_active_prefixes_and_inline_span_visibility() {
             .iter()
             .filter(|t| t.property::<bool>("foreground-set"))
             .collect();
-        assert_eq!(foreground.last().unwrap(), &&fx.live.tag("checked").unwrap());
+        assert_eq!(
+            foreground.last().unwrap(),
+            &&fx.live.tag("checked").unwrap()
+        );
     });
 }
 impl Fx {
@@ -167,14 +179,23 @@ fn test_home_left_selection_copy_click_and_undo_clamp() {
         fx.press(k::Home);
         fx.press(k::Left);
         assert_eq!(fx.tab.cursor(), 8);
-        fx.tab.buffer.place_cursor(&fx.tab.buffer.iter_at_offset(15));
+        fx.tab
+            .buffer
+            .place_cursor(&fx.tab.buffer.iter_at_offset(15));
         let rect = fx.tab.view.iter_location(&fx.tab.buffer.iter_at_offset(11));
-        let (x, y) = fx
-            .tab
-            .view
-            .buffer_to_window_coords(gtk::TextWindowType::Text, rect.x() - 18, rect.y() + 3);
+        let (x, y) = fx.tab.view.buffer_to_window_coords(
+            gtk::TextWindowType::Text,
+            rect.x() - 18,
+            rect.y() + 3,
+        );
         let window = TextViewExt::window(&fx.tab.view, gtk::TextWindowType::Text).unwrap();
-        let press = button_event_at(gdk::EventType::ButtonPress, &window, f64::from(x), f64::from(y), 1);
+        let press = button_event_at(
+            gdk::EventType::ButtonPress,
+            &window,
+            f64::from(x),
+            f64::from(y),
+            1,
+        );
         let _: bool = fx.tab.view.emit_by_name("button-press-event", &[&press]);
         fx.ready();
         assert_eq!(fx.tab.cursor(), 11);
@@ -183,7 +204,9 @@ fn test_home_left_selection_copy_click_and_undo_clamp() {
         fx.key(k::c, ctrl());
         let clipboard = gtk::Clipboard::default(&gdk::Display::default().unwrap()).unwrap();
         assert_eq!(clipboard.wait_for_text().unwrap(), fx.text());
-        fx.tab.buffer.place_cursor(&fx.tab.buffer.iter_at_offset(11));
+        fx.tab
+            .buffer
+            .place_cursor(&fx.tab.buffer.iter_at_offset(11));
         fx.press(k::BackSpace);
         assert_eq!(fx.text(), "previous\ncontent\n- next");
         fx.key(k::z, ctrl());
@@ -198,7 +221,7 @@ fn test_home_left_selection_copy_click_and_undo_clamp() {
 fn test_list_keys_children_renumber_and_one_step_undo() {
     run(|| {
         let fx = Fx::new();
-        fx.h.panel.set_indent(false, 2);
+        let _ = fx.h.panel.set_indent(false, 2);
         fx.reset("1. one\n2. two\n3. three", Some(6));
         let (before, history) = (fx.text(), fx.tab.history_len());
         fx.press(k::Return);
@@ -224,7 +247,7 @@ fn test_list_keys_children_renumber_and_one_step_undo() {
         assert_eq!(fx.text(), "- ");
         fx.press(k::Return);
         assert_eq!(fx.text(), "");
-        fx.h.panel.set_indent(false, 4);
+        let _ = fx.h.panel.set_indent(false, 4);
         fx.reset("- root\n  - parent\n    - ", Some(24));
         fx.press(k::Return);
         assert_eq!(fx.text(), "- root\n  - parent\n  - ");
@@ -232,7 +255,11 @@ fn test_list_keys_children_renumber_and_one_step_undo() {
         fx.key(k::Return, ctrl());
         assert_eq!(fx.text(), "- [ ] done");
         let boxes = fx.widgets("marker");
-        boxes[0].clone().downcast::<gtk::CheckButton>().unwrap().clicked();
+        boxes[0]
+            .clone()
+            .downcast::<gtk::CheckButton>()
+            .unwrap()
+            .clicked();
         fx.ready();
         assert_eq!(fx.text(), "- [x] done");
     });
@@ -302,16 +329,26 @@ fn test_code_keys_language_picker_copy_and_exit() {
         let container = popover.child().unwrap().downcast::<gtk::Box>().unwrap();
         let children = container.children();
         let search = children[0].clone().downcast::<gtk::SearchEntry>().unwrap();
-        let scroll = children[1].clone().downcast::<gtk::ScrolledWindow>().unwrap();
+        let scroll = children[1]
+            .clone()
+            .downcast::<gtk::ScrolledWindow>()
+            .unwrap();
         search.set_text("json");
         pump(200);
         let viewport = scroll.child().unwrap().downcast::<gtk::Bin>().unwrap();
-        let choices = viewport.child().unwrap().downcast::<gtk::ListBox>().unwrap();
+        let choices = viewport
+            .child()
+            .unwrap()
+            .downcast::<gtk::ListBox>()
+            .unwrap();
         let row = choices
             .children()
             .into_iter()
             .filter_map(|c| c.downcast::<gtk::ListBoxRow>().ok())
-            .find(|r| unsafe { r.data::<String>("language").is_some_and(|l| l.as_ref() == "json") })
+            .find(|r| unsafe {
+                r.data::<String>("language")
+                    .is_some_and(|l| l.as_ref() == "json")
+            })
             .expect("json row");
         let history = fx.tab.history_len();
         choices.emit_by_name::<()>("row-activated", &[&row]);
@@ -344,7 +381,9 @@ fn test_code_keys_language_picker_copy_and_exit() {
         assert_eq!(fx.tab.cursor(), 11);
         fx.press(k::Up);
         assert_eq!(fx.tab.cursor(), 6);
-        fx.tab.buffer.place_cursor(&fx.tab.buffer.iter_at_offset(14));
+        fx.tab
+            .buffer
+            .place_cursor(&fx.tab.buffer.iter_at_offset(14));
         fx.press(k::Down);
         assert_eq!(fx.tab.cursor(), fx.index_of("after"));
         fx.reset("", None);
@@ -364,17 +403,23 @@ fn test_fence_caret_positions_stay_in_code_content() {
         let source = "```python\nvalue\n```";
         fx.reset(source, None);
         for offset in [0, 3, 9, 16, 18, source.chars().count() as i32] {
-            fx.tab.buffer.place_cursor(&fx.tab.buffer.iter_at_offset(offset));
+            fx.tab
+                .buffer
+                .place_cursor(&fx.tab.buffer.iter_at_offset(offset));
             fx.ready();
             assert!(!fx.hidden(fx.tab.cursor()), "{offset}");
             assert!(!fx.tab.buffer.has_selection(), "{offset}");
             assert!(fx.tab.cursor() >= fx.index_of("value"));
             assert!(fx.tab.cursor() <= fx.index_of("\n```"));
         }
-        fx.tab.buffer.place_cursor(&fx.tab.buffer.iter_at_offset(fx.index_of("value")));
+        fx.tab
+            .buffer
+            .place_cursor(&fx.tab.buffer.iter_at_offset(fx.index_of("value")));
         fx.press(k::BackSpace);
         assert_eq!(fx.text(), source);
-        fx.tab.buffer.place_cursor(&fx.tab.buffer.iter_at_offset(fx.index_of("\n```")));
+        fx.tab
+            .buffer
+            .place_cursor(&fx.tab.buffer.iter_at_offset(fx.index_of("\n```")));
         fx.press(k::Delete);
         assert_eq!(fx.text(), source);
     });

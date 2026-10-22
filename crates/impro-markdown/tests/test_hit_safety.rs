@@ -39,38 +39,128 @@ fn varied() -> String {
 fn scenarios() -> Vec<(&'static str, String, &'static str, &'static str)> {
     let long = long();
     vec![
-        ("two_headings", "# one\n# two\n".into(), "note", "impro-dark"),
-        ("headings_levels", "# one\n## two\n### three\n#### four\n".into(), "note", "impro-light"),
-        ("heading_then_plain", "# one\nplain\n".into(), "note", "impro-dark"),
+        (
+            "two_headings",
+            "# one\n# two\n".into(),
+            "note",
+            "impro-dark",
+        ),
+        (
+            "headings_levels",
+            "# one\n## two\n### three\n#### four\n".into(),
+            "note",
+            "impro-light",
+        ),
+        (
+            "heading_then_plain",
+            "# one\nplain\n".into(),
+            "note",
+            "impro-dark",
+        ),
         ("bullet_list", "- one\n- two\n".into(), "note", "impro-dark"),
-        ("bullet_list_light", "- one\n- two\n- three\n".into(), "note", "impro-light"),
-        ("numbered_list", "1. one\n2. two\n3. three\n".into(), "note", "impro-dark"),
-        ("checklist", "- [ ] one\n- [x] two\n".into(), "note", "impro-dark"),
-        ("nested_list", "- a\n  - b\n    - c\n  - d\n- e\n".into(), "note", "impro-dark"),
-        ("list_after_blank", "# one\n\n- a\n\n- b\n".into(), "note", "impro-dark"),
+        (
+            "bullet_list_light",
+            "- one\n- two\n- three\n".into(),
+            "note",
+            "impro-light",
+        ),
+        (
+            "numbered_list",
+            "1. one\n2. two\n3. three\n".into(),
+            "note",
+            "impro-dark",
+        ),
+        (
+            "checklist",
+            "- [ ] one\n- [x] two\n".into(),
+            "note",
+            "impro-dark",
+        ),
+        (
+            "nested_list",
+            "- a\n  - b\n    - c\n  - d\n- e\n".into(),
+            "note",
+            "impro-dark",
+        ),
+        (
+            "list_after_blank",
+            "# one\n\n- a\n\n- b\n".into(),
+            "note",
+            "impro-dark",
+        ),
         ("quote", "> one\n> two\n".into(), "note", "impro-dark"),
-        ("nested_quote", "> a\n> > b\n> > > c\n> d\n".into(), "note", "impro-light"),
-        ("rule_mid", "before\n\n---\n\nafter\n".into(), "note", "impro-dark"),
+        (
+            "nested_quote",
+            "> a\n> > b\n> > > c\n> d\n".into(),
+            "note",
+            "impro-light",
+        ),
+        (
+            "rule_mid",
+            "before\n\n---\n\nafter\n".into(),
+            "note",
+            "impro-dark",
+        ),
         ("rule_first", "---\n\nafter\n".into(), "note", "impro-dark"),
         ("rule_last", "before\n\n---\n".into(), "note", "impro-dark"),
-        ("rule_last_no_newline", "before\n\n***".into(), "note", "impro-dark"),
-        ("rules_adjacent", "---\n---\n- a\n".into(), "note", "impro-dark"),
-        ("code_after_list", "- a\n- b\n```\ncode\n```\nafter\n".into(), "note", "impro-dark"),
-        ("unclosed_code", "- a\n```py\nx = 1\ny = 2\n".into(), "note", "impro-dark"),
+        (
+            "rule_last_no_newline",
+            "before\n\n***".into(),
+            "note",
+            "impro-dark",
+        ),
+        (
+            "rules_adjacent",
+            "---\n---\n- a\n".into(),
+            "note",
+            "impro-dark",
+        ),
+        (
+            "code_after_list",
+            "- a\n- b\n```\ncode\n```\nafter\n".into(),
+            "note",
+            "impro-dark",
+        ),
+        (
+            "unclosed_code",
+            "- a\n```py\nx = 1\ny = 2\n".into(),
+            "note",
+            "impro-dark",
+        ),
         (
             "table_beside_hidden_prefix",
             "- a\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\n# h\n> q\n".into(),
             "note",
             "impro-dark",
         ),
-        ("image_placeholder", "![pic](pic.png)\n- a\n![gone](missing.png)\n# h\n".into(), "note", "impro-dark"),
+        (
+            "image_placeholder",
+            "![pic](pic.png)\n- a\n![gone](missing.png)\n# h\n".into(),
+            "note",
+            "impro-dark",
+        ),
         ("varied_lengths", varied(), "note", "impro-dark"),
         ("mixed_note", MIXED.into(), "note", "impro-dark"),
         ("mixed_note_light", MIXED.into(), "note", "impro-light"),
         ("mixed_project_md", MIXED.into(), "project", "impro-dark"),
-        ("project_md_list", "# one\n\n- a\n- b\n\n> q\n".into(), "project", "impro-light"),
-        ("wrapped_list_item", format!("- {long}\n- short\n  - {long}\n"), "note", "impro-dark"),
-        ("wrapped_quote_heading", format!("> {long}\n# {long}\n"), "note", "impro-dark"),
+        (
+            "project_md_list",
+            "# one\n\n- a\n- b\n\n> q\n".into(),
+            "project",
+            "impro-light",
+        ),
+        (
+            "wrapped_list_item",
+            format!("- {long}\n- short\n  - {long}\n"),
+            "note",
+            "impro-dark",
+        ),
+        (
+            "wrapped_quote_heading",
+            format!("> {long}\n# {long}\n"),
+            "note",
+            "impro-dark",
+        ),
         (
             "unicode",
             "- é 日本 😀\n- é 日本語 😀😀 text\n# 日本 😀\n> é\n".into(),
@@ -83,7 +173,13 @@ fn scenarios() -> Vec<(&'static str, String, &'static str, &'static str)> {
 fn run_scenario(name: &str) -> (Option<i32>, String, String) {
     let exe = std::env::current_exe().expect("test binary");
     let output = Command::new(exe)
-        .args(["--ignored", "--exact", "child", "--nocapture", "--test-threads=1"])
+        .args([
+            "--ignored",
+            "--exact",
+            "child",
+            "--nocapture",
+            "--test-threads=1",
+        ])
         .env("IMPRO_HIT_SCENARIO", name)
         .env("GDK_BACKEND", "x11")
         .env_remove("WAYLAND_DISPLAY")
@@ -151,7 +247,13 @@ fn every_scenario_has_a_test() {
 
 // -- child process: drive a real EditorPanel with synthetic input -------------
 
-fn motion_event(window: &gdk::Window, x: f64, y: f64, state: gdk::ModifierType, time: u32) -> gdk::Event {
+fn motion_event(
+    window: &gdk::Window,
+    x: f64,
+    y: f64,
+    state: gdk::ModifierType,
+    time: u32,
+) -> gdk::Event {
     use glib::translate::*;
     let mut event = gdk::Event::new(gdk::EventType::MotionNotify);
     unsafe {
@@ -206,12 +308,18 @@ fn sweep(name: &str, text: &str, kind: &str, theme_id: &str) {
     impro_ui::apply_style(None).unwrap();
     impro_ui::motion::set_reduce_motion(true);
     let folder = tempfile::tempdir().unwrap();
-    let path: PathBuf = folder.path().join(if kind == "note" { ".impro/Notes/n.md" } else { "guide.md" });
+    let path: PathBuf = folder.path().join(if kind == "note" {
+        ".impro/Notes/n.md"
+    } else {
+        "guide.md"
+    });
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
     std::fs::write(&path, text).unwrap();
     let pixbuf = gdk_pixbuf::Pixbuf::new(gdk_pixbuf::Colorspace::Rgb, false, 8, 40, 30).unwrap();
     pixbuf.fill(0x3366_99ff);
-    pixbuf.savev(path.parent().unwrap().join("pic.png"), "png", &[]).unwrap();
+    pixbuf
+        .savev(path.parent().unwrap().join("pic.png"), "png", &[])
+        .unwrap();
     let root = folder.path().canonicalize().unwrap();
     let panel = EditorPanel::new(Some(&root));
     let window = gtk::Window::new(gtk::WindowType::Toplevel);
@@ -239,7 +347,8 @@ fn sweep(name: &str, text: &str, kind: &str, theme_id: &str) {
     let keymap = gdk::Keymap::for_display(&display).unwrap();
     let mut probes = 0u64;
     let mut clock = 1000u32;
-    let text_window = || TextViewExt::window(&view, gtk::TextWindowType::Text).expect("text window");
+    let text_window =
+        || TextViewExt::window(&view, gtk::TextWindowType::Text).expect("text window");
 
     let mut send_key = |keyval: gdk::keys::Key, state: gdk::ModifierType, clock: &mut u32| {
         use glib::translate::*;
@@ -248,7 +357,8 @@ fn sweep(name: &str, text: &str, kind: &str, theme_id: &str) {
             *clock += 40;
             unsafe {
                 let raw: *mut gdk::ffi::GdkEvent = event.to_glib_none_mut().0;
-                (*raw).key.window = ToGlibPtr::<*mut gdk::ffi::GdkWindow>::to_glib_full(&text_window());
+                (*raw).key.window =
+                    ToGlibPtr::<*mut gdk::ffi::GdkWindow>::to_glib_full(&text_window());
                 (*raw).key.send_event = 1;
                 (*raw).key.keyval = *keyval;
                 (*raw).key.state = state.bits();
@@ -271,7 +381,17 @@ fn sweep(name: &str, text: &str, kind: &str, theme_id: &str) {
         let left = view.left_margin();
         let right = view.allocated_width() - view.right_margin();
         for y in -4..top + height + 24 {
-            for x in [-3, 0, 1, left - 1, left, left + 9, (left + right) / 2, right - 1, right + 6] {
+            for x in [
+                -3,
+                0,
+                1,
+                left - 1,
+                left,
+                left + 9,
+                (left + right) / 2,
+                right - 1,
+                right + 6,
+            ] {
                 let _ = view.iter_at_location(x, y);
                 let _ = view.iter_at_position(x, y);
                 *probes += 2;
@@ -284,7 +404,13 @@ fn sweep(name: &str, text: &str, kind: &str, theme_id: &str) {
         while y < height {
             for x in [0, 17, 45, 96, 240, 480, 700] {
                 *clock += 40;
-                let event = motion_event(&text_window(), f64::from(x), f64::from(y), gdk::ModifierType::empty(), *clock);
+                let event = motion_event(
+                    &text_window(),
+                    f64::from(x),
+                    f64::from(y),
+                    gdk::ModifierType::empty(),
+                    *clock,
+                );
                 view.event(&event);
                 *probes += 1;
             }
@@ -315,12 +441,33 @@ fn sweep(name: &str, text: &str, kind: &str, theme_id: &str) {
             // Three quick presses make a single, double and triple click in GTK's multi-press gesture.
             for _ in 0..3 {
                 *clock += 40;
-                view.event(&press_event(gdk::EventType::ButtonPress, &text_window(), f64::from(x), f64::from(y), none, *clock));
+                view.event(&press_event(
+                    gdk::EventType::ButtonPress,
+                    &text_window(),
+                    f64::from(x),
+                    f64::from(y),
+                    none,
+                    *clock,
+                ));
                 *clock += 40;
-                view.event(&press_event(gdk::EventType::ButtonRelease, &text_window(), f64::from(x), f64::from(y), gdk::ModifierType::BUTTON1_MASK, *clock));
+                view.event(&press_event(
+                    gdk::EventType::ButtonRelease,
+                    &text_window(),
+                    f64::from(x),
+                    f64::from(y),
+                    gdk::ModifierType::BUTTON1_MASK,
+                    *clock,
+                ));
             }
             *clock += 40;
-            view.event(&press_event(gdk::EventType::ButtonPress, &text_window(), f64::from(x), f64::from(y), gdk::ModifierType::SHIFT_MASK, *clock));
+            view.event(&press_event(
+                gdk::EventType::ButtonPress,
+                &text_window(),
+                f64::from(x),
+                f64::from(y),
+                gdk::ModifierType::SHIFT_MASK,
+                *clock,
+            ));
             *clock += 40;
             view.event(&press_event(
                 gdk::EventType::ButtonRelease,
@@ -335,62 +482,85 @@ fn sweep(name: &str, text: &str, kind: &str, theme_id: &str) {
         }
         for (&(x1, y1), &(x2, y2)) in targets.iter().zip(targets.iter().rev()) {
             *clock += 40;
-            view.event(&press_event(gdk::EventType::ButtonPress, &text_window(), f64::from(x1), f64::from(y1), none, *clock));
+            view.event(&press_event(
+                gdk::EventType::ButtonPress,
+                &text_window(),
+                f64::from(x1),
+                f64::from(y1),
+                none,
+                *clock,
+            ));
             for step in 1..=6 {
                 *clock += 40;
                 let (x, y) = (x1 + (x2 - x1) * step / 6, y1 + (y2 - y1) * step / 6);
-                view.event(&motion_event(&text_window(), f64::from(x), f64::from(y), gdk::ModifierType::BUTTON1_MASK, *clock));
+                view.event(&motion_event(
+                    &text_window(),
+                    f64::from(x),
+                    f64::from(y),
+                    gdk::ModifierType::BUTTON1_MASK,
+                    *clock,
+                ));
             }
             *clock += 40;
-            view.event(&press_event(gdk::EventType::ButtonRelease, &text_window(), f64::from(x2), f64::from(y2), gdk::ModifierType::BUTTON1_MASK, *clock));
+            view.event(&press_event(
+                gdk::EventType::ButtonRelease,
+                &text_window(),
+                f64::from(x2),
+                f64::from(y2),
+                gdk::ModifierType::BUTTON1_MASK,
+                *clock,
+            ));
             *probes += 7;
         }
         pump(50);
     };
-    let navigate = |probes: &mut u64, clock: &mut u32, send_key: &mut dyn FnMut(gdk::keys::Key, gdk::ModifierType, &mut u32)| {
-        let none = gdk::ModifierType::empty();
-        let mut sequence = vec![k::Down; 7];
-        sequence.extend(vec![k::Up; 7]);
-        for _ in 0..2 {
-            sequence.extend([k::Page_Down, k::Page_Up, k::End, k::Home, k::Right, k::Left]);
-        }
-        for key in sequence {
-            send_key(key, none, clock);
-        }
-        for key in [k::Down, k::Up, k::End, k::Home, k::Page_Down, k::Page_Up] {
-            for _ in 0..3 {
-                send_key(key, gdk::ModifierType::SHIFT_MASK, clock);
+    let navigate =
+        |probes: &mut u64,
+         clock: &mut u32,
+         send_key: &mut dyn FnMut(gdk::keys::Key, gdk::ModifierType, &mut u32)| {
+            let none = gdk::ModifierType::empty();
+            let mut sequence = vec![k::Down; 7];
+            sequence.extend(vec![k::Up; 7]);
+            for _ in 0..2 {
+                sequence.extend([k::Page_Down, k::Page_Up, k::End, k::Home, k::Right, k::Left]);
             }
-        }
-        send_key(k::Home, gdk::ModifierType::CONTROL_MASK, clock);
-        send_key(k::End, gdk::ModifierType::CONTROL_MASK, clock);
-        for (step, count) in [
-            (gtk::MovementStep::DisplayLines, 1),
-            (gtk::MovementStep::DisplayLines, -1),
-            (gtk::MovementStep::Pages, 1),
-            (gtk::MovementStep::Pages, -1),
-            (gtk::MovementStep::DisplayLineEnds, 1),
-            (gtk::MovementStep::DisplayLineEnds, -1),
-            (gtk::MovementStep::ParagraphEnds, 1),
-            (gtk::MovementStep::VisualPositions, 1),
-        ] {
-            for extend in [false, true] {
-                for _ in 0..4 {
-                    view.emit_by_name::<()>("move-cursor", &[&step, &count, &extend]);
+            for key in sequence {
+                send_key(key, none, clock);
+            }
+            for key in [k::Down, k::Up, k::End, k::Home, k::Page_Down, k::Page_Up] {
+                for _ in 0..3 {
+                    send_key(key, gdk::ModifierType::SHIFT_MASK, clock);
                 }
             }
-        }
-        for number in 0..buffer.line_count() {
-            let iter = buffer.iter_at_line(number);
-            view.scroll_to_iter(&mut iter.clone(), 0.0, false, 0.0, 0.0);
-            view.scroll_to_iter(&mut iter.clone(), 0.1, true, 0.5, 0.5);
-            buffer.place_cursor(&iter);
-            view.scroll_mark_onscreen(&buffer.get_insert().unwrap());
-            view.place_cursor_onscreen();
-            pump(10);
-            *probes += 4;
-        }
-    };
+            send_key(k::Home, gdk::ModifierType::CONTROL_MASK, clock);
+            send_key(k::End, gdk::ModifierType::CONTROL_MASK, clock);
+            for (step, count) in [
+                (gtk::MovementStep::DisplayLines, 1),
+                (gtk::MovementStep::DisplayLines, -1),
+                (gtk::MovementStep::Pages, 1),
+                (gtk::MovementStep::Pages, -1),
+                (gtk::MovementStep::DisplayLineEnds, 1),
+                (gtk::MovementStep::DisplayLineEnds, -1),
+                (gtk::MovementStep::ParagraphEnds, 1),
+                (gtk::MovementStep::VisualPositions, 1),
+            ] {
+                for extend in [false, true] {
+                    for _ in 0..4 {
+                        view.emit_by_name::<()>("move-cursor", &[&step, &count, &extend]);
+                    }
+                }
+            }
+            for number in 0..buffer.line_count() {
+                let iter = buffer.iter_at_line(number);
+                view.scroll_to_iter(&mut iter.clone(), 0.0, false, 0.0, 0.0);
+                view.scroll_to_iter(&mut iter.clone(), 0.1, true, 0.5, 0.5);
+                buffer.place_cursor(&iter);
+                view.scroll_mark_onscreen(&buffer.get_insert().unwrap());
+                view.place_cursor_onscreen();
+                pump(10);
+                *probes += 4;
+            }
+        };
     let scrolling = |probes: &mut u64| {
         let upper = (adjustment.upper() - adjustment.page_size()) as i32;
         let mut value = 0;

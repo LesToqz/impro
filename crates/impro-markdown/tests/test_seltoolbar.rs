@@ -17,7 +17,10 @@ impl Fx {
     fn new() -> Self {
         impro_ui::motion::set_reduce_motion(true);
         let h = Harness::sized(780, 600);
-        let text = format!("A note\n\nAn editable paragraph with selected words.\n{}", "\nMore text.".repeat(100));
+        let text = format!(
+            "A note\n\nAn editable paragraph with selected words.\n{}",
+            "\nMore text.".repeat(100)
+        );
         let tab = h.note("note.md", &text);
         let path = tab.path();
         tab.view.grab_focus();
@@ -32,9 +35,10 @@ impl Fx {
         text_of(&self.tab.buffer)
     }
     fn select_range(&self, start: i32, end: i32) {
-        self.tab
-            .buffer
-            .select_range(&self.tab.buffer.iter_at_offset(end), &self.tab.buffer.iter_at_offset(start));
+        self.tab.buffer.select_range(
+            &self.tab.buffer.iter_at_offset(end),
+            &self.tab.buffer.iter_at_offset(start),
+        );
     }
     fn select(&self, word: &str) {
         let text = self.text();
@@ -96,16 +100,31 @@ fn test_mouse_drag_waits_for_release_and_keyboard_debounces() {
         let fx = Fx::new();
         let window = TextViewExt::window(&fx.tab.view, gtk::TextWindowType::Text).unwrap();
         let rect = fx.tab.view.iter_location(&fx.tab.buffer.iter_at_offset(40));
-        let (x, y) = fx
-            .tab
-            .view
-            .buffer_to_window_coords(gtk::TextWindowType::Text, rect.x(), rect.y());
-        let press = button_event_at(gdk::EventType::ButtonPress, &window, f64::from(x), f64::from(y), 1);
+        let (x, y) =
+            fx.tab
+                .view
+                .buffer_to_window_coords(gtk::TextWindowType::Text, rect.x(), rect.y());
+        let press = button_event_at(
+            gdk::EventType::ButtonPress,
+            &window,
+            f64::from(x),
+            f64::from(y),
+            1,
+        );
         let _: bool = fx.tab.view.emit_by_name("button-press-event", &[&press]);
         fx.select("selected");
         assert!(!fx.visible());
-        let release = button_event_at(gdk::EventType::ButtonRelease, &window, f64::from(x), f64::from(y), 1);
-        let _: bool = fx.tab.view.emit_by_name("button-release-event", &[&release]);
+        let release = button_event_at(
+            gdk::EventType::ButtonRelease,
+            &window,
+            f64::from(x),
+            f64::from(y),
+            1,
+        );
+        let _: bool = fx
+            .tab
+            .view
+            .emit_by_name("button-release-event", &[&release]);
         pump(50);
         assert!(!fx.visible());
         pump(200);
@@ -181,8 +200,16 @@ fn test_other_inline_formats_link_copy_and_turn_into() {
         buttons["turn"].clicked();
         pump(200);
         assert!(fx.toolbar().menu().is_visible());
-        let ids: Vec<_> = fx.toolbar().menu_buttons().iter().map(|(id, _)| *id).collect();
-        assert_eq!(ids, ["text", "h1", "h2", "h3", "bullet", "numbered", "todo", "quote"]);
+        let ids: Vec<_> = fx
+            .toolbar()
+            .menu_buttons()
+            .iter()
+            .map(|(id, _)| *id)
+            .collect();
+        assert_eq!(
+            ids,
+            ["text", "h1", "h2", "h3", "bullet", "numbered", "todo", "quote"]
+        );
         let h2 = fx
             .toolbar()
             .menu_buttons()
@@ -203,10 +230,10 @@ fn test_focus_loss_tab_switch_typing_scroll_and_slash() {
     run(|| {
         let fx = Fx::new();
         fx.select("selected");
-        let _: bool = fx
-            .tab
-            .view
-            .emit_by_name("focus-out-event", &[&bare_event(gdk::EventType::FocusChange)]);
+        let _: bool = fx.tab.view.emit_by_name(
+            "focus-out-event",
+            &[&bare_event(gdk::EventType::FocusChange)],
+        );
         assert!(!fx.visible());
         fx.select("words");
         assert!(fx.visible());
@@ -233,7 +260,10 @@ fn test_focus_loss_tab_switch_typing_scroll_and_slash() {
         poll(|| !fx.h.panel.is_busy());
         fx.tab.view.grab_focus();
         fx.select("words");
-        impro_markdown::slashmenu::for_view(&fx.tab.view).unwrap().popover().show();
+        impro_markdown::slashmenu::for_view(&fx.tab.view)
+            .unwrap()
+            .popover()
+            .show();
         pump(200);
         assert!(!fx.visible());
     });

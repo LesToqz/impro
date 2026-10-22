@@ -5,8 +5,15 @@
 mod support;
 use gdk::keys::constants as k;
 use gtk::prelude::*;
-use impro_markdown::{livemd::{self, LiveMarkdown}, seltoolbar, slashmenu::SlashMenu};
-use std::{cell::{Cell, RefCell}, rc::Rc};
+use impro_markdown::{
+    livemd::{self, LiveMarkdown},
+    seltoolbar,
+    slashmenu::SlashMenu,
+};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
 use support::*;
 
 fn joined(live: &LiveMarkdown) -> String {
@@ -38,7 +45,10 @@ fn nested_buffer_edits_from_a_changed_handler_keep_blocks_consistent() {
         settle(&live);
         assert_eq!(joined(&live), text_of(&tab.buffer));
         let blocks = live.blocks();
-        assert!(blocks.iter().zip(blocks.iter().skip(1)).all(|(a, b)| a.end == b.start));
+        assert!(blocks
+            .iter()
+            .zip(blocks.iter().skip(1))
+            .all(|(a, b)| a.end == b.start));
     });
 }
 
@@ -46,7 +56,10 @@ fn nested_buffer_edits_from_a_changed_handler_keep_blocks_consistent() {
 fn mode_switch_and_destroy_inside_signal_handlers_do_not_panic() {
     run(|| {
         let h = Harness::new();
-        let tab = h.note("modes.md", "# Title\n\n```py\nx\n```\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend");
+        let tab = h.note(
+            "modes.md",
+            "# Title\n\n```py\nx\n```\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend",
+        );
         let live = live_of(&tab);
         settle(&live);
         // Switching modes from a mark-set handler (fires inside the renderer's own mark-set).
@@ -56,7 +69,11 @@ fn mode_switch_and_destroy_inside_signal_handlers_do_not_panic() {
         let id = tab.buffer.connect_mark_set(move |_, _, mark| {
             if mark.name().as_deref() == Some("insert") && count.get() < 2 {
                 count.set(count.get() + 1);
-                t.set_markdown_mode(if count.get() == 1 { "source" } else { "preview" });
+                t.set_markdown_mode(if count.get() == 1 {
+                    "source"
+                } else {
+                    "preview"
+                });
             }
         });
         tab.buffer.place_cursor(&tab.buffer.iter_at_offset(3));
@@ -64,7 +81,14 @@ fn mode_switch_and_destroy_inside_signal_handlers_do_not_panic() {
         tab.buffer.disconnect(id);
         settle(&live_of(&tab));
         assert!(fired.get() >= 1);
-        assert_eq!(tab.markdown_mode(), Some(if fired.get() == 1 { "source" } else { "preview" }));
+        assert_eq!(
+            tab.markdown_mode(),
+            Some(if fired.get() == 1 {
+                "source"
+            } else {
+                "preview"
+            })
+        );
         // Destroying the renderer from a key handler while work is queued.
         tab.set_markdown_mode("preview");
         tab.buffer.insert(&mut tab.buffer.iter_at_offset(0), "a");
@@ -160,10 +184,11 @@ fn releasing_a_document_frees_tags_marks_and_widgets() {
         let tab = h.note("weak.md", "# Title\n\n- [ ] a\n- b\n\n> q\n\n---\n\n```py\nx\n```\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend");
         let live = live_of(&tab);
         settle(&live);
-        let tags: Vec<glib::WeakRef<gtk::TextTag>> = ["hidden", "h1", "body", "strong", "link", "codeblock"]
-            .iter()
-            .map(|n| live.tag(n).unwrap().downgrade())
-            .collect();
+        let tags: Vec<glib::WeakRef<gtk::TextTag>> =
+            ["hidden", "h1", "body", "strong", "link", "codeblock"]
+                .iter()
+                .map(|n| live.tag(n).unwrap().downgrade())
+                .collect();
         let widgets: Vec<glib::WeakRef<gtk::Widget>> = live
             .blocks()
             .iter()
@@ -178,11 +203,22 @@ fn releasing_a_document_frees_tags_marks_and_widgets() {
         let _ = inner;
         drop(live);
         pump(80);
-        assert!(tags.iter().all(|t| t.upgrade().is_none()), "style tags leaked");
-        assert!(widgets.iter().all(|w| w.upgrade().is_none()), "widgets leaked");
+        assert!(
+            tags.iter().all(|t| t.upgrade().is_none()),
+            "style tags leaked"
+        );
+        assert!(
+            widgets.iter().all(|w| w.upgrade().is_none()),
+            "widgets leaked"
+        );
         // Only foreign tags (highlighter, gutter) remain in the table.
         assert!(table.size() < before);
-        assert!(!tab.buffer.start_iter().tags().iter().any(|t| t.name().is_some_and(|n| n.starts_with("live-md-"))));
+        assert!(!tab
+            .buffer
+            .start_iter()
+            .tags()
+            .iter()
+            .any(|t| t.name().is_some_and(|n| n.starts_with("live-md-"))));
         let mut live_tags = 0;
         table.foreach(|t| {
             if t.name().is_some_and(|n| n.starts_with("live-md-")) {
@@ -197,7 +233,10 @@ fn releasing_a_document_frees_tags_marks_and_widgets() {
 fn closing_a_tab_releases_the_buffer_view_and_renderer() {
     run(|| {
         let h = Harness::new();
-        let tab = h.note("close.md", "# Title\n\n- a\n\n```py\nx\n```\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend");
+        let tab = h.note(
+            "close.md",
+            "# Title\n\n- a\n\n```py\nx\n```\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend",
+        );
         let live = live_of(&tab);
         settle(&live);
         tab.buffer.set_modified(false);
@@ -220,7 +259,10 @@ fn closing_a_tab_releases_the_buffer_view_and_renderer() {
 fn idle_has_no_sources_once_settled() {
     run(|| {
         let h = Harness::new();
-        let tab = h.note("idle.md", "# Title\n\n- a\n\n```py\nx\n```\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend");
+        let tab = h.note(
+            "idle.md",
+            "# Title\n\n- a\n\n```py\nx\n```\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend",
+        );
         let live = live_of(&tab);
         settle(&live);
         pump(300);
