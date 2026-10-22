@@ -6,6 +6,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 import compare
+import check_runs
+import json
 from matrix import SCENES
 
 
@@ -43,6 +45,18 @@ class HarnessTests(unittest.TestCase):
             compare.write_png(path,64,64,bytes([10,20,30,255])*64*32 + bytes([0,0,0,255])*64*32)
             with self.assertRaisesRegex(ValueError,'clipped capture'):
                 compare.validate_capture(path)
+
+    def test_repeat_checker_rejects_changed_counts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            first, second = Path(directory)/'first.json', Path(directory)/'second.json'
+            row = dict(scene='default',theme='dark',scale=1,status='compared',changed=0)
+            first.write_text(json.dumps(dict(rows=[row])))
+            second.write_text(first.read_text())
+            self.assertEqual(check_runs.check(first,second),1)
+            row['changed'] = 1
+            second.write_text(json.dumps(dict(rows=[row])))
+            with self.assertRaisesRegex(ValueError,'changed'):
+                check_runs.check(first,second)
 
     def test_live_notes_reserved(self):
         self.assertEqual([s for s in SCENES if s.startswith('notes-')],

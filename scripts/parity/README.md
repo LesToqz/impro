@@ -62,3 +62,8 @@ kept visible and explained in RESULTS.md, including grammar differences.
 
 Run `PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 scripts/parity/test_harness.py`
 for codec, metrics, clipped-capture and reserved scene checks.
+
+Use `python3 scripts/parity/check_runs.py FIRST.json SECOND.json` to verify two
+saved summaries, including all source image hashes. Graph rows compare complete
+structural metadata instead of force-layout paint hashes; capture errors fail
+the repeat check. Keep the scene set and output directory the same between runs.
