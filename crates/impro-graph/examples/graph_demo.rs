@@ -326,6 +326,10 @@ fn main() {
                     }
                 }
             }
+            "closed" => {
+                view.set_panel_open(false);
+                t::pump(500);
+            }
             "replay" => {
                 view.replay_history();
                 t::pump(1200);
