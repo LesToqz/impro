@@ -1106,6 +1106,33 @@ impl EditorPanel {
         }
         self.dirty_changed();
     }
+    /// Retarget an exact file without appending an empty descendant component.
+    /// Returns true when an open file was moved. Directory callers can use
+    /// `on_path_renamed` when this returns false.
+    pub fn on_file_renamed(&self, old: &Path, new: &Path) -> bool {
+        let old = file::absolute(old);
+        let new = file::absolute(new);
+        let Some(tab) = self.tab_for_path(&old) else {
+            return false;
+        };
+        tab.set_path(new.clone());
+        let expected = new.clone();
+        let weak = Rc::downgrade(&tab);
+        self.worker(
+            move || new.canonicalize().unwrap_or(new),
+            move |resolved| {
+                if let Some(tab) = weak
+                    .upgrade()
+                    .filter(|tab| !tab.is_closed() && tab.path() == expected)
+                {
+                    tab.set_resolved_path(resolved);
+                }
+            },
+        );
+        self.update_status();
+        self.announce_current();
+        true
+    }
     pub fn on_path_renamed(&self, old: impl AsRef<Path>, new: impl AsRef<Path>) {
         let old = file::absolute(old.as_ref());
         let new = file::absolute(new.as_ref());
