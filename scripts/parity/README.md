@@ -21,7 +21,19 @@ using a different output directory changes those pages.
 Scenes are paired actions against the real window APIs in `reference.py` and
 `crates/impro/examples/parity/scenes.rs`. Add a name to `SCENES` in `matrix.py`,
 implement both actions and add their readiness predicates. Unknown scenes fail;
-`notes-*` is the reserved live Markdown capability stub (exit 77 means skipped).
+exit 77 from a driver marks a scene unsupported (skipped, never substituted).
+
+The `notes-*` scenes open the generated fixture note `.impro/Notes/Live.md`
+(every construct: headings, inline spans, links, tasks, nested lists, quote, a
+fenced code card, a table, a divider and the local image `pixel.png`) with live
+Markdown on and the readable column enabled (`notes-fullwidth` turns it off). The
+caret rests in a paragraph (`notes-live`, `notes-scrolled`), a list item
+(`notes-list`), the code card (`notes-code`, source reveal) or a table cell
+(`notes-table`); `notes-selection` selects a word so the selection toolbar is
+visible. The code, table and scrolled scenes apply a fixed vertical offset that is
+re-applied until the lazily laid-out view holds it. The reference adapter points
+its own note-path check at the rebranded notes folder, since that check names a
+fixed folder pair of the reference.
 Capture waits for pending work, completed frames and a bounded stable-image loop.
 No masks or pixel tolerance apply. Differences include all RGBA channels; bboxes
 use exclusive right/bottom coordinates. `regions` are connected occupied 32px

@@ -58,12 +58,16 @@ class HarnessTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'changed'):
                 check_runs.check(first,second)
 
-    def test_live_notes_reserved(self):
-        self.assertEqual([s for s in SCENES if s.startswith('notes-')],
-                         ['notes-live','notes-table','notes-selection'])
+    def test_live_note_scenes_are_implemented_on_both_sides(self):
+        notes = [s for s in SCENES if s.startswith('notes-')]
+        self.assertEqual(notes, ['notes-live','notes-list','notes-code','notes-table',
+                                 'notes-selection','notes-scrolled','notes-fullwidth'])
         driver = (Path(__file__).parents[2]/'crates/impro/examples/parity/scenes.rs').read_text()
-        self.assertIn('scene.starts_with("notes-")',driver)
-        self.assertIn('std::process::exit(77)',driver)
+        reference = (Path(__file__).parent/'reference.py').read_text()
+        self.assertNotIn('std::process::exit(77)',driver)
+        for scene in notes:
+            self.assertIn('"%s"' % scene,driver)
+            self.assertIn("'%s'" % scene,reference)
 
 
 if __name__ == '__main__':

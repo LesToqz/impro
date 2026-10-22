@@ -38,6 +38,14 @@ def main():
     settings = module('settings')
     notes = module('notes')
     notes.NOTES_DIR = os.path.join('.impro','Notes')
+    def is_note_path(path):
+        # The reference recognises notes outside a project by a fixed folder pair
+        # of its own name; use the rebranded pair so its popups apply to the notes.
+        if not path or not os.fspath(path).lower().endswith(notes.NOTE_SUFFIX):
+            return False
+        parts = os.path.abspath(path).split(os.sep)[:-1]
+        return any(parts[i:i + 2] == ['.impro', 'Notes'] for i in range(len(parts) - 1))
+    notes.is_note_path = is_note_path
     settings._path = lambda: Path(os.environ['XDG_CONFIG_HOME'])/'impro/settings.json'
     values = json.loads(os.environ['IMPRO_PARITY_SETTINGS'])
     # Resolve reference theme ids from its own registry, never by a literal prefix.
@@ -160,6 +168,48 @@ def main():
             w.open_commit(os.environ['IMPRO_PARITY_HEAD'])
             poll(lambda: not w._commit_pending and w._commit_views)
             poll(lambda: all(v._ready and v.last_data is not None for v in w._commit_views.values()))
+    elif scene.startswith('notes-'):
+        note = '.impro/Notes/Live.md'
+        open_file(note)
+        tab = next(t for t in w.editor.tabs if t.path == str(args.root/note))
+        renderer = tab.md_renderer
+        def ready():
+            tables = renderer.__dict__.get('_tables')
+            return not renderer.pending and (tables is None or all(
+                len(v.cells) == len(v.model.rows) for v in tables.views.values()))
+        poll(ready)
+        buffer = tab.buffer
+        text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True)
+        def offset(needle, extra=0):
+            return text.index(needle) + extra
+        # The view lays its lines out lazily, so a requested offset can be
+        # clamped until the layout reaches it: re-apply until it holds.
+        scroll = {'notes-code': 200, 'notes-table': 420, 'notes-scrolled': 400}.get(scene, 0)
+        def apply_scroll():
+            if scroll:
+                adjustment = tab.view.get_vadjustment()
+                def scrolled():
+                    adjustment.set_value(scroll)
+                    return abs(adjustment.get_value() - scroll) < 1 and ready()
+                poll(scrolled)
+        apply_scroll()
+        tab.view.grab_focus()
+        if scene == 'notes-selection':
+            buffer.select_range(buffer.get_iter_at_offset(offset('bold', 4)), buffer.get_iter_at_offset(offset('bold')))
+        else:
+            at = {'notes-list': offset('A nested bullet', 4), 'notes-code': offset('return f', 3),
+                  'notes-table': offset('Ada', 1)}.get(scene, offset('A paragraph', 4))
+            buffer.place_cursor(buffer.get_iter_at_offset(at))
+        poll(ready)
+        if scene == 'notes-table':
+            # The caret enters the grid it lands in: wait for that focus.
+            poll(lambda: any(v.focused() for v in renderer.tables.views.values()))
+            poll(ready)
+            # Focusing a cell may scroll it into view: restore the fixed offset.
+            apply_scroll()
+        if scene == 'notes-selection':
+            popover = tab.selection_toolbar.popover
+            poll(lambda: popover.get_visible() and popover.get_allocated_width() > 1)
     elif scene == 'graph':
         graph = w.open_graph()
         poll(lambda: graph._ready and graph.last_data is not None)
@@ -206,7 +256,8 @@ def main():
             panel.set_cursor_blink(False)
             poll(lambda: all(p.terminal is None or p.pid for p in panel._panes))
             poll(lambda: all(p.terminal is None or '$ ' in (p.terminal.get_text_format(Vte.Format.TEXT) or '') for p in panel._panes))
-        if scene not in ('palette','palette-query','switcher') and not scene.startswith('settings-'):
+        if (scene not in ('palette','palette-query','switcher') and not scene.startswith('settings-')
+                and not scene.startswith('notes-')):
             w.set_focus(None)
         normalize(w)
         if target is not w:
