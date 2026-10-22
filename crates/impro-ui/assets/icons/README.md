@@ -2,7 +2,8 @@
 
 The raw RGBA files preserve GTK's symbolic channel encoding. A color atlas
 also retains the SVG renderer's exact coverage rounding for the bundled theme
-foregrounds. Other CSS colors are recolored from the symbolic channels.
+foregrounds. Other CSS colors and translucent state colors retain GTK's native
+renderer so coverage rounding and transitions remain exact.
 16 and 32 physical pixels cover ordinary menu icons at 1x/2x. Window controls
 also include 64 physical pixels for their 32 logical pixel size at 2x.
 

@@ -49,8 +49,8 @@ fn pixels(name: &str, size: i32, scale: i32) -> Option<&'static [u8]> {
     (info.filename()?.to_str()? == *source).then_some(pixels)
 }
 
-/// Render verified symbolic channels directly, with no image decoder or disk IO.
-/// Returns None for a different desktop source or an unsupported size/scale.
+/// Render verified symbolic colors directly, with no image decoder or disk IO.
+/// Returns None for a different source or an unsupported size, scale or color.
 pub fn symbolic_surface(
     name: &str,
     size: i32,
@@ -58,61 +58,28 @@ pub fn symbolic_surface(
     context: &gtk::StyleContext,
     state: gtk::StateFlags,
 ) -> Option<gtk::cairo::Surface> {
-    let pixels = pixels(name, size, scale)?;
+    pixels(name, size, scale)?;
     let foreground = context.color(state);
+    // Keep GTK's SVG coverage rounding for colors outside the exact atlas,
+    // including translucent disabled states and intermediate CSS transitions.
+    if foreground.alpha() != 1.0 {
+        return None;
+    }
+    let channels = [foreground.red(), foreground.green(), foreground.blue()];
+    if channels
+        .iter()
+        .any(|channel| (channel * 255.0 - (channel * 255.0).round()).abs() > 0.000001)
+    {
+        return None;
+    }
     let color = format!(
         "#{:02x}{:02x}{:02x}",
         (foreground.red() * 255.0).round() as u8,
         (foreground.green() * 255.0).round() as u8,
         (foreground.blue() * 255.0).round() as u8,
     );
-    // Preserve SVG coverage rounding exactly for the bundled palettes. The
-    // symbolic channels below cover intermediate CSS transition colors too.
-    if foreground.alpha() == 1.0 {
-        if let Some(exact) = sources::colored_pixels(name, size * scale, &color) {
-            return surface(glib::Bytes::from_static(exact), size, scale);
-        }
-    }
-    let colors = [
-        foreground,
-        context
-            .lookup_color("success_color")
-            .unwrap_or_else(|| gdk::RGBA::new(0.3046921492, 0.6015716793, 0.0234378576, 1.0)),
-        context
-            .lookup_color("warning_color")
-            .unwrap_or_else(|| gdk::RGBA::new(0.9570458534, 0.4726634623, 0.2421911955, 1.0)),
-        context
-            .lookup_color("error_color")
-            .unwrap_or_else(|| gdk::RGBA::new(0.7968871595, 0.0, 0.0, 1.0)),
-    ];
-    let rgb = colors.map(|color| {
-        [
-            (color.red() * 255.0) as u32,
-            (color.green() * 255.0) as u32,
-            (color.blue() * 255.0) as u32,
-        ]
-    });
-    let alpha = (foreground.alpha() * 255.0) as u32;
-    let mut output = Vec::with_capacity(pixels.len());
-    for p in pixels.as_chunks::<4>().0 {
-        let weights = [
-            255_u32.saturating_sub(p[0] as u32 + p[1] as u32 + p[2] as u32),
-            p[0] as u32,
-            p[1] as u32,
-            p[2] as u32,
-        ];
-        for channel in 0..3 {
-            output.push(
-                (rgb.iter()
-                    .zip(weights)
-                    .map(|(rgb, weight)| rgb[channel] * weight)
-                    .sum::<u32>()
-                    / 255) as u8,
-            );
-        }
-        output.push((p[3] as u32 * alpha / 255) as u8);
-    }
-    surface(glib::Bytes::from_owned(output), size, scale)
+    let exact = sources::colored_pixels(name, size * scale, &color)?;
+    surface(glib::Bytes::from_static(exact), size, scale)
 }
 
 fn surface(bytes: glib::Bytes, size: i32, scale: i32) -> Option<gtk::cairo::Surface> {
@@ -133,6 +100,9 @@ fn surface(bytes: glib::Bytes, size: i32, scale: i32) -> Option<gtk::cairo::Surf
 /// Native HeaderBar images may change names when maximizing; track that too.
 /// Unrecognized desktop icons retain GTK's normal theme lookup.
 pub fn prepare_image(image: &gtk::Image) {
+    if image.style_context().has_class("impro-startup-image") {
+        return;
+    }
     let Some(name) = image.icon_name() else {
         return;
     };
@@ -144,6 +114,9 @@ pub fn prepare_image(image: &gtk::Image) {
     if pixels(&name, size, image.scale_factor()).is_none() {
         return;
     }
+    // Native color fallback can retain icon-name storage across allocations.
+    // Install refresh handlers once even when HeaderBar prepares it again.
+    image.style_context().add_class("impro-startup-image");
     let name = Rc::new(RefCell::new(name.to_string()));
     let updating = Rc::new(Cell::new(false));
     let update = {

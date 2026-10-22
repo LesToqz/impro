@@ -382,6 +382,30 @@ fn capture() {
                 .all(|p| terminal_text(p).contains("$ "))
     });
     poll(|| w.editor.tabs().iter().all(|t| !t.highlighter.pending()));
+    if let Some(state) = std::env::args().nth(5) {
+        let flags = match state.as_str() {
+            "hover" => gtk::StateFlags::PRELIGHT,
+            "pressed" => gtk::StateFlags::ACTIVE | gtk::StateFlags::PRELIGHT,
+            "insensitive" => gtk::StateFlags::INSENSITIVE,
+            _ => panic!("unknown capture icon state: {state}"),
+        };
+        fn set_state(widget: &gtk::Widget, flags: gtk::StateFlags) {
+            if widget.is::<gtk::Button>()
+                || widget.is::<gtk::SearchEntry>()
+                || widget.is::<gtk::TreeView>()
+            {
+                widget.set_sensitive(flags != gtk::StateFlags::INSENSITIVE);
+                widget.set_state_flags(flags, false);
+            }
+            if let Some(container) = widget.downcast_ref::<gtk::Container>() {
+                container.forall(|child| set_state(child, flags));
+            }
+        }
+        set_state(w.window.upcast_ref(), flags);
+        frame(&w.window);
+        let settled = Instant::now();
+        poll(|| settled.elapsed() >= Duration::from_millis(1500));
+    }
     frame(&w.window);
     impro::app::capture_window(&w.window, &output).unwrap();
     unsafe {
