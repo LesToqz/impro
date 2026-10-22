@@ -330,9 +330,6 @@ impl Inner {
             if let Some(tag) = tag {
                 let current: i32 = tag.property("pixels-above-lines");
                 if current != height + lead {
-                    if std::env::var_os("DBG_MOVE").is_some() {
-                        eprintln!("tag {index} {current}->{}", height + lead);
-                    }
                     tag.set_property("pixels-above-lines", height + lead);
                 }
             }
@@ -566,14 +563,6 @@ impl Inner {
                     .buffer_to_window_coords(gtk::TextWindowType::Widget, x, y);
                 let allocation = widget.allocation();
                 if (allocation.x(), allocation.y()) != (wx, wy) {
-                    if std::env::var_os("DBG_MOVE").is_some() {
-                        eprintln!(
-                            "move {:?} {:?}->{:?}",
-                            slot.role as u8,
-                            (allocation.x(), allocation.y()),
-                            (wx, wy)
-                        );
-                    }
                     self.view.move_child(widget, wx, wy);
                 }
             }

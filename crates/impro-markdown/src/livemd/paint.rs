@@ -40,25 +40,13 @@ impl Out {
 impl Inner {
     fn apply_named(&self, out: &mut Out, name: &str, a: i32, b: i32) {
         if b > a {
-            if name == "checked" && std::env::var_os("DBG_SKIP").is_some() {
-                return;
-            }
-            let t = std::time::Instant::now();
             let tag = self.tag(name);
-            self.slow(&format!("tag {name}"), t);
-            let t = std::time::Instant::now();
             self.apply_tag(out, &tag, a, b);
-            self.slow(&format!("apply {name}"), t);
         }
     }
     pub(super) fn apply_tag(&self, out: &mut Out, tag: &gtk::TextTag, a: i32, b: i32) {
         if b > a {
-            let t = std::time::Instant::now();
-            let (ia, ib) = (self.iter(a), self.iter(b));
-            self.slow("iters", t);
-            let t = std::time::Instant::now();
-            self.buffer.apply_tag(tag, &ia, &ib);
-            self.slow(&format!("gtk-apply {a} {b} {}", self.char_count()), t);
+            self.buffer.apply_tag(tag, &self.iter(a), &self.iter(b));
             out.mark(tag);
         }
     }
@@ -107,7 +95,6 @@ impl Inner {
             && ((a <= cursor && cursor < b)
                 || (b == cursor && cursor == char_count && !text.ends_with('\n')));
         let mut out = Out::default();
-        let t0 = std::time::Instant::now();
         match kind {
             Kind::Codeblock => self.paint_code(&mut out, &text, a, b),
             Kind::Table => {
@@ -119,10 +106,7 @@ impl Inner {
             // The paint already reflects this caret: no second pass in the caret idle.
             self.last_caret.set(Some(cursor));
         }
-        self.slow("paint-body", t0);
-        let t1 = std::time::Instant::now();
         self.commit(index, id, a, lead, active && kind != Kind::Table, out);
-        self.slow("paint-commit", t1);
         if started.elapsed() > super::SLICE {
             self.note_slice(started);
         }
@@ -141,7 +125,6 @@ impl Inner {
         editable: bool,
     ) {
         let caret = editable.then(|| self.caret());
-        let tp = std::time::Instant::now();
         let plan = {
             let blocks = self.blocks.borrow();
             let previous = || {
@@ -152,15 +135,12 @@ impl Inner {
             };
             plan_line(text, a, active, caret, previous)
         };
-        self.slow("plan_line", tp);
-        let tp = std::time::Instant::now();
         for op in &plan.ops {
             match op {
                 Op::Tag(name, x, y) => self.apply_named(out, name, *x, *y),
                 Op::Hidden(x, y) => self.apply_named(out, "hidden", *x, *y),
             }
         }
-        self.slow("apply_ops", tp);
         if let Some((inset, hanging)) = plan.indent {
             self.indent(out, Kind::Line, a, b, inset, hanging);
         }

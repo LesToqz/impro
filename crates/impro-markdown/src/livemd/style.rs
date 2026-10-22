@@ -318,13 +318,6 @@ impl Inner {
             (self.buffer.tag_table(), self.tags.borrow().get("checked"))
         {
             checked.set_priority(table.size() - 1);
-            if std::env::var_os("DBG_WARM").is_some() && self.char_count() > 0 {
-                let t = std::time::Instant::now();
-                self.buffer.apply_tag(checked, &self.iter(0), &self.iter(1));
-                self.slow("warm-apply", t);
-                self.buffer.remove_tag(checked, &self.iter(0), &self.iter(1));
-                self.slow("warm-remove", t);
-            }
         }
         self.sync_accent();
         self.resize();
