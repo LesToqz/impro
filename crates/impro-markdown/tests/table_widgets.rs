@@ -449,7 +449,7 @@ fn test_hover_handles_appear_and_fade_out_with_reduced_motion() {
             .handles()
             .iter()
             .all(|w| w.is_visible() && w.opacity() == 1.));
-        f.grid.unhovered();
+        f.grid.clear_hover();
         assert!(f.grid.handles().iter().all(|w| !w.is_visible()));
         f.focus(2, 0);
         assert!(f.grid.handles()[..2].iter().all(|w| w.is_visible()));

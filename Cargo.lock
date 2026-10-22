@@ -604,6 +604,7 @@ dependencies = [
  "impro-ui",
  "pango",
  "regex",
+ "serde_json",
  "tempfile",
 ]
 

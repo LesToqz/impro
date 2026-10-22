@@ -359,7 +359,12 @@ fn raw_transform(
             return Some(edit(end, end, format!("\n\n{}", code.fence), end + 1));
         }
         let first = code.content;
-        let last = text[first..code.closing.saturating_sub(1).max(first)]
+        let last = text[first
+            ..text[..code.closing]
+                .char_indices()
+                .next_back()
+                .map_or(0, |(i, _)| i)
+                .max(first)]
             .rfind('\n')
             .map_or(first, |i| first + i + 1);
         if ["exit", "toggle"].contains(&action) || action == "down" && start >= last {
@@ -388,7 +393,7 @@ fn raw_transform(
             }
             let leading = text[start..offset]
                 .bytes()
-                .take_while(|c| [b' ', b'\t'].contains(c))
+                .take_while(|c| b" \t".contains(c))
                 .count();
             return Some(edit(
                 offset,

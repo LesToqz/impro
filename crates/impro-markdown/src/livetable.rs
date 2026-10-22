@@ -713,6 +713,10 @@ impl Drop for TablesInner {
 /// drives bounded filling, prioritizing rows in the viewport. No polling timer.
 #[derive(Clone)]
 pub struct TableView(Rc<ViewInner>);
+struct FocusRequest {
+    focus: Focus,
+    select: Option<(usize, usize)>,
+}
 struct ViewInner {
     tables: Weak<TablesInner>,
     block: TableBlock,
@@ -725,7 +729,7 @@ struct ViewInner {
     loading: Flag<bool>,
     moving: Flag<bool>,
     dead: Flag<bool>,
-    want: RefCell<Option<Focus>>,
+    want: RefCell<Option<FocusRequest>>,
     row_strip: gtk::EventBox,
     column_strip: gtk::EventBox,
     add_row: gtk::Button,
@@ -734,6 +738,9 @@ struct ViewInner {
     grip: Flag<Option<(usize, usize)>>,
     menu: RefCell<Option<gtk::Popover>>,
     max_slice: Flag<Duration>,
+    leave_source: RefCell<Option<glib::SourceId>>,
+    sync_pending: Flag<bool>,
+    shown: Flag<[bool; 4]>,
 }
 impl TableView {
     fn tables(&self) -> Option<Tables> {
@@ -785,6 +792,9 @@ impl TableView {
             grip: Flag::new(None),
             menu: RefCell::new(None),
             max_slice: Flag::new(Duration::ZERO),
+            leave_source: RefCell::new(None),
+            sync_pending: Flag::new(false),
+            shown: Flag::new([false; 4]),
         }));
         // Empty spacers preserve document geometry before offscreen rows exist.
         for row in 0..len {
@@ -802,8 +812,9 @@ impl TableView {
             if let Some(v) = weak.upgrade() {
                 let view = TableView(v);
                 let want = view.0.want.borrow_mut().take();
-                if let Some(p) = want {
-                    view.focus_cell(p.row, p.column, Some(p.caret), None);
+                if let Some(request) = want {
+                    let p = request.focus;
+                    view.focus_cell(p.row, p.column, Some(p.caret), request.select);
                 }
             }
         });
@@ -869,9 +880,13 @@ impl TableView {
     /// Build one missing cell within a visible row range, then yield. Returns
     /// whether that range still contains missing cells.
     pub fn fill_visible_slice(&self, range: std::ops::Range<usize>) -> bool {
+        if self.0.dead.get() {
+            return false;
+        }
         let start = Instant::now();
         let count = self.column_count();
-        let range = range.start.min(self.row_count())..range.end.min(self.row_count());
+        let first = range.start.min(self.row_count());
+        let range = first..range.end.max(first).min(self.row_count());
         let index = self.0.cells.borrow()[range.clone()]
             .iter()
             .position(|r| r.as_ref().map_or(0, Vec::len) < count)
@@ -904,6 +919,9 @@ impl TableView {
     /// Materialize a small row range synchronously (for caret entry). Bulk
     /// painting should use `fill_visible_slice` / `fill_slice` between yields.
     pub fn ensure_rows(&self, range: std::ops::Range<usize>) {
+        if self.0.dead.get() {
+            return;
+        }
         let count = self.column_count();
         for row in range.take_while(|&r| r < self.row_count()) {
             while self.0.cells.borrow()[row].as_ref().map_or(0, Vec::len) < count {
@@ -954,19 +972,18 @@ impl TableView {
                     | gdk::EventMask::LEAVE_NOTIFY_MASK,
             );
             let weak = Rc::downgrade(&self.0);
-            let copy = cell.clone();
+            let (r, c) = (cell.row.clone(), cell.column.clone());
             cell.widget.connect_button_press_event(move |_, e| {
                 if e.button() != 1 || e.event_type() != gdk::EventType::ButtonPress {
                     return glib::Propagation::Proceed;
                 }
                 if let Some(v) = weak.upgrade() {
                     let (x, y) = e.position();
-                    TableView(v).focus_cell(
-                        copy.row.get(),
-                        copy.column.get(),
-                        Some(copy.index_at(x, y)),
-                        None,
-                    );
+                    let view = TableView(v);
+                    let row = r.get();
+                    let column = c.get();
+                    let caret = view.cell(row, column).map(|cell| cell.index_at(x, y));
+                    view.focus_cell(row, column, caret, None);
                 }
                 glib::Propagation::Stop
             });
@@ -1060,10 +1077,13 @@ impl TableView {
         let column = column.min(self.column_count() - 1);
         self.ensure_rows(row..row + 1);
         if !self.0.widget.is_mapped() {
-            *self.0.want.borrow_mut() = Some(Focus {
-                row,
-                column,
-                caret: caret.unwrap_or(usize::MAX),
+            *self.0.want.borrow_mut() = Some(FocusRequest {
+                focus: Focus {
+                    row,
+                    column,
+                    caret: caret.unwrap_or(usize::MAX),
+                },
+                select,
             });
             return;
         }
@@ -1089,7 +1109,8 @@ impl TableView {
             self.0.loading.set(true);
             buffer.set_text(&to_display(&cell.source()));
             self.0.loading.set(false);
-            editor.set_justification(justification(self.0.model.borrow().align(column)));
+            let align = self.0.model.borrow().align(column);
+            editor.set_justification(justification(align));
             cell.label.hide();
             cell.widget.style_context().add_class("focused");
             editor.bin.show_all();
@@ -1140,7 +1161,7 @@ impl TableView {
             }
             position += line.chars().count() + 1;
         }
-        let row = if index <= 1 { 0 } else { index - 1 }.min(self.row_count() - 1);
+        let row = index.saturating_sub(1).min(self.row_count() - 1);
         let line = lines[self.0.model.borrow().line_index(row)];
         let spans = cell_spans(line);
         let within = if index == 1 {
@@ -1201,6 +1222,9 @@ impl TableView {
     }
     /// Replace source through a minimal Unicode hunk, retaining its final LF.
     pub fn write(&self, new: &str) {
+        if self.0.dead.get() {
+            return;
+        }
         let old = self.text();
         if old == new {
             return;
@@ -1276,7 +1300,7 @@ impl TableView {
     /// Apply a row/column menu action in one GTK user action. Existing grid and
     /// editor objects survive; only inserted/removed cells change ownership.
     pub fn act(&self, axis: &str, action: &str, index: usize) {
-        if !self.editable() {
+        if !self.editable() || self.0.dead.get() {
             return;
         }
         let rows = axis == "row";
@@ -1309,6 +1333,23 @@ impl TableView {
         let state = self.0.current.get().unwrap_or((0, 0));
         let Some(t) = self.tables() else { return };
         t.end_burst();
+        // Finish only rows that already have a partial slice before changing
+        // their column indexes. Offscreen rows remain unbuilt.
+        let partial: Vec<_> = self
+            .0
+            .cells
+            .borrow()
+            .iter()
+            .enumerate()
+            .filter_map(|(i, r)| {
+                r.as_ref()
+                    .is_some_and(|r| r.len() < self.column_count())
+                    .then_some(i)
+            })
+            .collect();
+        for row in partial {
+            self.ensure_rows(row..row + 1);
+        }
         self.0.moving.set(true);
         self.release();
         if let Some(editor) = &self.0.editor {
@@ -1585,6 +1626,10 @@ impl TableView {
         if let Some(t) = self.tables() {
             t.end_burst();
         }
+        let source = self.0.leave_source.borrow_mut().take();
+        if let Some(source) = source {
+            source.remove();
+        }
         let menu = self.0.menu.borrow_mut().take();
         if let Some(menu) = menu {
             unsafe {
@@ -1595,6 +1640,8 @@ impl TableView {
         unsafe {
             self.0.widget.destroy();
         }
+        let cells = std::mem::take(&mut *self.0.cells.borrow_mut());
+        drop(cells);
     }
     fn connect_editing(&self) {
         let e = self.0.editor.as_ref().expect("editable");
@@ -1686,18 +1733,93 @@ impl TableView {
         });
         for (axis, strip) in [("row", &self.0.row_strip), ("column", &self.0.column_strip)] {
             let weak = Rc::downgrade(&self.0);
+            strip.connect_motion_notify_event(move |strip, e| {
+                if let Some(v) = weak.upgrade() {
+                    let view = TableView(v);
+                    let (x, y) = e.position();
+                    if let Some(index) = view.strip_index(axis, strip, x, y) {
+                        let (mut r, mut c) = view.0.grip.get().unwrap_or((0, 0));
+                        if axis == "row" {
+                            r = index;
+                        } else {
+                            c = index;
+                        }
+                        view.0.grip.set(Some((r, c)));
+                        view.update_handles();
+                    }
+                }
+                glib::Propagation::Proceed
+            });
+            strip.connect_enter_notify_event(|strip, _| {
+                if let Some(pill) = strip
+                    .child()
+                    .and_then(|w| w.downcast::<gtk::Fixed>().ok())
+                    .and_then(|f| f.children().first().cloned())
+                {
+                    pill.style_context().add_class("hot");
+                }
+                glib::Propagation::Proceed
+            });
+            strip.connect_leave_notify_event(|strip, event| {
+                if event.detail() != gdk::NotifyType::Inferior {
+                    if let Some(pill) = strip
+                        .child()
+                        .and_then(|w| w.downcast::<gtk::Fixed>().ok())
+                        .and_then(|f| f.children().first().cloned())
+                    {
+                        pill.style_context().remove_class("hot");
+                    }
+                }
+                glib::Propagation::Proceed
+            });
+            let weak = Rc::downgrade(&self.0);
             strip.connect_button_press_event(move |_, e| {
                 if [1, 3].contains(&e.button()) {
                     if let Some(v) = weak.upgrade() {
                         let view = TableView(v);
                         let grip = view.0.grip.get().unwrap_or((0, 0));
-                        view.open_menu(axis, if axis == "row" { grip.0 } else { grip.1 });
+                        let (x, y) = e.position();
+                        let index = view
+                            .strip_index(
+                                axis,
+                                if axis == "row" {
+                                    &view.0.row_strip
+                                } else {
+                                    &view.0.column_strip
+                                },
+                                x,
+                                y,
+                            )
+                            .unwrap_or(if axis == "row" { grip.0 } else { grip.1 });
+                        view.open_menu(axis, index);
                     }
                     return glib::Propagation::Stop;
                 }
                 glib::Propagation::Proceed
             });
         }
+        let weak = Rc::downgrade(&self.0);
+        self.0.widget.connect_size_allocate(move |widget, a| {
+            let clip = widget.clip();
+            let right = clip.x() + clip.width();
+            let bottom = clip.y() + clip.height();
+            let x = clip.x().min(a.x() - GUTTER);
+            let y = clip.y().min(a.y() - GUTTER);
+            widget.set_clip(&gtk::Allocation::new(x, y, right - x, bottom - y));
+            if let Some(v) = weak.upgrade() {
+                if !v.sync_pending.replace(true) {
+                    let weak = weak.clone();
+                    glib::idle_add_local_once(move || {
+                        if let Some(v) = weak.upgrade() {
+                            v.sync_pending.set(false);
+                            if !v.dead.get() {
+                                TableView(v).update_handles();
+                            }
+                        }
+                    });
+                }
+            }
+        });
         let weak = Rc::downgrade(&self.0);
         self.0.widget.connect_get_child_position(move |_, child| {
             let v = weak.upgrade()?;
@@ -1719,6 +1841,34 @@ impl TableView {
             Some(gdk::Rectangle::new(x, y, w.max(1), h.max(1)))
         });
     }
+    fn strip_index(&self, axis: &str, strip: &gtk::EventBox, x: f64, y: f64) -> Option<usize> {
+        let rows = axis == "row";
+        let count = if rows {
+            self.row_count()
+        } else {
+            self.column_count()
+        };
+        let position = if rows { y } else { x };
+        let mut last = None;
+        for index in 0..count {
+            if let Some(cell) =
+                self.cell(if rows { index } else { 0 }, if rows { 0 } else { index })
+            {
+                if let Some((a, b)) = cell.widget.translate_coordinates(strip, 0, 0) {
+                    last = Some(index);
+                    let end = if rows {
+                        b + cell.widget.allocated_height()
+                    } else {
+                        a + cell.widget.allocated_width()
+                    };
+                    if position < (end as f64) {
+                        return last;
+                    }
+                }
+            }
+        }
+        last
+    }
     /// Editable handles in row, column, add-column, add-row order.
     pub fn handles(&self) -> Vec<gtk::Widget> {
         if !self.editable() {
@@ -1732,24 +1882,73 @@ impl TableView {
         ]
     }
     pub fn hovered(&self, cell: Option<(usize, usize)>) {
+        let source = self.0.leave_source.borrow_mut().take();
+        if let Some(source) = source {
+            source.remove();
+        }
         let cell = cell.or(self.0.grip.get()).unwrap_or((0, 0));
         self.0.hover.set(Some(cell));
         self.0.grip.set(Some(cell));
         self.update_handles();
     }
+    /// Keep the handles reachable across the gutter, then check the pointer.
     pub fn unhovered(&self) {
+        if self.0.leave_source.borrow().is_some() {
+            return;
+        }
+        let weak = Rc::downgrade(&self.0);
+        let source = glib::timeout_add_local_once(Duration::from_millis(160), move || {
+            if let Some(v) = weak.upgrade() {
+                v.leave_source.borrow_mut().take();
+                let view = TableView(v);
+                if !view.pointer_inside() {
+                    view.clear_hover();
+                }
+            }
+        });
+        *self.0.leave_source.borrow_mut() = Some(source);
+    }
+    /// Clear hover on an external pointer departure (also useful to hosts that
+    /// route crossing events). Keyboard focus continues to show the grips.
+    pub fn clear_hover(&self) {
+        let source = self.0.leave_source.borrow_mut().take();
+        if let Some(source) = source {
+            source.remove();
+        }
         self.0.hover.set(None);
         self.update_handles();
+    }
+    fn pointer_inside(&self) -> bool {
+        let Some(window) = self.0.widget.window() else {
+            return false;
+        };
+        let Some(pointer) = window.display().default_seat().and_then(|s| s.pointer()) else {
+            return false;
+        };
+        let (_, x, y, _) = window.device_position(&pointer);
+        let a = self.0.widget.allocation();
+        a.x() - GUTTER - 2 <= x
+            && x < a.x() + a.width()
+            && a.y() - GUTTER - 2 <= y
+            && y < a.y() + a.height()
     }
     fn update_handles(&self) {
         if !self.editable() {
             return;
         }
+        if self.0.hover.get().is_none() {
+            if let Some(current) = self.0.current.get() {
+                self.0.grip.set(Some(current));
+            }
+        }
         let hovered = self.0.hover.get().is_some();
         let shown = hovered || self.focused() || self.0.menu.borrow().is_some();
         for (index, widget) in self.handles().iter().enumerate() {
             let show = if index < 2 { shown } else { hovered };
-            if widget.is_visible() != show {
+            let mut shown = self.0.shown.get();
+            if shown[index] != show {
+                shown[index] = show;
+                self.0.shown.set(shown);
                 impro_ui::motion::fade(widget, show, 140, true, None);
             }
         }
@@ -1792,7 +1991,37 @@ impl TableView {
         } else {
             &self.0.column_strip
         };
+        let (mut row, mut column) = self.0.grip.get().unwrap_or((0, 0));
+        if axis == "row" {
+            row = index;
+        } else {
+            column = index;
+        }
+        self.0.grip.set(Some((row, column)));
+        let restore = self.focus_state();
+        let acted = Rc::new(Flag::new(false));
         let popover = gtk::Popover::new(Some(strip));
+        if let Some(cell) = self.cell(
+            if axis == "row" { index } else { 0 },
+            if axis == "row" { 0 } else { index },
+        ) {
+            if let Some((x, y)) = cell.widget.translate_coordinates(strip, 0, 0) {
+                popover.set_pointing_to(&gdk::Rectangle::new(
+                    if axis == "row" {
+                        2
+                    } else {
+                        x + cell.widget.allocated_width() / 2 - 10
+                    },
+                    if axis == "row" {
+                        y + cell.widget.allocated_height() / 2 - 10
+                    } else {
+                        2
+                    },
+                    if axis == "row" { 13 } else { 20 },
+                    if axis == "row" { 20 } else { 13 },
+                ));
+            }
+        }
         popover.set_position(gtk::PositionType::Bottom);
         popover.set_property(
             "transitions-enabled",
@@ -1868,7 +2097,9 @@ impl TableView {
             let weak = Rc::downgrade(&self.0);
             let axis = axis.to_string();
             let menu = popover.downgrade();
+            let acted = acted.clone();
             button.connect_clicked(move |_| {
+                acted.set(true);
                 if let Some(menu) = menu.upgrade() {
                     menu.popdown();
                 }
@@ -1888,7 +2119,13 @@ impl TableView {
             if let Some(v) = weak.upgrade() {
                 let current = v.menu.borrow_mut().take();
                 drop(current);
-                TableView(v).update_handles();
+                let view = TableView(v);
+                if !acted.get() {
+                    if let Some(p) = restore {
+                        view.focus_cell(p.row, p.column, Some(p.caret), None);
+                    }
+                }
+                view.update_handles();
             }
             let p = p.clone();
             glib::idle_add_local_once(move || unsafe {
@@ -1930,7 +2167,8 @@ fn make_strip(rows: bool) -> gtk::EventBox {
     strip.add_events(
         gdk::EventMask::BUTTON_PRESS_MASK
             | gdk::EventMask::ENTER_NOTIFY_MASK
-            | gdk::EventMask::LEAVE_NOTIFY_MASK,
+            | gdk::EventMask::LEAVE_NOTIFY_MASK
+            | gdk::EventMask::POINTER_MOTION_MASK,
     );
     let fixed = gtk::Fixed::new();
     let pill = gtk::Box::new(gtk::Orientation::Horizontal, 0);
@@ -1979,7 +2217,7 @@ pub fn minimal_edit(old: &str, new: &str) -> Edit {
         .zip(b[first..].iter().rev())
         .take_while(|(a, b)| a == b)
         .count();
-    if &b[first..b.len() - tail] == ['/'] && first > 0 {
+    if b[first..b.len() - tail] == ['/'] && first > 0 {
         first -= 1;
     }
     Edit {

@@ -302,12 +302,20 @@ fn chunks(text: &str) -> impl Iterator<Item = &str> {
         Some(first)
     })
 }
+struct FenceState {
+    token: String,
+    language: String,
+    quote: usize,
+    continued: bool,
+    content: String,
+    size: usize,
+}
 /// Incremental flat block iterator. No inline parsing or file access occurs here.
 pub struct Blocks<'a> {
     lines: Vec<&'a str>,
     at: usize,
     pending: VecDeque<Block>,
-    fence: Option<(String, String, usize, bool)>,
+    fence: Option<FenceState>,
     table: Option<(usize, usize, Vec<String>)>,
 }
 /// Yield bounded paragraphs/code and individual table rows. CRLF is normalized
@@ -315,8 +323,16 @@ pub struct Blocks<'a> {
 pub fn parse_blocks(text: &str) -> Blocks<'_> {
     Blocks {
         lines: text
-            .split('\n')
-            .map(|s| s.strip_suffix('\r').unwrap_or(s))
+            .split_inclusive('\n')
+            .map(|s| {
+                if let Some(line) = s.strip_suffix('\n') {
+                    line.strip_suffix('\r').unwrap_or(line)
+                } else {
+                    s
+                }
+            })
+            .chain(text.ends_with('\n').then_some(""))
+            .chain(text.is_empty().then_some(""))
             .collect(),
         at: 0,
         pending: VecDeque::new(),
@@ -331,9 +347,15 @@ impl Iterator for Blocks<'_> {
             if let Some(b) = self.pending.pop_front() {
                 return Some(b);
             }
-            if let Some((token, language, quote, mut continued)) = self.fence.take() {
-                let mut content = String::new();
-                let mut size = 0;
+            if let Some(FenceState {
+                token,
+                language,
+                quote,
+                mut continued,
+                mut content,
+                mut size,
+            }) = self.fence.take()
+            {
                 while self.at < self.lines.len() {
                     let (_, line) = _quote(self.lines[self.at], quote);
                     self.at += 1;
@@ -360,11 +382,18 @@ impl Iterator for Blocks<'_> {
                         }
                     }
                     if !self.pending.is_empty() {
-                        self.fence = Some((token.clone(), language.clone(), quote, continued));
+                        self.fence = Some(FenceState {
+                            token: token.clone(),
+                            language: language.clone(),
+                            quote,
+                            continued,
+                            content: std::mem::take(&mut content),
+                            size,
+                        });
                         break;
                     }
                 }
-                if !content.is_empty() || (!continued && self.pending.is_empty()) {
+                if self.fence.is_none() && (!content.is_empty() || !continued) {
                     let mut b = block("codeblock", content, quote);
                     b.language = language;
                     b.continuation = continued;
@@ -396,12 +425,14 @@ impl Iterator for Blocks<'_> {
             }
             if let Some(m) = _FENCE.captures(line) {
                 self.at += 1;
-                self.fence = Some((
-                    m[1].into(),
-                    m[2].split_whitespace().next().unwrap_or_default().into(),
+                self.fence = Some(FenceState {
+                    token: m[1].into(),
+                    language: m[2].split_whitespace().next().unwrap_or_default().into(),
                     quote,
-                    false,
-                ));
+                    continued: false,
+                    content: String::new(),
+                    size: 0,
+                });
                 continue;
             }
             if let Some(m) = _HEADING.captures(line) {
@@ -599,7 +630,7 @@ pub fn link_target(target: &str, source_path: &Path) -> Option<LinkTarget> {
             .ancestors()
             .find(|p| p.join(".impro").is_dir() || p.join(".git").exists())
             .unwrap_or(parent);
-        let variants = if Path::new(name).extension().is_some() {
+        let variants = if Path::new(name).extension().is_some_and(|e| !e.is_empty()) {
             vec![name.to_string()]
         } else {
             vec![
@@ -628,8 +659,33 @@ pub fn link_target(target: &str, source_path: &Path) -> Option<LinkTarget> {
     if let Some((scheme, rest)) = target.split_once(':') {
         if ["http", "https"].contains(&scheme.to_ascii_lowercase().as_str()) {
             let authority = rest.strip_prefix("//")?.split(['/', '?', '#']).next()?;
-            if authority.is_empty() || (authority.contains('[') && !authority.contains(']')) {
+            if authority.is_empty() {
                 return None;
+            }
+            if authority.contains('[') || authority.contains(']') {
+                let (head, rest) = authority.split_once('[')?;
+                if head.contains(']') {
+                    return None;
+                }
+                let (host, tail) = rest.split_once(']')?;
+                if tail.contains(['[', ']']) {
+                    return None;
+                }
+                let valid = if let Some(host) = host.strip_prefix('v') {
+                    host.split_once('.').is_some_and(|(version, body)| {
+                        !version.is_empty()
+                            && version.bytes().all(|b| b.is_ascii_hexdigit())
+                            && !body.is_empty()
+                    })
+                } else {
+                    host.split('%')
+                        .next()?
+                        .parse::<std::net::Ipv6Addr>()
+                        .is_ok()
+                };
+                if !valid {
+                    return None;
+                }
             }
             return Some(LinkTarget::Uri(target.into()));
         }
