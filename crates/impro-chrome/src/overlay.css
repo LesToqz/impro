@@ -1,0 +1,7 @@
+
+.impro-notice { background: alpha(#000000, 0.9); color: #fafafa; border-radius: 8px;
+    padding: 8px 12px; font-size: 13px; font-feature-settings: "tnum"; box-shadow: {shadow}; }
+.impro-notice label { color: #fafafa; }
+.impro-notice-success { box-shadow: inset 3px 0 0 #44cf6e, {shadow}; }
+.impro-notice-warning { box-shadow: inset 3px 0 0 #e9973f, {shadow}; }
+.impro-notice-error { box-shadow: inset 3px 0 0 {ui['danger']}, {shadow}; }
