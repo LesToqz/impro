@@ -21,6 +21,9 @@ struct Probe {
     max: Duration,
     iterations: usize,
     busy: Duration,
+    samples: Vec<f64>,
+    rows: Rc<Cell<usize>>,
+    row_samples: Vec<f64>,
 }
 
 /// Run the main loop until `done`, recording how long each dispatching iteration blocked.
@@ -33,10 +36,15 @@ fn run_until(probe: &mut Probe, timeout: Duration, mut done: impl FnMut() -> boo
         }
         let started = Instant::now();
         // Non-blocking: waiting for events is idle time, not main-thread work.
+        probe.rows.set(0);
         if context.iteration(false) {
             let spent = started.elapsed();
             probe.iterations += 1;
             probe.busy += spent;
+            probe.samples.push(spent.as_secs_f64() * 1000.);
+            if probe.rows.get() > 0 {
+                probe.row_samples.push(spent.as_secs_f64() * 1000.);
+            }
             probe.max = probe.max.max(spent);
             if spent > Duration::from_millis(12) && std::env::var_os("PERF_VERBOSE").is_some() {
                 eprintln!(
@@ -50,6 +58,28 @@ fn run_until(probe: &mut Probe, timeout: Duration, mut done: impl FnMut() -> boo
         }
     }
     false
+}
+
+fn print_percentiles(probe: &Probe) {
+    let mut samples = probe.samples.clone();
+    samples.sort_by(f64::total_cmp);
+    let mut rows = probe.row_samples.clone();
+    rows.sort_by(f64::total_cmp);
+    if !rows.is_empty() {
+        println!(
+            "row-dispatch-p50-ms={:.3} row-dispatch-p95-ms={:.3} row-dispatch-max-ms={:.3}",
+            rows[(rows.len() - 1) / 2],
+            rows[(rows.len() - 1) * 95 / 100],
+            rows[rows.len() - 1]
+        );
+    }
+    if !samples.is_empty() {
+        println!(
+            "dispatch-p50-ms={:.3} dispatch-p95-ms={:.3}",
+            samples[(samples.len() - 1) / 2],
+            samples[(samples.len() - 1) * 95 / 100]
+        );
+    }
 }
 
 fn ms(duration: Duration) -> String {
@@ -171,6 +201,7 @@ fn bigdir(entries: usize) {
         ms(probe.max),
         ms(probe.busy)
     );
+    print_percentiles(&probe);
     // Responsiveness while rows keep arriving: how long does a click-sized task wait?
     drop(window);
 }
@@ -224,6 +255,8 @@ fn search_path(root: &Path, query: &str, regex: bool) {
     let window = window_for(&panel);
     let mut probe = Probe::default();
     run_until(&mut probe, Duration::from_secs(20), || !panel.is_busy());
+    // Separate the existing window's startup paint from search dispatch work.
+    run_until(&mut probe, Duration::from_millis(600), || false);
     let search = panel.search();
     if std::env::var_os("PERF_PROVIDER").is_some() {
         // As in the app: the editor answers for its open buffers only.
@@ -243,6 +276,10 @@ fn search_path(root: &Path, query: &str, regex: bool) {
         });
     }
     let mut probe = Probe::default();
+    let inserted = probe.rows.clone();
+    search
+        .store()
+        .connect_row_inserted(move |_, _, _| inserted.set(inserted.get() + 1));
     search.search_now(Some(query));
     let finished = run_until(&mut probe, Duration::from_secs(120), || {
         !search.is_searching() && !search.timeout_pending()
@@ -268,6 +305,7 @@ fn search_path(root: &Path, query: &str, regex: bool) {
         ms(probe.max),
         ms(probe.busy)
     );
+    print_percentiles(&probe);
     // Typing a new query cancels the previous run: measure how fast the old one stops.
     let cancel_started = Instant::now();
     search.search_now(Some("needle"));
@@ -352,6 +390,11 @@ fn main() {
                 args.get(2).expect("QUERY"),
                 args.iter().any(|a| a == "--regex"),
             );
+        }
+        Some("search-generated") => {
+            let temp = tempfile::tempdir().unwrap();
+            make_tree(temp.path(), 20_000);
+            search_path(temp.path(), "function", false);
         }
         Some("idle") => idle(),
         _ => eprintln!("usage: perf bigdir|tree|search|idle"),

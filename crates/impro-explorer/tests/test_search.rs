@@ -1219,3 +1219,26 @@ fn test_incremental_render_appends_without_clearing_and_keeps_file_names_last() 
         assert!(f.panel.summary().text().contains("results in"));
     });
 }
+
+#[test]
+fn test_snapshot_delivery_yields_before_applying_rows() {
+    run(|| {
+        let files = Files::new();
+        let path = files.write("a.txt", "needle");
+        let panel = SearchPanel::new(&gtk::Box::new(gtk::Orientation::Vertical, 0), files.root());
+        let generation = panel.generation();
+        assert!(panel.deliver_snapshot(generation, files.needle(), true));
+        assert!(panel.store().iter_first().is_none());
+        assert!(panel.is_searching());
+        assert!(poll(3000, || !panel.is_searching()));
+        assert_eq!(panel.results().groups[0].path, path);
+        assert!(panel.store().iter_first().is_some());
+        assert!(panel.deliver_snapshot(generation, files.needle(), true));
+        panel.clear();
+        pump(20);
+        assert!(panel.store().iter_first().is_none());
+        unsafe {
+            panel.destroy();
+        }
+    });
+}

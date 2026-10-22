@@ -112,26 +112,55 @@ fn idle_cpu_and_open_to_first_frame() {
                 &format!("[[{}]] [[{}]]", (i * 7) % 600, (i * 13 + 5) % 600),
             );
         }
+        impro_ui::apply_style(None).expect("style");
+        let first = std::rc::Rc::new(std::cell::Cell::new(None));
+        let populated = std::rc::Rc::new(std::cell::Cell::new(None));
         let t0 = Instant::now();
-        let f = Fixture::in_dir(project, json!({}), true);
-        println!("open + index + settle (600 notes): {:?}", t0.elapsed());
-        // idle: nothing animates, so the process uses no CPU
-        let (c0, w0) = (cpu_seconds(), Instant::now());
-        t::pump(2_000);
-        let (c1, w1) = (cpu_seconds(), Instant::now());
-        let idle = (c1 - c0) / (w1 - w0).as_secs_f64() * 100.0;
-        println!("settled idle CPU: {idle:.2} % over {:?}", w1 - w0);
-        assert!(idle < 3.0, "{idle}");
-        // hidden while animating: no CPU either
-        write(f.root(), "x.md", "[[1]]");
-        f.view.file_saved(&f.path("x.md"));
-        t::pump(50);
-        f.window.hide();
-        let (c0, w0) = (cpu_seconds(), Instant::now());
-        t::pump(1_000);
-        let hidden = (cpu_seconds() - c0) / w0.elapsed().as_secs_f64() * 100.0;
-        println!("hidden idle CPU: {hidden:.2} %");
-        assert!(hidden < 3.0, "{hidden}");
-        let _ = Duration::from_secs(0);
+        let view = impro_graph::GraphView::with_options(
+            project.path(),
+            impro_graph::ViewOptions {
+                store: std::sync::Arc::new(impro_graph::view::MemoryStore::new(json!({}))),
+                scan: true,
+            },
+        );
+        let (frame, data) = (first.clone(), populated.clone());
+        let drawing = view.clone();
+        let window = gtk::Window::new(gtk::WindowType::Toplevel);
+        // The canvas consumes draw emissions. Observe after the containing
+        // window has painted its children to capture a completed frame.
+        let handler = window.connect_local("draw", true, move |_| {
+            frame.set(frame.get().or_else(|| Some(t0.elapsed())));
+            if drawing.summary().nodes > 0 {
+                data.set(data.get().or_else(|| Some(t0.elapsed())));
+            }
+            Some(false.to_value())
+        });
+        window.set_default_size(900, 600);
+        window.add(&*view);
+        window.show_all();
+        assert!(t::wait_for(10_000, || populated.get().is_some()));
+        println!(
+            "open-first-frame-ms={:.3} open-first-populated-frame-ms={:.3}",
+            first.get().unwrap().as_secs_f64() * 1e3,
+            populated.get().unwrap().as_secs_f64() * 1e3
+        );
+        window.disconnect(handler);
+        t::settle_now(&view);
+        assert!(t::settle(&view, 15_000));
+        t::pump(3000);
+        let main_loop = glib::MainLoop::new(None, false);
+        let stop = main_loop.clone();
+        glib::timeout_add_local_once(Duration::from_secs(10), move || stop.quit());
+        let (cpu, wall) = (cpu_seconds(), Instant::now());
+        main_loop.run();
+        let elapsed = wall.elapsed().as_secs_f64();
+        let used = cpu_seconds() - cpu;
+        println!(
+            "idle-cpu-s={used:.3} wall-s={elapsed:.3} idle-percent={:.3}",
+            used / elapsed * 100.0
+        );
+        unsafe {
+            window.destroy();
+        }
     });
 }

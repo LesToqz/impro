@@ -253,11 +253,11 @@ impl Triangle {
 
     #[inline]
     fn coverage(&self, x: f32, y: f32) -> f32 {
-        let mut c = 1.0f32;
-        for &(a, b, k) in &self.e {
-            c = c.min((a * x + b * y + k + 0.5).clamp(0.0, 1.0));
-        }
-        c
+        let distance = |(a, b, k): (f32, f32, f32)| a * x + b * y + k + 0.5;
+        distance(self.e[0])
+            .min(distance(self.e[1]))
+            .min(distance(self.e[2]))
+            .clamp(0.0, 1.0)
     }
 }
 

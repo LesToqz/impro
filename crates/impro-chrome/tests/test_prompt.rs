@@ -499,12 +499,26 @@ fn benchmark_prompt() {
         let dispatch = start.elapsed();
         poll(|| s.index_ready() && s.items().len() == 100);
         pump(30);
+        if std::env::var_os("IMPRO_CHROME_BENCH_CACHE").is_some() {
+            let prepare = std::time::Instant::now();
+            f.host.cache_prompt(&s);
+            println!(
+                "cache preparation {:.3} ms",
+                prepare.elapsed().as_secs_f64() * 1000.
+            );
+            pump(30);
+        }
         let painted = Rc::new(Cell::new(None::<std::time::Duration>));
         let flag = painted.clone();
         let start = std::time::Instant::now();
         let handler = s.widget().connect_local("draw", true, move |_| {
-            flag.set(Some(start.elapsed()));
+            flag.set(flag.get().or_else(|| Some(start.elapsed())));
             Some(false.to_value())
+        });
+        let mapped = Rc::new(Cell::new(None::<std::time::Duration>));
+        let flag = mapped.clone();
+        let map_handler = s.widget().connect_map(move |_| {
+            flag.set(flag.get().or_else(|| Some(start.elapsed())));
         });
         f.host.show_prompt(&s);
         println!(
@@ -517,7 +531,36 @@ fn benchmark_prompt() {
             "open to first draw {:.3} ms",
             painted.get().unwrap().as_secs_f64() * 1000.
         );
+        println!(
+            "open to map {:.3} ms; map to first draw {:.3} ms",
+            mapped.get().unwrap().as_secs_f64() * 1000.,
+            painted
+                .get()
+                .unwrap()
+                .saturating_sub(mapped.get().unwrap())
+                .as_secs_f64()
+                * 1000.
+        );
         s.widget().disconnect(handler);
+        s.widget().disconnect(map_handler);
+        for reopen in 0..3 {
+            f.host.hide_prompt();
+            pump(40);
+            let painted = Rc::new(Cell::new(None::<std::time::Duration>));
+            let flag = painted.clone();
+            let start = std::time::Instant::now();
+            let handler = s.widget().connect_local("draw", true, move |_| {
+                flag.set(flag.get().or_else(|| Some(start.elapsed())));
+                Some(false.to_value())
+            });
+            f.host.show_prompt(&s);
+            poll(|| painted.get().is_some());
+            println!(
+                "reopen {reopen} to first draw {:.3} ms",
+                painted.get().unwrap().as_secs_f64() * 1000.
+            );
+            s.widget().disconnect(handler);
+        }
         pump(50);
         let start = std::time::Instant::now();
         s.set_query("main");
