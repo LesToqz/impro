@@ -45,14 +45,24 @@ fn main() {
     window.add(&panel);
     window.show_all();
     pump();
+    if std::env::var_os("IMPRO_EDITOR_TRACE").is_some() {
+        let start = Instant::now();
+        let _ = gtk::IconTheme::default().unwrap().load_icon(
+            "window-close-symbolic",
+            14,
+            gtk::IconLookupFlags::FORCE_SYMBOLIC,
+        );
+        eprintln!("warm close icon: {:?}", start.elapsed());
+    }
     let begin = Instant::now();
     let painted = Rc::new(Cell::new(None));
     let p = painted.clone();
-    let handler = panel.connect_draw(move |panel, _| {
-        if !panel.tabs().is_empty() && p.get().is_none() {
+    let weak = panel.downgrade();
+    let handler = panel.connect_local("draw", true, move |_| {
+        if weak.upgrade().is_some_and(|panel| !panel.tabs().is_empty()) && p.get().is_none() {
             p.set(Some(begin.elapsed()));
         }
-        glib::Propagation::Proceed
+        Some(false.to_value())
     });
     panel.open_file(&path);
     until(|| painted.get().is_some());
@@ -68,11 +78,11 @@ fn main() {
     let pending = Rc::new(Cell::new(None::<Instant>));
     let samples = painted_edits.clone();
     let start_draw = pending.clone();
-    let handler = tab.view.connect_draw(move |_, _| {
+    let handler = tab.view.connect_local("draw", true, move |_| {
         if let Some(start) = start_draw.take() {
             samples.borrow_mut().push(ms(start.elapsed()));
         }
-        glib::Propagation::Proceed
+        Some(false.to_value())
     });
     let mut edits = Vec::new();
     for index in 0..200 {
@@ -104,9 +114,9 @@ fn main() {
     pump();
     let frames = Rc::new(Cell::new(0usize));
     let count = frames.clone();
-    let handler = tab.view.connect_draw(move |_, _| {
+    let handler = tab.view.connect_local("draw", true, move |_| {
         count.set(count.get() + 1);
-        glib::Propagation::Proceed
+        Some(false.to_value())
     });
     let start = Instant::now();
     let mut worst_cpu = Duration::ZERO;
@@ -124,7 +134,7 @@ fn main() {
         worst_frame = worst_frame.max(frame.elapsed());
     }
     tab.view.disconnect(handler);
-    println!("scroll-bytes={} rendered-sweep-100-ms={:.3} max-dispatch-ms={:.3} max-frame-ms={:.3} visible-lines={}",5000000,ms(start.elapsed()),ms(worst_cpu),ms(worst_frame),tab.chrome.painted_lines());
+    println!("scroll-bytes={} rendered-sweep-100-ms={:.3} max-dispatch-ms={:.3} max-frame-ms={:.3} visible-lines={}",scroll_text.len(),ms(start.elapsed()),ms(worst_cpu),ms(worst_frame),tab.chrome.painted_lines());
     let settle = Instant::now();
     while settle.elapsed() < Duration::from_millis(500) {
         pump();

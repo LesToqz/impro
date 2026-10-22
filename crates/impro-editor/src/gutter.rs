@@ -447,6 +447,7 @@ impl ViewChrome {
         self.0.area.queue_draw();
     }
     fn draw(&self, cr: &cairo::Context) {
+        let trace_start = std::time::Instant::now();
         if !self.0.line_numbers.get() {
             return;
         }
@@ -506,6 +507,9 @@ impl ViewChrome {
             }
         }
         self.0.painted_lines.set(count);
+        if std::env::var_os("IMPRO_EDITOR_TRACE").is_some() {
+            eprintln!("gutter draw {:?}", trace_start.elapsed());
+        }
     }
     pub fn refresh_tags(&self) {
         if self.0.destroyed.get() || self.0.refreshing.replace(true) {

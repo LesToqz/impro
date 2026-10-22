@@ -78,8 +78,8 @@ claim of identical syntax classification.
 
 `examples/editor_perf.rs` prints first text paint, initial and incremental
 highlighting, 200 edits, edit-to-draw latency, a rendered scroll sweep and idle
-process CPU. Run the optimized executable under Xvfb. Draw latency ends at the
-GTK draw callback; it does not measure a physical keyboard or compositor scanout.
+process CPU. Run the optimized executable under Xvfb. Draw latency ends after the
+GTK default draw handler; it does not measure a physical keyboard or compositor scanout.
 The event-driven display flush uses GTK3's GDK update API after text validation,
 with no recurring timer. Highlighting snapshots only after debounce, reuses parser
 checkpoints, and paints the changed span in short visible-first batches. Initial

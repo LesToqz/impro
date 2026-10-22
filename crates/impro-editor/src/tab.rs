@@ -46,15 +46,44 @@ pub struct EditorTab {
 }
 impl EditorTab {
     pub(crate) fn new(panel: &EditorPanel, path: PathBuf, doc: crate::file::Document) -> Rc<Self> {
+        let trace_start = std::time::Instant::now();
+        let trace = |label: &str| {
+            if std::env::var_os("IMPRO_EDITOR_TRACE").is_some() {
+                eprintln!("tab {label}: {:?}", trace_start.elapsed());
+            }
+        };
         let buffer = gtk::TextBuffer::new(None::<&gtk::TextTagTable>);
         buffer.set_text(&doc.text);
         buffer.set_modified(false);
+        trace("text");
         let view = gtk::TextView::with_buffer(&buffer);
         view.set_pixels_above_lines(1);
         view.set_pixels_below_lines(1);
         view.set_wrap_mode(gtk::WrapMode::None);
         view.set_left_margin(0);
         view.set_right_margin(12);
+        if std::env::var_os("IMPRO_EDITOR_TRACE").is_some() {
+            let once = Rc::new(Cell::new(false));
+            let seen = once.clone();
+            view.connect_draw(move |v, _| {
+                if !seen.replace(true) {
+                    eprintln!(
+                        "view draw before: {:?} visible={:?}",
+                        trace_start.elapsed(),
+                        v.visible_rect()
+                    );
+                }
+                glib::Propagation::Proceed
+            });
+            let once = Rc::new(Cell::new(false));
+            view.connect_local("draw", true, move |_| {
+                if !once.replace(true) {
+                    eprintln!("view draw after: {:?}", trace_start.elapsed());
+                }
+                Some(false.to_value())
+            });
+        }
+        trace("view");
         let highlighter = Highlighter::new(
             &view,
             &panel.syntax_style(),
@@ -63,6 +92,7 @@ impl EditorTab {
                 doc.text.lines().next().unwrap_or(""),
             ),
         );
+        trace("syntax");
         let chrome = ViewChrome::new(&view, &panel.chrome());
         chrome.set_line_numbers(panel.line_numbers());
         chrome.set_highlight_line(panel.highlight_line());
@@ -213,9 +243,12 @@ impl EditorTab {
             }
         });
         tab.chrome.set_font_family(panel.font_family().as_deref());
+        trace("signals");
         tab.set_font_size(panel.font_size());
+        trace("font");
         tab.sync_markdown();
         tab.update_title();
+        trace("done");
         tab
     }
     pub fn path(&self) -> PathBuf {

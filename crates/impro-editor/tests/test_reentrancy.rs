@@ -168,3 +168,32 @@ fn page_added_callback_can_close_new_file() {
         assert!(h.panel.tabs().is_empty());
     });
 }
+#[test]
+fn close_during_active_lex_releases_large_buffer() {
+    run(|| {
+        let h = Harness::new();
+        let t = h.open("large.py", &"value = compute(1) # comment\n".repeat(20000));
+        pump(10);
+        assert!(t.highlighter.pending());
+        let weak = t.buffer.downgrade();
+        assert!(h.close(&t));
+        assert!(!t.highlighter.pending());
+        drop(t);
+        pump(30);
+        assert!(weak.upgrade().is_none());
+    });
+}
+#[test]
+fn tab_switch_cancels_stale_highlight_and_resumes() {
+    run(|| {
+        let h = Harness::new();
+        let a = h.open("large.py", &"value = compute(1) # comment\n".repeat(1000));
+        let b = h.open("small.py", "def f(): pass\n");
+        assert!(!a.highlighter.pending());
+        h.settled();
+        assert_eq!(tag(&b, 0), Some("hl-keyword".into()));
+        h.panel.notebook().set_current_page(Some(0));
+        h.settled();
+        assert_eq!(tag(&a, 0), Some("hl-variable".into()));
+    });
+}

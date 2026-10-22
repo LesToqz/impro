@@ -525,19 +525,30 @@ impl EditorPanel {
         if let Some(tab) = self.tab_for_path(&path) {
             return tab;
         }
+        let trace_start = std::time::Instant::now();
+        let trace = |label: &str| {
+            if std::env::var_os("IMPRO_EDITOR_TRACE").is_some() {
+                eprintln!("panel {label}: {:?}", trace_start.elapsed());
+            }
+        };
         let tab = EditorTab::new(self, path, doc);
+        trace("tab");
         self.imp().tabs.borrow_mut().push(tab.clone());
         let n = self.notebook();
         self.imp().assembling.set(true);
         n.append_page(&tab.page, Some(&tab.header.widget));
         self.imp().assembling.set(false);
         n.set_tab_reorderable(&tab.page, true);
+        trace("append");
         tab.page.show_all();
         tab.header.widget.show_all();
         self.stack().set_visible_child_name("editor");
         n.set_current_page(n.page_num(&tab.page));
+        trace("show");
         self.switched();
+        trace("switch");
         self.focus_current();
+        trace("focus");
         tab
     }
     pub fn open_file_at(&self, path: impl AsRef<Path>, line: i32, column: i32, length: i32) {

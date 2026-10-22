@@ -167,19 +167,37 @@ fn test_offsets_are_code_points_and_cover_the_text() {
 fn test_by_file_name() {
     for (path, expected) in [
         ("a.py", "Python"),
-        ("a.pyi", "Python"),
-        ("a.rs", "Rust"),
-        ("README.MD", "Markdown"),
-        ("a.jsonc", "JSON"),
-        (".bashrc", "Shell Script"),
-        (".env.local", "Shell Script"),
-        ("Dockerfile.dev", "Dockerfile"),
-        ("Makefile", "Makefile"),
-        ("CMakeLists.txt", "CMake"),
+        ("stubs.pyi", "Python"),
+        ("a.json", "JSON"),
+        ("a.md", "Markdown"),
+        ("a.html", "HTML"),
+        ("a.css", "CSS"),
+        ("a.scss", "SCSS"),
+        ("a.js", "JavaScript"),
+        ("a.ts", "TypeScript"),
         ("a.tsx", "TypeScript React"),
-        ("a.svg", "XML"),
+        ("a.jsx", "JavaScript React"),
+        ("run.sh", "Shell Script"),
+        ("a.yml", "YAML"),
+        ("a.yaml", "YAML"),
+        ("a.toml", "TOML"),
+        ("a.c", "C"),
+        ("a.h", "C"),
+        ("a.cpp", "C++"),
+        ("a.rs", "Rust"),
+        ("a.go", "Go"),
+        ("q.sql", "SQL"),
+        ("logo.svg", "XML"),
+        ("a.xml", "XML"),
+        ("Dockerfile", "Dockerfile"),
+        ("Makefile", "Makefile"),
+        (".bashrc", "Shell Script"),
+        (".zshrc", "Shell Script"),
+        (".profile", "Shell Script"),
+        (".env", "Shell Script"),
+        ("/some/dir/Dockerfile.dev", "Dockerfile"),
     ] {
-        assert_eq!(language_name(path, ""), expected);
+        assert_eq!(language_name(path, ""), expected, "{path}");
     }
 }
 #[test]

@@ -57,7 +57,9 @@ pub fn language_name(path: &str, first_line: &str) -> &'static str {
         "jsx" => "JavaScript React",
         "html" | "htm" => "HTML",
         "xml" | "svg" => "XML",
-        "css" | "scss" | "sass" => "CSS",
+        "css" => "CSS",
+        "scss" => "SCSS",
+        "sass" => "Sass",
         "sh" | "bash" | "zsh" => "Shell Script",
         "c" | "h" => "C",
         "cpp" | "cc" | "hpp" | "cxx" => "C++",
@@ -90,6 +92,8 @@ pub fn language_name(path: &str, first_line: &str) -> &'static str {
         "html" => "HTML",
         "xml" => "XML",
         "css" => "CSS",
+        "scss" => "SCSS",
+        "sass" => "Sass",
         "go" => "Go",
         "sql" => "SQL",
         "c" => "C",
@@ -185,6 +189,7 @@ fn lex_cached(path: &str, text: &str, cancel: &AtomicBool, old: Option<&LexCache
         "Shell Script" => "Bourne Again Shell (bash)",
         "TypeScript" | "TypeScript React" | "JavaScript React" => "JavaScript",
         "INI" => "YAML",
+        "SCSS" | "Sass" => "CSS",
         _ => language,
     };
     let syntax = set
@@ -483,7 +488,7 @@ fn classify_span(
         kind = Some("string");
     }
     if all.contains("comment.block.documentation") {
-        kind = if line.matches("\"\"\"").count() >= 2 {
+        kind = if line.matches("\"\"\"").count() >= 2 || line.matches("'''").count() >= 2 {
             Some("doc")
         } else {
             Some("string")
@@ -889,6 +894,7 @@ struct Inner {
     skipped: Cell<bool>,
     destroyed: Cell<bool>,
     active: Cell<bool>,
+    painted: Cell<bool>,
     max_batch: Cell<Duration>,
     cache: Arc<Mutex<Option<LexCache>>>,
     ready: Arc<AtomicBool>,
@@ -922,6 +928,7 @@ impl Highlighter {
             skipped: Cell::new(false),
             destroyed: Cell::new(false),
             active: Cell::new(true),
+            painted: Cell::new(false),
             max_batch: Cell::new(Duration::ZERO),
             cache: Arc::new(Mutex::new(None)),
             ready: Arc::new(AtomicBool::new(false)),
@@ -934,6 +941,19 @@ impl Highlighter {
             }
         });
         this.0.handler.replace(Some(id));
+        let weak = Rc::downgrade(&this.0);
+        view.connect_draw(move |_, _| {
+            if let Some(inner) = weak.upgrade() {
+                if !inner.painted.replace(true)
+                    && inner.pending.get()
+                    && inner.active.get()
+                    && !inner.destroyed.get()
+                {
+                    Self(inner).restart(0);
+                }
+            }
+            glib::Propagation::Proceed
+        });
         this.restart(0);
         this
     }
@@ -1026,6 +1046,9 @@ impl Highlighter {
             return;
         }
         self.0.pending.set(true);
+        if !self.0.painted.get() {
+            return;
+        }
         let weak = Rc::downgrade(&self.0);
         let cb = move || {
             if let Some(inner) = weak.upgrade() {
