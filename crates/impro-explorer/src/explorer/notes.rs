@@ -172,7 +172,7 @@ impl ExplorerPanel {
                 panel.notes_open_marker(cell, model, iter);
             }
         });
-        let icon = gtk::CellRendererPixbuf::new();
+        let icon = crate::icons::IconCell::new();
         icon.set_xpad(4);
         util::pack(&column, &icon, false);
         util::attribute(&column, &icon, "icon-name", 0);

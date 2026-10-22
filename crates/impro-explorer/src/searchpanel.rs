@@ -251,7 +251,7 @@ impl SearchPanel {
         tree.set_margin_end(12);
         tree.set_margin_bottom(24);
         let column = gtk::TreeViewColumn::new();
-        let icon = gtk::CellRendererPixbuf::new();
+        let icon = crate::icons::IconCell::new();
         util::pack(&column, &icon, false);
         util::attribute(&column, &icon, "icon-name", 0);
         let number = gtk::CellRendererText::new();
@@ -295,6 +295,7 @@ impl SearchPanel {
         assert!(imp.w.set(widgets).is_ok(), "search panel built once");
         self.set_font_size(10.0);
         self.connect_signals();
+        warm_entry_icons(&self.w().entry);
         self.attach_channel();
         self.show_all();
         self.w().stack.set_visible_child_name("content");
@@ -1108,6 +1109,49 @@ impl SearchPanel {
             None
         })
     }
+}
+
+/// GTK decodes the entry's clear icon (about 12 ms) when the first character is
+/// typed. A throwaway entry painted off screen, once the real one is shown and the
+/// main loop is idle, leaves it in GTK's icon cache before that happens.
+fn warm_entry_icons(entry: &gtk::SearchEntry) {
+    thread_local! {
+        static WARMED: Cell<bool> = const { Cell::new(false) };
+    }
+    entry.connect_map(|entry| {
+        if WARMED.replace(true) {
+            return;
+        }
+        let entry = entry.downgrade();
+        glib::idle_add_local_full(glib::Priority::LOW, move || {
+            if entry.upgrade().is_none() {
+                return glib::ControlFlow::Break;
+            }
+            let window = gtk::OffscreenWindow::new();
+            let warm = gtk::SearchEntry::new();
+            warm.style_context().add_class("impro-search-entry");
+            warm.set_text("x");
+            window.add(&warm);
+            window.set_default_size(200, 30);
+            window.show_all();
+            let window = Rc::new(window);
+            // Painted on the next frame; the window is not needed after that.
+            if let Some(clock) = window.frame_clock() {
+                let keep = window.clone();
+                let done = Rc::new(Cell::new(false));
+                clock.connect_after_paint(move |_| {
+                    if !done.replace(true) {
+                        let keep = keep.clone();
+                        glib::idle_add_local_once(move || {
+                            // SAFETY: the window is owned here and not used again.
+                            unsafe { keep.destroy() }
+                        });
+                    }
+                });
+            }
+            glib::ControlFlow::Break
+        });
+    });
 }
 
 fn absolute_or_empty(path: &Path) -> PathBuf {

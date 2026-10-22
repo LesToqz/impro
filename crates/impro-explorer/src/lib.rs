@@ -96,6 +96,8 @@
 //! `str.splitlines`) and character coordinates are identical.
 pub mod explorer;
 pub mod gitstatus;
+#[doc(hidden)]
+pub mod icons;
 pub mod pool;
 pub mod search;
 pub mod searchpanel;

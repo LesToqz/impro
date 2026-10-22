@@ -334,7 +334,7 @@ impl ExplorerPanel {
         tree.set_margin_top(4);
         tree.set_margin_bottom(24);
         let column = gtk::TreeViewColumn::new();
-        let icon = gtk::CellRendererPixbuf::new();
+        let icon = crate::icons::IconCell::new();
         util::pack(&column, &icon, false);
         // Preserve model icon names (also used to identify directories), but render their
         // system symbolic variants in the row's muted colour.

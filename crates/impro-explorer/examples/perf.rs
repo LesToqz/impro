@@ -16,6 +16,56 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
+thread_local! {
+    /// Frame-clock phase marks (`PERF_PHASES=1`) of the current main-loop iteration.
+    static MARKS: RefCell<Vec<(&'static str, Instant)>> = const { RefCell::new(Vec::new()) };
+}
+
+fn mark(name: &'static str) {
+    MARKS.with(|m| m.borrow_mut().push((name, Instant::now())));
+}
+
+thread_local! {
+    static DRAWS: RefCell<Vec<(&'static str, f64)>> = const { RefCell::new(Vec::new()) };
+}
+
+/// Inclusive draw time of `widget` (`PERF_PHASES=1`), reported per slow iteration.
+fn watch_draw(widget: &impl IsA<gtk::Widget>, name: &'static str) {
+    if std::env::var_os("PERF_PHASES").is_none() {
+        return;
+    }
+    let start = Rc::new(Cell::new(Instant::now()));
+    let s = start.clone();
+    widget.connect_draw(move |_, _| {
+        s.set(Instant::now());
+        glib::Propagation::Proceed
+    });
+    widget.connect_closure(
+        "draw",
+        true,
+        glib::closure_local!(move |_w: gtk::Widget, _cr: gtk::cairo::Context| -> bool {
+            let ms = start.get().elapsed().as_secs_f64() * 1e3;
+            DRAWS.with(|d| d.borrow_mut().push((name, ms)));
+            false
+        }),
+    );
+}
+
+/// Records when each frame-clock phase handler of `widget`'s window runs (they are
+/// connected after GTK's own, so a mark is the end of that phase's GTK work).
+fn watch_phases(widget: &impl IsA<gtk::Widget>) {
+    if std::env::var_os("PERF_PHASES").is_none() {
+        return;
+    }
+    let Some(clock) = widget.frame_clock() else {
+        return;
+    };
+    clock.connect_update(|_| mark("update"));
+    clock.connect_layout(|_| mark("layout"));
+    clock.connect_paint(|_| mark("paint"));
+    clock.connect_after_paint(|_| mark("after-paint"));
+}
+
 #[derive(Default)]
 struct Probe {
     max: Duration,
@@ -37,8 +87,34 @@ fn run_until(probe: &mut Probe, timeout: Duration, mut done: impl FnMut() -> boo
         let started = Instant::now();
         // Non-blocking: waiting for events is idle time, not main-thread work.
         probe.rows.set(0);
+        MARKS.with(|m| m.borrow_mut().clear());
+        DRAWS.with(|d| d.borrow_mut().clear());
         if context.iteration(false) {
             let spent = started.elapsed();
+            if spent > Duration::from_millis(3) && std::env::var_os("PERF_PHASES").is_some() {
+                let marks: Vec<String> = MARKS.with(|m| {
+                    m.borrow()
+                        .iter()
+                        .map(|(n, t)| {
+                            format!("{n}@{:.1}", t.duration_since(started).as_secs_f64() * 1e3)
+                        })
+                        .collect()
+                });
+                let draws: Vec<String> = DRAWS.with(|d| {
+                    d.borrow_mut()
+                        .drain(..)
+                        .map(|(n, ms)| format!("{n} {ms:.1}"))
+                        .collect()
+                });
+                eprintln!("  draws [{}]", draws.join(", "));
+                eprintln!(
+                    "iteration {} total {:.1} ms rows {} marks [{}]",
+                    probe.iterations + 1,
+                    spent.as_secs_f64() * 1e3,
+                    probe.rows.get(),
+                    marks.join(" ")
+                );
+            }
             probe.iterations += 1;
             probe.busy += spent;
             probe.samples.push(spent.as_secs_f64() * 1000.);
@@ -253,6 +329,17 @@ fn tree_scenario(files: usize) {
 fn search_path(root: &Path, query: &str, regex: bool) {
     let panel = ExplorerPanel::new(root);
     let window = window_for(&panel);
+    watch_phases(&window);
+    {
+        let search = panel.search();
+        watch_draw(&window, "window");
+        watch_draw(&search, "panel");
+        watch_draw(&search.entry(), "entry");
+        watch_draw(&search.stack(), "stack");
+        watch_draw(&search.summary(), "summary");
+        watch_draw(&search.tree(), "tree");
+        watch_draw(&search.case_button(), "case");
+    }
     let mut probe = Probe::default();
     run_until(&mut probe, Duration::from_secs(20), || !panel.is_busy());
     // Separate the existing window's startup paint from search dispatch work.
@@ -314,6 +401,26 @@ fn search_path(root: &Path, query: &str, regex: bool) {
         !search.is_searching() && !search.timeout_pending()
     });
     println!("  supersede-and-finish-ms={}", ms(cancel_started.elapsed()));
+    if let Some(seconds) = std::env::var("PERF_PAINT_LOOP")
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+    {
+        // Repaint the finished result list continuously (for sampling profilers).
+        search.search_now(Some("function"));
+        run_until(&mut probe, Duration::from_secs(60), || {
+            !search.is_searching() && !search.timeout_pending()
+        });
+        println!("paint loop {seconds}s: pid {}", std::process::id());
+        let end = Instant::now() + Duration::from_secs(seconds);
+        let tree = search.tree();
+        let mut frames = 0u32;
+        while Instant::now() < end {
+            tree.queue_draw();
+            run_until(&mut probe, Duration::from_millis(40), || false);
+            frames += 1;
+        }
+        println!("frames {frames}");
+    }
     drop(window);
 }
 
