@@ -219,7 +219,8 @@ impl PanelColors {
         let text = get("foreground", FALLBACK_TEXT);
         let muted = legible(&get("muted", &text), &bg, 3.0);
         let dark = luminance(&bg) < 0.3;
-        let mix = |t_dark: f64, t_light: f64| mix_color(&bg, &text, if dark { t_dark } else { t_light });
+        let mix =
+            |t_dark: f64, t_light: f64| mix_color(&bg, &text, if dark { t_dark } else { t_light });
         PanelColors {
             panel: mix(0.06, 0.035),
             border: mix(0.13, 0.11),
@@ -246,8 +247,14 @@ mod tests {
     #[test]
     fn parses_hex_forms() {
         assert_eq!(Rgba::parse("#fff"), Some(Rgba::new(1.0, 1.0, 1.0, 1.0)));
-        assert_eq!(Rgba::parse("#000000").map(|c| c.to_hex()), Some("#000000".into()));
-        assert_eq!(Rgba::parse("#ff000080").map(|c| c.a > 0.49 && c.a < 0.51), Some(true));
+        assert_eq!(
+            Rgba::parse("#000000").map(|c| c.to_hex()),
+            Some("#000000".into())
+        );
+        assert_eq!(
+            Rgba::parse("#ff000080").map(|c| c.a > 0.49 && c.a < 0.51),
+            Some(true)
+        );
         assert_eq!(Rgba::parse("red"), None);
         assert_eq!(Rgba::parse("#12"), None);
         assert_eq!(Rgba::parse("#ggg"), None);

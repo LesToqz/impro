@@ -1,9 +1,7 @@
 //! Camera motion: eased zoom, drag panning with inertia, keyboard movement and
 //! focus tracking. Pure maths on top of [`crate::geometry`].
 
-use crate::geometry::{
-    clamp_zoom, ease, zoom_about, Camera, PAN_DECAY, PAN_FILTER, ZOOM_EASE_K,
-};
+use crate::geometry::{clamp_zoom, ease, zoom_about, Camera, PAN_DECAY, PAN_FILTER, ZOOM_EASE_K};
 
 /// Zoom steps per 60 Hz frame while a zoom key is held (shift: faster).
 const KEY_ZOOM: f64 = 1.03;
@@ -254,7 +252,10 @@ impl CameraState {
                 let d = PAN_DECAY.powf(dt * 60.0);
                 self.vx = self.vx * d + kx * (1.0 - d);
                 self.vy = self.vy * d + ky * (1.0 - d);
-                if kx == 0.0 && ky == 0.0 && self.vx.abs() < STOP_SPEED && self.vy.abs() < STOP_SPEED
+                if kx == 0.0
+                    && ky == 0.0
+                    && self.vx.abs() < STOP_SPEED
+                    && self.vy.abs() < STOP_SPEED
                 {
                     self.vx = 0.0;
                     self.vy = 0.0;
@@ -370,7 +371,9 @@ mod tests {
         let mut c = CameraState::centred(SIZE.0, SIZE.1);
         c.track_node(3);
         for _ in 0..600 {
-            if !c.step(1.0 / 60.0, false, SIZE, false, false, |_| Some((100.0, -50.0))) {
+            if !c.step(1.0 / 60.0, false, SIZE, false, false, |_| {
+                Some((100.0, -50.0))
+            }) {
                 break;
             }
         }

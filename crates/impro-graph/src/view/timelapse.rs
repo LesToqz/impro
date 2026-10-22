@@ -115,7 +115,10 @@ mod tests {
 
     #[test]
     fn counts_nodes_and_references() {
-        let g = graph(&[Some(1.0), Some(2.0), Some(3.0)], &[(0, 1), (1, 2), (2, 0)]);
+        let g = graph(
+            &[Some(1.0), Some(2.0), Some(3.0)],
+            &[(0, 1), (1, 2), (2, 0)],
+        );
         assert_eq!(Plan::new(&g, true).total(), 6);
         assert_eq!(Plan::new(&g, false).total(), 3);
     }

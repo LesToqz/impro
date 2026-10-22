@@ -319,11 +319,15 @@ impl Scene {
         if let Some(w) = weights {
             self.layout.set_weights(&w);
         }
-        self.layout
-            .set_size_multiplier(self.disp.node as f32);
+        self.layout.set_size_multiplier(self.disp.node as f32);
         self.adj = graph.adjacency();
         self.lines = graph.lines();
-        self.arrows = graph.pairs.iter().copied().filter(|(s, t)| s != t).collect();
+        self.arrows = graph
+            .pairs
+            .iter()
+            .copied()
+            .filter(|(s, t)| s != t)
+            .collect();
         self.graph = graph;
         self.layers = layers;
         self.focus = focus;
@@ -590,7 +594,11 @@ impl Scene {
         }
         let hl = self.highlight();
         for i in 0..self.len() {
-            let ta = if hl.is_none() || self.near[i] { 1.0 } else { HOVER_DIM };
+            let ta = if hl.is_none() || self.near[i] {
+                1.0
+            } else {
+                HOVER_DIM
+            };
             let td = if Some(i) == hl { LABEL_OFFSET } else { 0.0 };
             if (ta - self.alpha[i]).abs() > 1e-3 || (td - self.drop[i]).abs() > 0.05 {
                 return true;
@@ -607,7 +615,11 @@ impl Scene {
         }
         for (k, l) in self.lines.iter().enumerate() {
             let touch = hl.is_some_and(|h| l.a as usize == h || l.b as usize == h);
-            let ta = if hl.is_none() || touch { 1.0 } else { HOVER_DIM };
+            let ta = if hl.is_none() || touch {
+                1.0
+            } else {
+                HOVER_DIM
+            };
             let th = if touch { 1.0 } else { 0.0 };
             if (ta - self.line_alpha[k]).abs() > 1e-3 || (th - self.line_mix[k]).abs() > 1e-3 {
                 return true;
@@ -744,7 +756,11 @@ impl Scene {
             }
         };
         for i in 0..self.graph.nodes.len() {
-            let ta = if hl.is_none() || self.near[i] { 1.0 } else { HOVER_DIM };
+            let ta = if hl.is_none() || self.near[i] {
+                1.0
+            } else {
+                HOVER_DIM
+            };
             approach(&mut self.alpha[i], ta, 1e-3);
             let t = color_for(
                 &self.palette,
@@ -762,7 +778,11 @@ impl Scene {
         }
         for (k, l) in self.lines.iter().enumerate() {
             let touch = hl.is_some_and(|h| l.a as usize == h || l.b as usize == h);
-            let ta = if hl.is_none() || touch { 1.0 } else { HOVER_DIM };
+            let ta = if hl.is_none() || touch {
+                1.0
+            } else {
+                HOVER_DIM
+            };
             let th = if touch { 1.0 } else { 0.0 };
             approach(&mut self.line_alpha[k], ta, 1e-3);
             approach(&mut self.line_mix[k], th, 1e-3);
@@ -909,7 +929,13 @@ mod tests {
     fn updates_keep_positions_of_unaffected_nodes() {
         let mut s = loaded(20);
         let before: Vec<(String, f32, f32)> = (0..20)
-            .map(|i| (s.graph.nodes[i].id.to_string(), s.layout.x()[i], s.layout.y()[i]))
+            .map(|i| {
+                (
+                    s.graph.nodes[i].id.to_string(),
+                    s.layout.x()[i],
+                    s.layout.y()[i],
+                )
+            })
             .collect();
         // drop the last node and add a branch from node 3
         let mut pairs: Vec<(u32, u32)> = (0..18u32).map(|i| (i, i + 1)).collect();
@@ -971,10 +997,7 @@ mod tests {
         for n in &mut nodes {
             n.id = Arc::from(format!("other-{}", n.id));
         }
-        let renamed = Graph {
-            nodes,
-            ..other
-        };
+        let renamed = Graph { nodes, ..other };
         let r = s.apply(Built::global(renamed));
         assert!(r.replaced);
         assert_eq!(s.cam.cam.pan_x, 400.0);
