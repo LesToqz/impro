@@ -58,6 +58,7 @@ fn main() {
         );
         eprintln!("warm close icon: {:?}", start.elapsed());
     }
+    let baseline_rss = rss_kib();
     let begin = Instant::now();
     let painted = Rc::new(Cell::new(None));
     let p = painted.clone();
@@ -71,7 +72,12 @@ fn main() {
     panel.open_file(&path);
     until(|| painted.get().is_some() || (!panel.is_busy() && panel.last_error().is_some()));
     if let Some(error) = panel.last_error() {
-        println!("open-bytes={} rejected={error}", text.len());
+        println!(
+            "open-bytes={} rejected={error} rss-baseline-kib={} rss-rejected-kib={}",
+            text.len(),
+            baseline_rss,
+            rss_kib()
+        );
         panel.shutdown();
         unsafe {
             window.destroy();
@@ -80,6 +86,19 @@ fn main() {
     }
     let open = painted.get().unwrap();
     panel.disconnect(handler);
+    if std::env::var_os("IMPRO_EDITOR_PERF_PAINT_ONLY").is_some() {
+        println!(
+            "open-bytes={} first-text-paint-ms={:.3}",
+            text.len(),
+            ms(open)
+        );
+        panel.shutdown();
+        unsafe {
+            window.destroy();
+        }
+        pump();
+        return;
+    }
     let tab = panel.current_tab().unwrap();
     until(|| !panel.is_busy());
     println!(
@@ -161,6 +180,21 @@ fn main() {
         count.set(count.get() + 1);
         Some(false.to_value())
     });
+    let draw_started = Rc::new(Cell::new(None::<Instant>));
+    let drawing = draw_started.clone();
+    let draw_begin = tab.view.connect_draw(move |_, _| {
+        drawing.set(Some(Instant::now()));
+        glib::Propagation::Proceed
+    });
+    let draw_costs = Rc::new(RefCell::new(Vec::new()));
+    let drawing = draw_started.clone();
+    let costs = draw_costs.clone();
+    let draw_end = tab.view.connect_local("draw", true, move |_| {
+        if let Some(start) = drawing.take() {
+            costs.borrow_mut().push(ms(start.elapsed()));
+        }
+        Some(false.to_value())
+    });
     let start = Instant::now();
     let mut worst_cpu = Duration::ZERO;
     let mut frame_samples = Vec::new();
@@ -177,24 +211,66 @@ fn main() {
         frame_samples.push(ms(frame.elapsed()));
     }
     tab.view.disconnect(handler);
+    tab.view.disconnect(draw_begin);
+    tab.view.disconnect(draw_end);
+    let mut draw_costs = draw_costs.borrow().clone();
+    draw_costs.sort_by(f64::total_cmp);
+    println!(
+        "scroll-handler-samples={} draw-handler-p50-ms={:.3} draw-handler-p95-ms={:.3}",
+        draw_costs.len(),
+        draw_costs[draw_costs.len() / 2],
+        draw_costs[draw_costs.len() * 95 / 100]
+    );
     frame_samples.sort_by(f64::total_cmp);
     println!("scroll-bytes={} rendered-pages-100-ms={:.3} max-dispatch-ms={:.3} draw-p50-ms={:.3} draw-p95-ms={:.3} max-frame-ms={:.3} visible-lines={}",text.len(),ms(start.elapsed()),ms(worst_cpu),frame_samples[50],frame_samples[95],frame_samples[99],tab.chrome.painted_lines());
+    println!(
+        "rss-baseline-kib={} rss-open-kib={}",
+        baseline_rss,
+        rss_kib()
+    );
+    let settle_ms = std::env::var("IMPRO_EDITOR_IDLE_SETTLE_MS")
+        .ok()
+        .map(|s| s.parse::<u64>().expect("idle settle milliseconds"))
+        .unwrap_or(5000);
     let settle = Instant::now();
-    while settle.elapsed() < Duration::from_millis(500) {
+    while settle.elapsed() < Duration::from_millis(settle_ms) {
         pump();
         std::thread::sleep(Duration::from_millis(5));
     }
     until(|| !tab.highlighter.pending());
+    let idle_draws = Rc::new(Cell::new(0));
+    let draws = idle_draws.clone();
+    let idle_handler = tab.view.connect_local("draw", true, move |_| {
+        draws.set(draws.get() + 1);
+        Some(false.to_value())
+    });
     let cpu_start = cpu_time();
+    let ticks_start = cpu_ticks();
     let idle_start = Instant::now();
     let event_loop = glib::MainLoop::new(None, false);
     let finish = event_loop.clone();
-    glib::timeout_add_local_once(Duration::from_secs(1), move || finish.quit());
+    glib::timeout_add_local_once(Duration::from_secs(10), move || finish.quit());
     event_loop.run();
     println!(
-        "idle-process-cpu-percent={:.3}",
-        (cpu_time() - cpu_start) / idle_start.elapsed().as_secs_f64() * 100.0
+        "idle-settle-ms={} idle-seconds=10 idle-process-cpu-percent={:.3} idle-cpu-ticks={}",
+        settle_ms,
+        (cpu_time() - cpu_start) / idle_start.elapsed().as_secs_f64() * 100.0,
+        cpu_ticks() - ticks_start
     );
+    tab.view.disconnect(idle_handler);
+    println!("idle-draws={}", idle_draws.get());
+    let weak_buffer = tab.buffer.downgrade();
+    panel.close_tab(&tab, |ok| assert!(ok));
+    drop(tab);
+    until(|| weak_buffer.upgrade().is_none());
+    println!("rss-closed-kib={} buffer-released=true", rss_kib());
+    #[cfg(all(target_os = "linux", target_env = "gnu"))]
+    {
+        unsafe {
+            libc::malloc_trim(0);
+        }
+        println!("rss-closed-trimmed-kib={}", rss_kib());
+    }
     panel.shutdown();
     unsafe {
         window.destroy();
@@ -212,6 +288,26 @@ fn cpu_time() -> f64 {
     value.tv_sec as f64 + value.tv_nsec as f64 / 1e9
 }
 
+fn rss_kib() -> usize {
+    std::fs::read_to_string("/proc/self/status")
+        .unwrap()
+        .lines()
+        .find_map(|line| {
+            line.strip_prefix("VmRSS:")
+                .map(|s| s.split_whitespace().next().unwrap().parse().unwrap())
+        })
+        .unwrap()
+}
+fn cpu_ticks() -> u64 {
+    let stat = std::fs::read_to_string("/proc/self/stat").unwrap();
+    let fields: Vec<_> = stat
+        .rsplit_once(')')
+        .unwrap()
+        .1
+        .split_whitespace()
+        .collect();
+    fields[11].parse::<u64>().unwrap() + fields[12].parse::<u64>().unwrap()
+}
 fn measure_typing(tab: &impro_editor::EditorTab, phase: &str, count: usize) {
     let pending = Rc::new(Cell::new(None::<Instant>));
     let samples = Rc::new(RefCell::new(Vec::new()));
