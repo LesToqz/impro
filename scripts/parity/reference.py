@@ -140,6 +140,7 @@ def main():
         w.open_command_palette()
         if scene == 'palette-query':
             w._palette.entry.set_text('terminal')
+            w._palette.entry.set_position(-1)
     elif scene == 'switcher':
         w.open_quick_switcher()
     elif scene == 'notice':

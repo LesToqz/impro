@@ -60,6 +60,14 @@ def write_png(path, w, h, rgba):
         chunk(b'IDAT', zlib.compress(rows)) + chunk(b'IEND', b''))
 
 
+def validate_capture(path):
+    """Reject the zero-filled tail produced by a window larger than its X screen."""
+    w, h, rgba = read_png(path)
+    bottom = rgba[max(0,h-32)*w*4:]
+    if not any(bottom[i+c] for i in range(0,len(bottom),4) for c in range(3)):
+        raise ValueError('clipped capture: bottom 32 rows contain no RGB pixels')
+
+
 def compare(reference, actual, output):
     w, h, a = read_png(reference)
     aw, ah, b = read_png(actual)

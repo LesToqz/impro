@@ -209,6 +209,8 @@ pub fn run() {
                     && graph.widget().allocated_width() > 1
                     && graph.panel().root.allocated_width() > 1
             });
+            poll(|| w.layout_ready());
+            frame(&w.window);
             let summary = graph.summary();
             let ui = impro_ui::current_theme().unwrap().ui.clone();
             let palette = impro_graph::view::palette::Palette::from_theme(

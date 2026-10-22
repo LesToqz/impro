@@ -8,7 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
-from compare import compare
+from compare import compare, validate_capture
 
 SCENES = [
     'default', 'explorer-expanded', 'explorer-selected', 'explorer-hover',
@@ -132,6 +132,11 @@ def main():
                     break
                 if process.returncode:
                     row.update(status='error', side=side, exit=process.returncode)
+                    break
+                try:
+                    validate_capture(image)
+                except ValueError as error:
+                    row.update(status='error', side=side, detail=str(error))
                     break
                 row[side+'_sha256'] = hashlib.sha256(image.read_bytes()).hexdigest()
             else:

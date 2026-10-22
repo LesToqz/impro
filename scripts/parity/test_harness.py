@@ -37,6 +37,13 @@ class HarnessTests(unittest.TestCase):
             with patch('builtins.__import__',without_pillow):
                 self.assertEqual(compare.read_png(path),(2,1,rgba))
 
+    def test_clipped_capture_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'clipped.png'
+            compare.write_png(path,64,64,bytes([10,20,30,255])*64*32 + bytes([0,0,0,255])*64*32)
+            with self.assertRaisesRegex(ValueError,'clipped capture'):
+                compare.validate_capture(path)
+
     def test_live_notes_reserved(self):
         self.assertEqual([s for s in SCENES if s.startswith('notes-')],
                          ['notes-live','notes-table','notes-selection'])
