@@ -57,6 +57,21 @@ fn test_markdown() {
     check("a.md","# Title\nSome **bold** and *em* and `code` and [text](http://x.y)\n```python\ndef f(): pass\n```\n- item\n",&[("# Title",0,"heading"),("**bold**",0,"strong"),("*em*",0,"emphasis"),("`code`",0,"string"),("http://x.y",0,"link"),("```python",0,"string"),("def",0,"keyword"),("f()",0,"function"),("- item",0,"keyword")]);
 }
 #[test]
+fn test_markdown_prose_is_plain_and_link_text_is_a_string() {
+    let source = "A small with a [link](main.py).\n";
+    check(
+        "a.md",
+        source,
+        &[("link", 0, "string"), ("main.py", 0, "link")],
+    );
+    let runs = tokenize("a.md", source);
+    let at = source.find("with").unwrap();
+    assert!(
+        runs.iter().all(|(a, b, _)| at >= *b || at + 4 <= *a),
+        "{runs:?}"
+    );
+}
+#[test]
 fn test_html() {
     check("a.html","<!DOCTYPE html>\n<html lang=\"en\"><head><style>a { color: red; }</style><script>var n = go(1);</script></head><p class=\"x\">Hi &amp; bye</p><!-- c --></html>",&[("html",1,"tag"),("<head",0,"punctuation"),("lang",0,"attribute"),("\"en\"",0,"string"),("&amp;",0,"constant"),("<!-- c -->",0,"comment"),("a {",0,"selector"),("color",0,"property"),("var",0,"keyword"),("go",0,"function")]);
 }
@@ -113,7 +128,7 @@ fn test_c() {
 }
 #[test]
 fn test_rust() {
-    check("a.rs","#[derive(Debug)]\npub struct Foo { x: i32, y: Option<String> }\nimpl Foo { pub fn new() -> Self { let s = \"a\"; println!(\"{}\", s); } }\n",&[("#[derive(Debug)]",0,"decorator"),("struct",0,"keyword"),("Foo",0,"class"),("i32",0,"class"),("Option",0,"class"),("fn",0,"keyword"),("new",0,"function"),("let",0,"keyword"),("println!",0,"function")]);
+    check("a.rs","#[derive(Debug)]\npub struct Foo { x: i32, y: Option<String> }\nimpl Foo { pub fn new() -> Self { let s = \"a\"; println!(\"{}\", s); } }\n",&[("#[derive(Debug)]",0,"decorator"),("struct",0,"keyword"),("Foo",0,"class"),("i32",0,"class"),("Option",0,"class"),("fn",0,"keyword"),("new",0,"function"),("let",0,"keyword"),("println!",0,"function"),("!(",0,"function")]);
 }
 #[test]
 fn test_go() {
