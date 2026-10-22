@@ -125,14 +125,16 @@ fn idle_cpu_and_open_to_first_frame() {
         );
         let (frame, data) = (first.clone(), populated.clone());
         let drawing = view.clone();
-        let handler = view.canvas().connect_draw(move |_, _| {
+        let window = gtk::Window::new(gtk::WindowType::Toplevel);
+        // The canvas consumes draw emissions. Observe after the containing
+        // window has painted its children to capture a completed frame.
+        let handler = window.connect_local("draw", true, move |_| {
             frame.set(frame.get().or_else(|| Some(t0.elapsed())));
             if drawing.summary().nodes > 0 {
                 data.set(data.get().or_else(|| Some(t0.elapsed())));
             }
-            glib::Propagation::Proceed
+            Some(false.to_value())
         });
-        let window = gtk::Window::new(gtk::WindowType::Toplevel);
         window.set_default_size(900, 600);
         window.add(&*view);
         window.show_all();
@@ -142,7 +144,7 @@ fn idle_cpu_and_open_to_first_frame() {
             first.get().unwrap().as_secs_f64() * 1e3,
             populated.get().unwrap().as_secs_f64() * 1e3
         );
-        view.canvas().disconnect(handler);
+        window.disconnect(handler);
         t::settle_now(&view);
         assert!(t::settle(&view, 15_000));
         t::pump(3000);
