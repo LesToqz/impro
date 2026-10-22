@@ -484,7 +484,13 @@ impl EditorPanel {
         let (tx, rx) = glib::MainContext::channel(glib::Priority::DEFAULT);
         std::thread::spawn(move || {
             let started = std::time::Instant::now();
-            let result = file::read_file(&worker_path);
+            let result = file::read_file(&worker_path).map(|doc| {
+                let language = crate::highlight::language_name(
+                    &worker_path.to_string_lossy(),
+                    doc.text.lines().next().unwrap_or(""),
+                );
+                (doc, language)
+            });
             if std::env::var_os("IMPRO_EDITOR_TRACE").is_some() {
                 eprintln!("worker read/decode: {:?}", started.elapsed());
             }
@@ -494,12 +500,12 @@ impl EditorPanel {
         });
         let weak = self.downgrade();
         let key = path.clone();
-        let source = rx.attach(None, move |result: std::io::Result<Document>| {
+        let source = rx.attach(None, move |result| {
             if let Some(p) = weak.upgrade() {
                 if !p.imp().closed.get() && p.imp().pending.borrow().contains_key(&key) {
                     match result {
-                        Ok(doc) => {
-                            let tab = p.insert_document(key.clone(), doc);
+                        Ok((doc, language)) => {
+                            let tab = p.insert_document(key.clone(), doc, language);
                             if !tab.loading.get() {
                                 let pending = p.imp().pending.borrow_mut().remove(&key);
                                 if let Some(pending) = pending {
@@ -557,7 +563,12 @@ impl EditorPanel {
             },
         );
     }
-    fn insert_document(&self, path: PathBuf, doc: Document) -> Rc<EditorTab> {
+    fn insert_document(
+        &self,
+        path: PathBuf,
+        doc: Document,
+        language: &'static str,
+    ) -> Rc<EditorTab> {
         if let Some(tab) = self.tab_for_path(&path) {
             return tab;
         }
@@ -567,7 +578,7 @@ impl EditorPanel {
                 eprintln!("panel {label}: {:?}", trace_start.elapsed());
             }
         };
-        let tab = EditorTab::new(self, path, doc);
+        let tab = EditorTab::new(self, path, doc, language);
         trace("tab");
         self.imp().tabs.borrow_mut().push(tab.clone());
         let n = self.notebook();

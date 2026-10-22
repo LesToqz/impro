@@ -90,3 +90,19 @@ fn closing_a_published_prefix_releases_the_buffer() {
         assert!(h.panel.tabs().is_empty());
     });
 }
+
+#[test]
+fn language_detection_uses_the_complete_worker_first_line() {
+    run(|| {
+        let h = Harness::new();
+        let text = format!(
+            "#!/usr/bin/env {}python3\nvalue = 1\n",
+            "FLAG=value ".repeat(600)
+        );
+        let tab = h.open("script", &text);
+        assert_eq!(tab.language(), "Python");
+        assert_eq!(tab.text(), text);
+        assert_eq!(tab.history_len(), 0);
+        assert!(!tab.buffer.is_modified());
+    });
+}

@@ -47,7 +47,12 @@ pub struct EditorTab {
     paint_source: Rc<RefCell<Option<glib::SourceId>>>,
 }
 impl EditorTab {
-    pub(crate) fn new(panel: &EditorPanel, path: PathBuf, doc: crate::file::Document) -> Rc<Self> {
+    pub(crate) fn new(
+        panel: &EditorPanel,
+        path: PathBuf,
+        doc: crate::file::Document,
+        language_name: &'static str,
+    ) -> Rc<Self> {
         let trace_start = std::time::Instant::now();
         let trace = |label: &str| {
             if std::env::var_os("IMPRO_EDITOR_TRACE").is_some() {
@@ -93,14 +98,7 @@ impl EditorTab {
             });
         }
         trace("view");
-        let highlighter = Highlighter::new(
-            &view,
-            &panel.syntax_style(),
-            highlight::language_name(
-                &path.to_string_lossy(),
-                doc.text.lines().next().unwrap_or(""),
-            ),
-        );
+        let highlighter = Highlighter::new(&view, &panel.syntax_style(), language_name);
         highlighter.set_active(false);
         view.set_editable(false);
         trace("syntax");
@@ -115,10 +113,6 @@ impl EditorTab {
         let header = TabHeader::new("Close file", None);
         let history = History::new(&buffer);
         history.set_loading(true);
-        let language_name = highlight::language_name(
-            &path.to_string_lossy(),
-            doc.text.lines().next().unwrap_or(""),
-        );
         let tab = Rc::new(Self {
             panel: panel.downgrade(),
             language_name: Cell::new(language_name),
@@ -322,7 +316,11 @@ impl EditorTab {
                 self.history.set_loading(false);
                 self.loading.set(false);
                 self.view.set_editable(true);
-                self.sync_markdown();
+                if is_markdown(&self.path()) {
+                    self.sync_markdown();
+                } else {
+                    self.sync_slash_menu();
+                }
                 self.highlighter.set_active(
                     self.panel
                         .upgrade()
@@ -422,13 +420,19 @@ impl EditorTab {
         self.sync_markdown();
     }
     fn detect_language(&self) {
-        let mut end = self.buffer.start_iter();
-        end.forward_to_line_end();
-        let text = self
-            .buffer
-            .text(&self.buffer.start_iter(), &end, false)
-            .unwrap_or_default();
-        let language = highlight::language_name(&self.path().to_string_lossy(), &text);
+        let path = self.path();
+        let known = highlight::language_name(&path.to_string_lossy(), "");
+        let language = if known != "Plain Text" {
+            known
+        } else {
+            let mut end = self.buffer.start_iter();
+            end.forward_to_line_end();
+            let text = self
+                .buffer
+                .text(&self.buffer.start_iter(), &end, false)
+                .unwrap_or_default();
+            highlight::language_name(&path.to_string_lossy(), &text)
+        };
         self.language_name.set(language);
         self.highlighter
             .set_language(if self.md_mode.get() == "preview" {
