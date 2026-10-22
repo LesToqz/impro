@@ -130,7 +130,8 @@ pub fn capture_window(window: &impl IsA<gtk::Widget>, path: &Path) -> Result<(),
 }
 
 fn timing(phase: &str, started: Instant) {
-    if std::env::var_os("IMPRO_QA_TRACE").is_some() {
+    if std::env::var_os("IMPRO_QA_TRACE").is_some() || std::env::var_os("IMPRO_QA_TIMING").is_some()
+    {
         eprintln!(
             "app-{phase}-ms={:.3}",
             started.elapsed().as_secs_f64() * 1000.0

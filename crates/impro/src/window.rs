@@ -84,7 +84,9 @@ impl MainWindow {
     ) -> Self {
         let started = std::time::Instant::now();
         let trace = |phase: &str| {
-            if std::env::var_os("IMPRO_QA_TRACE").is_some() {
+            if std::env::var_os("IMPRO_QA_TRACE").is_some()
+                || std::env::var_os("IMPRO_QA_TIMING").is_some()
+            {
                 eprintln!(
                     "window-{phase}-ms={:.3}",
                     started.elapsed().as_secs_f64() * 1000.0
