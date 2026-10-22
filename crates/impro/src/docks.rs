@@ -299,11 +299,13 @@ impl MainWindow {
             return;
         }
         let weak = self.weak();
-        let source = glib::idle_add_local_once(move || {
+        // Coalesce allocations before GTK's resize/paint sources run.
+        let source = glib::idle_add_local_full(glib::Priority::HIGH_IDLE, move || {
             if let Some(this) = weak.upgrade().map(Self) {
                 this.dock_size_idle[i].borrow_mut().take();
                 this.size_terminal(right);
             }
+            glib::ControlFlow::Break
         });
         *self.dock_size_idle[i].borrow_mut() = Some(source);
     }
