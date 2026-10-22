@@ -224,3 +224,28 @@ fn test_font_changes_preserve_real_shell_prompt_in_both_docks() {
         }
     });
 }
+
+#[test]
+fn test_saved_custom_shell_is_validated_before_autostart() {
+    run(|| {
+        for shell in ["/bin/sh", "/missing-impro-shell"] {
+            let mut values = impro_core::settings::defaults().clone();
+            values.insert("terminal_shell".into(), shell.into());
+            let h = Harness::with(values);
+            let pane = h.shell(false);
+            let pid = pane.pid().unwrap();
+            let executable = std::fs::read_link(format!("/proc/{pid}/exe")).unwrap();
+            if shell == "/bin/sh" {
+                assert_eq!(executable, std::fs::canonicalize(shell).unwrap());
+            } else {
+                assert_eq!(
+                    executable,
+                    std::fs::canonicalize(impro_terminal::pick_shell()).unwrap()
+                );
+                assert!(h.w.overlay.notices().iter().any(|n| n
+                    .text()
+                    .contains("is not executable; using the default shell.")));
+            }
+        }
+    });
+}

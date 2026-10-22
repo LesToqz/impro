@@ -364,10 +364,11 @@ impl MainWindow {
             .set(self.allocation_us.get().max(started.elapsed().as_micros()));
     }
     pub fn layout_ready(&self) -> bool {
-        self.panels().iter().enumerate().all(|(i, p)| {
-            !p.get_visible()
-                || (!self.size_pending[i].get() && self.dock_size_idle[i].borrow().is_none())
-        })
+        !self.startup_shell_pending.get()
+            && self.panels().iter().enumerate().all(|(i, p)| {
+                !p.get_visible()
+                    || (!self.size_pending[i].get() && self.dock_size_idle[i].borrow().is_none())
+            })
     }
     pub fn max_allocation_us(&self) -> u128 {
         self.allocation_us.get()

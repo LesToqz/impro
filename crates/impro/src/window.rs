@@ -60,6 +60,7 @@ pub struct WindowWidgets {
     pub(crate) closed: Cell<bool>,
     pub(crate) quitting: Cell<bool>,
     pub(crate) allocation_us: Cell<u128>,
+    pub(crate) startup_shell_pending: Cell<bool>,
 }
 
 impl Deref for MainWindow {
@@ -110,6 +111,7 @@ impl MainWindow {
         let window = gtk::ApplicationWindow::new(app);
         window.set_title(identity::WINDOW_TITLE);
         window.set_default_size(1200, 750);
+        trace("window");
         let explorer = ExplorerPanel::new(&root);
         trace("explorer");
         let editor = EditorPanel::new(Some(&root));
@@ -117,6 +119,7 @@ impl MainWindow {
         let size = values["terminal_font_size"].as_i64().unwrap_or(11) as i32;
         let terminal_bottom = TerminalPanel::new(&root, false, false, size);
         let terminal_right = TerminalPanel::new(&root, false, true, size);
+        trace("docks");
         terminal_right.set_no_show_all(true);
         let autostart = values["terminal_autostart"] == true && values["feature_terminal"] == true;
         terminal_bottom.set_no_show_all(!autostart);
@@ -176,11 +179,14 @@ impl MainWindow {
             closed: Cell::new(false),
             quitting: Cell::new(false),
             allocation_us: Cell::new(0),
+            startup_shell_pending: Cell::new(false),
         }));
         trace("skeleton");
         this.build_commands();
+        trace("commands");
         this.connect_panels();
         this.connect_docks();
+        trace("signals");
         this.apply_initial_preferences();
         trace("preferences");
         if let Some(error) = style_error {
@@ -216,10 +222,9 @@ impl MainWindow {
                 );
             }
         });
-        if autostart {
-            // The panel builds its chrome now; shell resolution/spawn waits for stable paint.
-            this.terminal_bottom.new_terminal();
-        }
+        // Default shell chrome is immediate; custom shells are checked on a worker first.
+        this.configure_shell(autostart);
+        trace("terminal-pane");
         this.window.set_title(identity::WINDOW_TITLE);
         this
     }

@@ -47,9 +47,20 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
             }
         });
         if let Some(path) = qa_path.as_ref() {
-            install_screenshot_helper(window, path.clone(), started, screenshot_failed.clone());
+            let weak = owner.weak();
+            install_screenshot_helper_when(
+                window,
+                path.clone(),
+                started,
+                screenshot_failed.clone(),
+                move || {
+                    weak.upgrade()
+                        .is_some_and(|owner| MainWindow(owner).layout_ready())
+                },
+            );
         }
         window.show_all();
+        timing("shown", started);
         window.present();
         timing("presented", started);
     });
@@ -68,13 +79,24 @@ pub fn install_screenshot_helper(
     started: Instant,
     failed: Rc<Cell<bool>>,
 ) {
+    install_screenshot_helper_when(window, path, started, failed, || true);
+}
+
+fn install_screenshot_helper_when(
+    window: &gtk::ApplicationWindow,
+    path: PathBuf,
+    started: Instant,
+    failed: Rc<Cell<bool>>,
+    ready: impl Fn() -> bool + 'static,
+) {
     let armed = Rc::new(Cell::new(false));
     // map/after-paint can occur before GtkWidget has drawn its first contents.
     // Queue one idle from draw: GDK has ended its paint buffer before it executes.
     window.connect_draw(move |window, _| {
-        if armed.replace(true) {
+        if !ready() || armed.replace(true) {
             return glib::Propagation::Proceed;
         }
+        timing("draw", started);
         let weak = window.downgrade();
         let path = path.clone();
         let failed = failed.clone();

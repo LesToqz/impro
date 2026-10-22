@@ -49,15 +49,12 @@ impl MainWindow {
     }
     pub(crate) fn apply_initial_preferences(&self) {
         let values = self.values();
-        self.editor.apply_settings(&values);
-        for panel in self.panels() {
-            panel.apply_settings(&values);
-        }
-        self.explorer
-            .set_font_size(values["explorer_font_size"].as_i64().unwrap_or(10) as f64);
+        // Use the same dispatch at startup and for live edits, once per key.
         for key in values.keys() {
-            if !matches!(key.as_str(), "accent" | "theme" | "ui_font" | "editor_font")
-                && !key.starts_with("feature_")
+            if !matches!(
+                key.as_str(),
+                "accent" | "theme" | "ui_font" | "editor_font" | "terminal_shell"
+            ) && !key.starts_with("feature_")
             {
                 self.apply_setting(key);
             }
@@ -155,22 +152,7 @@ impl MainWindow {
                     panel.set_max_panes(number as usize);
                 }
             }
-            "terminal_shell" => {
-                // Executability checks stay off GTK's thread, including live changes.
-                let shell = text.to_owned();
-                let expected = shell.clone();
-                let weak = self.weak();
-                self.worker(move || {
-                    use std::os::unix::fs::PermissionsExt;
-                    shell.is_empty() || std::fs::metadata(&shell).is_ok_and(|m| m.is_file() && m.permissions().mode() & 0o111 != 0)
-                }, move |valid| {
-                    if let Some(this) = weak.upgrade().map(Self) {
-                        if this.values()["terminal_shell"].as_str() != Some(&expected) { return; }
-                        for panel in this.panels() { panel.set_shell(if valid { &expected } else { "" }); }
-                        if !valid { this.notify(&format!("Shell {expected} is not executable; using the default shell."), "info"); }
-                    }
-                });
-            }
+            "terminal_shell" => self.configure_shell(false),
             "terminal_copy_on_select" => {
                 for panel in self.panels() {
                     panel.set_copy_on_select(flag);
@@ -209,6 +191,62 @@ impl MainWindow {
             }
             _ => {} // Startup policy and graph default affect future panes only.
         }
+    }
+    pub(crate) fn configure_shell(&self, autostart: bool) {
+        let shell = self.values()["terminal_shell"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned();
+        if shell.is_empty() {
+            for panel in self.panels() {
+                panel.set_shell("");
+            }
+            if autostart {
+                self.terminal_bottom.new_terminal();
+            }
+            return;
+        }
+        // A saved custom shell must be validated before the first pane captures it.
+        if autostart {
+            self.startup_shell_pending.set(true);
+        }
+        let expected = shell.clone();
+        let weak = self.weak();
+        self.worker(
+            move || {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::metadata(&shell)
+                    .is_ok_and(|m| m.is_file() && m.permissions().mode() & 0o111 != 0)
+            },
+            move |valid| {
+                if let Some(this) = weak.upgrade().map(Self) {
+                    if autostart {
+                        this.startup_shell_pending.set(false);
+                        this.window.queue_draw();
+                    }
+                    if this.values()["terminal_shell"].as_str() != Some(&expected) {
+                        return;
+                    }
+                    for panel in this.panels() {
+                        panel.set_shell(if valid { &expected } else { "" });
+                    }
+                    if !valid {
+                        this.notify(
+                            &format!(
+                                "Shell {expected} is not executable; using the default shell."
+                            ),
+                            "info",
+                        );
+                    }
+                    if autostart
+                        && this.feature_enabled("terminal")
+                        && this.terminal_bottom.pane_count() == 0
+                    {
+                        this.terminal_bottom.new_terminal();
+                    }
+                }
+            },
+        );
     }
     pub fn theme_id(&self) -> String {
         self.values()["theme"]
