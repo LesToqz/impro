@@ -87,15 +87,14 @@ fn color_group(group: &Value) -> Option<Value> {
     let color = group.get("color")?;
     let color = if let Some(text) = color.as_str().filter(|c| valid_hex(c)) {
         Value::from(text.to_ascii_lowercase())
-    } else if let Some(object) = color.as_object() {
+    } else {
+        let object = color.as_object()?;
         let rgb = object.get("rgb").filter(|v| v.is_i64() || v.is_u64())?;
         let alpha = object.get("a")?.as_f64().filter(|a| a.is_finite())?;
         if !(0.0..=0xff_ffff as f64).contains(&rgb.as_f64()?) || !(0.0..=1.0).contains(&alpha) {
             return None;
         }
         json!({ "a": object["a"], "rgb": rgb })
-    } else {
-        return None;
     };
     Some(json!({ "query": query, "color": color }))
 }

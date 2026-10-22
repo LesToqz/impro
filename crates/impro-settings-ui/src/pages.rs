@@ -44,13 +44,7 @@ pub(crate) struct Builder {
 }
 
 fn limits(key: &str) -> (f64, f64) {
-    settings::limits()
-        .get(key)
-        .copied()
-        .unwrap_or_else(|| match key {
-            "terminal_font_size" | "editor_font_size" => (7.0, 32.0),
-            _ => (8.0, 24.0),
-        })
+    settings::limits().get(key).copied().unwrap_or((8.0, 24.0))
 }
 
 fn is_executable(path: &Path) -> bool {
