@@ -185,3 +185,23 @@ fn test_settings_changes_are_forwarded_and_saved_without_blocking() {
         assert_eq!(settings::get_value("show_hidden").unwrap(), json!(false));
     });
 }
+
+#[test]
+fn test_dialog_keeps_working_after_the_handle_is_dropped() {
+    run(|| {
+        let _fx = Fixture::new();
+        let dialog = SettingsDialog::new(None, None, None);
+        let events: Rc<RefCell<Vec<String>>> = Rc::default();
+        let sink = events.clone();
+        dialog.connect_setting_changed(move |key, _| sink.borrow_mut().push(key.to_owned()));
+        let toggle = dialog.control("line_numbers").unwrap();
+        let window: gtk::Window = (*dialog).clone();
+        drop(dialog); // Only the window (and GTK) keep it alive now.
+        click(&toggle);
+        assert_eq!(*events.borrow(), ["line_numbers"]);
+        flush();
+        assert_eq!(settings::get_value("line_numbers").unwrap(), json!(false));
+        unsafe { window.destroy() };
+        pump(10);
+    });
+}

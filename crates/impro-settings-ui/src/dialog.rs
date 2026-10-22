@@ -287,13 +287,19 @@ impl SettingsDialog {
             .into_iter()
             .map(|(k, v)| (k.to_owned(), v))
             .collect::<BTreeMap<_, _>>();
-        let initial_sizes = match options.sizes {
-            Some(given) => Some(given),
-            None => Some(settings::get_font_sizes()),
+        let given: Vec<(String, Value)> = match options.sizes {
+            Some(given) => given
+                .into_iter()
+                .map(|(k, v)| (k, Value::from(v)))
+                .collect(),
+            None => settings::FONT_KEYS
+                .iter()
+                .map(|k| (k.to_string(), stored[*k].clone()))
+                .collect(),
         };
-        for (key, value) in initial_sizes.into_iter().flatten() {
+        for (key, value) in given {
             if sizes.contains_key(&key) {
-                sizes.insert(key.clone(), normalize_size(&key, Value::from(value)));
+                sizes.insert(key.clone(), normalize_size(&key, value));
             }
         }
         let theme = themes::get_theme(
@@ -353,6 +359,12 @@ impl SettingsDialog {
         });
         inner.build_chrome();
         inner.updating.set(false);
+        // The window keeps the dialog alive until it is destroyed, so signal handlers
+        // (which hold weak references) keep working if the caller drops its handle.
+        let keep = RefCell::new(Some(inner.clone()));
+        inner.window.connect_destroy(move |_| {
+            keep.borrow_mut().take();
+        });
         Self { inner }
     }
 
