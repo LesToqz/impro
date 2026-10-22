@@ -65,9 +65,9 @@ class HarnessTests(unittest.TestCase):
         driver = (Path(__file__).parents[2]/'crates/impro/examples/parity/scenes.rs').read_text()
         reference = (Path(__file__).parent/'reference.py').read_text()
         self.assertNotIn('std::process::exit(77)',driver)
+        self.assertIn("scene.startswith('notes-')",reference)
         for scene in notes:
             self.assertIn('"%s"' % scene,driver)
-            self.assertIn("'%s'" % scene,reference)
 
 
 if __name__ == '__main__':
