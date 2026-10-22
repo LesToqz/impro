@@ -740,6 +740,7 @@ struct ViewInner {
     max_slice: Flag<Duration>,
     leave_source: RefCell<Option<glib::SourceId>>,
     sync_pending: Flag<bool>,
+    pill_at: Flag<[(i32, i32); 2]>,
     shown: Flag<[bool; 4]>,
 }
 impl TableView {
@@ -794,6 +795,7 @@ impl TableView {
             max_slice: Flag::new(Duration::ZERO),
             leave_source: RefCell::new(None),
             sync_pending: Flag::new(false),
+            pill_at: Flag::new([(i32::MIN, i32::MIN); 2]),
             shown: Flag::new([false; 4]),
         }));
         // Empty spacers preserve document geometry before offscreen rows exist.
@@ -1953,7 +1955,10 @@ impl TableView {
             }
         }
         let (row, column) = self.0.grip.get().unwrap_or((0, 0));
-        for (strip, is_row) in [(&self.0.row_strip, true), (&self.0.column_strip, false)] {
+        for (slot, (strip, is_row)) in [(&self.0.row_strip, true), (&self.0.column_strip, false)]
+            .into_iter()
+            .enumerate()
+        {
             if let Some(cell) = self.cell(
                 if is_row { row } else { 0 },
                 if is_row { 0 } else { column },
@@ -1962,19 +1967,19 @@ impl TableView {
                 if let Some(fixed) = strip.child().and_then(|w| w.downcast::<gtk::Fixed>().ok()) {
                     if let Some(pill) = fixed.children().first() {
                         let origin = self.0.frame.allocation();
-                        fixed.move_(
-                            pill,
-                            if is_row {
-                                2
-                            } else {
-                                a.x() - origin.x() + a.width() / 2 - 10
-                            },
-                            if is_row {
-                                a.y() - origin.y() + a.height() / 2 - 10
-                            } else {
-                                2
-                            },
-                        );
+                        let at = if is_row {
+                            (2, a.y() - origin.y() + a.height() / 2 - 10)
+                        } else {
+                            (a.x() - origin.x() + a.width() / 2 - 10, 2)
+                        };
+                        // `Fixed::move_` always requests a new layout, which would
+                        // re-trigger this sync through the table's size-allocate.
+                        let mut last = self.0.pill_at.get();
+                        if last[slot] != at {
+                            last[slot] = at;
+                            self.0.pill_at.set(last);
+                            fixed.move_(pill, at.0, at.1);
+                        }
                     }
                 }
             }

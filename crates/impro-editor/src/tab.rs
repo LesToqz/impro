@@ -541,6 +541,22 @@ impl EditorTab {
                 },
                 move || tab.upgrade().map(|t| t.path()),
             );
+            renderer.set_code_highlighter(Some(std::sync::Arc::new(|language, text| {
+                let as_file = format!("code.{language}");
+                let target = if highlight::language_name(&as_file, "") == "Plain Text" {
+                    language
+                } else {
+                    as_file.as_str()
+                };
+                highlight::tokenize(target, text)
+                    .into_iter()
+                    .map(|(start, end, kind)| impro_markdown::livemd::CodeRun {
+                        start,
+                        end,
+                        kind: kind.to_string(),
+                    })
+                    .collect()
+            })));
             renderer.set_readable_width(panel.md_readable_width());
             self.md_renderer.replace(Some(Rc::new(renderer)));
             self.style_markdown();

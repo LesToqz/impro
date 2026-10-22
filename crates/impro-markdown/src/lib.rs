@@ -21,13 +21,15 @@
 pub fn init() {
     livetable::init();
     impro_ui::register_css("markdown", css);
+    livemd::warm_widgets();
 }
 
-pub fn css(_ui: &impro_core::themes::UiColors) -> String {
-    String::new()
+/// Stylesheet shared by every live Markdown view (a view's own `set_style`
+/// provider overrides it with the editor palette).
+pub fn css(ui: &impro_core::themes::UiColors) -> String {
+    livemd::css(ui)
 }
 
-// STUB: replaced by task md-core/livemd
 pub mod livemd;
 pub mod seltoolbar;
 pub mod slashmenu;
