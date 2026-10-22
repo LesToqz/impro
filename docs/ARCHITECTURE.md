@@ -1,269 +1,240 @@
-# impro architecture and worker integration contracts
+# impro architecture
 
-The workspace targets Rust 2021 and one GTK3 gtk-rs **0.18** stack. Shared
+impro is a Rust 2021 workspace on one GTK3 gtk-rs **0.18** stack. Shared
 versions live in the root `Cargo.toml`; `webkit2gtk` is 2.0. Local `impro-vte`
-wraps libvte-2.91 without introducing a second GLib/GTK ABI. It includes a nested
-`impro-vte-sys` package; do not replace it with a third-party VTE binding.
-Cargo jobs are limited to three. Run only one Cargo operation at a time.
+wraps libvte-2.91 without introducing a second GLib/GTK ABI; its nested
+`impro-vte-sys` package supplies the FFI. The workspace declares Rust 1.80 as
+its minimum. Cargo jobs are limited to three; run one Cargo operation at a time.
 
 ## Crates and dependency direction
 
-| Crate | Owns | Depends on |
+| Crate | Responsibility | Internal dependencies |
 | --- | --- | --- |
-| impro-core | identity, 14 themes, settings, fsops, pure note edits | std, serde/JSON, regex, libc, tempfile, Unicode helpers; no GTK/GIO |
-| impro-ui | shared CSS/provider, tokens, motion, widgets, note toolbar | core, GTK stack |
-| impro-vte | safe Terminal/Pty and the local FFI shim | GTK stack, sys/pkg-config |
-| impro-explorer | explorer, search, gitstatus | core, ui, GTK |
-| impro-terminal | terminal docks, panes, resizing, terminal bar | core, ui, vte, GTK |
-| impro-editor | editor, gutter, highlighting | core, ui, markdown, GTK, syntect |
-| impro-markdown | Markdown editing/preview, tables, live rendering, slash/selection menus | core, ui, GTK |
-| impro-chrome | titlebar, palette, overlays | core, ui, GTK |
-| impro-settings-ui | settings dialog | core, ui, GTK |
-| impro-gitviews | git data and WebKit git pages (created by owning task) | core, ui, GTK/WebKit as needed |
-| impro-graph | native graph engine/view (created by owning task) | core; ui/GTK for the view |
-| impro | argv, application, window wiring, stylesheet assembly | feature crates, core, ui |
+| impro-core | Identity, 14 themes, settings, filesystem operations, pure note edits | None; no GTK/GIO |
+| impro-ui | Shared CSS/provider, tokens, motion, widgets, icons, note toolbar | core |
+| impro-vte | Safe Terminal/Pty and local FFI | Local sys binding |
+| impro-explorer | File tree, notes, search, Git status | core, ui |
+| impro-terminal | Docks, panes, terminal bar and resize handling | core, ui, vte |
+| impro-editor | Tabs, gutter, source editing and syntect highlighting | core, ui, markdown |
+| impro-markdown | Markdown parsing, block/table edits, live rendering, slash/selection menus | core, ui |
+| impro-chrome | Titlebar, palettes, overlays and notices | core, ui |
+| impro-settings-ui | Searchable settings dialog and hotkeys | core, ui |
+| impro-gitviews | Git data, Git graph and commit WebKit hosts/assets | core, ui |
+| impro-graph | Independent native graph engine and GTK view | core, ui |
+| impro | Binary, application, window and feature integration | All feature crates, core, ui |
 
 Direction is `impro → feature crates → impro-ui → impro-core`; VTE is a sibling
-of ui. Feature crates never depend on `impro`. Avoid dependencies between
-features except editor → markdown. The binary connects their callbacks.
-`members = ["crates/*"]` picks up the graph and git-view workers' crates.
-Do not create those crates from a foundation stub. Each worker adds its own
-crate-specific dependencies; do not alter shared GTK versions.
+of ui. Features never depend on the application crate. Editor → Markdown is
+the explicit feature dependency. Graph engine modules are GTK-free even though
+the crate also contains its native GTK view. No async runtime is used.
 
-## Public data APIs
+## Application modules
 
-```rust
-use impro_core::{settings, themes};
-let theme = themes::get_theme(Some("impro-dark")); // &'static Theme; unknown => default
-let foreground = &theme.ui["foreground"];
-let points = settings::get_font_size("editor_font_size")?;
-let values = settings::get_values(); // 45 validated keys, owned JSON map
-let reduce = values["reduce_motion"].as_bool().unwrap_or(false);
-```
-
-`Theme` has public `id`, `name`, `dark`, `ui`, `syntax`, `terminal`, `chrome`.
-`UiColors` is `BTreeMap<String, String>` using the same role keys everywhere.
-`SyntaxStyle` contains foreground/bold/italic/underline; `KINDS` lists 26 roles.
-`TerminalColors.ansi` is `[String; 16]`. Catalogue values are resolved in
-`themes.json`, preserving contrast adjustment and rounding exactly.
-Use `themes::{contrast,luminance,legible,mix_color}` for derived colours.
-
-`settings::{normalize,get_value,set_value,set_values,reset_value}` return a
-`Result` for unknown keys. A save result of `false` means IO failed; retain your
-in-memory preferences. `save` merges raw keys, preserving extensions.
-`Store::new(path)` offers the same operations with an explicit path for tests.
-Unbounded JSON integers clamp without float overflow, and font-family validation
-rejects Unicode control/format/separator characters.
-Writes use a 0600 temporary file, fsync, atomic replacement and parent fsync.
-`settings_path()` resolves XDG/HOME at call time and never imports older settings.
-`get_graph/set_graph` and `get_gitgraph/set_gitgraph` preserve **opaque JSON**;
-normalization belongs to the owning graph task. They are outside `defaults()`.
-
-`fsops` returns `Result<PathBuf, FsOpError>` with original error wording.
-`rename_no_replace` uses Linux renameat2; deletion protects filesystem/project
-roots and unlinks symlinks. `trash` implements freedesktop home trash on the same
-filesystem, including `.trashinfo`. Unsupported mounts return
-`FsOpError::TrashUnavailable`; never silently delete. Call all filesystem/store
-operations on a worker thread once the event loop is running.
-
-`notes::{notes_dir,note_filename,note_path,create_note,list_notes,is_note,is_note_path}`
-operate on `.impro/Notes`. `list_notes(root, "name"|"modified")` is fallible for
-an unknown sort mode. Creation is lazy/exclusive and retries suffix collisions.
-`apply_command(id, text, start, Some(end))`, `apply_slash_command` and
-`apply_selection_command` return `Edit`. Inputs are signed character offsets and
-are clamped/reordered. `Edit` offsets count Unicode characters, **not bytes**,
-so they match `GtkTextBuffer`; `Edit::apply` returns a new document.
-`NOTE_COMMANDS`, `SLASH_COMMANDS`, `INLINE_MARKERS`, `TURN_COMMANDS` and
-`selection_formats` are shared with all Markdown UIs. Date insertion uses the
-local calendar date. `impro_ui::notes::{apply_edit,apply_to_buffer}` group edits
-into one GTK user action and select the result.
-
-## CSS porting and registration
-
-Every feature exposes `pub fn init()` and `pub fn css(ui: &UiColors) -> String`.
-Call each `init()` once **before** applying the startup theme. Register by a
-stable unique name; duplicate registration of the same function is harmless:
-
-```rust
-use impro_core::themes::UiColors;
-pub fn css(ui: &UiColors) -> String {
-    impro_ui::render_css(include_str!("panel.css"), ui)
-}
-pub fn init() {
-    impro_ui::register_css("explorer.panel", css);
-}
-```
-
-Copy the original f-string body into `panel.css`, rename CSS classes to `impro-`,
-and leave `{ui['bg']}`, `{ui["foreground"]}`, or use shorter `{bg}` placeholders.
-Both literal CSS braces and doubled f-string braces work. Locals such as
-`{hover}` must be inserted into a cloned UiColors map by your builder first.
-Register multiple builders for multiple original modules. Registration uses
-name order; keep independent selectors, or combine dependent modules in one
-builder to preserve cascade order. The ui crate registers its own widgets and
-notes CSS; do not add them twice. It never imports feature crates.
-
-`style::{TOKENS,build_css,build_overrides,with_accent}` are pure.
-`apply_style(Some(theme))` installs the base theme;
-`apply_theme(theme, accent, ui_font, editor_font)` adds user overrides.
-`current_theme()` returns `Option<Rc<Theme>>` of the effective palette.
-CSS strings are cached by full theme/font contents, invalidated on registration.
-Strict staging catches parser errors before changing the current provider or
-GTK dark preference. One registered provider updates existing widgets.
-Editors and terminals still apply syntax/chrome/font/ANSI values via their APIs.
-
-## Motion
-
-```rust
-use gtk::prelude::*;
-use impro_ui::motion::{self, AnimateOptions, MotionKey};
-let weak = widget.downgrade();
-let tween = motion::animate(&widget, "state", move |p| {
-    if let Some(widget) = weak.upgrade() { widget.set_opacity(p); }
-}, AnimateOptions { key: MotionKey::Opacity, ..Default::default() });
-// tween.cancel(); // leaves the current value; never calls on_done
-```
-
-Durations accept token strings, i32/u32 or finite f64 milliseconds.
-`DURATIONS` and `EASING_POINTS` include compatibility aliases.
-`easing(name)` / `cubic_bezier(...)` produce a `Curve`; `.evaluate()` validates
-input and `.sample()` is allocation-free for known finite progress.
-`AnimateOptions` has easing, key, delay_ms, optional boxed FnOnce on_done.
-Keys are per widget; use `MotionKey::unique()` for independent custom effects.
-Replacement captures the current value; the old completion never runs.
-`Tween::finished()` includes cancellation. Dropping a handle keeps it running.
-Use weak GTK references in callbacks to avoid extending widget lifetimes.
-
-`fade(widget, show, duration, hide_when_done, on_done)`,
-`slide_in(widget, offset, duration, on_done)`,
-`animate_size_request(widget, Axis::Width|Height, target, duration, restore, on_done)`
-manage reversal baselines. `StateFader::new(widget, update, duration_ms, initial)`
-handles hover crossings; `.set()`, `.cancel()`, `.disconnect()` are reentrant.
-New tweens finish synchronously when the application preference,
-`IMPRO_REDUCE_MOTION=1`, or GTK enable-animations disables motion.
-
-There is **one** shared frame-clock callback while work is active; unmapped
-initial widgets use one shared temporary fallback until mapped. Unmap/unrealize/
-destroy cancels the corresponding tween. Idle has no tick/timer. Normal tween
-steps reuse the active vector and allocate nothing; new animations allocate at
-creation. `active_count()` and `clock_attached()` support lifecycle tests.
-
-## Widgets
-
-`Toggle`, `IconButton`, `HotkeyChip`, `SearchField`, `SettingRow`, `SettingCard`,
-`NavRow`, `NavList` are cloneable composition handles. They dereference to their
-GTK widget for methods/signals; pass `.widget()` into generic GTK container
-methods (`container.add(toggle.widget())`). Use `.widget().upcast_ref()` where
-an API takes `&gtk::Widget`. This avoids unsafe wrapper casts.
-
-`Toggle::new(active, label)` exposes `thumb` and `thumb_offset()`; active/toggled
-and keyboard semantics are GTK's. IconButton takes icon name + tooltip.
-`SearchField::default()` has the settings placeholder; use `connect_changed`
-for immediate filtering. `SettingRow::new(name, description, control, RowOptions)`
-supports key, aliases, reset callback and extras. It exposes labels/controls/
-reset_button, `matches`, `set_narrow`, `activate_control`. Add rows with
-`SettingCard::add_row`, then `set_query` / `visible_rows`.
-
-`NavList::add_page` returns a NavRow; use `select_page`, `page_id`, `rows()` and
-GTK row-selected. Nav rows expose labels/count and `set_count(Option<usize>)`.
-The list implements j/k/G/gg in addition to GTK arrow/Home/End navigation.
-`SwatchPicker` is a native GtkBox subclass with `buttons()`, `value()`,
-`set_value(value, emit)` and `connect_value_changed`; clicking a chosen swatch
-keeps it chosen. `CenteredColumn::default()` is a custom Bin with 700 max width,
-32 side, 48 top, 64 bottom. `WrapBox::new(spacing,line_spacing)` is a custom
-Container preserving each child's natural width. Both accept normal `.add()`.
-`NoteToolbar` is a native GtkBox subclass: `new`, `buttons`, `connect_command`.
-All accessible names/roles and CSS are installed by constructors/init.
-
-## VTE and the toolchain spike
-
-`impro_vte::Terminal` is a real GtkWidget implementing Scrollable; normal GTK
-extension traits work. `Terminal::spawn_async(cwd, argv, envv, flags, timeout,
-cancellable, callback)` completes with `Result<glib::Pid, glib::Error>` on the
-main context. Empty envv inherits the environment; an explicit envv merges as
-VTE specifies. No Rust callback runs between fork/exec. `PtyFlags::DEFAULT` is
-the spawn default. `pty().fd()` is borrowed and only valid while the PTY lives.
-The native version must be >=0.72 (text-format API). Public FFI types are under
-`impro_vte::ffi`; the terminal worker owns subsequent binding extensions.
-
-Feed/feed_child accept byte slices. Bindings cover clipboard formats, primary
-selection, selection, reset, terminal size/grid/font scale/font, scrollback,
-colours, cursor shape/blink, bell, scroll behaviour, autohide, hyperlinks,
-window title/current directory/file URI, PTY fd, and the original signals
-(child-exited, commit, selection/contents/title/current-directory changes).
-`current-directory-uri` is a property notification, exposed as a convenient
-`connect_current_directory_uri_changed`. Native GTK key/focus/tick APIs are
-inherited. See the real shell/PTY test in `impro-vte/tests/terminal.rs`.
-
-`cargo run -p impro --example toolchain_spike` retains the D1 one-process GTK +
-VTE + WebKit proof. The ordinary binary creates neither a terminal nor WebView
-until later feature wiring requests them.
-
-## Stub ownership contracts
-
-Explorer, terminal, editor, chrome and settings-ui currently export only
-`init()` and `css(&UiColors) -> String`. Replace those bodies in the owning task;
-the feature worker defines the panel types and the final window task wires them.
-The terminal worker adds an impro-vte dependency; the editor worker adds
-impro-markdown plus workspace syntect. The markdown stub exposes these modules:
-
-| Module | Compiling contract |
+| Module in `crates/impro/src` | Responsibility |
 | --- | --- |
-| livemd | `MAX_BYTES = 1 MiB`, `LiveMarkdown::new(&TextView, Fn(&Path), Fn() -> Option<PathBuf>)`, destroy, set_enabled, set_readable_width, generic set_style(&syntax, &chrome, i32), edit_key(&EventKey, bool, i32) -> bool |
-| slashmenu | `SlashMenu::new(&TextView)`, destroy, handle_key(&TextView, &EventKey) -> bool |
-| seltoolbar | generic `sync(&tab)`, `set_enabled(&editor, bool)` |
+| `main.rs`, `cli.rs` | Argument parsing, logging panic hook and process exit |
+| `lib.rs` | Library exports used by the binary, integration tests and QA examples |
+| `app.rs` | GTK application lifecycle, initial settings snapshot, first-paint capture |
+| `window.rs` | `MainWindow` composition, panel signals, project lifecycle and shutdown |
+| `commands.rs` | File/View menus, accelerators, palette, quick switcher and cache warmup |
+| `docks.rs` | Bottom/right dock choice, capacity, fullscreen and feature toggles |
+| `views.rs` | Native graph hosting, Git graphs, commit tabs and note actions |
+| `preferences.rs` | Settings dispatch, live theme/font changes and write-behind integration |
+| `style.rs` | Idempotent registration of every feature's CSS |
+| `startup_icons.rs` | Preparation of remaining native icon render points |
 
-These no-op items carry `STUB: replaced by task md-core/livemd`. Root reexports
-LiveMarkdown, MAX_BYTES, SlashMenu. The Markdown workers replace them while
-preserving callers, and add mdview/blockedit/livetable modules. Callback paths
-are Rust Path/PathBuf, not UTF-8-only strings. No-op methods return false.
+The window owns a horizontal sidebar split, a bottom vertical dock split, a
+right horizontal dock split, editor, titlebar and overlay. Bottom terminals are
+side by side; right terminals are stacked. All pane kinds share the configured
+capacity. Graph/Git handles and commit tabs have explicit shutdown hooks.
+Callbacks use weak window owners; closing the window cancels pending work.
+Project epochs reject responses from a previous Open Folder operation.
+
+## Startup sequence
+
+1. Parse arguments before GTK; `--help` and `--version` exit without a display.
+   Initialize bundled icon support and read the settings snapshot before UI event
+   dispatch. The application id is `dev.impro.impro`, with window title `impro`.
+2. Register feature CSS and apply the initial palette/fonts. Construct the
+   complete widget skeleton: titlebar, explorer, editor, dock containers and
+   overlay. Wire menus/signals and apply in-memory preferences. Initial directory
+   scanning is asynchronous; it does not wait for the complete tree.
+3. Create the default bottom terminal only when autostart is enabled. Custom
+   shell paths are validated on a worker before their first pane is spawned.
+   VTE spawning is asynchronous. No graph index or WebKit view is created here.
+4. Prepare the first-frame icons, show the window and let GTK allocate/draw the
+   complete layout. `layout_ready()` gates the first-paint screenshot milestone.
+5. After that draw, warm the command palette at LOW idle priority. Realisation
+   and measurement proceed in slices, one native widget operation per dispatch;
+   `OverlayHost::cache_prompt` retains the hidden prompt for fast reopening.
+   The idle source removes itself when finished or the window closes.
+
+Expensive features are lazy: quick-switcher enumeration starts on demand,
+syntect loads syntax data in a worker on first use, graph workers start on graph
+open, and Git pages share a WebKit process created on first use. The skeleton
+and required preference wiring are synchronous; background results and optional
+work arrive through channels or bounded idle slices.
+
+### First-frame icons
+
+`crates/impro-ui/assets/icons` contains exact raw RGBA pixels at 1x and 2x for
+startup symbolic icons. `impro_ui::icons` supplies these directly for supported
+palette/state/scale combinations. Native GTK rendering remains the fallback for
+other themes, colours and translucent states. This avoids the first-show SVG
+loader's process and file-loading costs without changing the captured pixels.
+The application registers a small CSS rule preventing GTK from dimming the
+already coloured raw icons twice. `startup_icons.rs` prepares tree cells and
+window decoration render points while preserving semantic icon names.
+
+## CSS registry and theme flow
+
+`impro::style::init()` calls every feature's `init()` once, before applying the
+first theme. Each registers a named CSS builder in `impro-ui`; the shared layer
+never imports features. Builders expose `css(&UiColors) -> String`, render their
+own templates and are assembled in registry name order with shared base CSS.
+Stable names make repeat registration harmless and avoid dependency cycles.
+
+`impro_ui::render_css` resolves palette expressions in templates.
+`style::{TOKENS,build_css,build_overrides,with_accent}` build shared geometry and
+overrides. `apply_theme(theme, accent, ui_font, editor_font)` validates CSS before
+replacing the shared provider and GTK dark preference. Strings are cached by
+full palette/font contents and invalidated when builders register. Existing
+widgets update through that provider. Syntax tags, terminal ANSI colours and
+Git/native graph styles also receive explicit theme/font updates from the host.
+`current_theme()` supplies the effective palette after accent overrides.
+See [design-tokens.md](design-tokens.md) for geometry and motion constants.
+
+## Data, settings and Markdown
+
+`impro-core` contains pure themes, validation, note transformations and filesystem
+helpers. Themes have UI, syntax, terminal and chrome maps; syntax uses 26 token
+roles. Editor highlighting maps syntect scopes to these roles off-thread.
+Filesystem operations return structured errors, protect project/filesystem roots,
+and do not silently replace a failed trash operation with permanent deletion.
+
+Settings resolve to `$XDG_CONFIG_HOME/impro/settings.json`, or
+`~/.config/impro/settings.json`. Defaults, ranges and choices are embedded in
+`crates/impro-core/src/{defaults,limits,choices}.json`. Invalid input falls back
+to defaults or clamps to bounds. Saves preserve unknown keys and atomically
+replace a 0600 temporary file after flush/fsync; the parent directory is synced
+best-effort. Changes apply immediately in memory; write failures produce notices.
+`graph` and `gitgraph` blobs have feature-owned normalization; the settings dialog
+also exposes validated `gitgraph_*` keys. Graph controls synchronize across views.
+
+Notes live in `.impro/Notes`, created lazily. Editor and Markdown offsets count
+Unicode characters, matching GtkTextBuffer rather than UTF-8 bytes. Live Markdown
+renders around the active source line; source remains the authoritative document
+for saving, find, copy, undo and cursor reporting. Source mode is available through
+Ctrl+Shift+M. Table grids are built lazily through `TableHost`, retain stable block
+marks, forward history to the editor and fill visible cells between loop yields.
+Slash commands and the selection toolbar share pure note-edit commands from core.
 
 ## Threading, borrows and safety
 
-Only GTK's main thread creates/updates GTK or uses ui's thread-local registry.
-Core Theme/settings JSON and owned results can cross worker threads. No async
-runtime: use std::thread + glib MainContext channels/invoke. Cancel background
-search/highlight/graph/git work and deliver small batches (<4 ms main-thread
-work). Avoid starting WebKit, shell processes or syntax loading at startup.
+Only GTK's main thread creates or updates GTK objects or uses the thread-local
+CSS registry. Owned paths, text, theme/settings data and search/index results can
+cross workers. Use `std::thread` and GLib main-context channels/invoke, cooperative
+cancellation and epochs. Directory/file I/O, Git commands, search, graph indexing
+and syntax lexing belong on workers. Apply results in small slices: the design
+budget is at most 4 ms of application work per batch. A slice does not bound GTK's
+subsequent allocation/paint time.
 
-Never retain a RefCell borrow across GTK calls, signal emissions, callback
-invocation, or builder invocation. Copy/clone/take state out first; setters,
+The native graph currently advances allocation-free layout steps in bounded
+frame-clock callbacks on GTK's thread; indexing/building and preference writes
+are off-thread. It reuses flat arrays and a Barnes–Hut tree, and caps catch-up
+steps. Keep these steps bounded; do not describe them as a background layout
+worker. See [graph-view.md](graph-view.md) for the renderer and idle lifecycle.
+
+Never retain a `RefCell` borrow across GTK calls, signal emissions, callback
+invocation or builder invocation. Copy, clone or take the state out first:
 selection changes, CSS reloads and widget removal can synchronously re-enter.
-Use Cell for scalar flags. The motion scheduler clones each Rc handle from its vector before an
-update, so callbacks can replace or cancel any registered tween. Native custom-container forall/allocation code snapshots
-children before GTK calls. User/IO errors return Result, and the binary installs
-a logging panic hook. Do not unwrap user documents, paths or JSON values.
+Use `Cell` for scalar flags, weak owners for callbacks and `try_borrow*` where
+re-entry is expected. User documents, paths and JSON must return errors rather
+than panic. The binary installs a logging panic hook.
 
-## Running and QA
+Idle has no recurring application timers. Debounce sources exist only for pending
+changes; animation uses a shared frame-clock callback only while active. Unmapping
+or destroying a widget cancels its animation. A hidden graph pauses; a settled
+graph detaches its tick callback. VTE or WebKit may perform their own housekeeping.
+Reduce motion, `IMPRO_REDUCE_MOTION=1`, or disabled GTK animations finish new tweens
+immediately. Notice lifetimes use one-shot timers while notices are visible.
+
+## Build and test
 
 ```sh
 cargo build --workspace
-scripts/test.sh
+G_DEBUG=fatal-criticals bash scripts/test.sh
+G_DEBUG=fatal-criticals bash scripts/test.sh -p impro-core
 cargo fmt --check
 cargo clippy --workspace -- -D warnings
-cargo build --release -p impro
-IMPRO_QA_SCREENSHOT=.ceo/shot.png xvfb-run -a target/release/impro /tmp
+node crates/impro-gitviews/tests/js/index.js
+bash scripts/test-install.sh
 ```
 
-The CLI accepts an optional folder, --help and --version; invalid folders and
-unknown arguments exit 2. Application ID is `dev.impro.impro`, title `impro`.
-The placeholder ApplicationWindow is 1200x800; the window task replaces it.
-`app::install_screenshot_helper` attaches before show_all and captures the native
-window after its first draw is flushed, then quits. PNG parent directories must
-exist. `IMPRO_QA_TIMING=1` additionally prints `first-paint-ms=...` (main entry to
-paint, excluding PNG encoding). Capture failures log and exit nonzero.
+`scripts/test.sh` exports `GDK_BACKEND=x11 GIO_USE_VFS=local` and runs
+`xvfb-run -a dbus-run-session -- cargo test`. It defaults to `--workspace`;
+`-p`/`--package` selects individual crates. Pure core tests also work without a
+display. GTK suites serialize UI closures onto their dedicated GTK thread;
+WebKit integration runs in separate process hosts. Feature `VERIFICATION.md`
+files document test groups and composition contracts; the final window's host
+cases are in `crates/impro/tests` and `window_qa`.
 
-`xvfb-run -a dbus-run-session -- python3 scripts/startup-bench.py --runs 10 --output .ceo/startup.json`
-records comparable process-launch→map measurements plus the internal paint
-milestone. Supply `--reference-root /absolute/reference/project` to benchmark a
-read-only Python reference package (module derived from directory name).
-Runs reuse one display/bus, use /tmp as project, preserve user settings, and
-disable Python bytecode writes. Map timing is not a substitute for complete
-workspace parity: this binary is still a placeholder. No full-IDE performance
-claim can be made until the final window task is integrated.
+## QA helpers
 
-UI integration tests serialize closures onto a dedicated GTK thread within each
-test executable. Pure core tests need no display. Noop feature stubs have no
-tests; their workers add behavioral tests. Build artifacts and QA PNGs are ignored.
-`packaging/install.sh` builds release and installs the binary, desktop launcher
-and SVG under ~/.local; --uninstall removes those three user-owned files.
+Use release binaries for timing. Create screenshot parent directories first;
+PNG encoding is excluded from `first-paint-ms`. The screenshot helper captures
+only after the complete-layout draw has flushed and exits nonzero on failure.
+`IMPRO_QA_TIMING=1` prints phase timings; `IMPRO_QA_TRACE=1` traces to stderr.
+
+```sh
+cargo build --release -p impro
+mkdir -p .ceo/qa
+IMPRO_QA_SCREENSHOT=.ceo/qa/window.png IMPRO_QA_TIMING=1 GDK_BACKEND=x11 xvfb-run -a dbus-run-session -- target/release/impro /tmp
+cargo build --release -p impro --example window_qa --example startup_floor
+G_DEBUG=fatal-criticals GDK_BACKEND=x11 xvfb-run -a dbus-run-session -- target/release/examples/window_qa performance
+```
+
+`window_qa` supports `git` (default, repository integration), `performance`,
+`capture` and `controls`. `IMPRO_QA_CONTROLS_DIR` chooses control-state capture
+output; `IMPRO_QA_QUIET_FOCUS` controls capture focus handling. Inspect the example's
+arguments before automating captures. `startup_floor` supports `empty`, `style`,
+`chrome`, `glyphs`, `native` and `decorations`; supply `IMPRO_QA_SCREENSHOT`.
+
+`crates/impro/examples/startup_bench.py` interleaves ten or more fresh release
+processes for before/after workspace, empty-window and chrome comparisons.
+`--before` is a saved baseline directory containing `impro` and `startup_floor`;
+`--after` defaults to `target/release` with `examples/startup_floor`. For example,
+after preparing that baseline under `.ceo/qa/before`:
+
+```sh
+GDK_BACKEND=x11 xvfb-run -a dbus-run-session -- python3 crates/impro/examples/startup_bench.py --before .ceo/qa/before --after target/release --root /tmp --runs 10 --output .ceo/qa/startup.json
+```
+
+It records a separate initial session-service warmup and excludes PNG encoding.
+Fresh processes do not mean a cold filesystem cache. Preserve identical project,
+settings, fonts, display scale and window dimensions for comparisons.
+`scripts/startup-bench.py` is a separate process-launch-to-X11-map harness with an
+optional read-only Python reference root; mapping and completed paint are different
+milestones. Run it under Xvfb/D-Bus, with `--runs 10 --output .ceo/qa/map.json`.
+
+| Feature | QA examples (Cargo package / example) |
+| --- | --- |
+| Graph | `impro-graph` / `graph_demo`, `graph_bench` |
+| Chrome | `impro-chrome` / `chrome_demo` |
+| Markdown tables | `impro-markdown` / `table_demo` |
+| Editor and Markdown host | `impro-editor` / `editor_demo`, `editor_perf` |
+| Explorer | `impro-explorer` / `explorer_demo`, `perf` |
+| Terminal | `impro-terminal` / `dock_demo` |
+| Settings | `impro-settings-ui` / `settings_demo` |
+| Git pages | `impro-gitviews` / `git_demo`, `git_perf`, `webkit_host_qa` |
+
+For example, `cargo run -p impro-graph --example graph_demo -- --vault /tmp` opens a native
+graph demo on a display. `table_demo` accepts a theme id and optional PNG path;
+`editor_demo` accepts `IMPRO_DEMO_THEME`, `IMPRO_DEMO_FIXTURES` and
+`IMPRO_QA_SCREENSHOT`. Graph benchmark image output uses `IMPRO_GRAPH_BENCH_IMAGES`;
+chrome's cache benchmark uses `IMPRO_CHROME_BENCH_CACHE=1` with its ignored prompt
+benchmark test. These are QA controls, not user renderer switches.
+
+Measured startup/input/terminal/graph results and the scope of the pixel comparison
+are in the README's Performance section. They are recorded results from the
+four-core VM, not timings inferred from unit-test execution.

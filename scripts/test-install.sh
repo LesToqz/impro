@@ -7,8 +7,14 @@ trap 'rm -rf -- "$work"' EXIT
 export HOME="$work/home"
 mkdir -p "$HOME"
 # Use a real binary when available; otherwise test copying/argv with a fixture.
+if [[ -n "${IMPRO_INSTALL_BINARY:-}" && ! -x "$IMPRO_INSTALL_BINARY" ]]; then
+    echo "impro: requested test binary is not executable: $IMPRO_INSTALL_BINARY" >&2
+    exit 1
+fi
+fixture=0
 export IMPRO_INSTALL_BINARY=${IMPRO_INSTALL_BINARY:-"$repo/target/release/impro"}
 if [[ ! -f "$IMPRO_INSTALL_BINARY" ]]; then
+    fixture=1
     export IMPRO_INSTALL_BINARY="$work/impro-fixture"
     cat > "$IMPRO_INSTALL_BINARY" <<'FIXTURE'
 #!/usr/bin/env bash
@@ -56,8 +62,12 @@ for attempt in 1 2; do
     echo "PASS isolated install $attempt (binary, launcher, icon, modes)"
 done
 (cd -- "$HOME" && "$launcher" --help) > "$work/help"
-rg -q '^usage: impro ' "$work/help"
+grep -q '^usage: impro ' "$work/help"
 echo 'PASS installed executable --help outside repository'
+if [[ "$fixture" == 1 ]]; then
+    test "$("$launcher" 'folder with spaces' '--literal')" = "$(printf '%s\n' 'folder with spaces' '--literal')"
+    echo 'PASS installed fixture preserves argument boundaries'
+fi
 for attempt in 1 2; do
     bash "$repo/packaging/install.sh" --uninstall
     test ! -e "$launcher"
