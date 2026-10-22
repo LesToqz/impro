@@ -703,9 +703,9 @@ fn test_keyboard_navigation_model() {
         rows["appearance"].grab_focus();
         key(&*nav, k::Down);
         assert_eq!(nav.page_id().as_deref(), Some("editor"));
-        assert_eq!(visible_page(&dialog).as_deref(), Some("editor"));
+        assert_eq!(visible_page(dialog).as_deref(), Some("editor"));
         key(&*nav, k::k);
-        assert_eq!(visible_page(&dialog).as_deref(), Some("appearance"));
+        assert_eq!(visible_page(dialog).as_deref(), Some("appearance"));
         key(&*nav, k::Return);
         assert!(focused(dialog.row("theme").unwrap().upcast_ref()));
         key(dialog.deref_window(), k::Down);
@@ -829,7 +829,7 @@ fn test_search_filters_groups_and_escape_order() {
         key(&**dialog, k::Escape); // Clears first...
         assert_eq!(entry.text(), "");
         assert!(dialog.is_visible());
-        assert_eq!(visible_page(&dialog).as_deref(), Some("appearance"));
+        assert_eq!(visible_page(dialog).as_deref(), Some("appearance"));
         assert!(!empty.get_visible());
         let body = dialog.page_body("appearance").unwrap();
         assert_eq!(
