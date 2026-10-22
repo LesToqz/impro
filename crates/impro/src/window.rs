@@ -1,6 +1,6 @@
 use gtk::prelude::*;
 use impro_chrome::{Command, CommandPalette, OverlayHost, QuickSwitcher, TitleBar};
-use impro_core::{identity, notes, settings};
+use impro_core::{identity, notes, settings, themes};
 use impro_editor::{EditorPanel, EditorTab};
 use impro_explorer::ExplorerPanel;
 use impro_gitviews::{CommitView, GitGraphView};
@@ -52,6 +52,7 @@ pub struct WindowWidgets {
     pub(crate) explorer_was_visible: Cell<bool>,
     pub(crate) fullscreen: RefCell<Option<crate::docks::SavedLayout>>,
     pub(crate) size_pending: [Cell<bool>; 2],
+    pub(crate) dock_size_idle: [RefCell<Option<glib::SourceId>>; 2],
     pub(crate) toolbars: RefCell<HashMap<usize, impro_ui::notes::NoteToolbar>>,
     pub(crate) connected_tabs: RefCell<HashSet<usize>>,
     pub(crate) tree_refresh: RefCell<Option<glib::SourceId>>,
@@ -70,7 +71,9 @@ impl Deref for MainWindow {
 impl MainWindow {
     /// Load settings before construction. Applications may pass their startup snapshot instead.
     pub fn new(app: &gtk::Application, root: impl AsRef<Path>) -> Self {
-        Self::with_values(app, root, settings::get_values())
+        let mut values = settings::get_values();
+        values.insert("graph".into(), settings::get_graph());
+        Self::with_values(app, root, values)
     }
 
     /// Build the complete workspace synchronously; expensive views remain lazy.
@@ -79,18 +82,37 @@ impl MainWindow {
         root: impl AsRef<Path>,
         mut values: settings::Values,
     ) -> Self {
+        let started = std::time::Instant::now();
+        let trace = |phase: &str| {
+            if std::env::var_os("IMPRO_QA_TRACE").is_some() {
+                eprintln!(
+                    "window-{phase}-ms={:.3}",
+                    started.elapsed().as_secs_f64() * 1000.0
+                );
+            }
+        };
         crate::style::init();
         for (key, default) in settings::defaults() {
             let value = settings::normalize(key, values.get(key).unwrap_or(default))
                 .unwrap_or_else(|_| default.clone());
             values.insert(key.clone(), value);
         }
+        let style_error = impro_ui::apply_theme(
+            themes::get_theme(values["theme"].as_str()),
+            values["accent"].as_str(),
+            values["ui_font"].as_str(),
+            values["editor_font"].as_str(),
+        )
+        .err();
+        trace("style");
         let root = root.as_ref().to_path_buf();
         let window = gtk::ApplicationWindow::new(app);
         window.set_title(identity::WINDOW_TITLE);
         window.set_default_size(1200, 750);
         let explorer = ExplorerPanel::new(&root);
+        trace("explorer");
         let editor = EditorPanel::new(Some(&root));
+        trace("editor");
         let size = values["terminal_font_size"].as_i64().unwrap_or(11) as i32;
         let terminal_bottom = TerminalPanel::new(&root, false, false, size);
         let terminal_right = TerminalPanel::new(&root, false, true, size);
@@ -145,6 +167,7 @@ impl MainWindow {
             explorer_was_visible: Cell::new(true),
             fullscreen: RefCell::new(None),
             size_pending: [Cell::new(true), Cell::new(true)],
+            dock_size_idle: [RefCell::new(None), RefCell::new(None)],
             toolbars: RefCell::new(HashMap::new()),
             connected_tabs: RefCell::new(HashSet::new()),
             tree_refresh: RefCell::new(None),
@@ -152,10 +175,15 @@ impl MainWindow {
             quitting: Cell::new(false),
             allocation_us: Cell::new(0),
         }));
+        trace("skeleton");
         this.build_commands();
         this.connect_panels();
         this.connect_docks();
         this.apply_initial_preferences();
+        trace("preferences");
+        if let Some(error) = style_error {
+            this.notify(&error.to_string(), "error");
+        }
         // Keep the owner alive until native destruction, then break the ownership cycle.
         let keep = RefCell::new(Some(this.clone()));
         this.window.connect_destroy(move |_| {
@@ -190,6 +218,7 @@ impl MainWindow {
             // The panel builds its chrome now; shell resolution/spawn waits for stable paint.
             this.terminal_bottom.new_terminal();
         }
+        this.window.set_title(identity::WINDOW_TITLE);
         this
     }
 
@@ -253,7 +282,7 @@ impl MainWindow {
             .connect_search_result_activated(move |_, path, line, column, length| {
                 if let Some(this) = weak.upgrade().map(Self) {
                     this.restore_terminal_fullscreen();
-                    this.editor.open_file_at(path, line, column, length);
+                    this.open_file_at(path, line, column, length);
                 }
             });
         let weak = self.weak();
@@ -273,7 +302,9 @@ impl MainWindow {
         let weak = self.weak();
         self.explorer.connect_path_renamed(move |_, old, new| {
             if let Some(this) = weak.upgrade().map(Self) {
-                this.editor.on_path_renamed(old, new);
+                if !this.editor.on_file_renamed(old, new) {
+                    this.editor.on_path_renamed(old, new);
+                }
                 for view in this.graph_views() {
                     view.path_renamed(old, new);
                 }
@@ -437,8 +468,14 @@ impl MainWindow {
         if !tab.view.is_editable() {
             return;
         }
-        if let Err(error) = impro_ui::notes::apply_to_buffer(id, &tab.buffer) {
-            self.notify(&error.to_string(), "error");
+        match impro_ui::notes::apply_to_buffer(id, &tab.buffer) {
+            Ok(edit) if id == "table" && tab.markdown_mode() == Some("preview") => {
+                let offset = edit.start + edit.text.chars().count();
+                tab.buffer
+                    .place_cursor(&tab.buffer.iter_at_offset(offset as i32));
+            }
+            Err(error) => self.notify(&error.to_string(), "error"),
+            _ => {}
         }
         if let Some(mark) = tab.buffer.get_insert() {
             tab.view.scroll_mark_onscreen(&mark);
@@ -465,6 +502,9 @@ impl MainWindow {
             .copied()
             .filter(|id| !ids.contains(id))
             .collect();
+        self.connected_tabs
+            .borrow_mut()
+            .retain(|id| ids.contains(id));
         for id in stale {
             self.toolbars.borrow_mut().remove(&id);
             self.connected_tabs.borrow_mut().remove(&id);
@@ -538,6 +578,37 @@ impl MainWindow {
             &seed
         };
         self.explorer.focus_search(Some(seed));
+    }
+    /// Open a search/location target and centre it after its first allocated draw.
+    pub fn open_file_at(&self, path: &Path, line: i32, column: i32, length: i32) {
+        self.editor.open_file_at(path, line, column, length);
+        self.editor.open_file_with(path, move |tab| {
+            let Some(tab) = tab else {
+                return;
+            };
+            let weak = Rc::downgrade(&tab);
+            let handler = Rc::new(RefCell::new(None));
+            let connection = handler.clone();
+            let armed = Cell::new(false);
+            let id = tab.view.connect_local("draw", true, move |_| {
+                if !armed.replace(true) {
+                    let weak = weak.clone();
+                    let connection = connection.clone();
+                    glib::idle_add_local_once(move || {
+                        if let Some(tab) = weak.upgrade().filter(|t| !t.is_closed()) {
+                            if let Some(id) = connection.borrow_mut().take() {
+                                tab.view.disconnect(id);
+                            }
+                            let mut at = tab.buffer.iter_at_offset(tab.buffer.cursor_position());
+                            tab.view.scroll_to_iter(&mut at, 0.0, true, 0.0, 0.5);
+                        }
+                    });
+                }
+                Some(false.to_value())
+            });
+            *handler.borrow_mut() = Some(id);
+            tab.view.queue_draw();
+        });
     }
     pub fn set_root(&self, path: impl AsRef<Path>) {
         let path = path.as_ref().to_path_buf();
@@ -635,6 +706,11 @@ impl MainWindow {
     pub fn shutdown(&self) {
         if self.closed.replace(true) {
             return;
+        }
+        for source in &self.dock_size_idle {
+            if let Some(source) = source.borrow_mut().take() {
+                source.remove();
+            }
         }
         self.epoch.set(self.epoch.get() + 1);
         self.switcher_epoch.set(self.switcher_epoch.get() + 1);

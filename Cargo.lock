@@ -514,6 +514,7 @@ dependencies = [
  "impro-terminal",
  "impro-ui",
  "impro-vte",
+ "javascriptcore-rs",
  "serde_json",
  "tempfile",
  "webkit2gtk",

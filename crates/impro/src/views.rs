@@ -109,8 +109,12 @@ impl MainWindow {
         }
     }
     fn make_graph(&self) -> GraphView {
-        let view = GraphView::new(self.root());
         let values = self.values();
+        let store = Arc::new(impro_graph::view::store::MemoryStore::new(
+            values.get("graph").cloned().unwrap_or_default(),
+        ));
+        let view =
+            GraphView::with_options(self.root(), impro_graph::ViewOptions { store, scan: true });
         if let Some(prefs) = values.get("graph") {
             view.apply_prefs(prefs);
         }
@@ -425,11 +429,23 @@ impl MainWindow {
         });
         self.restore_terminal_fullscreen();
         let shutdown = view.clone();
+        let subject = self
+            .gitgraph_views()
+            .iter()
+            .filter_map(|view| view.last_data())
+            .find_map(|data| {
+                data["commits"]
+                    .as_array()?
+                    .iter()
+                    .find(|commit| commit["hash"].as_str() == Some(rev))
+                    .and_then(|commit| commit["subject"].as_str().map(str::to_owned))
+            })
+            .unwrap_or_else(|| rev.to_owned());
         self.editor.add_view_tab_with_shutdown(
             &key,
             &rev[..7],
             view.widget(),
-            Some(rev),
+            Some(&subject),
             Some("document-open-recent-symbolic"),
             move || shutdown.shutdown(),
         );
@@ -445,7 +461,7 @@ impl MainWindow {
                 if let Some(this) = weak.upgrade().map(Self) {
                     if valid {
                         this.restore_terminal_fullscreen();
-                        this.editor.open_file_at(&path, (line - 1).max(0), 0, 0);
+                        this.open_file_at(&path, (line - 1).max(0), 0, 0);
                     } else {
                         this.notify("File not in the working tree", "info");
                     }

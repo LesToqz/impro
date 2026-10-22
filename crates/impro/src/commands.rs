@@ -36,7 +36,8 @@ impl MainWindow {
             self.menu_bar.append(&item);
         }
         type Action = fn(&MainWindow);
-        let entries: &[(&gtk::Menu, &str, &str, Action, &[&str], bool)] = &[
+        type MenuEntry<'a> = (&'a gtk::Menu, &'a str, &'a str, Action, &'a [&'a str], bool);
+        let entries: &[MenuEntry<'_>] = &[
             (
                 &file,
                 "Quick Switcher…",

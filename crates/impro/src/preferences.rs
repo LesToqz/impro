@@ -10,10 +10,15 @@ impl MainWindow {
     }
     pub fn open_settings(&self, page: Option<&str>) {
         if self.settings_dialog().is_none() {
-            let dialog = SettingsDialog::new(
+            let values = self.values();
+            let dialog = SettingsDialog::with_values(
                 Some(self.window.upcast_ref()),
-                Some(self.theme_id().as_str()),
-                None,
+                impro_settings_ui::DialogOptions {
+                    project_root: Some(self.root()),
+                    ..Default::default()
+                },
+                &values,
+                values.get("graph").unwrap_or(&Value::Null),
             );
             let weak = self.weak();
             dialog.connect_theme_selected(move |id| {
@@ -60,7 +65,7 @@ impl MainWindow {
         for kind in ["explorer", "terminal", "graph", "gitgraph", "notes"] {
             self.sync_features(kind);
         }
-        self.refresh_style();
+        self.apply_widget_theme();
     }
     /// Apply a validated value immediately. Disk writes use the settings write-behind worker.
     pub fn set_setting(&self, key: &str, value: Value, persist: bool) -> Result<(), String> {
@@ -244,6 +249,11 @@ impl MainWindow {
             self.notify(&error.to_string(), "error");
             return;
         }
+        self.apply_widget_theme();
+    }
+    pub(crate) fn apply_widget_theme(&self) {
+        let values = self.values();
+        let theme = themes::get_theme(values["theme"].as_str());
         self.editor.apply_theme(theme);
         self.editor.set_font_family(values["editor_font"].as_str());
         for panel in self.panels() {

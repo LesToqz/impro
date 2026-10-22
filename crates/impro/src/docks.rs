@@ -61,15 +61,16 @@ impl MainWindow {
             (true, &self.dock, &self.terminal_right),
         ] {
             let weak = self.weak();
-            paned.connect_size_allocate(move |_, _| {
+            paned.connect_local("size-allocate", true, move |_| {
                 if let Some(this) = weak.upgrade().map(Self) {
-                    this.size_terminal(right);
+                    this.schedule_dock_size(right);
                 }
+                None
             });
             let weak = self.weak();
             panel.connect_show(move |_| {
                 if let Some(this) = weak.upgrade().map(Self) {
-                    this.size_terminal(right);
+                    this.schedule_dock_size(right);
                 }
             });
         }
@@ -98,11 +99,11 @@ impl MainWindow {
     }
     fn sync_titlebar(&self) {
         self.titlebar
-            .set_dock_active(self.terminal_right.is_visible());
+            .set_dock_active(self.terminal_right.get_visible());
         self.titlebar
-            .set_bottom_dock_active(self.terminal_bottom.is_visible());
+            .set_bottom_dock_active(self.terminal_bottom.get_visible());
         self.titlebar
-            .set_explorer_active(self.explorer.is_visible());
+            .set_explorer_active(self.explorer.get_visible());
     }
     pub(crate) fn set_visible(widget: &impl IsA<gtk::Widget>, visible: bool) {
         widget.set_no_show_all(!visible);
@@ -134,7 +135,7 @@ impl MainWindow {
     }
     pub fn toggle_dock(&self, panel: &TerminalPanel) {
         self.restore_terminal_fullscreen();
-        if panel.is_visible() {
+        if panel.get_visible() {
             self.hide_dock(panel);
         } else {
             self.show_dock(panel);
@@ -155,7 +156,7 @@ impl MainWindow {
     }
     pub fn toggle_right_dock(&self) {
         self.restore_terminal_fullscreen();
-        if self.terminal_right.is_visible() {
+        if self.terminal_right.get_visible() {
             self.hide_dock(&self.terminal_right);
         } else if self.terminal_right.pane_count() == 0 && self.feature_enabled("graph") {
             self.open_graph();
@@ -184,8 +185,8 @@ impl MainWindow {
             return;
         }
         self.restore_terminal_fullscreen();
-        Self::set_visible(&self.explorer, !self.explorer.is_visible());
-        self.explorer_was_visible.set(self.explorer.is_visible());
+        Self::set_visible(&self.explorer, !self.explorer.get_visible());
+        self.explorer_was_visible.set(self.explorer.get_visible());
     }
     pub(crate) fn focus_in(&self, widget: &impl IsA<gtk::Widget>) -> bool {
         GtkWindowExt::focused_widget(&self.window)
@@ -249,7 +250,7 @@ impl MainWindow {
             widgets: widgets
                 .into_iter()
                 .map(|w| {
-                    let visible = w.is_visible();
+                    let visible = w.get_visible();
                     let no_show = w.is_no_show_all();
                     (w, visible, no_show)
                 })
@@ -281,15 +282,32 @@ impl MainWindow {
         let panels = self.panels();
         let panel = panels
             .iter()
-            .find(|p| p.is_visible() && self.focus_in(*p))
-            .or_else(|| panels.iter().find(|p| p.is_visible()))
+            .find(|p| p.get_visible() && self.focus_in(*p))
+            .or_else(|| panels.iter().find(|p| p.get_visible()))
             .unwrap_or(&self.terminal_bottom);
-        if !panel.is_visible() {
+        if !panel.get_visible() {
             self.show_dock(panel);
         }
         if panel.pane_count() > 0 {
             panel.toggle_maximize();
         }
+    }
+    fn schedule_dock_size(&self, right: bool) {
+        let i = usize::from(right);
+        if !self.size_pending[i].get()
+            || self.dock_size_idle[i].borrow().is_some()
+            || self.closed.get()
+        {
+            return;
+        }
+        let weak = self.weak();
+        let source = glib::idle_add_local_once(move || {
+            if let Some(this) = weak.upgrade().map(Self) {
+                this.dock_size_idle[i].borrow_mut().take();
+                this.size_terminal(right);
+            }
+        });
+        *self.dock_size_idle[i].borrow_mut() = Some(source);
     }
     fn size_terminal(&self, right: bool) {
         let started = Instant::now();
@@ -299,7 +317,7 @@ impl MainWindow {
         } else {
             (&self.dock_bottom, &self.terminal_bottom)
         };
-        if self.is_terminal_fullscreen() || !self.size_pending[i].get() || !panel.is_visible() {
+        if self.is_terminal_fullscreen() || !self.size_pending[i].get() || !panel.get_visible() {
             return;
         }
         let extent = if right {
@@ -346,6 +364,12 @@ impl MainWindow {
         }
         self.allocation_us
             .set(self.allocation_us.get().max(started.elapsed().as_micros()));
+    }
+    pub fn layout_ready(&self) -> bool {
+        self.panels().iter().enumerate().all(|(i, p)| {
+            !p.get_visible()
+                || (!self.size_pending[i].get() && self.dock_size_idle[i].borrow().is_none())
+        })
     }
     pub fn max_allocation_us(&self) -> u128 {
         self.allocation_us.get()
