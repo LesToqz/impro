@@ -116,6 +116,22 @@ fn bench(n: usize, edges: usize) {
                 }
             }
             let s = painter.stats;
+            if n == 3000 && name == "zoomed in" {
+                let mut changed = Vec::new();
+                for frame in 0..40 {
+                    scene.cam.cam.pan_x = cam.pan_x + (frame % 2) as f64 * 0.01;
+                    let start = Instant::now();
+                    painter.render(&scene, W as f64, H as f64, PaintOptions::default());
+                    changed.push(start.elapsed().as_secs_f64() * 1e3);
+                }
+                scene.cam.cam = cam;
+                println!(
+                    "  changing geometry hover={} p50 {:.2} ms p95 {:.2} ms",
+                    hover.is_some(),
+                    percentile(&mut changed.clone(), 0.5),
+                    percentile(&mut changed, 0.95)
+                );
+            }
             println!(
                 "  {name:<9} hover={:<5} draw p50 {:.2} ms  p95 {:.2} ms  (nodes {} lines {} [{:.0} px] arrows {} labels {}) phases bg/lines/arrows/nodes/labels {:.1?} lines prep/raster/composite {:.1?}",
                 hover.is_some(),
