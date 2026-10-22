@@ -10,7 +10,8 @@
 //! `min(cores - 1, 4)` threads, sleeping while idle); results come back as owned data through
 //! `glib::MainContext` channels and are applied in steps of a few milliseconds. The only
 //! main-thread filesystem calls are the `inotify` registrations of the `Gio::FileMonitor`
-//! watchers (Git metadata, the active file's folder and the notes folders).
+//! watchers (Git metadata, the active file's folder, the notes folders and the expanded
+//! folders, see `set_watch_folders`).
 //!
 //! # Public surface
 //!
@@ -25,7 +26,8 @@
 //!   `set_delete_mode(`[`DeleteMode`]`)` (`DeleteMode::parse("trash"|"delete")`),
 //!   `set_git_colors`, `set_git_enabled`, `set_folders_first`, `set_compact`,
 //!   `set_open_after_create`, `set_notes_enabled` (the Notes feature gate),
-//!   `set_notes_sort("name"|"modified")`.
+//!   `set_notes_sort("name"|"modified")`, `set_watch_folders` (default on: the expanded
+//!   folders re-list themselves after changes made by other programs).
 //! * Editor link: `set_current_file(Option<&Path>)` (reveals and selects the file, lists
 //!   its search hits first, selects it in the Notes list), `set_text_provider(Option<Rc<dyn
 //!   Fn(&Path) -> Option<String>>>)` (unsaved buffer text; called on the main thread).
@@ -43,6 +45,10 @@
 //!   [`DialogHooks`] (`set_dialog_hooks`) lets a host or test answer the dialogs.
 //!
 //! Signals (`connect_*` helpers, GObject names in parentheses):
+//! Paths in models and GObject signal arguments are strings, so a name that is not UTF-8
+//! is stored with `util::encode_path`; the typed `connect_*` helpers decode it again and
+//! always hand out the real `Path` (read models and raw signals through `util::decode_path`).
+//!
 //! * `connect_file_activated(|panel, path|)` (`file-activated`) -> `editor.open_file`.
 //! * `connect_path_renamed(|panel, old, new|)` (`path-renamed`) -> `editor.on_path_renamed`.
 //! * `connect_path_deleted(|panel, path|)` (`path-deleted`) -> `editor.on_path_deleted`.
@@ -96,6 +102,8 @@
 //! `str.splitlines`) and character coordinates are identical.
 pub mod explorer;
 pub mod gitstatus;
+#[doc(hidden)]
+pub mod icons;
 pub mod pool;
 pub mod search;
 pub mod searchpanel;

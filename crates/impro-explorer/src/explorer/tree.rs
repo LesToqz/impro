@@ -83,7 +83,7 @@ pub fn scan_dir_cancellable(
             if index & 255 == 255 && cancel.is_cancelled() {
                 return entries;
             }
-            let name = item.file_name().to_string_lossy().into_owned();
+            let name = util::display_name(&item.file_name());
             if !show_hidden && name.starts_with('.') {
                 continue;
             }
@@ -91,7 +91,7 @@ pub fn scan_dir_cancellable(
             entries.push(Entry {
                 is_dir: kind.is_dir(),
                 key: crate::search::fold(&name),
-                path: item.path().to_string_lossy().into_owned(),
+                path: util::encode_path(&item.path()),
                 name,
             });
         }
@@ -274,15 +274,13 @@ impl ExplorerPanel {
     /// The sibling after `row`, unless it is the trailing placeholder.
     fn next_row(&self, row: &gtk::TreeIter) -> Option<gtk::TreeIter> {
         let store = &self.w().store;
-        let next = *row;
-        (store.iter_next(&next) && !util::string(store, &next, 2).is_empty()).then_some(next)
+        util::next_iter(store, row).filter(|next| !util::string(store, next, 2).is_empty())
     }
 
     /// Remove `row`; the following real sibling, if any.
     fn remove_row(&self, row: &gtk::TreeIter) -> Option<gtk::TreeIter> {
         let store = &self.w().store;
-        let next = *row;
-        (store.remove(&next) && !util::string(store, &next, 2).is_empty()).then_some(next)
+        util::remove_tree_row(store, row).filter(|next| !util::string(store, next, 2).is_empty())
     }
 
     /// Advance one merge by up to the deadline; `true` when the folder is fully merged
@@ -408,7 +406,7 @@ impl ExplorerPanel {
                         .imp()
                         .want_expanded
                         .borrow()
-                        .contains(Path::new(&entry.path))
+                        .contains(&util::decode_path(&entry.path))
                     {
                         if let Some(reference) = store
                             .path(row)
@@ -489,18 +487,12 @@ impl ExplorerPanel {
             return Some(row);
         }
         let relative = path.strip_prefix(&root).ok()?;
+        let mut walked = root.clone();
         for component in relative.components() {
-            let name = component.as_os_str().to_string_lossy();
-            let child = store.iter_children(Some(&row))?;
-            loop {
-                if util::string(store, &child, 1) == name {
-                    row = child;
-                    break;
-                }
-                if !store.iter_next(&child) {
-                    return None;
-                }
-            }
+            // Compare whole paths: two names can look alike once shown (invalid bytes).
+            walked.push(component);
+            let wanted = model_path(&walked);
+            row = util::find_child(store, Some(&row), 2, &wanted)?;
         }
         Some(row)
     }
@@ -511,7 +503,7 @@ impl ExplorerPanel {
         }
         let (_, iter) = self.w().tree.selection().selected()?;
         let path = util::string(&self.w().store, &iter, 2);
-        (!path.is_empty()).then(|| PathBuf::from(path))
+        (!path.is_empty()).then(|| util::decode_path(&path))
     }
 
     /// Select and scroll to `path` (it must be visible: loaded under expanded folders).
@@ -538,7 +530,7 @@ impl ExplorerPanel {
             if let Some(iter) = w.store.iter(path) {
                 found
                     .borrow_mut()
-                    .insert(PathBuf::from(util::string(&w.store, &iter, 2)));
+                    .insert(util::decode_path(&util::string(&w.store, &iter, 2)));
             }
         });
         found.into_inner()
@@ -558,7 +550,7 @@ impl ExplorerPanel {
         if selected.is_empty() {
             return root;
         }
-        let selected = PathBuf::from(selected);
+        let selected = util::decode_path(&selected);
         // Directory symlinks are leaf rows, so the icon tells real folders apart.
         if util::string(&w.store, &iter, 0) == "folder" {
             selected
@@ -610,7 +602,7 @@ impl ExplorerPanel {
         let root = self.root();
         let name = root
             .file_name()
-            .map_or_else(|| model_path(&root), |n| n.to_string_lossy().into_owned());
+            .map_or_else(|| model_path(&root), util::display_name);
         let iter = w.store.insert_with_values(
             None,
             None,
@@ -670,7 +662,7 @@ impl ExplorerPanel {
         if path.is_empty() {
             return;
         }
-        let path = PathBuf::from(path);
+        let path = util::decode_path(&path);
         if self.imp().loaded.borrow().contains(&path) {
             return;
         }
@@ -690,7 +682,7 @@ impl ExplorerPanel {
                 w.tree.expand_row(path, false);
             }
         } else if !full_path.is_empty() {
-            self.emit_file_activated(Path::new(&full_path));
+            self.emit_file_activated(&util::decode_path(&full_path));
         }
     }
 
@@ -736,23 +728,17 @@ impl ExplorerPanel {
         let Some(mut row) = w.store.iter_first() else {
             return;
         };
+        let mut walked = root.clone();
         for component in relative.components() {
             let tree_path = util::path_of(&w.store, &row);
             if !w.tree.row_expanded(&tree_path) {
                 w.tree.expand_row(&tree_path, false);
             }
-            let name = component.as_os_str().to_string_lossy();
-            let Some(child) = w.store.iter_children(Some(&row)) else {
+            walked.push(component);
+            let wanted = model_path(&walked);
+            let Some(child) = util::find_child(&w.store, Some(&row), 2, &wanted) else {
                 return;
             };
-            loop {
-                if util::string(&w.store, &child, 1) == name {
-                    break;
-                }
-                if !w.store.iter_next(&child) {
-                    return;
-                }
-            }
             row = child;
         }
         self.imp().want_select.borrow_mut().take();

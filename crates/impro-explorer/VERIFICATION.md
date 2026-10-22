@@ -31,3 +31,14 @@ the public explorer API; they do not prove final application wiring. Additional
 tests cover large folders, incremental updates, cancellation, Unicode lines,
 quick-switcher listing, binary rejection and six signal reentrancy scenarios.
 Final command results, timings and visual limitations are in `.ceo/report.md`.
+
+## Performance continuation (perf2)
+
+- Tree icons come from an asynchronous cache (`icons.rs`); the search entry's clear icon is warmed.
+- Notes list: merged in place in 3 ms steps with fixed-height rows; edited texts are formatted on the worker.
+- Every expanded folder is watched (`explorer/watch.rs`); bursts become one in-place re-listing.
+- Paths with bytes that are not UTF-8 round-trip through `util::encode_path` / `decode_path`.
+- GTK iterators are advanced through `util::next_iter` / `find_child` / `remove_*_row`; the earlier
+  `iter_next(&iter)` loops only matched the first row in release builds (release test run:
+  `cargo test --release -p impro-explorer`).
+- Measurements: `examples/perf.rs` (`search`, `bigdir`, `notes`, `idle`); figures are in `.ceo/report.md`.

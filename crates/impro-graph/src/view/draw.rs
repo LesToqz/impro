@@ -18,8 +18,42 @@ const LABEL_SIZE_TOLERANCE: f64 = 0.1;
 /// Bitmaps that may be re-rendered in one frame; stale ones are scaled instead.
 const LABEL_RENDER_BUDGET: u32 = 120;
 const LABEL_PAD: i32 = 2;
+/// Labels drawn while the scene moves: the largest markers on screen.
+const MOTION_LABELS: usize = 96;
+/// While moving, markers are drawn only on connections whose visible shaft is
+/// at least this many marker lengths (dense scenes draw none).
+const MOTION_ARROW_SHAFTS: f32 = 1.5;
 /// The cache is dropped when it grows past this many labels.
 const LABEL_CACHE_LIMIT: usize = 6000;
+
+/// Connection groups with at least this many lines keep their coverage.
+const GROUP_CACHE_MIN: usize = 256;
+/// Coverage masks kept for the next frame (one full canvas of bytes each).
+const GROUP_CACHE_SLOTS: usize = 6;
+
+/// Marker metrics of one frame, in device pixels.
+struct ArrowDims {
+    fade: f32,
+    wf: f32,
+    hf: f32,
+    lw: f64,
+    len: f32,
+    half: f32,
+    notch: f32,
+    gap: f32,
+}
+
+/// Keeps marker groups apart from connection groups in the shared cache.
+const ARROW_SALT: u64 = 0x9e37_79b9_7f4a_7c15;
+
+/// The coverage of one connection group, kept while its geometry stays.
+struct Group {
+    key: u64,
+    lines: usize,
+    line_px: f64,
+    used: u64,
+    mask: LineMask,
+}
 
 /// What one frame drew, for tests and the benchmark.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -31,6 +65,8 @@ pub struct DrawStats {
     pub label_renders: usize,
     /// The connection surface was reused without rasterising its geometry.
     pub connections_reused: bool,
+    /// Connection and marker groups repainted from kept coverage.
+    pub group_hits: usize,
     /// Total length of the drawn connections in device pixels.
     pub line_px: f64,
     /// Milliseconds spent on background, lines, arrows, markers and labels.
@@ -217,14 +253,23 @@ pub struct Painter {
     sr: Vec<f32>,
     keys: Vec<u64>,
     segments: Vec<[f32; 4]>,
+    shapes: Vec<[(f32, f32); 4]>,
     dense: bool,
     label_cells: Vec<bool>,
+    label_order: Vec<usize>,
     connections: Option<cairo::ImageSurface>,
     connections_key: Option<u64>,
     connection_stats: DrawStats,
     /// Threads the connection raster may use.
     pub threads: usize,
+    /// Draw the cheaper "moving" level of detail: half-resolution lines, flat
+    /// markers on long enough connections, only the most important labels.
+    /// Set it while the scene's geometry changes between frames; the next
+    /// frame without it renders the full-quality picture.
+    pub motion: bool,
     mask: LineMask,
+    groups: Vec<Group>,
+    group_clock: u64,
     back: Option<cairo::ImageSurface>,
     back_size: (i32, i32),
     pub labels: LabelCache,
@@ -245,13 +290,18 @@ impl Painter {
             sr: Vec::new(),
             keys: Vec::new(),
             segments: Vec::new(),
+            shapes: Vec::new(),
             dense: false,
             label_cells: Vec::new(),
+            label_order: Vec::new(),
             connections: None,
             connections_key: None,
             connection_stats: DrawStats::default(),
             threads: std::thread::available_parallelism().map_or(1, |n| n.get().min(4)),
+            motion: false,
             mask: LineMask::default(),
+            groups: Vec::new(),
+            group_clock: 0,
             back: None,
             back_size: (0, 0),
             labels: LabelCache::new(),
@@ -328,7 +378,7 @@ impl Painter {
             // views whose direction markers have already faded away.
             self.dense = visible as f64 / (w * h).max(1.0) > 0.0008
                 && arrow_opacity(scene.cam.cam.zoom) > 0.0;
-            let cacheable = !scene.needs_frames();
+            let cacheable = !scene.needs_frames() && !self.motion;
             let key = cacheable.then(|| self.connection_key(scene, pw, ph, dev));
             let reuse = cacheable && self.connections_key == key;
             if reuse {
@@ -351,7 +401,11 @@ impl Painter {
                     self.lines(&cr, scene, pw as usize, ph as usize, dev as f32);
                 }
                 lap(1, &mut self.stats);
-                if let Some(mut canvas) = Self::canvas(&mut back, pw, ph) {
+                if !self.motion && scene.needs_frames() {
+                    if let Ok(cr) = cairo::Context::new(&back) {
+                        self.arrows_masked(&cr, scene, pw as usize, ph as usize, dev as f32);
+                    }
+                } else if let Some(mut canvas) = Self::canvas(&mut back, pw, ph) {
                     self.arrows(&mut canvas, scene, dev as f32);
                 }
                 self.connections_key = None;
@@ -476,6 +530,7 @@ impl Painter {
     }
 
     fn lines(&mut self, cr: &cairo::Context, scene: &Scene, cw: usize, ch: usize, dev: f32) {
+        let flat = self.motion;
         let (wf, hf) = (cw as f32, ch as f32);
         let line_alpha = scene.palette.line.a;
         self.keys.clear();
@@ -503,16 +558,46 @@ impl Painter {
             stats.line_ms[slot] += clock.elapsed().as_secs_f64() * 1e3;
             clock = std::time::Instant::now();
         };
-        if !self.mask.begin(cw, ch, dev as f64) {
-            return;
-        }
+        // Moving frames and one-off pictures use the scratch mask. Otherwise a
+        // group's coverage is kept: while appearance eases (hover fades) the
+        // geometry and the membership of a group stay, only its colour moves.
+        let keep = !flat;
+        let geometry = if keep {
+            self.line_geometry_key(cw, ch, dev, scene)
+        } else {
+            0
+        };
         let mut i = 0;
         while i < self.keys.len() {
             let key = self.keys[i] >> 32;
             let mut j = i;
-            self.segments.clear();
+            let mut member = 0xcbf2_9ce4_8422_2325u64;
             while j < self.keys.len() && self.keys[j] >> 32 == key {
                 let l = &scene.lines[(self.keys[j] & 0xffff_ffff) as usize];
+                member = (member ^ (u64::from(l.a) << 32 | u64::from(l.b)))
+                    .wrapping_mul(0x0100_0000_01b3);
+                j += 1;
+            }
+            let (qa, qm) = ((key >> 4) as f32, (key & 15) as f32);
+            let c = scene
+                .palette
+                .line
+                .mix(scene.palette.line_highlight, qm / 10.0);
+            let cache_key = (j - i >= GROUP_CACHE_MIN).then(|| geometry ^ member.rotate_left(17));
+            if let Some(hit) = cache_key.and_then(|k| self.group_take(k)) {
+                self.stats.group_hits += 1;
+                hit.mask.paint(cr, c.rgb(), qa / LINE_LEVELS);
+                self.stats.lines += hit.lines;
+                self.stats.line_px += hit.line_px;
+                self.group_put(hit);
+                tick(2, &mut self.stats);
+                i = j;
+                continue;
+            }
+            self.segments.clear();
+            let (mut lines, mut line_px) = (0, 0.0);
+            for x in i..j {
+                let l = &scene.lines[(self.keys[x] & 0xffff_ffff) as usize];
                 let (a, b) = (l.a as usize, l.b as usize);
                 let (dx, dy) = (self.sx[b] - self.sx[a], self.sy[b] - self.sy[a]);
                 let d = (dx * dx + dy * dy).sqrt();
@@ -526,75 +611,248 @@ impl Painter {
                         self.sx[b] - ux * rb,
                         self.sy[b] - uy * rb,
                     ]);
-                    self.stats.lines += 1;
-                    self.stats.line_px += len as f64;
+                    lines += 1;
+                    line_px += len as f64;
                 }
-                j += 1;
             }
+            self.stats.lines += lines;
+            self.stats.line_px += line_px;
             tick(0, &mut self.stats);
+            let mut group = match cache_key {
+                Some(k) => self.group_new(k, lines, line_px),
+                None => None,
+            };
+            let mask = match group.as_mut() {
+                Some(g) => &mut g.mask,
+                None => &mut self.mask,
+            };
+            if !mask.begin(cw, ch, dev as f64) {
+                return;
+            }
             {
-                let Some(mut pixels) = self.mask.lines() else {
+                let Some(mut pixels) = mask.lines() else {
                     return;
                 };
-                pixels.segments(&self.segments, width, self.threads);
+                if flat {
+                    pixels.flat_segments(&self.segments, width, self.threads);
+                } else {
+                    pixels.segments(&self.segments, width, self.threads);
+                }
             }
             tick(1, &mut self.stats);
-            let (qa, qm) = ((key >> 4) as f32, (key & 15) as f32);
-            let c = scene
-                .palette
-                .line
-                .mix(scene.palette.line_highlight, qm / 10.0);
-            self.mask.composite(cr, c.rgb(), qa / LINE_LEVELS);
+            match group {
+                Some(g) => {
+                    g.mask.paint(cr, c.rgb(), qa / LINE_LEVELS);
+                    self.group_put(g);
+                }
+                None => self.mask.composite(cr, c.rgb(), qa / LINE_LEVELS),
+            }
             tick(2, &mut self.stats);
             i = j;
         }
     }
 
-    fn arrows(&mut self, canvas: &mut Canvas<'_>, scene: &Scene, dev: f32) {
+    /// Everything the rasterised coverage of a connection group depends on
+    /// besides which lines it holds: canvas, device scale, width, projection.
+    fn line_geometry_key(&self, w: usize, h: usize, dev: f32, scene: &Scene) -> u64 {
+        let mut hash = std::collections::hash_map::DefaultHasher::new();
+        (w, h, dev.to_bits(), scene.disp.line.to_bits()).hash(&mut hash);
+        for values in [&self.sx, &self.sy, &self.sr] {
+            for value in values {
+                value.to_bits().hash(&mut hash);
+            }
+        }
+        hash.finish()
+    }
+
+    /// Takes the kept group with this key out of the cache.
+    fn group_take(&mut self, key: u64) -> Option<Group> {
+        let at = self.groups.iter().position(|g| g.key == key)?;
+        Some(self.groups.swap_remove(at))
+    }
+
+    /// A group slot to rasterise into: a free one or the least recently used.
+    fn group_new(&mut self, key: u64, lines: usize, line_px: f64) -> Option<Group> {
+        let mut group = if self.groups.len() >= GROUP_CACHE_SLOTS {
+            let oldest = (0..self.groups.len()).min_by_key(|&k| self.groups[k].used)?;
+            self.groups.swap_remove(oldest)
+        } else {
+            Group {
+                key,
+                lines,
+                line_px,
+                used: 0,
+                mask: LineMask::default(),
+            }
+        };
+        group.key = key;
+        group.lines = lines;
+        group.line_px = line_px;
+        Some(group)
+    }
+
+    fn group_put(&mut self, mut group: Group) {
+        self.group_clock += 1;
+        group.used = self.group_clock;
+        self.groups.push(group);
+    }
+
+    /// Marker metrics, or `None` if no markers are drawn this frame.
+    fn arrow_dims(&self, scene: &Scene, w: usize, h: usize, dev: f32) -> Option<ArrowDims> {
         let zoom = scene.cam.cam.zoom;
         let fade = arrow_opacity(zoom) as f32;
-        if !scene.style.show_arrow || fade <= 0.0 {
-            return;
+        // Dense scenes show no markers while moving; they return with the
+        // settled frame.
+        if !scene.style.show_arrow || fade <= 0.0 || (self.motion && self.dense) {
+            return None;
         }
-        let (wf, hf) = (canvas.w as f32 + 20.0 * dev, canvas.h as f32 + 20.0 * dev);
-        let arrow = scene.palette.arrow;
         let lw = scene.disp.line;
         let len = (arrow_length(lw) * 4.0 / 3.0) as f32 * dev;
-        let half = len / 2.0;
-        let notch = len * 0.75;
-        let gap = zoom as f32 * dev;
-        for (k, &(a, b)) in scene.arrows.iter().enumerate() {
-            let (a, b) = (a as usize, b as usize);
-            if self.sx[b] < -20.0 * dev
-                || self.sx[b] > wf
-                || self.sy[b] < -20.0 * dev
-                || self.sy[b] > hf
-            {
-                continue;
-            }
-            let alpha = scene.arrow_alpha[k] * arrow.a * fade;
-            if (alpha * LINE_LEVELS).round() < 1.0 {
-                continue;
-            }
-            let (dx, dy) = (self.sx[b] - self.sx[a], self.sy[b] - self.sy[a]);
-            let d = (dx * dx + dy * dy).sqrt();
-            if d <= 0.0 || d - self.sr[a] - self.sr[b] <= lw as f32 * dev {
-                continue;
-            }
-            let (ux, uy) = (dx / d, dy / d);
-            let back = self.sr[b] + gap;
-            let (tx, ty) = (self.sx[b] - ux * back, self.sy[b] - uy * back);
-            // local frame: x along the line toward the tip, y to its side
-            let p = |lx: f32, ly: f32| (tx + ux * lx - uy * ly, ty + uy * lx + ux * ly);
-            canvas.dart(
+        Some(ArrowDims {
+            fade,
+            wf: w as f32 + 20.0 * dev,
+            hf: h as f32 + 20.0 * dev,
+            lw,
+            len,
+            half: len / 2.0,
+            notch: len * 0.75,
+            gap: zoom as f32 * dev,
+        })
+    }
+
+    /// Opacity and outline (tip, wing, notch, wing) of marker `k`, if drawn.
+    fn arrow_shape(
+        &self,
+        scene: &Scene,
+        k: usize,
+        m: &ArrowDims,
+        dev: f32,
+    ) -> Option<(f32, [(f32, f32); 4])> {
+        let (a, b) = scene.arrows[k];
+        let (a, b) = (a as usize, b as usize);
+        if self.sx[b] < -20.0 * dev
+            || self.sx[b] > m.wf
+            || self.sy[b] < -20.0 * dev
+            || self.sy[b] > m.hf
+        {
+            return None;
+        }
+        let alpha = scene.arrow_alpha[k] * scene.palette.arrow.a * m.fade;
+        if (alpha * LINE_LEVELS).round() < 1.0 {
+            return None;
+        }
+        let (dx, dy) = (self.sx[b] - self.sx[a], self.sy[b] - self.sy[a]);
+        let d = (dx * dx + dy * dy).sqrt();
+        if d <= 0.0 || d - self.sr[a] - self.sr[b] <= m.lw as f32 * dev {
+            return None;
+        }
+        if self.motion && d - self.sr[a] - self.sr[b] < m.len * MOTION_ARROW_SHAFTS {
+            return None;
+        }
+        let (ux, uy) = (dx / d, dy / d);
+        let back = self.sr[b] + m.gap;
+        let (tx, ty) = (self.sx[b] - ux * back, self.sy[b] - uy * back);
+        // local frame: x along the line toward the tip, y to its side
+        let p = |lx: f32, ly: f32| (tx + ux * lx - uy * ly, ty + uy * lx + ux * ly);
+        Some((
+            alpha,
+            [
                 (tx, ty),
-                p(-len, -half),
-                p(-notch, 0.0),
-                p(-len, half),
-                arrow.rgb(),
-                alpha,
-            );
+                p(-m.len, -m.half),
+                p(-m.notch, 0.0),
+                p(-m.len, m.half),
+            ],
+        ))
+    }
+
+    fn arrows(&mut self, canvas: &mut Canvas<'_>, scene: &Scene, dev: f32) {
+        let Some(dims) = self.arrow_dims(scene, canvas.w, canvas.h, dev) else {
+            return;
+        };
+        let rgb = scene.palette.arrow.rgb();
+        for k in 0..scene.arrows.len() {
+            let Some((alpha, [tip, wing_a, notch, wing_b])) =
+                self.arrow_shape(scene, k, &dims, dev)
+            else {
+                continue;
+            };
+            if self.motion {
+                canvas.dart_flat([tip, wing_a, notch, wing_b], rgb, alpha);
+            } else {
+                canvas.dart(tip, wing_a, notch, wing_b, rgb, alpha);
+            }
             self.stats.arrows += 1;
+        }
+    }
+
+    /// Markers while appearance eases (hover fades): coverage masks per
+    /// opacity level, kept as long as the geometry and the members stay, so a
+    /// frame only repaints them in the new opacity. Opacities are quantised to
+    /// the same 1/40 steps as connections, which the settled frame then refines.
+    fn arrows_masked(&mut self, cr: &cairo::Context, scene: &Scene, w: usize, h: usize, dev: f32) {
+        let Some(dims) = self.arrow_dims(scene, w, h, dev) else {
+            return;
+        };
+        let geometry = self.line_geometry_key(w, h, dev, scene)
+            ^ u64::from(scene.cam.cam.zoom.to_bits() as u32).rotate_left(29)
+            ^ ARROW_SALT;
+        self.keys.clear();
+        for k in 0..scene.arrows.len() {
+            if let Some((alpha, _)) = self.arrow_shape(scene, k, &dims, dev) {
+                let level = (alpha * LINE_LEVELS).round() as u64;
+                self.keys.push(level << 32 | k as u64);
+            }
+        }
+        self.keys.sort_unstable();
+        let rgb = scene.palette.arrow.rgb();
+        let mut i = 0;
+        while i < self.keys.len() {
+            let level = self.keys[i] >> 32;
+            let mut j = i;
+            let mut member = 0xcbf2_9ce4_8422_2325u64;
+            while j < self.keys.len() && self.keys[j] >> 32 == level {
+                let (a, b) = scene.arrows[(self.keys[j] & 0xffff_ffff) as usize];
+                member =
+                    (member ^ (u64::from(a) << 32 | u64::from(b))).wrapping_mul(0x0100_0000_01b3);
+                j += 1;
+            }
+            let opacity = level as f32 / LINE_LEVELS;
+            self.stats.arrows += j - i;
+            let key = geometry ^ member.rotate_left(17);
+            if let Some(hit) = self.group_take(key) {
+                self.stats.group_hits += 1;
+                hit.mask.paint(cr, rgb, opacity);
+                self.group_put(hit);
+                i = j;
+                continue;
+            }
+            self.shapes.clear();
+            for x in i..j {
+                let k = (self.keys[x] & 0xffff_ffff) as usize;
+                if let Some((_, shape)) = self.arrow_shape(scene, k, &dims, dev) {
+                    self.shapes.push(shape);
+                }
+            }
+            let mut group = self.group_new(key, j - i, 0.0);
+            let mask = match group.as_mut() {
+                Some(g) => &mut g.mask,
+                None => &mut self.mask,
+            };
+            if mask.begin(w, h, dev as f64) {
+                if let Some(mut pixels) = mask.lines() {
+                    for [tip, wing_a, notch, wing_b] in &self.shapes {
+                        pixels.dart(*tip, *wing_a, *notch, *wing_b);
+                    }
+                }
+            }
+            match group {
+                Some(g) => {
+                    g.mask.paint(cr, rgb, opacity);
+                    self.group_put(g);
+                }
+                None => self.mask.composite(cr, rgb, opacity),
+            }
+            i = j;
         }
     }
 
@@ -618,7 +876,11 @@ impl Painter {
             if (alpha * NODE_LEVELS).round() < 1.0 {
                 continue;
             }
-            canvas.disc(self.sx[i], self.sy[i], r, scene.color[i], alpha);
+            if self.motion {
+                canvas.disc_flat(self.sx[i], self.sy[i], r, scene.color[i], alpha);
+            } else {
+                canvas.disc(self.sx[i], self.sy[i], r, scene.color[i], alpha);
+            }
             self.stats.nodes += 1;
         }
         if let Some(i) = hl.filter(|i| *i < n) {
@@ -651,15 +913,50 @@ impl Painter {
         self.label_cells.fill(false);
         let hl = scene.highlight().filter(|h| *h < scene.len());
         if label_opacity(scene.cam.cam.zoom, scene.disp.label_detail) > 0.001 {
-            for i in 0..scene.len() {
-                if hl != Some(i) {
-                    self.label(cr, scene, i, w, h, dev, false);
+            if self.motion {
+                self.motion_labels(cr, scene, w, h, dev, hl);
+            } else {
+                for i in 0..scene.len() {
+                    if hl != Some(i) {
+                        self.label(cr, scene, i, w, h, dev, false);
+                    }
                 }
             }
         }
         if let Some(i) = hl {
             self.label(cr, scene, i, w, h, dev, true);
         }
+    }
+
+    /// The largest markers on screen get a label while the scene moves.
+    fn motion_labels(
+        &mut self,
+        cr: &cairo::Context,
+        scene: &Scene,
+        w: f64,
+        h: f64,
+        dev: f64,
+        hl: Option<usize>,
+    ) {
+        let (wd, hd) = ((w + 300.0) * dev, (h + 200.0) * dev);
+        let radius = scene.layout.radius();
+        let mut shown = std::mem::take(&mut self.label_order);
+        shown.clear();
+        shown.extend((0..scene.len()).filter(|&i| {
+            hl != Some(i)
+                && (-300.0 * dev..=wd).contains(&(self.sx[i] as f64))
+                && (-20.0 * dev..=hd).contains(&(self.sy[i] as f64))
+        }));
+        let by_size = |a: &usize, b: &usize| radius[*b].total_cmp(&radius[*a]);
+        if shown.len() > MOTION_LABELS {
+            shown.select_nth_unstable_by(MOTION_LABELS, by_size);
+            shown.truncate(MOTION_LABELS);
+        }
+        shown.sort_unstable_by(by_size);
+        for &i in &shown {
+            self.label(cr, scene, i, w, h, dev, false);
+        }
+        self.label_order = shown;
     }
 
     #[allow(clippy::too_many_arguments)]

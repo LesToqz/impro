@@ -613,6 +613,20 @@ impl Scene {
             || self.eased_pending()
     }
 
+    /// Geometry changes between frames: the layout runs (a dragged node
+    /// keeps it hot), the camera moves, or markers and lines ease in size.
+    /// Appearance-only easing (hover fades, theme blends) does not count.
+    pub fn moving(&self) -> bool {
+        self.simulating()
+            || self.cam.keys.any()
+            || self.cam.vx != 0.0
+            || self.cam.vy != 0.0
+            || self.cam.is_tracking()
+            || self.cam.cam.zoom != self.cam.target_zoom
+            || (self.disp.node - self.style.node_size).abs() >= 1e-3
+            || (self.disp.line - self.style.line_width).abs() >= 1e-3
+    }
+
     /// The force simulation still moves nodes.
     pub fn simulating(&self) -> bool {
         !self.layout.is_empty() && !self.layout.settled()

@@ -8,6 +8,7 @@ mod actions;
 mod gitdeco;
 mod notes;
 mod tree;
+mod watch;
 
 pub use actions::{
     ConfirmHook, ConfirmRequest, DeleteMode, DialogHooks, ErrorHook, NameAction, NameDialogHook,
@@ -151,6 +152,13 @@ mod imp {
         pub(crate) notes_dir_exists: Cell<bool>,
         pub(crate) notes_pending_select: RefCell<Option<PathBuf>>,
         pub(crate) notes_edited: RefCell<HashMap<PathBuf, String>>,
+        pub(crate) watch_folders: Cell<bool>,
+        pub(crate) dir_monitors: RefCell<HashMap<PathBuf, gio::FileMonitor>>,
+        pub(crate) dir_dirty: RefCell<HashSet<PathBuf>>,
+        pub(crate) dir_timeout: RefCell<Option<glib::SourceId>>,
+        pub(crate) dir_sync: RefCell<Option<glib::SourceId>>,
+        pub(crate) notes_task: RefCell<Option<notes::NotesTask>>,
+        pub(crate) notes_apply_source: RefCell<Option<glib::SourceId>>,
         pub(crate) notes_hover: RefCell<HashMap<String, f64>>,
         pub(crate) notes_hover_path: RefCell<Option<String>>,
         pub(crate) notes_angle: Cell<f64>,
@@ -215,6 +223,13 @@ mod imp {
                 notes_dir_exists: Cell::new(false),
                 notes_pending_select: RefCell::new(None),
                 notes_edited: RefCell::default(),
+                watch_folders: Cell::new(true),
+                dir_monitors: RefCell::default(),
+                dir_dirty: RefCell::default(),
+                dir_timeout: RefCell::new(None),
+                dir_sync: RefCell::new(None),
+                notes_task: RefCell::new(None),
+                notes_apply_source: RefCell::new(None),
                 notes_hover: RefCell::default(),
                 notes_hover_path: RefCell::new(None),
                 notes_angle: Cell::new(0.0),
@@ -334,7 +349,7 @@ impl ExplorerPanel {
         tree.set_margin_top(4);
         tree.set_margin_bottom(24);
         let column = gtk::TreeViewColumn::new();
-        let icon = gtk::CellRendererPixbuf::new();
+        let icon = crate::icons::IconCell::new();
         util::pack(&column, &icon, false);
         // Preserve model icon names (also used to identify directories), but render their
         // system symbolic variants in the row's muted colour.
@@ -422,6 +437,13 @@ impl ExplorerPanel {
         w.tree.connect_row_expanded(move |_, iter, _| {
             if let Some(panel) = weak.upgrade() {
                 panel.on_expanded(iter);
+                panel.schedule_watch_sync();
+            }
+        });
+        let weak = self.downgrade();
+        w.tree.connect_row_collapsed(move |_, _, _| {
+            if let Some(panel) = weak.upgrade() {
+                panel.schedule_watch_sync();
             }
         });
         let weak = self.downgrade();
@@ -457,12 +479,7 @@ impl ExplorerPanel {
                 if let Some(panel) = weak.upgrade() {
                     panel.emit_by_name::<()>(
                         "search-result-activated",
-                        &[
-                            &path.to_string_lossy().into_owned(),
-                            &line,
-                            &column,
-                            &length,
-                        ],
+                        &[&model_path(path), &line, &column, &length],
                     );
                 }
             });
@@ -580,6 +597,7 @@ impl ExplorerPanel {
     fn shutdown(&self) {
         self.imp().destroyed.set(true);
         self.stop_git();
+        self.stop_watches();
         let imp = self.imp();
         if let Some(source) = imp.apply_source.take() {
             source.remove();
@@ -735,7 +753,7 @@ impl ExplorerPanel {
         self.connect_local("file-activated", false, move |args| {
             let panel = args[0].get::<ExplorerPanel>().ok()?;
             let path: String = args[1].get().ok()?;
-            f(&panel, Path::new(&path));
+            f(&panel, &util::decode_path(&path));
             None
         })
     }
@@ -747,7 +765,7 @@ impl ExplorerPanel {
         self.connect_local("path-renamed", false, move |args| {
             let panel = args[0].get::<ExplorerPanel>().ok()?;
             let (old, new): (String, String) = (args[1].get().ok()?, args[2].get().ok()?);
-            f(&panel, Path::new(&old), Path::new(&new));
+            f(&panel, &util::decode_path(&old), &util::decode_path(&new));
             None
         })
     }
@@ -759,7 +777,7 @@ impl ExplorerPanel {
         self.connect_local("path-deleted", false, move |args| {
             let panel = args[0].get::<ExplorerPanel>().ok()?;
             let path: String = args[1].get().ok()?;
-            f(&panel, Path::new(&path));
+            f(&panel, &util::decode_path(&path));
             None
         })
     }
@@ -774,7 +792,7 @@ impl ExplorerPanel {
             let path: String = args[1].get().ok()?;
             f(
                 &panel,
-                Path::new(&path),
+                &util::decode_path(&path),
                 args[2].get().ok()?,
                 args[3].get().ok()?,
                 args[4].get().ok()?,
@@ -792,7 +810,7 @@ impl ExplorerPanel {
 
     /// Activate a file as if it was opened from the tree (emits `file-activated`).
     pub(crate) fn emit_file_activated(&self, path: &Path) {
-        self.emit_by_name::<()>("file-activated", &[&path.to_string_lossy().into_owned()]);
+        self.emit_by_name::<()>("file-activated", &[&model_path(path)]);
     }
 }
 
@@ -804,7 +822,7 @@ pub(crate) fn set_accessible_name(widget: &impl IsA<gtk::Widget>, name: &str) {
 
 /// Convert a path to the string stored in the tree model.
 pub(crate) fn model_path(path: &Path) -> String {
-    path.to_string_lossy().into_owned()
+    util::encode_path(path)
 }
 
 pub(crate) fn css(ui: &impro_core::themes::UiColors) -> String {

@@ -334,6 +334,8 @@ fn test_shortcuts() {
             gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::SHIFT_MASK
         ));
         assert_eq!(recorder.names.borrow().last().unwrap().0, "New Folder");
+        // F5 is what lists a change made elsewhere; folder watching would race the check.
+        f.panel.set_watch_folders(false);
         std::fs::File::create(f.p("external.txt")).unwrap();
         assert!(f.panel.find_row(&f.p("external.txt")).is_none());
         assert!(press_on(&f.panel, key::F5, gdk::ModifierType::empty()));
@@ -842,6 +844,8 @@ fn test_header_actions_create_in_selected_folder_and_refresh() {
         wait_idle(&f.panel);
         assert_eq!(f.panel.selected_path(), Some(p.clone()));
         let external = folder.join("external.txt");
+        // The Refresh button is what lists a change made elsewhere; watching would race it.
+        f.panel.set_watch_folders(false);
         std::fs::File::create(&external).unwrap();
         assert!(f.panel.find_row(&external).is_none());
         f.panel.header_button("Refresh").unwrap().clicked();

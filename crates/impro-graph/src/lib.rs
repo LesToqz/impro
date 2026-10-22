@@ -33,6 +33,23 @@
 //! saved `reduceMotion` key, `IMPRO_REDUCE_MOTION=1` or GTK's
 //! `gtk-enable-animations`) skips easing and inertia.
 //!
+//! ### Levels of detail
+//!
+//! A frame is drawn at one of three levels, chosen by the scene's state:
+//!
+//! * **Settled** (nothing eases): the reference picture, anti-aliased lines,
+//!   markers and labels, with the connection layer kept between frames.
+//! * **Easing** (hover fades, theme blends; geometry unchanged): the same
+//!   picture, but the coverage of each connection and marker group is kept
+//!   while its geometry and members stay, so a frame repaints the groups in
+//!   their new opacity instead of rasterising them again.
+//! * **Moving** (`Scene::moving`: the layout runs, the camera pans, zooms or
+//!   flings, sizes ease; `Painter::motion`): lines and markers are drawn without
+//!   anti-aliasing, dense scenes draw no direction markers, and only the 96
+//!   largest on-screen markers get a label. The first frame after the motion
+//!   stops is the settled picture, so nothing outside these three differences
+//!   is visible in motion.
+//!
 //! ## Host API (everything the window needs)
 //!
 //! ```ignore

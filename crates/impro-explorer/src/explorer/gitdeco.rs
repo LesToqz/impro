@@ -48,7 +48,7 @@ impl ExplorerPanel {
             } else {
                 &snapshot.files
             };
-            statuses.get(Path::new(&path)).copied()
+            statuses.get(&util::decode_path(&path)).copied()
         } else {
             None
         };
