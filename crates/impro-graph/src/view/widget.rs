@@ -51,22 +51,28 @@ impl Default for ViewOptions {
 
 /// Events from worker threads, delivered on the main loop.
 pub(super) enum Event {
-    Built(Output),
+    Built(Box<Output>),
     SaveFailed,
 }
 
 /// Signal handlers connected by the host.
 #[derive(Default)]
 pub(super) struct Handlers {
-    pub open_file: RefCell<Vec<Rc<dyn Fn(&Path, OpenMode)>>>,
-    pub search_tag: RefCell<Vec<Rc<dyn Fn(&str)>>>,
-    pub create_note: RefCell<Vec<Rc<dyn Fn(&str)>>>,
-    pub reveal: RefCell<Vec<Rc<dyn Fn(&Path)>>>,
-    pub copy_path: RefCell<Vec<Rc<dyn Fn(&Path)>>>,
-    pub settings_changed: RefCell<Vec<Rc<dyn Fn(&Value)>>>,
-    pub error: RefCell<Vec<Rc<dyn Fn(&str)>>>,
-    pub updated: RefCell<Vec<Rc<dyn Fn(&GraphSummary)>>>,
+    pub open_file: Slot<OpenHandler>,
+    pub search_tag: Slot<dyn Fn(&str)>,
+    pub create_note: Slot<dyn Fn(&str)>,
+    pub reveal: Slot<dyn Fn(&Path)>,
+    pub copy_path: Slot<dyn Fn(&Path)>,
+    pub settings_changed: Slot<dyn Fn(&Value)>,
+    pub error: Slot<dyn Fn(&str)>,
+    pub updated: Slot<dyn Fn(&GraphSummary)>,
 }
+
+/// A handler of the open-file signal.
+pub(super) type OpenHandler = dyn Fn(&Path, OpenMode);
+
+/// The handlers connected to one signal.
+pub(super) type Slot<F> = RefCell<Vec<Rc<F>>>;
 
 /// What the view currently shows (for hosts, tests and diagnostics).
 #[derive(Clone, Debug, Default, PartialEq)]

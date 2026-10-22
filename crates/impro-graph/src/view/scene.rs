@@ -115,6 +115,8 @@ pub struct Scene {
     near: Vec<bool>,
     near_for: Option<usize>,
     near_stale: bool,
+    /// Some appearance target changed since the easing last came to rest.
+    elements_dirty: bool,
     // interaction
     pub hover: Option<usize>,
     /// The node held by the pointer (highlighted; pinned once it is moved).
@@ -192,6 +194,7 @@ impl Scene {
             near: Vec::new(),
             near_for: None,
             near_stale: true,
+            elements_dirty: true,
             hover: None,
             drag: None,
             dragging: false,
@@ -357,8 +360,8 @@ impl Scene {
             self.dragging = false;
         }
         let fresh_alpha = if self.style.reduce_motion { 1.0 } else { 0.0 };
-        for i in 0..n {
-            match old_of_new[i] {
+        for (i, &previous) in old_of_new.iter().enumerate() {
+            match previous {
                 NONE => {
                     self.alpha[i] = fresh_alpha;
                     self.color[i] = self.target_color(i).rgb();
@@ -390,6 +393,7 @@ impl Scene {
         self.near.clear();
         self.near.resize(n, false);
         self.near_stale = true;
+        self.elements_dirty = true;
         if !self.has_data {
             self.layout.restart();
             self.has_data = true;
@@ -422,6 +426,7 @@ impl Scene {
     pub fn set_active(&mut self, id: Option<&str>) {
         self.active_id = id.map(Arc::from);
         self.active = id.and_then(|id| self.graph.index_of(id));
+        self.elements_dirty = true;
     }
 
     pub fn set_size(&mut self, w: f64, h: f64) {
@@ -457,6 +462,7 @@ impl Scene {
             self.pal_t = 1.0;
         }
         self.style = style;
+        self.elements_dirty = true;
     }
 
     pub fn set_forces(&mut self, forces: ForceParams) {
@@ -498,6 +504,7 @@ impl Scene {
             return false;
         }
         self.hover = node;
+        self.elements_dirty = true;
         true
     }
 
@@ -552,6 +559,7 @@ impl Scene {
         if i < self.len() {
             self.drag = Some(i);
             self.dragging = false;
+            self.elements_dirty = true;
         }
     }
 
@@ -560,6 +568,9 @@ impl Scene {
     pub fn drag_to(&mut self, i: usize, wx: f32, wy: f32) {
         if i >= self.len() {
             return;
+        }
+        if self.drag != Some(i) {
+            self.elements_dirty = true;
         }
         self.drag = Some(i);
         if self.dragging {
@@ -578,6 +589,7 @@ impl Scene {
 
     /// Releases the held node; the layout cools again.
     pub fn end_drag(&mut self) {
+        self.elements_dirty = true;
         if let Some(i) = self.drag.take() {
             if self.dragging && i < self.len() {
                 self.layout.end_drag(i);
@@ -616,9 +628,14 @@ impl Scene {
     }
 
     fn elements_busy(&self) -> bool {
-        if self.near_stale {
+        if self.near_stale || self.elements_dirty {
             return true;
         }
+        false
+    }
+
+    #[allow(dead_code)]
+    fn elements_busy_slow(&self) -> bool {
         let hl = self.highlight();
         for i in 0..self.len() {
             let ta = if hl.is_none() || self.near[i] {
@@ -654,7 +671,7 @@ impl Scene {
         }
         if self.style.show_arrow {
             for (k, (s, t)) in self.arrows.iter().enumerate() {
-                let ta = if hl.is_none_or(|h| h == *s as usize || h == *t as usize) {
+                let ta = if hl.map_or(true, |h| h == *s as usize || h == *t as usize) {
                     1.0
                 } else {
                     HOVER_DIM
@@ -719,6 +736,7 @@ impl Scene {
         } else {
             self.pal_from.blend(&self.pal_to, self.pal_t)
         };
+        self.elements_dirty = true;
         self.pal_t < 1.0
     }
 
@@ -765,6 +783,10 @@ impl Scene {
 
     /// Eases opacity, tint, label offset and line state toward their targets.
     fn step_elements(&mut self, dt: f64) -> bool {
+        if !self.elements_dirty {
+            self.expire_ghosts(dt);
+            return false;
+        }
         self.refresh_near();
         let f = if self.style.reduce_motion {
             1.0
@@ -816,7 +838,7 @@ impl Scene {
         }
         if self.style.show_arrow {
             for (k, (s, t)) in self.arrows.iter().enumerate() {
-                let ta = if hl.is_none_or(|h| h == *s as usize || h == *t as usize) {
+                let ta = if hl.map_or(true, |h| h == *s as usize || h == *t as usize) {
                     1.0
                 } else {
                     HOVER_DIM
@@ -824,12 +846,24 @@ impl Scene {
                 approach(&mut self.arrow_alpha[k], ta, 1e-3);
             }
         }
-        let floor = 0.01;
+        self.elements_dirty = busy;
+        self.expire_ghosts(dt);
+        busy
+    }
+
+    fn expire_ghosts(&mut self, dt: f64) {
+        if self.ghosts.is_empty() {
+            return;
+        }
+        let f = if self.style.reduce_motion {
+            1.0
+        } else {
+            ease_factor(EASE_K, dt) as f32
+        };
         self.ghosts.retain_mut(|g| {
             g.alpha -= g.alpha * f + dt as f32 * 0.5;
-            g.alpha > floor
+            g.alpha > 0.01
         });
-        busy
     }
 }
 

@@ -237,10 +237,9 @@ fn search_filters_with_the_query_language() {
         entry.set_text("");
         assert!(f.wait_ids(5_000, |ids| ids.len() > 5));
         assert!(!f.view.status_text().1);
-        // saved with the preferences
-        assert!(saved(&f)
-            .iter()
-            .any(|b| b["search"] == json!("zzzz-nothing")));
+        // saved with the preferences (the debounce keeps only the newest value)
+        entry.set_text("keep me");
+        assert_eq!(saved(&f).last().expect("saved")["search"], json!("keep me"));
     });
 }
 
@@ -359,7 +358,7 @@ fn the_local_graph_swaps_in_its_traversal_controls() {
             .expect("switch")
             .toggle();
         assert!(f.wait_ids(5_000, |ids| ids == ["hub/Hub.md"]));
-        assert_eq!(f.view.prefs().local_outgoing, false);
+        assert!(!f.view.prefs().local_outgoing);
         // reset also restores the traversal in local mode
         f.view.panel().reset_button().clicked();
         assert!(f.view.prefs().local_outgoing);

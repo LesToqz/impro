@@ -86,7 +86,7 @@ pub(super) fn create(root: &Path, options: ViewOptions) -> GraphView {
     let (tx, rx) = glib::MainContext::channel::<Event>(glib::Priority::DEFAULT);
     let build_tx = tx.clone();
     let host = Host::start(move |output| {
-        let _ = build_tx.send(Event::Built(output));
+        let _ = build_tx.send(Event::Built(Box::new(output)));
     });
     let save_tx = tx;
     let writer = Writer::start(options.store.clone(), move || {

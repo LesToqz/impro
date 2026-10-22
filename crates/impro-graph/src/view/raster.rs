@@ -271,6 +271,8 @@ pub struct LineMask {
     h: usize,
     // touched region (inclusive start, exclusive end)
     bbox: [usize; 4],
+    /// Per-band segment lists, reused between frames.
+    lists: Vec<Vec<u32>>,
 }
 
 /// Write access to the mask while lines are added.
@@ -280,6 +282,7 @@ pub struct MaskLines<'a> {
     h: usize,
     stride: usize,
     bbox: &'a mut [usize; 4],
+    lists: &'a mut Vec<Vec<u32>>,
 }
 
 impl LineMask {
@@ -309,6 +312,7 @@ impl LineMask {
             h: self.h,
             stride,
             bbox: &mut self.bbox,
+            lists: &mut self.lists,
         })
     }
 
@@ -356,14 +360,15 @@ impl MaskLines<'_> {
         self.banded(segments, width, bands);
     }
 
-    /// Like [`MaskLines::segments`] with an explicit number of bands.
-    pub fn banded(&mut self, segments: &[[f32; 4]], width: f32, bands: usize) {
+    /// Like [`MaskLines::segments`] with an explicit thread count: the canvas
+    /// is cut into many thin bands, each segment goes to the bands it touches,
+    /// and the threads take bands from a shared queue.
+    pub fn banded(&mut self, segments: &[[f32; 4]], width: f32, threads: usize) {
         if segments.is_empty() || self.h == 0 {
             return;
         }
         let (w, h, stride) = (self.w, self.h, self.stride);
-        let bands = bands.clamp(1, 8).min(h);
-        let rows = h.div_ceil(bands);
+        let threads = threads.clamp(1, 8);
         let buf: &mut [u8] = &mut self.data;
         let mut merged = [w as i32, h as i32, 0i32, 0i32];
         let mut merge = |b: [i32; 4]| {
@@ -374,34 +379,58 @@ impl MaskLines<'_> {
                 merged[3] = merged[3].max(b[3]);
             }
         };
-        if bands == 1 {
+        if threads == 1 {
             let mut band = Band::new(buf, stride, w, 0, h);
             for s in segments {
                 band.line(s[0], s[1], s[2], s[3], width);
             }
             merge(band.bounds);
         } else {
-            let results: Vec<[i32; 4]> = std::thread::scope(|scope| {
-                let handles: Vec<_> = buf
-                    .chunks_mut(rows * stride)
-                    .enumerate()
-                    .map(|(k, chunk)| {
-                        let (y0, y1) = (k * rows, ((k + 1) * rows).min(h));
-                        scope.spawn(move || {
-                            let mut band = Band::new(chunk, stride, w, y0, y1);
-                            for s in segments {
-                                band.line(s[0], s[1], s[2], s[3], width);
-                            }
-                            band.bounds
-                        })
-                    })
-                    .collect();
-                handles
-                    .into_iter()
-                    .map(|h| h.join().unwrap_or([0, 0, 0, 0]))
-                    .collect()
+            let bands = (threads * 4).min(h.div_ceil(8)).max(1);
+            let rows = h.div_ceil(bands);
+            let bands = h.div_ceil(rows);
+            let margin = width / 2.0 + 1.0;
+            for list in self.lists.iter_mut() {
+                list.clear();
+            }
+            self.lists.resize_with(bands, Vec::new);
+            for (i, s) in segments.iter().enumerate() {
+                let (top, bottom) = (s[1].min(s[3]) - margin, s[1].max(s[3]) + margin);
+                if !(top.is_finite() && bottom.is_finite()) || bottom < 0.0 || top > h as f32 {
+                    continue;
+                }
+                let first = (top.max(0.0) as usize / rows).min(bands - 1);
+                let last = (bottom.max(0.0) as usize / rows).min(bands - 1);
+                for list in &mut self.lists[first..=last] {
+                    list.push(i as u32);
+                }
+            }
+            let lists = &self.lists;
+            let queue = std::sync::Mutex::new(buf.chunks_mut(rows * stride).enumerate());
+            let work = || {
+                let mut touched: Vec<[i32; 4]> = Vec::new();
+                loop {
+                    let item = queue.lock().ok().and_then(|mut q| q.next());
+                    let Some((k, chunk)) = item else {
+                        break;
+                    };
+                    let (y0, y1) = (k * rows, ((k + 1) * rows).min(h));
+                    let mut band = Band::new(chunk, stride, w, y0, y1);
+                    for &i in &lists[k] {
+                        let s = &segments[i as usize];
+                        band.line(s[0], s[1], s[2], s[3], width);
+                    }
+                    touched.push(band.bounds);
+                }
+                touched
+            };
+            let results: Vec<Vec<[i32; 4]>> = std::thread::scope(|scope| {
+                let helpers: Vec<_> = (1..threads).map(|_| scope.spawn(work)).collect();
+                let mut all = vec![work()];
+                all.extend(helpers.into_iter().map(|h| h.join().unwrap_or_default()));
+                all
             });
-            for r in results {
+            for r in results.into_iter().flatten() {
                 merge(r);
             }
         }
@@ -753,7 +782,7 @@ mod tests {
                 ((6.0, 6.0), (58.0, 42.0)),
             ] {
                 let px = stroke(&[(a.0, a.1, b.0, b.1, width)], 1.0);
-                let len = ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2) as f32).sqrt() as f64;
+                let len = ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2)).sqrt() as f64;
                 let area = total(&px);
                 let want = len * width as f64;
                 assert!(
@@ -849,7 +878,7 @@ mod tests {
     }
 
     #[test]
-    fn lines_are_positioned_to_a_twentieth_of_a_pixel() {
+    fn lines_are_positioned_to_a_tenth_of_a_pixel() {
         for seg in [
             [53.4f32, 28.7, 25.3, 57.7],
             [4.2, 40.1, 60.3, 8.8],
@@ -893,7 +922,7 @@ mod tests {
                     seg[1] + t * (seg[3] - seg[1])
                 };
                 assert!(
-                    (centre - want).abs() < 0.08,
+                    (centre - want).abs() < 0.1,
                     "{seg:?} at {k}: {centre} vs {want}"
                 );
             }

@@ -50,7 +50,7 @@ impl Inner {
                 self.save_failed.set(true);
                 self.emit_error("Graph preferences could not be saved");
             }
-            Event::Built(out) => self.on_built(out),
+            Event::Built(out) => self.on_built(*out),
         }
     }
 

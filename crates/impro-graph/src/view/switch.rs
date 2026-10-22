@@ -21,6 +21,8 @@ const INSET: f64 = 3.0;
 const TRAVEL: f64 = 18.0;
 const DURATION_MS: i32 = 120;
 
+type Handler = Rc<dyn Fn(bool)>;
+
 struct Inner {
     area: gtk::DrawingArea,
     active: Cell<bool>,
@@ -28,7 +30,7 @@ struct Inner {
     position: Cell<f64>,
     animate: Cell<bool>,
     key: MotionKey,
-    handlers: RefCell<Vec<Rc<dyn Fn(bool)>>>,
+    handlers: RefCell<Vec<Handler>>,
 }
 
 /// A switch; clones share state.
