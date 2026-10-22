@@ -17,7 +17,7 @@ SCENES = [
     'editor-selection-find', 'editor-unsaved', 'tab-hover', 'tab-close',
     'terminal-bottom', 'terminal-right', 'terminal-split', 'terminal-fullscreen',
     'terminal-maximized', 'terminal-hover', 'palette', 'palette-query', 'switcher', 'notice',
-    *['settings-'+p for p in ['appearance','editor','explorer','terminal','graph','gitgraph','notes','hotkeys']],
+    *['settings-'+p for p in ['appearance','editor','files','terminal','graph','gitgraph','notes','hotkeys','about']],
     'git-horizontal', 'git-vertical', 'commit-horizontal', 'commit-vertical', 'graph',
     'notes-live', 'notes-table', 'notes-selection',
 ]

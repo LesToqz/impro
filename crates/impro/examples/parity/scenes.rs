@@ -33,7 +33,7 @@ pub fn run() {
     let app = gtk::Application::new(Some("dev.impro.Parity"), gio::ApplicationFlags::NON_UNIQUE);
     app.register(None::<&gio::Cancellable>).unwrap();
     let w = impro::MainWindow::with_values(&app, &root, values);
-    w.window.set_default_size(1200, 800);
+    w.window.set_default_size(1190, 750);
     w.show();
     for name in ["main.py", "README.md", "data.json"] {
         w.editor.open_file(root.join(name));
@@ -143,11 +143,11 @@ pub fn run() {
             w.set_setting("gitgraph_orientation", orientation.into(), false)
                 .unwrap();
             w.open_gitgraph();
-            poll(|| w.gitgraph_views().iter().all(|v| v.is_ready()));
+            poll(|| w.gitgraph_views().iter().all(|v| v.is_ready() && v.last_data().is_some()));
             if name.starts_with("commit-") {
                 w.open_commit("HEAD");
                 poll(|| w.pending_commits() == 0 && !w.commit_views().is_empty());
-                poll(|| w.commit_views().iter().all(|v| v.is_ready()));
+                poll(|| w.commit_views().iter().all(|v| v.is_ready() && v.last_data().is_some()));
             }
         }
         "graph" => {

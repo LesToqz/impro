@@ -27,10 +27,13 @@ def main():
     def module(name):
         return importlib.import_module(package+'.'+name)
     import gi
+    if os.getenv('IMPRO_PARITY_GI_PATH'):
+        gi.__path__.append(os.environ['IMPRO_PARITY_GI_PATH'])
+    gi.require_foreign('cairo')
     gi.require_version('Gtk','3.0')
     gi.require_version('Gdk','3.0')
     gi.require_version('Vte','2.91')
-    from gi.repository import Gdk, Gio, GLib, Gtk
+    from gi.repository import Gdk, Gio, GLib, Gtk, Vte
     settings = module('settings')
     notes = module('notes')
     notes.NOTES_DIR = os.path.join('.impro','Notes')
@@ -48,7 +51,7 @@ def main():
     app.register(None)
     w = module('window').MainWindow(app, str(args.root), theme=theme)
     w.set_title('impro')
-    w.set_default_size(1200, 800)
+    w.set_default_size(1190, 750)
     w.show_all()
     context = GLib.MainContext.default()
     def poll(predicate, timeout=20):
@@ -67,7 +70,7 @@ def main():
             context.iteration(False)
     def open_file(name):
         w.editor.open_file(str(args.root/name))
-        poll(lambda: str(args.root/name) in w.editor.tabs)
+        poll(lambda: any(t.path == str(args.root/name) for t in w.editor.tabs))
     for name in ['main.py','README.md','data.json']:
         open_file(name)
     frame()
@@ -87,23 +90,23 @@ def main():
     elif scene in ('search-results','search-empty'):
         query = 'Example' if scene == 'search-results' else 'missing-value-xyz'
         w.explorer.focus_search(query)
-        w.explorer.search_panel.search_now()
+        w.explorer.search.search_now()
     elif scene == 'explorer-notes':
         w.explorer.show_notes_section(True)
     elif scene.startswith('editor-') and scene.split('-',1)[1] in ('python','json','rust','toml','markdown'):
         open_file(dict(python='main.py',json='data.json',rust='src/main.rs',toml='settings.toml',markdown='README.md')[scene[7:]])
     elif scene == 'editor-selection-find':
         open_file('main.py')
-        tab = w.editor.tabs[str(args.root/'main.py')]
+        tab = next(t for t in w.editor.tabs if t.path == str(args.root/'main.py'))
         tab.buffer.select_range(tab.buffer.get_iter_at_offset(10),tab.buffer.get_iter_at_offset(21))
         w.editor.search_bar.set_search_mode(True)
         w.editor.search_entry.grab_focus()
         w.editor.search_entry.set_text('greet')
     elif scene == 'editor-unsaved':
-        tab = w.editor.tabs[str(args.root/'data.json')]
+        tab = next(t for t in w.editor.tabs if t.path == str(args.root/'data.json'))
         tab.buffer.insert(tab.buffer.get_end_iter(),'\n')
     elif scene in ('tab-hover','tab-close'):
-        tab = w.editor.tabs[str(args.root/'main.py')]
+        tab = next(t for t in w.editor.tabs if t.path == str(args.root/'main.py'))
         tab.header_inner.get_style_context().add_class('hover')
         if scene == 'tab-close':
             tab.close.set_state_flags(Gtk.StateFlags.PRELIGHT,False)
@@ -133,11 +136,11 @@ def main():
     elif scene.startswith(('git-','commit-')):
         w._values['gitgraph_orientation'] = scene.split('-')[1]
         w.open_gitgraph()
-        poll(lambda: all(v._ready for v in w._gitgraph_views()))
+        poll(lambda: all(v._ready and v.last_data is not None for v in w._gitgraph_views()))
         if scene.startswith('commit-'):
             w.open_commit('HEAD')
             poll(lambda: not w._commit_pending and w._commit_views)
-            poll(lambda: all(v._ready for v in w._commit_views.values()))
+            poll(lambda: all(v._ready and v.last_data is not None for v in w._commit_views.values()))
     elif scene == 'graph':
         w.open_graph()
     else:
@@ -153,11 +156,11 @@ def main():
         if isinstance(widget, Gtk.Container):
             widget.forall(normalize)
     def finish():
-        poll(lambda: all(not t.highlighter.pending for t in w.editor.tabs.values()))
+        poll(lambda: all(not t.highlighter.pending for t in w.editor.tabs))
         for panel in (w.terminal_bottom,w.terminal_right):
             panel.set_cursor_blink(False)
             poll(lambda: all(p.terminal is None or p.pid for p in panel._panes))
-            poll(lambda: all(p.terminal is None or '$ ' in p.terminal.get_text()[0] for p in panel._panes))
+            poll(lambda: all(p.terminal is None or '$ ' in (p.terminal.get_text_format(Vte.Format.TEXT) or '') for p in panel._panes))
         if scene not in ('palette','palette-query','switcher') and not scene.startswith('settings-'):
             w.set_focus(None)
         normalize(w)
