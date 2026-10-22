@@ -708,7 +708,7 @@ impl Inner {
                 ..Default::default()
             },
         );
-        let chips = WrapBox::new(0, 0);
+        let chips = WrapBox::default();
         chips.set_margin_top(10);
         for name in &self.ignored_folders {
             chips.add(HotkeyChip::new(name).widget());

@@ -19,8 +19,11 @@
 //!   and the window control hide it; it is reused. `new(parent, theme_id, sizes)` and
 //!   `with_options(parent, DialogOptions)` (`ignored_folders`, `project_root`) build
 //!   only the chrome: the navigation pane and the visited page. Other pages are built
-//!   on first visit (and, after the first `present`, one per idle iteration; no timer);
-//!   the first search builds the rest. `present(page)` shows and focuses; page ids are
+//!   on first visit; after the first drawn frame one page per idle iteration is built and
+//!   style-warmed (an idle chain that ends, never a timer; `set_prebuild(false)` turns it
+//!   off) and the first search builds the rest. All pages live in one scrolled column of
+//!   per-page sections (`section(id)`, `content_scroll()`): switching pages and starting or
+//!   ending a search only toggle visibility. `present(page)` shows and focuses; page ids are
 //!   [`PAGES`]. `response()` hides (the former dialog API).
 //! - Signals as closures: `connect_theme_selected(Fn(&str))`,
 //!   `connect_font_size_changed(Fn(&str, i32))` for the three font-size keys (the owner

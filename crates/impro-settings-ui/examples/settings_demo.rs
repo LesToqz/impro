@@ -3,6 +3,7 @@
 //! ```sh
 //! cargo run -p impro-settings-ui --example settings_demo -- [PAGE] [--theme impro-dark]
 //! cargo run -p impro-settings-ui --example settings_demo -- --timing [--prebuild]
+//! (--height N [--width N] makes tall or narrow shots)
 //! xvfb-run -a cargo run --release -p impro-settings-ui --example settings_demo -- \
 //!     --theme impro-light --shots .ceo/shots --prefix rust-light-
 //! ```
@@ -97,6 +98,12 @@ fn main() {
     // Timing mode isolates each cost; the background page building is shown separately.
     let prebuild = args.iter().any(|a| a == "--prebuild");
     dialog.set_prebuild(prebuild || !timing);
+    if let Some(height) = value("--height").and_then(|h| h.parse::<i32>().ok()) {
+        let width = value("--width")
+            .and_then(|w| w.parse::<i32>().ok())
+            .unwrap_or(900);
+        dialog.set_default_size(width, height); // Tall shots show whole pages below the fold.
+    }
     let built = ms(started);
     let draws = Rc::new(Cell::new(0u32));
     let counter = draws.clone();
