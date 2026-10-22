@@ -167,6 +167,25 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    /// A filled disc without anti-aliasing: whole pixels whose centre lies
+    /// inside, blended once. Used while the scene moves.
+    pub fn disc_flat(&mut self, cx: f32, cy: f32, r: f32, rgb: [f32; 3], alpha: f32) {
+        if !(r > 0.0 && alpha > 0.0) || !cx.is_finite() || !cy.is_finite() {
+            return;
+        }
+        let src = [byte(rgb[0]), byte(rgb[1]), byte(rgb[2])];
+        let a = byte(alpha.min(1.0)) as u32;
+        let y0 = (cy - r - 0.5).ceil().max(0.0) as usize;
+        let y1 = ((cy + r - 0.5).ceil().max(0.0) as usize).min(self.h);
+        for y in y0..y1 {
+            let dy = y as f32 + 0.5 - cy;
+            let reach = (r * r - dy * dy).max(0.0).sqrt();
+            let x0 = (cx - reach - 0.5).ceil().max(0.0) as usize;
+            let x1 = ((cx + reach - 0.5).ceil().max(0.0) as usize).min(self.w);
+            self.span(y, x0, x1, src, a);
+        }
+    }
+
     /// An anti-aliased circle outline of the given line width.
     pub fn ring(&mut self, cx: f32, cy: f32, r: f32, width: f32, rgb: [f32; 3], alpha: f32) {
         if !(r > 0.0 && width > 0.0 && alpha > 0.0) {
@@ -188,6 +207,39 @@ impl<'a> Canvas<'a> {
                 if cov > 0.0 {
                     self.blend(x, y, src, (a * cov) as u32);
                 }
+            }
+        }
+    }
+
+    /// The same arrow head without anti-aliasing: pixels whose centre lies
+    /// inside the quad are blended once. Several times cheaper than
+    /// [`Canvas::dart`], used while the scene moves.
+    pub fn dart_flat(&mut self, pts: [(f32, f32); 4], rgb: [f32; 3], alpha: f32) {
+        let src = [byte(rgb[0]), byte(rgb[1]), byte(rgb[2])];
+        let a = byte(alpha.min(1.0)) as u32;
+        if a == 0 || pts.iter().any(|p| !p.0.is_finite() || !p.1.is_finite()) {
+            return;
+        }
+        let top = pts.iter().fold(f32::MAX, |m, p| m.min(p.1));
+        let bottom = pts.iter().fold(f32::MIN, |m, p| m.max(p.1));
+        let y0 = (top - 0.5).ceil().max(0.0) as usize;
+        let y1 = ((bottom - 0.5).ceil().max(0.0) as usize).min(self.h);
+        for y in y0..y1 {
+            let yc = y as f32 + 0.5;
+            let mut xs = [0f32; 4];
+            let mut n = 0;
+            for i in 0..4 {
+                let ((ax, ay), (bx, by)) = (pts[i], pts[(i + 1) & 3]);
+                if (ay <= yc) != (by <= yc) {
+                    xs[n] = ax + (yc - ay) / (by - ay) * (bx - ax);
+                    n += 1;
+                }
+            }
+            xs[..n].sort_unstable_by(|p, q| p.total_cmp(q));
+            for pair in xs[..n].chunks_exact(2) {
+                let x0 = (pair[0] - 0.5).ceil().max(0.0) as usize;
+                let x1 = ((pair[1] - 0.5).ceil().max(0.0) as usize).min(self.w);
+                self.span(y, x0, x1, src, a);
             }
         }
     }
@@ -286,9 +338,11 @@ pub struct MaskLines<'a> {
 }
 
 impl LineMask {
-    /// Prepares an empty mask for a `w × h` device-pixel canvas drawn with the
-    /// given device scale. Returns false if no surface can be created.
+    /// Prepares an empty mask (dropping what a kept one holds) for a `w × h`
+    /// device-pixel canvas drawn with the given device scale. Returns false if
+    /// no surface can be created.
     pub fn begin(&mut self, w: usize, h: usize, scale: f64) -> bool {
+        self.clear();
         if self.surface.is_none() || self.w != w || self.h != h {
             self.surface = cairo::ImageSurface::create(cairo::Format::A8, w as i32, h as i32).ok();
             self.w = w;
@@ -319,20 +373,47 @@ impl LineMask {
     /// Paints the accumulated coverage through `cr` in one colour and empties
     /// the mask. Release the [`MaskLines`] first.
     pub fn composite(&mut self, cr: &cairo::Context, rgb: [f32; 3], alpha: f32) {
+        self.paint(cr, rgb, alpha);
+        self.clear();
+    }
+
+    /// Paints the accumulated coverage through `cr` in one colour and keeps it,
+    /// so the same lines can be painted again in another colour.
+    pub fn paint(&self, cr: &cairo::Context, rgb: [f32; 3], alpha: f32) {
         let [x0, y0, x1, y1] = self.bbox;
         if x1 <= x0 || y1 <= y0 {
             return;
         }
-        let Some(surface) = self.surface.as_mut() else {
+        let Some(surface) = self.surface.as_ref() else {
             return;
         };
         cr.set_source_rgba(rgb[0] as f64, rgb[1] as f64, rgb[2] as f64, alpha as f64);
-        let _ = cr.mask_surface(&*surface, 0.0, 0.0);
-        let stride = surface.stride() as usize;
-        if let Ok(mut data) = surface.data() {
-            for y in y0..y1.min(self.h) {
-                let row = &mut data[y * stride + x0..y * stride + x1.min(self.w)];
-                row.fill(0);
+        // The mask is empty outside the touched region (one pixel of margin).
+        let (sx, sy) = surface.device_scale();
+        let _ = cr.save();
+        cr.rectangle(
+            (x0 as f64 - 1.0) / sx,
+            (y0 as f64 - 1.0) / sy,
+            ((x1 - x0) as f64 + 2.0) / sx,
+            ((y1 - y0) as f64 + 2.0) / sy,
+        );
+        cr.clip();
+        let _ = cr.mask_surface(surface, 0.0, 0.0);
+        let _ = cr.restore();
+    }
+
+    /// Empties the mask.
+    pub fn clear(&mut self) {
+        let [x0, y0, x1, y1] = self.bbox;
+        if x1 > x0 && y1 > y0 {
+            if let Some(surface) = self.surface.as_mut() {
+                let stride = surface.stride() as usize;
+                if let Ok(mut data) = surface.data() {
+                    for y in y0..y1.min(self.h) {
+                        let row = &mut data[y * stride + x0..y * stride + x1.min(self.w)];
+                        row.fill(0);
+                    }
+                }
             }
         }
         self.bbox = [self.w, self.h, 0, 0];
@@ -360,10 +441,69 @@ impl MaskLines<'_> {
         self.banded(segments, width, bands);
     }
 
+    /// Adds an arrow head (see [`Canvas::dart`]) as coverage.
+    pub fn dart(
+        &mut self,
+        tip: (f32, f32),
+        wing_a: (f32, f32),
+        notch: (f32, f32),
+        wing_b: (f32, f32),
+    ) {
+        let tris = [
+            Triangle::new(tip, wing_a, notch),
+            Triangle::new(tip, notch, wing_b),
+        ];
+        let (xs, ys) = (
+            [tip.0, wing_a.0, notch.0, wing_b.0],
+            [tip.1, wing_a.1, notch.1, wing_b.1],
+        );
+        let min = |v: &[f32; 4]| v.iter().copied().fold(f32::MAX, f32::min);
+        let max = |v: &[f32; 4]| v.iter().copied().fold(f32::MIN, f32::max);
+        let x0 = ((min(&xs) - 1.0).floor().max(0.0)) as usize;
+        let x1 = ((max(&xs) + 1.0).ceil().min(self.w as f32)).max(0.0) as usize;
+        let y0 = ((min(&ys) - 1.0).floor().max(0.0)) as usize;
+        let y1 = ((max(&ys) + 1.0).ceil().min(self.h as f32)).max(0.0) as usize;
+        if x1 <= x0 || y1 <= y0 {
+            return;
+        }
+        for y in y0..y1 {
+            for x in x0..x1 {
+                let (px, py) = (x as f32 + 0.5, y as f32 + 0.5);
+                let cov = (tris[0].coverage(px, py) + tris[1].coverage(px, py)).min(1.0);
+                if cov > 0.0 {
+                    let cell = &mut self.data[y * self.stride + x];
+                    *cell = (*cell).max((cov * 255.0 + 0.5) as u8);
+                }
+            }
+        }
+        self.bbox[0] = self.bbox[0].min(x0);
+        self.bbox[1] = self.bbox[1].min(y0);
+        self.bbox[2] = self.bbox[2].max(x1);
+        self.bbox[3] = self.bbox[3].max(y1);
+    }
+
+    /// Adds many segments of one width without anti-aliasing: each step along
+    /// the major axis stores `round(thickness)` whole pixels (dimmer for
+    /// hairlines). Several times cheaper than [`MaskLines::segments`]; used
+    /// while the scene moves. Banding and threading as in [`MaskLines::banded`],
+    /// but the result may differ by a pixel between thread counts.
+    pub fn flat_segments(&mut self, segments: &[[f32; 4]], width: f32, threads: usize) {
+        let bands = if segments.len() >= PARALLEL_MIN_SEGMENTS {
+            threads
+        } else {
+            1
+        };
+        self.run(segments, width, bands, true);
+    }
+
     /// Like [`MaskLines::segments`] with an explicit thread count: the canvas
     /// is cut into many thin bands, each segment goes to the bands it touches,
     /// and the threads take bands from a shared queue.
     pub fn banded(&mut self, segments: &[[f32; 4]], width: f32, threads: usize) {
+        self.run(segments, width, threads, false);
+    }
+
+    fn run(&mut self, segments: &[[f32; 4]], width: f32, threads: usize, flat: bool) {
         if segments.is_empty() || self.h == 0 {
             return;
         }
@@ -382,14 +522,14 @@ impl MaskLines<'_> {
         if threads == 1 {
             let mut band = Band::new(buf, stride, w, 0, h);
             for s in segments {
-                band.line(s[0], s[1], s[2], s[3], width);
+                band.draw(s, width, flat);
             }
             merge(band.bounds);
         } else {
             let bands = (threads * 4).min(h.div_ceil(8)).max(1);
             let rows = h.div_ceil(bands);
             let bands = h.div_ceil(rows);
-            let margin = width / 2.0 + 1.0;
+            let margin = if flat { width + 2.0 } else { width / 2.0 + 1.0 };
             for list in self.lists.iter_mut() {
                 list.clear();
             }
@@ -417,8 +557,7 @@ impl MaskLines<'_> {
                     let (y0, y1) = (k * rows, ((k + 1) * rows).min(h));
                     let mut band = Band::new(chunk, stride, w, y0, y1);
                     for &i in &lists[k] {
-                        let s = &segments[i as usize];
-                        band.line(s[0], s[1], s[2], s[3], width);
+                        band.draw(&segments[i as usize], width, flat);
                     }
                     touched.push(band.bounds);
                 }
@@ -461,6 +600,15 @@ impl<'b> Band<'b> {
             y0: y0 as i32,
             y1: y1 as i32,
             bounds: [w as i32, y1 as i32, 0, y0 as i32],
+        }
+    }
+
+    #[inline]
+    fn draw(&mut self, s: &[f32; 4], width: f32, flat: bool) {
+        if flat {
+            self.line_flat(s[0], s[1], s[2], s[3], width);
+        } else {
+            self.line(s[0], s[1], s[2], s[3], width);
         }
     }
 
@@ -524,11 +672,32 @@ impl<'b> Band<'b> {
             let step = (slope * 65536.0) as i32;
             let mut yc = ((y0 + ((xs as f32 + 0.5) - x0) * slope) * 65536.0) as i32;
             let (mut lo, mut hi) = (band_bottom, band_top);
+            // Up to two pixels thick: every column touches at most three
+            // rows, written without data-dependent branches.
+            let thin = hv <= ONE;
+            let stride = self.stride;
             for x in xs..xe {
                 let top = yc - hv;
                 let bot = yc + hv;
                 yc += step;
                 let r0 = top >> 16;
+                if thin && r0 >= band_top && r0 + 2 < band_bottom {
+                    let base = (r0 - band_top) as usize * stride + x as usize;
+                    let b1 = (r0 + 1) << 16;
+                    let covers = [
+                        bot.min(b1) - top,
+                        bot.min(b1 + ONE) - top.max(b1),
+                        bot.min(b1 + 2 * ONE) - top.max(b1 + ONE),
+                    ];
+                    for (k, cov) in covers.into_iter().enumerate() {
+                        let m = (cov.clamp(0, ONE) >> 8).min(255) as u8;
+                        let cell = &mut self.buf[base + k * stride];
+                        *cell = (*cell).max(m);
+                    }
+                    lo = lo.min(r0);
+                    hi = hi.max(r0 + 3);
+                    continue;
+                }
                 let r1 = bot >> 16;
                 if r0 < band_top || r1 >= band_bottom {
                     for r in r0.max(band_top)..=r1.min(band_bottom - 1) {
@@ -578,11 +747,30 @@ impl<'b> Band<'b> {
             let step = (slope * 65536.0) as i32;
             let mut xc = ((x0 + ((ys as f32 + 0.5) - y0) * slope) * 65536.0) as i32;
             let (mut lo, mut hi) = (w, 0);
+            let thin = hv <= ONE;
             for y in ys..ye {
                 let left = xc - hv;
                 let right = xc + hv;
                 xc += step;
                 let c0 = left >> 16;
+                if thin && c0 >= 0 && c0 + 2 < w {
+                    let base = (y - band_top) as usize * self.stride + c0 as usize;
+                    let b1 = (c0 + 1) << 16;
+                    let covers = [
+                        right.min(b1) - left,
+                        right.min(b1 + ONE) - left.max(b1),
+                        right.min(b1 + 2 * ONE) - left.max(b1 + ONE),
+                    ];
+                    if let Some(cells) = self.buf.get_mut(base..base + 3) {
+                        for (cell, cov) in cells.iter_mut().zip(covers) {
+                            let m = (cov.clamp(0, ONE) >> 8).min(255) as u8;
+                            *cell = (*cell).max(m);
+                        }
+                    }
+                    lo = lo.min(c0);
+                    hi = hi.max(c0 + 3);
+                    continue;
+                }
                 let c1 = right >> 16;
                 if c0 < 0 || c1 >= w {
                     for c in c0.max(0)..=c1.min(w - 1) {
@@ -615,6 +803,100 @@ impl<'b> Band<'b> {
                 }
             }
             self.grow(lo, ys, hi, ye);
+        }
+    }
+
+    /// One segment of [`MaskLines::flat_segments`], clipped to this band.
+    fn line_flat(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, width: f32) {
+        let (w, top, bottom) = (self.w, self.y0, self.y1);
+        let Some((x0, y0, x1, y1)) = clip(x0, y0, x1, y1, 0.0, top as f32, w as f32, bottom as f32)
+        else {
+            return;
+        };
+        let (dx, dy) = (x1 - x0, y1 - y0);
+        let len = (dx * dx + dy * dy).sqrt();
+        if len < 1e-3 {
+            return;
+        }
+        let stride = self.stride;
+        if dx.abs() >= dy.abs() {
+            let (x0, y0, x1, y1) = if x0 <= x1 {
+                (x0, y0, x1, y1)
+            } else {
+                (x1, y1, x0, y0)
+            };
+            let thickness = width * len / (x1 - x0);
+            let n = ((thickness + 0.5) as i32).max(1);
+            let value = ((thickness / n as f32).min(1.0) * 255.0) as u8;
+            let slope = (y1 - y0) / (x1 - x0);
+            let xs = ((x0 - 0.5).ceil().max(0.0) as i32).min(w);
+            let xe = ((x1 - 0.5).ceil().max(0.0) as i32).min(w);
+            if xe <= xs {
+                return;
+            }
+            let step = (slope * 65536.0) as i32;
+            let mut yc =
+                ((y0 + ((xs as f32 + 0.5) - x0) * slope) * 65536.0) as i32 + (1 - n) * 32768;
+            for x in xs..xe {
+                let r = yc >> 16;
+                yc += step;
+                if r >= top && r + n <= bottom {
+                    let mut i = (r - top) as usize * stride + x as usize;
+                    for _ in 0..n {
+                        self.buf[i] = value;
+                        i += stride;
+                    }
+                } else {
+                    for row in r.max(top)..(r + n).min(bottom) {
+                        self.buf[(row - top) as usize * stride + x as usize] = value;
+                    }
+                }
+            }
+            let reach = n + 1;
+            self.grow(
+                xs,
+                (y0.min(y1) as i32 - reach).max(top),
+                xe,
+                (y0.max(y1) as i32 + reach).min(bottom),
+            );
+        } else {
+            let (x0, y0, x1, y1) = if y0 <= y1 {
+                (x0, y0, x1, y1)
+            } else {
+                (x1, y1, x0, y0)
+            };
+            let thickness = width * len / (y1 - y0);
+            let n = ((thickness + 0.5) as i32).max(1);
+            let value = ((thickness / n as f32).min(1.0) * 255.0) as u8;
+            let slope = (x1 - x0) / (y1 - y0);
+            let ys = ((y0 - 0.5).ceil().max(top as f32) as i32).min(bottom);
+            let ye = ((y1 - 0.5).ceil().max(top as f32) as i32).min(bottom);
+            if ye <= ys {
+                return;
+            }
+            let step = (slope * 65536.0) as i32;
+            let mut xc =
+                ((x0 + ((ys as f32 + 0.5) - y0) * slope) * 65536.0) as i32 + (1 - n) * 32768;
+            for y in ys..ye {
+                let c = xc >> 16;
+                xc += step;
+                let base = (y - top) as usize * stride;
+                if c >= 0 && c + n <= w {
+                    let i = base + c as usize;
+                    self.buf[i..i + n as usize].fill(value);
+                } else {
+                    for col in c.max(0)..(c + n).min(w) {
+                        self.buf[base + col as usize] = value;
+                    }
+                }
+            }
+            let reach = n + 1;
+            self.grow(
+                (x0.min(x1) as i32 - reach).max(0),
+                ys,
+                (x0.max(x1) as i32 + reach).min(w),
+                ye,
+            );
         }
     }
 
@@ -989,5 +1271,104 @@ mod tests {
         // two triangles of 36 square pixels each
         let area = total(&px);
         assert!((area - 72.0).abs() < 8.0, "{area}");
+    }
+
+    /// Like [`stroke`] with [`MaskLines::flat_segments`].
+    fn stroke_flat(lines: &[[f32; 4]], width: f32, threads: usize) -> Vec<u8> {
+        let surface = cairo::ImageSurface::create(cairo::Format::ARgb32, W as i32, H as i32)
+            .expect("surface");
+        let cr = cairo::Context::new(&surface).expect("cr");
+        cr.set_source_rgb(0.0, 0.0, 0.0);
+        let _ = cr.paint();
+        let mut mask = LineMask::default();
+        assert!(mask.begin(W, H, 1.0));
+        {
+            let mut m = mask.lines().expect("pixels");
+            m.flat_segments(lines, width, threads);
+        }
+        mask.composite(&cr, [0.0, 1.0, 0.0], 1.0);
+        drop(cr);
+        let mut surface = surface;
+        let stride = surface.stride() as usize;
+        let data = surface.data().expect("data");
+        let mut out = vec![0u8; W * H * 4];
+        for y in 0..H {
+            out[y * W * 4..(y + 1) * W * 4].copy_from_slice(&data[y * stride..y * stride + W * 4]);
+        }
+        out
+    }
+
+    #[test]
+    fn flat_lines_carry_the_ink_of_anti_aliased_ones() {
+        for line in [
+            [4.0, 10.0, 58.0, 12.0],
+            [6.0, 5.0, 50.0, 44.0],
+            [30.0, 3.0, 33.0, 45.0],
+            [58.0, 40.0, 3.0, 8.0],
+        ] {
+            let flat = total(&stroke_flat(&[line], 1.0, 1));
+            let smooth = total(&stroke(&[(line[0], line[1], line[2], line[3], 1.0)], 1.0));
+            assert!(
+                (flat - smooth).abs() / smooth < 0.3,
+                "{line:?}: {flat} vs {smooth}"
+            );
+        }
+    }
+
+    #[test]
+    fn flat_lines_are_clipped_and_cover_only_whole_pixels() {
+        let px = stroke_flat(
+            &[[-500.0, 20.0, 900.0, 30.0], [20.0, -300.0, 25.0, 700.0]],
+            1.0,
+            1,
+        );
+        assert!(total(&px) > 100.0);
+        assert!(px.chunks_exact(4).all(|p| p[1] == 0 || p[1] == 255));
+        let empty = stroke_flat(&[[f32::NAN, 0.0, 5.0, 5.0], [3.0, 3.0, 3.0, 3.0]], 1.0, 1);
+        assert_eq!(total(&empty), 0.0);
+    }
+
+    #[test]
+    fn flat_bands_match_the_single_thread_result_closely() {
+        let lines: Vec<[f32; 4]> = (0..2000)
+            .map(|i| {
+                let t = i as f32;
+                [
+                    (t * 7.0) % 64.0,
+                    (t * 3.0) % 48.0,
+                    (t * 11.0) % 64.0,
+                    (t * 5.0) % 48.0,
+                ]
+            })
+            .collect();
+        let one = stroke_flat(&lines, 1.0, 1);
+        let four = stroke_flat(&lines, 1.0, 4);
+        let differing = one.iter().zip(&four).filter(|(a, b)| a != b).count();
+        assert!(differing * 100 < one.len(), "{differing} bytes differ");
+    }
+
+    #[test]
+    fn flat_disc_and_dart_match_their_smooth_areas() {
+        let smooth = total(&paint(|c| c.disc(32.0, 24.0, 8.0, [0.0, 1.0, 0.0], 1.0)));
+        let flat = total(&paint(|c| {
+            c.disc_flat(32.0, 24.0, 8.0, [0.0, 1.0, 0.0], 1.0)
+        }));
+        assert!((flat - smooth).abs() / smooth < 0.05, "{flat} vs {smooth}");
+        let (tip, a, notch, b) = ((40.0, 24.0), (28.0, 18.0), (31.0, 24.0), (28.0, 30.0));
+        let smooth = total(&paint(|c| c.dart(tip, a, notch, b, [0.0, 1.0, 0.0], 1.0)));
+        let flat = total(&paint(|c| {
+            c.dart_flat([tip, a, notch, b], [0.0, 1.0, 0.0], 1.0)
+        }));
+        assert!((flat - smooth).abs() / smooth < 0.15, "{flat} vs {smooth}");
+        // off-canvas and degenerate input is ignored
+        let none = paint(|c| {
+            c.disc_flat(-40.0, 5.0, 3.0, [1.0; 3], 1.0);
+            c.dart_flat(
+                [(f32::NAN, 0.0), (1.0, 1.0), (2.0, 2.0), (3.0, 3.0)],
+                [1.0; 3],
+                1.0,
+            );
+        });
+        assert_eq!(total(&none), 0.0);
     }
 }

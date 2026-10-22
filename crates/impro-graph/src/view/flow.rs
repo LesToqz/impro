@@ -904,6 +904,8 @@ impl Inner {
         if let (Ok(scene), Ok(mut painter)) =
             (self.scene.try_borrow(), self.painter.try_borrow_mut())
         {
+            // The frame after the last moving one is drawn at full quality.
+            painter.motion = scene.moving();
             painter.paint(
                 cr,
                 &scene,
