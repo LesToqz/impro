@@ -9,6 +9,7 @@ use std::{
     time::Instant,
 };
 pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
+    impro_ui::icons::init();
     // Read preferences before GTK starts dispatching UI events; no startup file IO in callbacks.
     let preferences = crate::preferences::load_values();
     timing("preferences", started);

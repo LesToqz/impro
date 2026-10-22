@@ -228,6 +228,16 @@ fn async_icon(name: &str) -> gtk::Image {
             }
         });
         let scale = image.scale_factor();
+        if let Some(surface) = impro_ui::icons::symbolic_surface(
+            &name,
+            16,
+            scale,
+            &image.style_context(),
+            image.state_flags(),
+        ) {
+            image.set_from_surface(Some(&surface));
+            return;
+        }
         let Some(info) =
             theme.lookup_icon_for_scale(&name, 16, scale, gtk::IconLookupFlags::empty())
         else {

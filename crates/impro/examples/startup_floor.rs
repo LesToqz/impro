@@ -4,6 +4,7 @@ use std::{cell::Cell, path::PathBuf, rc::Rc, time::Instant};
 
 fn main() -> glib::ExitCode {
     let started = Instant::now();
+    impro_ui::icons::init();
     // Each mode isolates one part of the first-show cost without changing the app.
     let mode = std::env::args().nth(1).unwrap_or_else(|| "empty".into());
     let styled = matches!(mode.as_str(), "style" | "chrome" | "glyphs" | "decorations");

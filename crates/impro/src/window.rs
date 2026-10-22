@@ -225,6 +225,8 @@ impl MainWindow {
         // Default shell chrome is immediate; custom shells are checked on a worker first.
         this.configure_shell(autostart);
         trace("terminal-pane");
+        impro_ui::icons::prepare_widget(&this.explorer);
+        trace("icons");
         this.window.set_title(identity::WINDOW_TITLE);
         this
     }
