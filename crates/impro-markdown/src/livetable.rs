@@ -849,41 +849,66 @@ impl TableView {
             .cloned()
     }
     pub fn built_rows(&self) -> usize {
-        self.0.cells.borrow().iter().filter(|r| r.is_some()).count()
+        let count = self.column_count();
+        self.0
+            .cells
+            .borrow()
+            .iter()
+            .filter(|r| r.as_ref().is_some_and(|r| r.len() == count))
+            .count()
     }
     pub fn max_slice_time(&self) -> Duration {
         self.0.max_slice.get()
     }
-    /// Build a slice of missing rows, stopping after one row or 3 ms. Returns
-    /// whether more rows remain. The host schedules subsequent slices as needed.
+    /// Build one missing cell per call. Returns whether more cells remain.
+    /// The host yields to the main loop between calls and prioritizes the
+    /// viewport through `fill_visible_slice`. There is no idle polling source.
     pub fn fill_slice(&self) -> bool {
+        self.fill_visible_slice(0..self.row_count())
+    }
+    /// Build one missing cell within a visible row range, then yield. Returns
+    /// whether that range still contains missing cells.
+    pub fn fill_visible_slice(&self, range: std::ops::Range<usize>) -> bool {
         let start = Instant::now();
-        let index = self.0.cells.borrow().iter().position(Option::is_none);
+        let count = self.column_count();
+        let range = range.start.min(self.row_count())..range.end.min(self.row_count());
+        let index = self.0.cells.borrow()[range.clone()]
+            .iter()
+            .position(|r| r.as_ref().map_or(0, Vec::len) < count)
+            .map(|i| i + range.start);
         if let Some(row) = index {
-            self.ensure_rows(row..row + 1);
+            self.fill_cell(row);
         }
         self.0
             .max_slice
             .set(self.0.max_slice.get().max(start.elapsed()));
-        self.built_rows() < self.row_count()
+        self.0.cells.borrow()[range]
+            .iter()
+            .any(|r| r.as_ref().map_or(0, Vec::len) < count)
     }
-    /// Materialize visible rows first. Call with a small viewport range; each row
-    /// is the atomic unit, so even an eight-column table yields between rows.
+    fn fill_cell(&self, row: usize) {
+        let column = self.0.cells.borrow()[row].as_ref().map_or(0, Vec::len);
+        if column >= self.column_count() {
+            return;
+        }
+        if column == 0 {
+            if let Some(spacer) = self.0.frame.child_at(0, row as i32) {
+                self.0.frame.remove(&spacer);
+            }
+        }
+        let cell = self.make_cell(row, column);
+        self.0.cells.borrow_mut()[row]
+            .get_or_insert_with(Vec::new)
+            .push(cell);
+    }
+    /// Materialize a small row range synchronously (for caret entry). Bulk
+    /// painting should use `fill_visible_slice` / `fill_slice` between yields.
     pub fn ensure_rows(&self, range: std::ops::Range<usize>) {
+        let count = self.column_count();
         for row in range.take_while(|&r| r < self.row_count()) {
-            if self.0.cells.borrow()[row].is_some() {
-                continue;
+            while self.0.cells.borrow()[row].as_ref().map_or(0, Vec::len) < count {
+                self.fill_cell(row);
             }
-            let children = self.0.frame.children();
-            for child in children {
-                if self.0.frame.child_property::<i32>(&child, "top-attach") == row as i32 {
-                    self.0.frame.remove(&child);
-                }
-            }
-            let cells = (0..self.column_count())
-                .map(|column| self.make_cell(row, column))
-                .collect::<Vec<_>>();
-            self.0.cells.borrow_mut()[row] = Some(cells);
         }
     }
     fn make_cell(&self, row: usize, column: usize) -> Cell {
@@ -1242,6 +1267,11 @@ impl TableView {
             self.column_count() - 1
         };
         self.act(axis, "after", index);
+        if axis == "row" {
+            self.focus_cell(index + 1, 0, Some(0), None);
+        } else {
+            self.focus_cell(0, index + 1, Some(0), None);
+        }
     }
     /// Apply a row/column menu action in one GTK user action. Existing grid and
     /// editor objects survive; only inserted/removed cells change ownership.
@@ -1962,7 +1992,9 @@ pub fn minimal_edit(old: &str, new: &str) -> Edit {
 /// Table CSS registered with the shared theme registry.
 pub fn css(ui: &UiColors) -> String {
     let mut ui = ui.clone();
-    ui.insert("table_bg".into(), ui["editor_bg"].clone());
+    ui.insert("surface".into(), ui["sidebar_bg"].clone());
+    ui.insert("foreground".into(), ui["editor_fg"].clone());
+    ui.insert("table_bg".into(), ui["bg"].clone());
     ui.insert("table_size".into(), "11".into());
     ui.insert("table_add_size".into(), "10".into());
     ui.insert("table_font".into(), "Sans".into());
@@ -1971,6 +2003,7 @@ pub fn css(ui: &UiColors) -> String {
 /// Host style override matching its body font, editor colour and point size.
 pub fn styled_css(ui: &UiColors, bg: &str, size: i32, font: &str) -> String {
     let mut ui = ui.clone();
+    ui.insert("surface".into(), ui["sidebar_bg"].clone());
     ui.insert("table_bg".into(), bg.into());
     ui.insert("table_size".into(), size.to_string());
     ui.insert("table_add_size".into(), 8.max(size - 1).to_string());
