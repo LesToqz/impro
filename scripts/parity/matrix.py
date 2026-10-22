@@ -100,6 +100,8 @@ def main():
     values = dict(reduce_motion=True, terminal_blink=False, terminal_shell=str(shell),
                   ui_font='DejaVu Sans', editor_font='DejaVu Sans Mono', md_live_preview=False,
                   gitgraph_time_format='absolute')
+    if args.smoke:
+        values.update(ui_font='', editor_font='')
     (config/'impro').mkdir(parents=True, exist_ok=True)
     (config/'impro/settings.json').write_text(json.dumps(values))
     env = dict(os.environ, XDG_CONFIG_HOME=str(config), GDK_SCALE=args.scale,

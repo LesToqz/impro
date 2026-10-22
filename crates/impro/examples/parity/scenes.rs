@@ -204,7 +204,11 @@ pub fn run() {
         }
         "graph" => {
             let graph = w.open_graph().unwrap();
-            poll(|| graph.summary().files_indexed > 0 && graph.widget().allocated_width() > 1 && graph.panel().root.allocated_width() > 1);
+            poll(|| {
+                graph.summary().files_indexed > 0
+                    && graph.widget().allocated_width() > 1
+                    && graph.panel().root.allocated_width() > 1
+            });
             let summary = graph.summary();
             let ui = impro_ui::current_theme().unwrap().ui.clone();
             let palette = impro_graph::view::palette::Palette::from_theme(
