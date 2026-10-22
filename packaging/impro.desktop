@@ -6,3 +6,4 @@ Icon=impro
 Terminal=false
 Type=Application
 Categories=Development;IDE;TextEditor;
+StartupWMClass=dev.impro.impro
