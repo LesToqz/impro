@@ -34,6 +34,7 @@ impl Inner {
         if self.blocks.borrow().items[index].links.is_empty() {
             return None;
         }
+        self.hits.set(self.hits.get() + 1);
         let iter = self.view.iter_at_location(bx, by)?;
         let blocks = self.blocks.borrow();
         let relative = iter.offset() - blocks.spans[index].0;

@@ -132,22 +132,20 @@ impl Inner {
         button.set_tooltip_text(Some("Copied!"));
         let weak_button = button.downgrade();
         let weak = self.weak.clone();
-        let key = std::rc::Rc::new(std::cell::Cell::new(None::<glib::SourceId>));
-        let slot = key.clone();
+        let slot = std::rc::Rc::new(std::cell::Cell::new(0u32));
+        let mine = slot.clone();
         let id = glib::timeout_add_local_once(std::time::Duration::from_millis(1200), move || {
             if let Some(button) = weak_button.upgrade() {
                 button.set_label("Copy");
                 button.set_tooltip_text(Some("Copy code"));
             }
-            let _ = slot.take();
+            // The source is gone once it has run: forget it so clear() never removes it.
             if let Some(s) = weak.upgrade() {
-                s.feedback.borrow_mut().retain(|_| true);
+                s.feedback.borrow_mut().retain(|i| i.as_raw() != mine.get());
             }
         });
-        // Keep the source so destroy() can cancel it; completed ones are pruned.
-        let mut feedback = self.feedback.borrow_mut();
-        feedback.retain(|source| glib::MainContext::default().find_source_by_id(source).is_some());
-        feedback.push(id);
+        slot.set(id.as_raw());
+        self.feedback.borrow_mut().push(id);
     }
 
     pub(super) fn choose_language(&self, anchor: &gtk::Widget, id: u64) -> bool {

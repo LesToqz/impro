@@ -336,8 +336,11 @@ impl Inner {
                 table.remove(&tag);
             }
         }
+        let toolbar = self.toolbar.borrow_mut().take();
+        if let Some(toolbar) = toolbar {
+            toolbar.destroy();
+        }
         super::unregister(&self.view);
-        crate::seltoolbar::forget(&self.view);
     }
 
     pub(super) fn bump(&self) {

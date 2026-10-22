@@ -300,6 +300,8 @@ pub(crate) struct StyleState {
 }
 type Idle = Option<(glib::SourceId, i32)>;
 
+pub(crate) type LiveInner = Inner;
+
 pub(crate) struct Inner {
     pub id: u64,
     pub view: gtk::TextView,
@@ -317,6 +319,7 @@ pub(crate) struct Inner {
     pub silent: Cell<u32>,
     pub pointer: Cell<bool>,
     pub hot: Cell<i32>,
+    pub hits: Cell<usize>,
     pub next_id: Cell<u64>,
     pub unpainted: Cell<usize>,
     pub max_slice: Cell<Duration>,
@@ -329,6 +332,7 @@ pub(crate) struct Inner {
     pub caret_idle: RefCell<Option<glib::SourceId>>,
     pub layout_idle: RefCell<Option<glib::SourceId>>,
     pub fill_idle: RefCell<Option<glib::SourceId>>,
+    pub toolbar: RefCell<Option<crate::seltoolbar::SelectionToolbar>>,
     pub active: RefCell<BTreeSet<u64>>,
     pub last_caret: Cell<Option<i32>>,
     pub tags: RefCell<HashMap<String, gtk::TextTag>>,
@@ -369,6 +373,16 @@ pub fn for_view(view: &gtk::TextView) -> Option<LiveMarkdown> {
             .find(|(v, _)| v.upgrade().as_ref() == Some(view))
             .and_then(|(_, w)| w.upgrade())
             .map(LiveMarkdown)
+    })
+}
+/// Views that currently have a live renderer.
+pub(crate) fn registered_views() -> Vec<gtk::TextView> {
+    REGISTRY.with(|r| {
+        r.borrow()
+            .iter()
+            .filter(|(_, w)| w.upgrade().is_some())
+            .filter_map(|(v, _)| v.upgrade())
+            .collect()
     })
 }
 pub(crate) fn unregister(view: &gtk::TextView) {
@@ -415,6 +429,7 @@ impl LiveMarkdown {
             silent: Cell::new(0),
             pointer: Cell::new(false),
             hot: Cell::new(0),
+            hits: Cell::new(0),
             next_id: Cell::new(1),
             unpainted: Cell::new(0),
             max_slice: Cell::new(Duration::ZERO),
@@ -427,6 +442,7 @@ impl LiveMarkdown {
             caret_idle: RefCell::new(None),
             layout_idle: RefCell::new(None),
             fill_idle: RefCell::new(None),
+            toolbar: RefCell::new(None),
             active: RefCell::new(BTreeSet::new()),
             last_caret: Cell::new(None),
             tags: RefCell::new(HashMap::new()),
@@ -463,6 +479,26 @@ impl LiveMarkdown {
             r.push((view.downgrade(), Rc::downgrade(&inner)));
         });
         Self(inner)
+    }
+    pub(crate) fn from_inner(inner: Rc<Inner>) -> Option<Self> {
+        (!inner.destroyed.get()).then_some(Self(inner))
+    }
+    pub(crate) fn downgrade(&self) -> Weak<Inner> {
+        Rc::downgrade(&self.0)
+    }
+    pub fn view(&self) -> gtk::TextView {
+        self.0.view.clone()
+    }
+    /// The document path the renderer resolves links against.
+    pub fn path(&self) -> Option<PathBuf> {
+        (self.0.source_path)()
+    }
+    /// The selection toolbar this renderer currently owns.
+    pub fn toolbar(&self) -> Option<crate::seltoolbar::SelectionToolbar> {
+        self.0.toolbar.borrow().clone()
+    }
+    pub(crate) fn set_toolbar(&self, toolbar: Option<crate::seltoolbar::SelectionToolbar>) {
+        self.0.toolbar.replace(toolbar);
     }
     /// Replace how web links open (default: the desktop's URI handler).
     pub fn set_uri_opener(&self, opener: Option<Rc<dyn Fn(&str)>>) {
@@ -553,6 +589,10 @@ impl LiveMarkdown {
                     .collect(),
             })
             .collect()
+    }
+    /// How many times the renderer asked GTK to hit-test a layout (pointer, links).
+    pub fn hit_tests(&self) -> usize {
+        self.0.hits.get()
     }
     pub fn block_count(&self) -> usize {
         self.0.blocks.borrow().len()
