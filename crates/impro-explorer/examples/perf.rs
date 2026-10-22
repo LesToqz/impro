@@ -74,6 +74,17 @@ struct Probe {
     samples: Vec<f64>,
     rows: Rc<Cell<usize>>,
     row_samples: Vec<f64>,
+    /// On-CPU time of the same iterations: wall time minus whatever the VM or other
+    /// processes took away, so a preempted slice is not mistaken for slow work.
+    cpu_samples: Vec<f64>,
+}
+
+/// Nanoseconds this thread has spent on a CPU (`/proc/thread-self/schedstat`).
+fn thread_cpu_ns() -> u64 {
+    std::fs::read_to_string("/proc/thread-self/schedstat")
+        .ok()
+        .and_then(|s| s.split_whitespace().next().and_then(|v| v.parse().ok()))
+        .unwrap_or(0)
 }
 
 /// Run the main loop until `done`, recording how long each dispatching iteration blocked.
@@ -85,6 +96,7 @@ fn run_until(probe: &mut Probe, timeout: Duration, mut done: impl FnMut() -> boo
             return true;
         }
         let started = Instant::now();
+        let cpu_started = thread_cpu_ns();
         // Non-blocking: waiting for events is idle time, not main-thread work.
         probe.rows.set(0);
         MARKS.with(|m| m.borrow_mut().clear());
@@ -118,6 +130,9 @@ fn run_until(probe: &mut Probe, timeout: Duration, mut done: impl FnMut() -> boo
             probe.iterations += 1;
             probe.busy += spent;
             probe.samples.push(spent.as_secs_f64() * 1000.);
+            probe
+                .cpu_samples
+                .push(thread_cpu_ns().saturating_sub(cpu_started) as f64 / 1e6);
             if probe.rows.get() > 0 {
                 probe.row_samples.push(spent.as_secs_f64() * 1000.);
             }
@@ -147,6 +162,16 @@ fn print_percentiles(probe: &Probe) {
             rows[(rows.len() - 1) / 2],
             rows[(rows.len() - 1) * 95 / 100],
             rows[rows.len() - 1]
+        );
+    }
+    let mut cpu = probe.cpu_samples.clone();
+    cpu.sort_by(f64::total_cmp);
+    if !cpu.is_empty() {
+        println!(
+            "cpu-dispatch-p50-ms={:.3} cpu-dispatch-p95-ms={:.3} cpu-dispatch-max-ms={:.3}",
+            cpu[(cpu.len() - 1) / 2],
+            cpu[(cpu.len() - 1) * 95 / 100],
+            cpu[cpu.len() - 1]
         );
     }
     if !samples.is_empty() {
@@ -367,6 +392,9 @@ fn search_path(root: &Path, query: &str, regex: bool) {
     search
         .store()
         .connect_row_inserted(move |_, _, _| inserted.set(inserted.get() + 1));
+    if std::env::var_os("PERF_PHASES").is_some() {
+        eprintln!("search-start");
+    }
     search.search_now(Some(query));
     let finished = run_until(&mut probe, Duration::from_secs(120), || {
         !search.is_searching() && !search.timeout_pending()
