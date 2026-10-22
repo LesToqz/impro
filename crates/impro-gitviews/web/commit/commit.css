@@ -107,3 +107,6 @@ html.reduce-motion *, html.reduce-motion *::after { animation: none !important; 
 @keyframes arrive { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @keyframes context-in { from { opacity: 0; transform: translateY(-4px); clip-path: inset(0 0 100% 0); } to { opacity: 1; transform: none; clip-path: inset(0); } }
 @keyframes shimmer { to { transform: translateX(100%); } }
+
+/* Hidden host tabs suspend loading shimmer and transitions. */
+.paused *, .paused *::before, .paused *::after { animation-play-state: paused !important; transition: none !important; }

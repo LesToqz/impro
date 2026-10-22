@@ -3,7 +3,7 @@
   const C = window.CommitCore, app = document.getElementById('app');
   const root = document.documentElement;
   let detail = null, models = [], pending = new Map(), split = false, reduceMotion = false;
-  let observer = null, copyTimer = null, focusedFile = -1;
+  let observer = null, copyTimer = null, focusedFile = -1, paused = false;
   const theme = {syntax: {}};
   const defaults = {
     bg: '#202127', fg: '#dcdde4', muted: '#989ba9', surface: '#25262e', surface2: '#2c2d37',
@@ -140,7 +140,7 @@
     m.head.setAttribute('aria-expanded', String(!collapse));
     m.clip.inert = collapse;
     if (!collapse && immediate) renderBody(m);
-    if (!collapse && !m.rendered) observer && observer.observe(m.section);
+    if (!paused && !collapse && !m.rendered) observer && observer.observe(m.section);
     updateCollapseButton();
   }
   function fileSection(file, index, collapsed) {
@@ -329,15 +329,15 @@
     const collapsed = list.length > 40 || lineCount > 4000;
     if ('IntersectionObserver' in window) observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) { const m = models.find(model => model.section === entry.target); if (m && !m.collapsed) renderBody(m); }
+        if (!paused && entry.isIntersecting) { const m = models.find(model => model.section === entry.target); if (m && !m.collapsed) renderBody(m); }
       });
     }, {rootMargin: '500px 0px'});
     const fragment = document.createDocumentFragment();
     list.forEach((file, i) => { const m = fileSection(file, i, collapsed); models.push(m); fragment.append(m.section); });
     files.append(fragment);
-    models.forEach(m => { if (observer) observer.observe(m.section); else if (!m.collapsed) renderBody(m); });
+    models.forEach(m => { if (!paused && observer) observer.observe(m.section); else if (!paused && !m.collapsed) renderBody(m); });
     // Ensure meaningful first paint before the asynchronous visibility callback.
-    if (models.length && !collapsed) renderBody(models[0]);
+    if (!paused && models.length && !collapsed) renderBody(models[0]);
     if (!list.length) files.append(el('div', 'empty-files', 'This commit has no file changes.'));
     updateCollapseButton();
   }
@@ -438,6 +438,20 @@
       e.preventDefault();
     }
   });
-  window.ImproCommit = {setCommit, setState, setTheme, provideContext, setSettings};
+  function pause() {
+    paused = true; root.classList.add('paused');
+    if (observer) observer.disconnect();
+    clearTimeout(copyTimer);
+    const b = document.getElementById('copy-sha');
+    if (b && b.classList.contains('copied')) {
+      b.replaceChildren(icon('copy'), el('span', '', 'Commit SHA')); b.classList.remove('copied');
+    }
+  }
+  function resume() {
+    if (!paused) return;
+    paused = false; root.classList.remove('paused');
+    models.forEach(m => { if (!m.collapsed && !m.rendered) { if (observer) observer.observe(m.section); else renderBody(m); } });
+  }
+  window.ImproCommit = {setCommit, setState, setTheme, provideContext, setSettings, pause, resume};
   setTheme(); setState('loading'); post({type: 'ready'});
 })();
