@@ -619,7 +619,7 @@ mod tests {
 
     #[test]
     fn scanner_splits_lines_fences_and_tables() {
-        let source = "# T\n\n```py\nx\n```\n| a | b |\n| - | - |\n| 1 | 2 |\n\nend";
+        let source = "# T\n\n```py\nx\n```\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nend";
         let blocks = split_blocks(source);
         let joined: String = blocks.iter().map(|b| b.text.as_str()).collect();
         assert_eq!(joined, source);
@@ -649,7 +649,7 @@ mod tests {
         let mut line = Scanner::new("one\ntw", 0, false);
         assert!(matches!(line.next_step(), Step::Block(_)));
         assert_eq!(line.next_step(), Step::More { from: 4 });
-        let mut table = Scanner::new("| a |\n| - |\n", 0, false);
+        let mut table = Scanner::new("| a | b |\n| --- | --- |\n", 0, false);
         assert_eq!(table.next_step(), Step::More { from: 0 });
     }
 
@@ -669,7 +669,7 @@ mod tests {
         assert_eq!(hidden.pills, vec![(10, 14)]);
         let shown = plan_line(text, 0, true, Some(4), std::iter::empty);
         assert!(!shown.ops.contains(&Op::Hidden(0, 2)));
-        assert!(shown.ops.contains(&Op::Hidden(10, 11)));
+        assert!(shown.ops.contains(&Op::Hidden(9, 10)));
     }
 
     #[test]

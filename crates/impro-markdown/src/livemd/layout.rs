@@ -121,6 +121,12 @@ impl Inner {
     }
 
     fn caret_pass(&self) {
+        let started = std::time::Instant::now();
+        self.caret_pass_inner();
+        self.slow("caret", started);
+    }
+
+    fn caret_pass_inner(&self) {
         if self.idle.borrow().is_some() || self.blocks.borrow().len() == 0 || !self.enabled.get() {
             return;
         }
@@ -261,6 +267,12 @@ impl Inner {
     }
 
     fn layout(&self) {
+        let started = std::time::Instant::now();
+        self.layout_inner();
+        self.slow("layout", started);
+    }
+
+    fn layout_inner(&self) {
         if !self.enabled.get() {
             return;
         }
@@ -346,10 +358,17 @@ impl Inner {
                     todo.push((index, true));
                 }
             }
-            let released = |i: usize| i < far_lo || i > far_hi;
-            for (index, deco) in blocks.items.iter().enumerate() {
-                if released(index) && !deco.widgets.is_empty() {
-                    todo.push((index, false));
+            // Widgets far from the viewport are released, but only rescan the whole
+            // list when the viewport moved far since the last scan.
+            let moved = first.abs_diff(self.last_scan.get()) > BAND / 2;
+            if moved || self.band.get().0 == usize::MAX {
+                self.last_scan.set(first);
+                self.band.set((0, 0));
+                let released = |i: usize| i < far_lo || i > far_hi;
+                for (index, deco) in blocks.items.iter().enumerate() {
+                    if released(index) && !deco.widgets.is_empty() {
+                        todo.push((index, false));
+                    }
                 }
             }
             todo
@@ -365,6 +384,12 @@ impl Inner {
 
     /// Per-frame placement of the realized widgets and details.
     pub(super) fn position(&self) {
+        let started = std::time::Instant::now();
+        self.position_inner();
+        self.slow("position", started);
+    }
+
+    fn position_inner(&self) {
         if !self.enabled.get() || !self.view.is_realized() {
             return;
         }

@@ -320,6 +320,8 @@ pub(crate) struct Inner {
     pub pointer: Cell<bool>,
     pub hot: Cell<i32>,
     pub hits: Cell<usize>,
+    pub spent: Cell<Duration>,
+    pub painted_burst: Cell<usize>,
     pub next_id: Cell<u64>,
     pub unpainted: Cell<usize>,
     pub max_slice: Cell<Duration>,
@@ -430,6 +432,8 @@ impl LiveMarkdown {
             pointer: Cell::new(false),
             hot: Cell::new(0),
             hits: Cell::new(0),
+            spent: Cell::new(Duration::ZERO),
+            painted_burst: Cell::new(0),
             next_id: Cell::new(1),
             unpainted: Cell::new(0),
             max_slice: Cell::new(Duration::ZERO),
@@ -597,6 +601,17 @@ impl LiveMarkdown {
     /// How many times the renderer asked GTK to hit-test a layout (pointer, links).
     pub fn hit_tests(&self) -> usize {
         self.0.hits.get()
+    }
+    /// True while every block showing in the viewport is painted (diagnostics).
+    pub fn viewport_painted(&self) -> bool {
+        match self.0.visible_blocks() {
+            Some((first, last)) => {
+                let blocks = self.0.blocks.borrow();
+                (first..=last.min(blocks.len().saturating_sub(1)))
+                    .all(|i| blocks.items.get(i).is_none_or(|b| b.painted))
+            }
+            None => false,
+        }
     }
     pub fn block_count(&self) -> usize {
         self.0.blocks.borrow().len()

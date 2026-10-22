@@ -11,6 +11,8 @@ use std::time::Instant;
 /// redraw (120) but below input events.
 pub(super) const INTERACTIVE: i32 = 110;
 const BACKGROUND: i32 = 200;
+/// Longest total time interactive-priority work may hold off the redraw.
+const INTERACTIVE_BUDGET: std::time::Duration = std::time::Duration::from_millis(30);
 pub(super) const BACKGROUND_PRIORITY: i32 = BACKGROUND;
 const CHUNK: i32 = 32 * 1024;
 
@@ -343,6 +345,15 @@ impl Inner {
         super::unregister(&self.view);
     }
 
+    /// Report a callback that held the main loop longer than 3 ms (`IMPRO_LIVEMD_TRACE`).
+    pub(super) fn slow(&self, label: &str, started: Instant) {
+        static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+        let on = *ON.get_or_init(|| std::env::var_os("IMPRO_LIVEMD_TRACE").is_some());
+        if on && started.elapsed() > std::time::Duration::from_millis(3) {
+            eprintln!("livemd slow {label}: {:?}", started.elapsed());
+        }
+    }
+
     pub(super) fn bump(&self) {
         self.epoch.set(self.epoch.get() + 1);
         self.aim.borrow_mut().valid = false;
@@ -443,13 +454,7 @@ impl Inner {
         }
         self.work.replace(None);
         self.bump();
-        let (start, end) = self.dirty.get().unwrap_or((0, 0));
-        let priority = if end - start <= 2048 && self.blocks.borrow().len() > 0 {
-            INTERACTIVE
-        } else {
-            BACKGROUND
-        };
-        self.schedule(priority);
+        self.schedule(INTERACTIVE);
     }
 
     // -- scheduling -----------------------------------------------------------
@@ -465,6 +470,8 @@ impl Inner {
         if let Some((id, _)) = old {
             id.remove();
         }
+        self.spent.set(std::time::Duration::ZERO);
+        self.painted_burst.set(0);
         let weak = self.weak.clone();
         let id = glib::idle_add_local_full(glib::Priority::from(priority), move || match weak
             .upgrade()
@@ -480,20 +487,31 @@ impl Inner {
     fn step(&self) -> glib::ControlFlow {
         let started = Instant::now();
         let mut done = false;
+        let mut demote = false;
         if !self.enabled.get() {
             self.idle.borrow_mut().take();
             return glib::ControlFlow::Break;
         }
+        let interactive = self.idle.borrow().as_ref().is_some_and(|(_, p)| *p < BACKGROUND);
+        let mut viewport: Option<Option<(usize, usize)>> = None;
         loop {
             if started.elapsed() >= SLICE {
                 break;
             }
             if self.work.borrow().is_some() || self.dirty.get().is_some() {
+                viewport = None;
                 self.rebuild_unit();
                 continue;
             }
             match self.next_unpainted() {
-                Some(index) => self.paint(index),
+                Some(index) => {
+                    if interactive && !self.near_viewport(index, &mut viewport) {
+                        // The screen is done; the rest of the document paints behind the redraw.
+                        demote = true;
+                        break;
+                    }
+                    self.paint(index);
+                }
                 None => {
                     done = true;
                     break;
@@ -501,19 +519,33 @@ impl Inner {
             }
         }
         self.note_slice(started);
+        self.slow("step", started);
         if done {
             self.idle.borrow_mut().take();
             self.queue_caret();
             self.queue_layout();
             return glib::ControlFlow::Break;
         }
-        let priority = self.idle.borrow().as_ref().map_or(BACKGROUND, |(_, p)| *p);
-        if priority < BACKGROUND {
+        if interactive {
+            let spent = self.spent.get() + started.elapsed();
+            self.spent.set(spent);
+            if !demote && spent < INTERACTIVE_BUDGET {
+                return glib::ControlFlow::Continue;
+            }
             self.idle.borrow_mut().take();
             self.schedule(BACKGROUND);
+            self.queue_layout();
             return glib::ControlFlow::Break;
         }
         glib::ControlFlow::Continue
+    }
+
+    /// Whether block `index` is showing (or about to show) in the viewport.
+    fn near_viewport(&self, index: usize, cache: &mut Option<Option<(usize, usize)>>) -> bool {
+        match *cache.get_or_insert_with(|| self.visible_blocks()) {
+            Some((first, last)) => index + 6 >= first && index <= last + 6,
+            None => self.painted_burst.replace(self.painted_burst.get() + 1) < 120,
+        }
     }
 
     // -- rebuild --------------------------------------------------------------

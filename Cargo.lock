@@ -634,6 +634,7 @@ dependencies = [
  "impro-core",
  "impro-editor",
  "impro-ui",
+ "libc",
  "pango",
  "regex",
  "serde_json",
