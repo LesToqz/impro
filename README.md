@@ -6,8 +6,11 @@ terminal docks, a native project graph, read-only Git history, palettes and sett
 
 ## Install and run
 
-Build requirements: Rust **1.80 or newer**, a C toolchain, pkg-config and the
-GTK3, VTE and WebKit2GTK development libraries. On Debian/Ubuntu:
+Build requirements: the workspace declares Rust **1.80 or newer**, but the current
+lockfile selects dependencies (`plist` and `time`) that require **Rust 1.88 or
+newer**. Use a current stable toolchain for this checkout. A C toolchain,
+pkg-config and GTK3, VTE and WebKit2GTK development libraries are also required.
+On Debian/Ubuntu:
 
 ```sh
 sudo apt install build-essential pkg-config libgtk-3-dev libvte-2.91-dev libwebkit2gtk-4.1-dev
