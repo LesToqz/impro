@@ -56,6 +56,7 @@ pub fn run() {
     app.register(None::<&gio::Cancellable>).unwrap();
     let w = impro::MainWindow::with_values(&app, &root, values);
     w.window.set_default_size(1190, 750);
+    let mut graph_view = None;
     w.show();
     for name in ["main.py", "README.md", "data.json"] {
         w.editor.open_file(root.join(name));
@@ -204,6 +205,7 @@ pub fn run() {
         }
         "graph" => {
             let graph = w.open_graph().unwrap();
+            graph_view = Some(graph.clone());
             poll(|| {
                 graph.summary().files_indexed > 0
                     && graph.widget().allocated_width() > 1
@@ -283,6 +285,17 @@ pub fn run() {
         let pixels = capture(&target, &output);
         stable = if pixels == previous { stable + 1 } else { 0 };
         previous = pixels;
+    }
+    if let Some(graph) = graph_view {
+        // Geometry is read once the dock allocation has completed.
+        let path = output.with_extension("json");
+        let mut structure: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        structure["panel_size"] = serde_json::json!([
+            graph.widget().allocated_width(),
+            graph.widget().allocated_height()
+        ]);
+        std::fs::write(path, serde_json::to_vec_pretty(&structure).unwrap()).unwrap();
     }
     println!("settled {scene}");
     w.shutdown();

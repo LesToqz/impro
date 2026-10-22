@@ -228,6 +228,10 @@ def main():
             stable = stable+1 if pixels == previous else 0
             previous = pixels
         pixbuf.savev(str(args.output),'png',[],[])
+        if scene == 'graph':
+            # Geometry is read once the dock allocation has completed.
+            structure['panel_size'] = [graph.get_allocated_width(),graph.get_allocated_height()]
+            args.output.with_suffix('.json').write_text(json.dumps(structure,indent=2))
         print('settled '+scene)
     if scene == 'explorer-rename':
         # The source dialog runs a nested GLib loop; capture from that loop.
