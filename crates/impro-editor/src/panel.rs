@@ -115,6 +115,7 @@ mod imp {
         pub announced: RefCell<Option<PathBuf>>,
         pub dirty: Cell<bool>,
         pub closed: Cell<bool>,
+        pub(super) tabs_relayout: Cell<bool>,
         pub assembling: Cell<bool>,
         pub root_revision: Cell<u64>,
         pub dialog: RefCell<Option<DialogHook>>,
@@ -721,16 +722,33 @@ impl EditorPanel {
     }
     fn size_tabs(&self) {
         let n = self.notebook();
-        let width = ((self.allocated_width() - 16) / n.n_pages().max(1) as i32).clamp(120, 200) - 8;
-        for tab in self.tabs() {
-            if tab.header.widget.width_request() != width {
-                tab.header.widget.set_size_request(width, 32);
+        let width = ((n.allocated_width() - 16) / n.n_pages().max(1) as i32).clamp(120, 200) - 8;
+        let mut changed = false;
+        let headers = self
+            .tabs()
+            .into_iter()
+            .map(|t| t.header.widget.clone())
+            .chain(
+                self.view_tabs()
+                    .into_iter()
+                    .map(|t| t.header.widget.clone()),
+            );
+        for header in headers {
+            if header.width_request() != width {
+                header.set_size_request(width, 32);
+                changed = true;
             }
         }
-        for tab in self.view_tabs() {
-            if tab.header.widget.width_request() != width {
-                tab.header.widget.set_size_request(width, 32);
-            }
+        // A resize request made inside the notebook's own size-allocate is
+        // consumed by that allocation: lay the new tab widths out afterwards.
+        if changed && !self.imp().tabs_relayout.replace(true) {
+            let weak = self.downgrade();
+            glib::idle_add_local_once(move || {
+                if let Some(p) = weak.upgrade() {
+                    p.imp().tabs_relayout.set(false);
+                    p.notebook().queue_resize();
+                }
+            });
         }
     }
     fn update_tabs(&self) {
