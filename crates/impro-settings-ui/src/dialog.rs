@@ -249,6 +249,27 @@ impl SettingsDialog {
     }
 
     pub fn with_options(parent: Option<&gtk::Window>, options: DialogOptions) -> Self {
+        Self::with_values(
+            parent,
+            options,
+            &settings::get_values(),
+            &settings::get_graph(),
+        )
+    }
+
+    /// Construct from a host's loaded preferences without filesystem reads on GTK.
+    pub fn with_values(
+        parent: Option<&gtk::Window>,
+        options: DialogOptions,
+        snapshot: &Values,
+        graph: &Value,
+    ) -> Self {
+        let mut stored = settings::defaults().clone();
+        for (key, value) in snapshot {
+            if let Ok(value) = settings::normalize(key, value) {
+                stored.insert(key.clone(), value);
+            }
+        }
         let window = gtk::Window::new(gtk::WindowType::Toplevel);
         window.set_title("Settings");
         window.set_transient_for(parent);
@@ -282,7 +303,6 @@ impl SettingsDialog {
         empty_label.set_margin_top(48);
         empty_label.set_no_show_all(true);
         content.pack_start(&empty_label, false, false, 0);
-        let stored = settings::get_values();
         let mut sizes = settings::default_font_sizes()
             .into_iter()
             .map(|(k, v)| (k.to_owned(), v))
@@ -312,7 +332,7 @@ impl SettingsDialog {
         for key in settings::new_keys() {
             values.insert(key.to_owned(), stored[key].clone());
         }
-        let graph = normalize_graph(&settings::get_graph());
+        let graph = normalize_graph(graph);
         let inner = Rc::new(Inner {
             window,
             scroll,
