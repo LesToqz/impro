@@ -489,6 +489,10 @@ impl LiveMarkdown {
     pub fn view(&self) -> gtk::TextView {
         self.0.view.clone()
     }
+    /// Whether both handles share one renderer.
+    pub fn ptr_eq(&self, other: &LiveMarkdown) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
     /// The document path the renderer resolves links against.
     pub fn path(&self) -> Option<PathBuf> {
         (self.0.source_path)()

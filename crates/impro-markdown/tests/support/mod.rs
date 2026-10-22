@@ -100,12 +100,23 @@ impl Harness {
         Self::sized(1000, 1000)
     }
     pub fn sized(width: i32, height: i32) -> Self {
+        Self::build(width, height, false)
+    }
+    /// Like `sized`, with the temp dir as the project root (so `.impro/Notes` are notes).
+    pub fn rooted(width: i32, height: i32) -> Self {
+        Self::build(width, height, true)
+    }
+    fn build(width: i32, height: i32, rooted: bool) -> Self {
         impro_ui::init();
         impro_editor::init();
         impro_markdown::init();
         impro_ui::apply_style(None).unwrap();
         let dir = tempfile::tempdir().unwrap();
-        let panel = EditorPanel::default();
+        let panel = if rooted {
+            EditorPanel::new(Some(&dir.path().canonicalize().unwrap()))
+        } else {
+            EditorPanel::default()
+        };
         panel.set_dialog_hook(Some(Rc::new(|_, _| Response::Cancel)));
         let window = gtk::Window::new(gtk::WindowType::Toplevel);
         window.set_default_size(width, height);
@@ -181,6 +192,10 @@ pub fn emit_key(
         (*raw).key.keyval = *key;
         (*raw).key.state = state.bits();
         (*raw).key.send_event = 1;
+        if let Some(seat) = gdk::Display::default().and_then(|d| d.default_seat()) {
+            gdk::Event::set_device(&mut event, seat.keyboard().as_ref());
+        }
+        let raw: *mut gdk::ffi::GdkEvent = event.to_glib_none_mut().0;
         if let Some(window) = window {
             (*raw).key.window = ToGlibPtr::<*mut gdk::ffi::GdkWindow>::to_glib_full(&window);
         }
