@@ -155,7 +155,7 @@ fn search_results_activate_the_exact_file() {
             if let Some(child) = store.iter_children(Some(&parent)) {
                 matches.push(impro_explorer::util::path_of(&store, &child));
             }
-            group = store.iter_next(&parent).then_some(parent);
+            group = impro_explorer::util::next_iter(&store, &parent);
         }
         assert_eq!(matches.len(), 3);
         for path in &matches {
