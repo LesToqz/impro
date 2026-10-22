@@ -17,7 +17,7 @@
 //!
 //! On editor selection changes, call `select(Some(hash))` on every graph, or
 //! `select(None)` for other tabs. Call `shutdown` when a pane/tab closes; widget
-//! destruction and dropping the final handle also clean up. Commit tabs share a
+//! destruction and dropping the final handle also clean up. Git pages share a
 //! process; closing one leaves its siblings alive. Workers are bounded by Git
 //! deadlines and discard cancelled/stale results without blocking GTK on close.
 //!
@@ -33,14 +33,15 @@
 //! The window owns chooser/palette entries (Open git graph, Refresh, Jump to
 //! HEAD, Close commit tabs), Ctrl+Alt+H, dock choice/capacity, and the tab registry.
 //! `webview`, `last_data`, `is_ready`, `is_closed`, `root` and `orientation`
-//! support host inspection. [`assets`] exposes standalone embedded HTML for QA.
+//! support host inspection. `timings()` returns [`PaintTimings`] with
+//! construction-to-paint and data-delivery-to-paint durations. [`assets`] exposes standalone embedded HTML for QA.
 
 pub mod assets;
 pub mod diff;
 pub mod gitviews;
 pub mod log;
 pub mod palette;
-pub use gitviews::{CommitView, GitGraphView, GraphSettings, SyntaxAdapter};
+pub use gitviews::{CommitView, GitGraphView, GraphSettings, PaintTimings, SyntaxAdapter};
 
 /// No native CSS is needed: both pages own their styles.
 pub fn css(_: &impro_core::themes::UiColors) -> String {

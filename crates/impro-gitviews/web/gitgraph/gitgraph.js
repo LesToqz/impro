@@ -63,7 +63,7 @@
   let press = null;
   const pointer = { x: -1, y: -1, inside: false };
   const perf = { frames: 0, layoutMs: 0, labelMs: 0, drawMs: 0, lastFrameTs: 0, revealMs: 0 };
-  let tipTimer = 0, tipFor = null, pulseTimer = 0, pulseOn = false;
+  let tipTimer = 0, tipFor = null, pulseTimer = 0, refreshTimer = 0, pulseOn = false;
 
   // ------------------------------------------------------------ theme
   const DEFAULT_THEME = {
@@ -797,7 +797,7 @@
     void now;
   }
   function wakePulse() {
-    if (reduce() || !L || L.head < 0) return;
+    if (paused || hiddenDoc || reduce() || !L || L.head < 0) return;
     clearTimeout(pulseTimer);
     if (!pulseOn) { pulseOn = true; updateOverlays(performance.now()); }
     pulseTimer = setTimeout(() => { pulseOn = false; updateOverlays(performance.now()); }, 9000);
@@ -857,6 +857,7 @@
   }
   function sameTip(a, b) { return a && b && a.kind === b.kind && a.i === b.i && a.lb === b.lb; }
   function requestTip(t, immediate) {
+    if (paused || hiddenDoc) return;
     if (sameTip(t, tipFor) && (tipEl.classList.contains('show') || tipTimer)) return;
     clearTimeout(tipTimer); tipTimer = 0;
     tipFor = t;
@@ -1058,7 +1059,7 @@
   $('b-head').addEventListener('click', safe(() => jumpHead()));
   $('b-in').addEventListener('click', safe(() => zoomBy(1.25)));
   $('b-out').addEventListener('click', safe(() => zoomBy(0.8)));
-  $('b-refresh').addEventListener('click', safe(() => { post({ type: 'refresh' }); $('b-refresh').classList.add('spin'); setTimeout(() => $('b-refresh').classList.remove('spin'), 900); }));
+  $('b-refresh').addEventListener('click', safe(() => { post({ type: 'refresh' }); $('b-refresh').classList.add('spin'); clearTimeout(refreshTimer); refreshTimer = setTimeout(() => $('b-refresh').classList.remove('spin'), 900); }));
   function setChip(id, on) { const el = $(id); el.classList.toggle('on', on); el.setAttribute('aria-pressed', on ? 'true' : 'false'); }
   $('c-remote').addEventListener('click', safe(() => { settings.showRemote = !settings.showRemote; setChip('c-remote', settings.showRemote); relabel(); draw(); }));
   $('c-tags').addEventListener('click', safe(() => { settings.showTags = !settings.showTags; setChip('c-tags', settings.showTags); relabel(); draw(); }));
@@ -1332,6 +1333,8 @@
       paused = true;
       if (raf) { cancelAnimationFrame(raf); raf = 0; }
       document.body.classList.add('paused');
+      clearTimeout(pulseTimer); clearTimeout(refreshTimer);
+      $('b-refresh').classList.remove('spin'); pulseOn = false;
       clearTimeout(tipTimer);
       updateOverlays();
     }),

@@ -21,8 +21,9 @@ use std::{
 };
 use webkit2gtk::{
     CacheModel, HardwareAccelerationPolicy, LoadEvent, NavigationPolicyDecision,
-    NavigationPolicyDecisionExt, PolicyDecisionExt, PolicyDecisionType, SettingsExt, URIRequestExt,
-    UserContentManager, UserContentManagerExt, WebContext, WebContextExt, WebView, WebViewExt,
+    NavigationPolicyDecisionExt, NavigationType, PolicyDecisionExt, PolicyDecisionType,
+    SettingsExt, URIRequestExt, UserContentManager, UserContentManagerExt, WebContext,
+    WebContextExt, WebView, WebViewExt,
 };
 
 /// Syntax adapters must be safe to use from Git workers. No editor dependency is required.
@@ -96,6 +97,13 @@ impl GraphSettings {
     }
 }
 
+/// Timings from construction/data delivery through two browser frame boundaries.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct PaintTimings {
+    pub open_to_first_paint: Option<Duration>,
+    pub data_to_paint: Option<Duration>,
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Kind {
     Graph,
@@ -123,6 +131,10 @@ struct Inner {
     root: RefCell<PathBuf>,
     rev: String,
     highlighter: Option<SyntaxAdapter>,
+    opened: Instant,
+    arrived: Cell<Option<Instant>>,
+    display_generation: Cell<u64>,
+    timings: Cell<PaintTimings>,
     closed: Cell<bool>,
     ready: Cell<bool>,
     generation: Cell<u64>,
@@ -152,7 +164,7 @@ struct Inner {
     open_file: RefCell<Vec<FileCallback>>,
     root_changed: RefCell<Vec<VoidCallback>>,
 }
-thread_local! {static COMMITS:RefCell<Vec<Weak<Inner>>>=const {RefCell::new(Vec::new())};}
+thread_local! {static PAGES:RefCell<Vec<Weak<Inner>>>=const {RefCell::new(Vec::new())};}
 
 impl Inner {
     fn new(root: &Path, rev: &str, kind: Kind, highlighter: Option<SyntaxAdapter>) -> Rc<Self> {
@@ -173,17 +185,13 @@ impl Inner {
         prefs.set_enable_webaudio(false);
         prefs.set_enable_media(false);
         prefs.set_enable_media_stream(false);
-        let related = if kind == Kind::Commit {
-            COMMITS.with(|views| {
-                views
-                    .borrow()
-                    .iter()
-                    .filter_map(Weak::upgrade)
-                    .find(|v| !v.closed.get())
-            })
-        } else {
-            None
-        };
+        let related = PAGES.with(|views| {
+            views
+                .borrow()
+                .iter()
+                .filter_map(Weak::upgrade)
+                .find(|v| !v.closed.get())
+        });
         let web = if let Some(other) = related {
             WebView::builder()
                 .related_view(&other.web)
@@ -217,6 +225,10 @@ impl Inner {
             root: RefCell::new(root.to_path_buf()),
             rev: rev.into(),
             highlighter,
+            opened: Instant::now(),
+            arrived: Cell::new(None),
+            display_generation: Cell::new(0),
+            timings: Cell::new(PaintTimings::default()),
             closed: Cell::new(false),
             ready: Cell::new(false),
             generation: Cell::new(0),
@@ -258,13 +270,11 @@ impl Inner {
         });
         *this.receiver.borrow_mut() = Some(source);
         this.connect();
-        if kind == Kind::Commit {
-            COMMITS.with(|v| {
-                let mut v = v.borrow_mut();
-                v.retain(|w| w.strong_count() > 0);
-                v.push(Rc::downgrade(&this));
-            });
-        }
+        PAGES.with(|v| {
+            let mut v = v.borrow_mut();
+            v.retain(|w| w.strong_count() > 0);
+            v.push(Rc::downgrade(&this));
+        });
         let weak = Rc::downgrade(&this);
         let handler = this
             .manager
@@ -326,21 +336,42 @@ impl Inner {
         });
         self.web.connect_context_menu(|_, _, _, _| true);
         self.web.connect_create(|_, _| None);
-        self.web.connect_decide_policy(|_, decision, kind| {
+        let weak = Rc::downgrade(self);
+        self.web.connect_decide_policy(move |_, decision, kind| {
             if kind == PolicyDecisionType::NewWindowAction {
                 decision.ignore();
                 return true;
             }
             if kind == PolicyDecisionType::NavigationAction {
                 if let Some(nav) = decision.dynamic_cast_ref::<NavigationPolicyDecision>() {
-                    if nav
-                        .navigation_action()
-                        .and_then(|a| a.request())
-                        .and_then(|r| r.uri())
-                        .is_some_and(|u| u != "about:blank")
-                    {
-                        decision.ignore();
-                        return true;
+                    if let Some(action) = nav.navigation_action() {
+                        let uri = action.request().and_then(|r| r.uri());
+                        if action.navigation_type() == NavigationType::Reload {
+                            decision.ignore();
+                            let weak = weak.clone();
+                            glib::idle_add_local_once(move || {
+                                if let Some(s) = weak.upgrade() {
+                                    if !s.closed.get() {
+                                        s.prepare_reload();
+                                        s.web.load_html(
+                                            &if s.kind == Kind::Graph {
+                                                assets::graph_html()
+                                            } else {
+                                                assets::commit_html()
+                                            },
+                                            Some("about:blank"),
+                                        );
+                                    }
+                                }
+                            });
+                            return true;
+                        }
+                        if uri.as_deref() != Some("about:blank")
+                            || weak.upgrade().is_none_or(|s| s.ready.get())
+                        {
+                            decision.ignore();
+                            return true;
+                        }
                     }
                 }
             }
@@ -350,19 +381,8 @@ impl Inner {
         self.web.connect_load_changed(move |_, event| {
             if event == LoadEvent::Started {
                 if let Some(s) = weak.upgrade() {
-                    if s.ready.replace(false) {
-                        s.queue.borrow_mut().clear();
-                        let theme = s.theme.borrow().clone();
-                        if let Some(theme) = theme {
-                            s.call("setTheme", &[theme]);
-                        }
-                        s.settings();
-                        let data = s.last_script.borrow().clone();
-                        if let Some(script) = data {
-                            s.post_script(script);
-                        } else {
-                            s.state("loading", "");
-                        }
+                    if s.ready.get() {
+                        s.prepare_reload();
                     }
                 }
             }
@@ -380,6 +400,28 @@ impl Inner {
                 s.error(&format!("Git web process stopped: {reason:?}"));
             }
         });
+    }
+    fn prepare_reload(self: &Rc<Self>) {
+        self.ready.set(false);
+        self.queue.borrow_mut().clear();
+        let theme = self.theme.borrow().clone();
+        if let Some(theme) = theme {
+            self.call("setTheme", &[theme]);
+        }
+        self.settings();
+        let script = self.last_script.borrow().clone();
+        if let Some(mut script) = script {
+            if self.kind == Kind::Graph {
+                let selection = self.selection.borrow().clone();
+                script.push_str(&self.command("select", &[json!(selection)]));
+                if self.focus.get() {
+                    script.push_str(&self.command("focus", &[json!("HEAD")]));
+                }
+            }
+            self.post_script(script);
+        } else {
+            self.state("loading", "");
+        }
     }
     fn error(&self, text: &str) {
         if !self.closed.get() {
@@ -423,12 +465,19 @@ impl Inner {
         )
     }
     fn call(self: &Rc<Self>, cmd: &str, args: &[Value]) {
+        // Lifecycle state is applied once, before queued data, at the ready handshake.
+        if matches!(cmd, "pause" | "resume") && !self.ready.get() {
+            return;
+        }
         let mut script = self.command(cmd, args);
         if self.kind == Kind::Commit && matches!(cmd, "pause" | "resume") {
             script = format!(
                 "if(typeof window.{}.{cmd}==='function'){{{script}}}",
                 self.api
             );
+        }
+        if matches!(cmd, "pause" | "resume") {
+            script = format!("window.__improActive={};{script}", cmd == "resume");
         }
         self.post_script(script);
     }
@@ -454,15 +503,22 @@ impl Inner {
             "ready" => {
                 if !self.ready.replace(true) {
                     let queue = std::mem::take(&mut *self.queue.borrow_mut());
-                    self.evaluate(&queue.join("\n"));
-                    self.call(
-                        if self.widget.is_mapped() {
-                            "resume"
-                        } else {
-                            "pause"
-                        },
-                        &[],
-                    );
+                    let active = self.widget.is_mapped();
+                    let lifecycle = if active { "resume" } else { "pause" };
+                    self.evaluate(&format!("window.__improActive={active};if(typeof window.{}.{lifecycle}==='function')window.{}.{lifecycle}();\n{}",self.api,self.api,queue.join("\n")));
+                    if self.kind == Kind::Commit && self.dirty.get() {
+                        self.start();
+                    }
+                }
+            }
+            "painted" => {
+                if v["generation"].as_u64() == Some(self.display_generation.get()) {
+                    let mut timings = self.timings.get();
+                    if timings.open_to_first_paint.is_none() {
+                        timings.open_to_first_paint = Some(self.opened.elapsed());
+                    }
+                    timings.data_to_paint = self.arrived.get().map(|t| t.elapsed());
+                    self.timings.set(timings);
                 }
             }
             "open-commit" => {
@@ -521,6 +577,11 @@ impl Inner {
         }
     }
     fn start(self: &Rc<Self>) {
+        // A cold commit tab starts Git work after its page handshake. This keeps
+        // data-arrival latency independent of the WebKit process startup cost.
+        if self.kind == Kind::Commit && !self.ready.get() {
+            return;
+        }
         if self.closed.get() || self.running.replace(true) {
             return;
         }
@@ -614,6 +675,8 @@ impl Inner {
                 *self.last.borrow_mut() = Some(u.data);
                 *self.last_script.borrow_mut() = Some(u.script.clone());
                 if !unchanged {
+                    self.arrived.set(Some(Instant::now()));
+                    self.display_generation.set(u.generation);
                     let mut script = u.script;
                     if self.kind == Kind::Graph {
                         let selection = self.selection.borrow().clone();
@@ -622,6 +685,8 @@ impl Inner {
                             script.push_str(&self.command("focus", &[json!("HEAD")]));
                         }
                     }
+                    // One update call carries both data and a one-shot first-paint marker.
+                    script.push_str(&format!("if(window.__improActive)requestAnimationFrame(()=>requestAnimationFrame(()=>webkit.messageHandlers.impro.postMessage({{type:'painted',generation:{}}})));",self.generation.get()));
                     self.post_script(script);
                 }
             }
@@ -848,15 +913,22 @@ impl Inner {
         }
         self.queue.borrow_mut().clear();
         self.contexts.borrow_mut().clear();
+        self.open_commit.borrow_mut().clear();
+        self.errors.borrow_mut().clear();
+        self.orientation_changed.borrow_mut().clear();
+        self.open_file.borrow_mut().clear();
+        self.root_changed.borrow_mut().clear();
+        self.last.borrow_mut().take();
+        self.last_script.borrow_mut().take();
+        self.theme.borrow_mut().take();
         self.manager.unregister_script_message_handler("impro");
         self.web.stop_loading();
-        let siblings = self.kind == Kind::Commit
-            && COMMITS.with(|v| {
-                v.borrow()
-                    .iter()
-                    .filter_map(Weak::upgrade)
-                    .any(|v| !v.closed.get())
-            });
+        let siblings = PAGES.with(|v| {
+            v.borrow()
+                .iter()
+                .filter_map(Weak::upgrade)
+                .any(|v| !v.closed.get())
+        });
         if !siblings {
             self.web.terminate_web_process();
         }
@@ -923,6 +995,9 @@ impl GitGraphView {
     /// Exposed for host accessibility, inspection and screenshot tools.
     pub fn webview(&self) -> &WebView {
         &self.0.web
+    }
+    pub fn timings(&self) -> PaintTimings {
+        self.0.timings.get()
     }
     pub fn is_ready(&self) -> bool {
         self.0.ready.get()
@@ -1088,6 +1163,9 @@ impl CommitView {
     }
     pub fn tab_key(&self) -> String {
         format!("commit:{}", self.rev())
+    }
+    pub fn timings(&self) -> PaintTimings {
+        self.0.timings.get()
     }
     pub fn is_ready(&self) -> bool {
         self.0.ready.get()
