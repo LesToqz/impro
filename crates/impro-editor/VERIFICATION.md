@@ -76,15 +76,60 @@ settled 900x600 window. The task's reference captures and pixel differences are
 under `.ceo/parity/`; the report records the measured result, not a universal
 claim of identical syntax classification.
 
-`examples/editor_perf.rs` prints first text paint, initial and incremental
-highlighting, 200 edits, edit-to-draw latency, a rendered scroll sweep and idle
-process CPU. Run the optimized executable under Xvfb. Draw latency ends after the
-GTK default draw handler; it does not measure a physical keyboard or compositor scanout.
-The event-driven display flush uses GTK3's GDK update API after text validation,
-with no recurring timer. Highlighting snapshots only after debounce, reuses parser
-checkpoints, and paints the changed span in short visible-first batches. Initial
-syntax data loads inside the first worker job. Cancelled partial paints force a
-fresh pass so cached lexer state cannot leave stale or missing tags.
+`examples/editor_perf.rs` accepts a byte count or `lines` (the default,
+20,000 source lines). It prints first text paint, full-load completion, maximum
+text-application slice, initial and incremental highlighting, typing during pending
+highlight work, 200 settled edits, and 100 page-scroll draw samples. Both typing
+phases can enforce their p95 budget with `IMPRO_EDITOR_PERF_ASSERT=1`.
+Draw latency ends after the GTK default draw handler; it measures software buffer
+insertion through rendering, without a physical keyboard or compositor scanout.
+`IMPRO_EDITOR_PERF_PAINT_ONLY=1` exits immediately after the same first-draw
+measurement for quick final-source paint repeats; it does not exercise typing,
+scrolling, memory release or idle guards. The background probe first draws a cursor
+move to the visible first line, so the
+measurement excludes an implicit scroll from EOF. Pending highlighting includes
+work cancelled and rescheduled by typing. These are release-only timing guards;
+shared-machine scheduling can exceed the budget.
+
+The harness also reports process RSS before opening, after highlighting, and after
+closing. It verifies that the buffer's weak reference expires. On Linux with GNU
+libc it reports an additional allocator-trimmed RSS diagnostic; production close
+behavior does not force an allocator trim. Its ten-second idle interval reports
+process CPU ticks and draw count, with caret blinking disabled for the measurement.
+The interval follows a five-second settling period, configurable through
+`IMPRO_EDITOR_IDLE_SETTLE_MS`. A shorter interval can include GTK's scrollbar fade
+animation; this must not be described as a steady-state zero-CPU measurement if
+draws or ticks remain. The saved interleaved comparison used 500 ms; subsequent
+steady-state checks use five seconds.
+
+For fresh, interleaved processes and nearest-rank p95 over at least five runs:
+
+```sh
+cargo build --release -p impro-editor --example editor_perf
+python3 crates/impro-editor/examples/editor_bench.py --before /path/to/saved/editor_perf --after target/release/examples/editor_perf --runs 5 --output .ceo/perf/results.json
+```
+
+The runner starts a separate Xvfb and D-Bus session for each process and retains
+raw output. Fixtures are 100 KiB, 1 MiB, 20,000 lines (1,060,000 bytes), and 10 MiB.
+The last fixture is rejected by the existing 5 MiB file-size policy. No timing or
+memory claim for a successfully loaded 10 MiB document follows from that rejection.
+Saved executables must use the same harness; an older library without load-slice
+instrumentation reports zero for that unavailable metric in the comparison build.
+
+File decoding and newline normalization remain on a worker. The first 4 KiB of
+UTF-8 text is attached before the remainder is inserted in idle slices targeting
+2 ms. Input is disabled during loading, history recording is suppressed, saves
+and open callbacks wait for completion, and the cursor finishes at EOF as before.
+Small files complete before their tab is announced. The close icon is populated
+following the first draw, preserving its allocation and settled pixels. Highlight
+snapshots read bounded ranges between loop yields and concatenate on a worker.
+The reader also detects language from the complete first line; initial load no
+longer scans or extracts a potentially huge first line on GTK's thread. Syntax
+data loads inside the first worker job, lexer checkpoints are reused, and
+changed-span tags are painted in short visible-first batches. Cancelled partial
+paints force a fresh pass so cached lexer state cannot leave stale or missing tags.
+There are no recurring editor timers after pending work completes; GTK animations
+and process-global caches are separate from editor-owned sources and buffers.
 
 Known lexer differences: TypeScript/React uses the bundled JavaScript grammar
 with contextual type/decorator refinements; TOML and Dockerfile have local syntect

@@ -42,10 +42,17 @@ pub struct EditorTab {
     md_updating: Cell<bool>,
     restore: Rc<RefCell<Option<glib::SourceId>>>,
     pub(crate) revision: Cell<u64>,
+    pub(crate) loading: Cell<bool>,
+    max_load_slice: Cell<std::time::Duration>,
     paint_source: Rc<RefCell<Option<glib::SourceId>>>,
 }
 impl EditorTab {
-    pub(crate) fn new(panel: &EditorPanel, path: PathBuf, doc: crate::file::Document) -> Rc<Self> {
+    pub(crate) fn new(
+        panel: &EditorPanel,
+        path: PathBuf,
+        doc: crate::file::Document,
+        language_name: &'static str,
+    ) -> Rc<Self> {
         let trace_start = std::time::Instant::now();
         let trace = |label: &str| {
             if std::env::var_os("IMPRO_EDITOR_TRACE").is_some() {
@@ -53,8 +60,15 @@ impl EditorTab {
             }
         };
         let buffer = gtk::TextBuffer::new(None::<&gtk::TextTagTable>);
-        buffer.set_text(&doc.text);
+        // Publish the first screen before applying the remaining document in idle slices.
+        let mut first_end = doc.text.len().min(4096);
+        while !doc.text.is_char_boundary(first_end) {
+            first_end -= 1;
+        }
+        buffer.set_text(&doc.text[..first_end]);
+        buffer.place_cursor(&buffer.start_iter());
         buffer.set_modified(false);
+        let initial_apply = trace_start.elapsed();
         trace("text");
         let view = gtk::TextView::with_buffer(&buffer);
         view.set_pixels_above_lines(1);
@@ -84,14 +98,9 @@ impl EditorTab {
             });
         }
         trace("view");
-        let highlighter = Highlighter::new(
-            &view,
-            &panel.syntax_style(),
-            highlight::language_name(
-                &path.to_string_lossy(),
-                doc.text.lines().next().unwrap_or(""),
-            ),
-        );
+        let highlighter = Highlighter::new(&view, &panel.syntax_style(), language_name);
+        highlighter.set_active(false);
+        view.set_editable(false);
         trace("syntax");
         let chrome = ViewChrome::new(&view, &panel.chrome());
         chrome.set_line_numbers(panel.line_numbers());
@@ -103,10 +112,7 @@ impl EditorTab {
         page.add(&source_scroll);
         let header = TabHeader::new("Close file", None);
         let history = History::new(&buffer);
-        let language_name = highlight::language_name(
-            &path.to_string_lossy(),
-            doc.text.lines().next().unwrap_or(""),
-        );
+        history.set_loading(true);
         let tab = Rc::new(Self {
             panel: panel.downgrade(),
             language_name: Cell::new(language_name),
@@ -136,6 +142,8 @@ impl EditorTab {
             md_updating: Cell::new(false),
             restore: Rc::new(RefCell::new(None)),
             revision: Cell::new(0),
+            loading: Cell::new(true),
+            max_load_slice: Cell::new(initial_apply),
             paint_source: Rc::new(RefCell::new(None)),
         });
         let weak = Rc::downgrade(&tab);
@@ -163,6 +171,9 @@ impl EditorTab {
         let weak = Rc::downgrade(&tab);
         buffer.connect_changed(move |_| {
             if let Some(t) = weak.upgrade() {
+                if t.loading.get() {
+                    return;
+                }
                 t.revision.set(t.revision.get() + 1);
                 t.flush_edit();
                 if !t.history.restoring() {
@@ -176,6 +187,9 @@ impl EditorTab {
         let weak = Rc::downgrade(&tab);
         buffer.connect_modified_changed(move |_| {
             if let Some(t) = weak.upgrade() {
+                if t.loading.get() {
+                    return;
+                }
                 t.update_title();
                 if let Some(p) = t.panel.upgrade() {
                     p.dirty_changed();
@@ -246,10 +260,80 @@ impl EditorTab {
         trace("signals");
         tab.set_font_size(panel.font_size());
         trace("font");
-        tab.sync_markdown();
         tab.update_title();
         trace("done");
+        let mut offset = tab.initial_load_offset();
+        let complete = offset == tab.saved_text.borrow().len();
+        if complete {
+            tab.load_slice(&mut offset);
+        }
         tab
+    }
+    pub(crate) fn initial_load_offset(&self) -> usize {
+        let text = self.saved_text.borrow();
+        let mut end = text.len().min(4096);
+        while !text.is_char_boundary(end) {
+            end -= 1;
+        }
+        end
+    }
+    /// Apply bounded UTF-8 chunks without recording file contents as edits.
+    /// Longest observed text-application slice, excluding GTK's later layout and draw.
+    pub fn max_load_slice(&self) -> std::time::Duration {
+        self.max_load_slice.get()
+    }
+    pub(crate) fn load_slice(self: &Rc<Self>, offset: &mut usize) -> bool {
+        let started = std::time::Instant::now();
+        let complete = self.apply_load_slice(offset);
+        self.max_load_slice
+            .set(self.max_load_slice.get().max(started.elapsed()));
+        complete
+    }
+    fn apply_load_slice(self: &Rc<Self>, offset: &mut usize) -> bool {
+        if self.closed.get() {
+            return true;
+        }
+        let started = std::time::Instant::now();
+        loop {
+            // Drop the document borrow before GTK emits synchronous signals.
+            let (chunk, end, complete) = {
+                let text = self.saved_text.borrow();
+                let mut end = (*offset + 4096).min(text.len());
+                while !text.is_char_boundary(end) {
+                    end -= 1;
+                }
+                (text[*offset..end].to_string(), end, end == text.len())
+            };
+            if !chunk.is_empty() {
+                self.buffer.insert(&mut self.buffer.end_iter(), &chunk);
+            }
+            self.buffer.set_modified(false);
+            *offset = end;
+            if complete {
+                self.buffer.place_cursor(&self.buffer.end_iter());
+                self.saved_chars.set(self.buffer.char_count());
+                self.buffer.set_modified(false);
+                self.history.set_loading(false);
+                self.loading.set(false);
+                self.view.set_editable(true);
+                if is_markdown(&self.path()) {
+                    self.sync_markdown();
+                } else {
+                    self.sync_slash_menu();
+                }
+                self.highlighter.set_active(
+                    self.panel
+                        .upgrade()
+                        .and_then(|p| p.current_tab())
+                        .is_some_and(|tab| Rc::ptr_eq(&tab, self)),
+                );
+                self.update_title();
+                return true;
+            }
+            if started.elapsed() >= std::time::Duration::from_millis(2) {
+                return false;
+            }
+        }
     }
     pub fn path(&self) -> PathBuf {
         self.path.borrow().clone()
@@ -336,13 +420,19 @@ impl EditorTab {
         self.sync_markdown();
     }
     fn detect_language(&self) {
-        let mut end = self.buffer.start_iter();
-        end.forward_to_line_end();
-        let text = self
-            .buffer
-            .text(&self.buffer.start_iter(), &end, false)
-            .unwrap_or_default();
-        let language = highlight::language_name(&self.path().to_string_lossy(), &text);
+        let path = self.path();
+        let known = highlight::language_name(&path.to_string_lossy(), "");
+        let language = if known != "Plain Text" {
+            known
+        } else {
+            let mut end = self.buffer.start_iter();
+            end.forward_to_line_end();
+            let text = self
+                .buffer
+                .text(&self.buffer.start_iter(), &end, false)
+                .unwrap_or_default();
+            highlight::language_name(&path.to_string_lossy(), &text)
+        };
         self.language_name.set(language);
         self.highlighter
             .set_language(if self.md_mode.get() == "preview" {
@@ -678,7 +768,22 @@ impl TabHeader {
         }
         inner.pack_start(&label, true, true, 0);
         let close = gtk::Button::new();
-        let image = gtk::Image::from_icon_name(Some("window-close-symbolic"), gtk::IconSize::Menu);
+        let image = gtk::Image::new();
+        image.set_size_request(14, 14);
+        let icon_pending = Rc::new(Cell::new(true));
+        let weak_image = image.downgrade();
+        image.connect_draw(move |_, _| {
+            if icon_pending.replace(false) {
+                let weak_image = weak_image.clone();
+                glib::idle_add_local_once(move || {
+                    if let Some(image) = weak_image.upgrade() {
+                        image
+                            .set_from_icon_name(Some("window-close-symbolic"), gtk::IconSize::Menu);
+                    }
+                });
+            }
+            glib::Propagation::Proceed
+        });
         image.set_pixel_size(14);
         close.add(&image);
         close.style_context().add_class("impro-tab-close");
