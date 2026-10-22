@@ -10,4 +10,8 @@ for argument in "$@"; do
         -p|--package|--package=*|-p?*) selection=(); break ;;
     esac
 done
-exec xvfb-run -a dbus-run-session -- cargo test --manifest-path "$repo/Cargo.toml" "${selection[@]}" "$@"
+xvfb-run -a dbus-run-session -- cargo test --manifest-path "$repo/Cargo.toml" "${selection[@]}" "$@"
+
+if [[ -n "${IMPRO_PARITY_REFERENCE:-}" ]]; then
+    bash "$repo/scripts/parity/run.sh" --smoke --strict --reference "$IMPRO_PARITY_REFERENCE"
+fi
