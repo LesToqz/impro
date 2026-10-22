@@ -55,6 +55,7 @@ pub struct ResultRow {
     pub detail: gtk::Label,
     pub chips: gtk::Box,
     cached: Rc<RefCell<Option<PromptItem>>>,
+    content: gtk::Box,
 }
 impl ResultRow {
     fn new() -> Self {
@@ -79,7 +80,6 @@ impl ResultRow {
         chips.set_no_show_all(true);
         bx.pack_start(&text, true, true, 0);
         bx.pack_end(&chips, false, false, 0);
-        widget.add(&bx);
         bx.show_all();
         Self {
             widget,
@@ -87,9 +87,20 @@ impl ResultRow {
             detail,
             chips,
             cached: Rc::new(RefCell::new(None)),
+            content: bx,
         }
     }
+    fn defer(&self, height: i32) {
+        if self.content.parent().is_some() {
+            self.widget.remove(&self.content);
+        }
+        self.widget.set_size_request(-1, height);
+    }
     fn update(&self, item: &PromptItem) {
+        if self.content.parent().is_none() {
+            self.widget.add(&self.content);
+            self.widget.set_size_request(-1, -1);
+        }
         let same = self.cached.borrow().as_ref().is_some_and(|old| {
             old.label == item.label
                 && old.detail == item.detail
@@ -159,6 +170,7 @@ struct Inner {
     chosen: RefCell<Vec<Chosen>>,
     query_chosen: RefCell<Vec<QueryChosen>>,
     pointer: Cell<Option<(i32, i32)>>,
+    rendering: Cell<bool>,
 }
 /// Cloneable GTK composition handle. Use `widget()` when adding to containers.
 #[derive(Clone)]
@@ -247,6 +259,7 @@ impl Prompt {
             chosen: RefCell::new(vec![]),
             query_chosen: RefCell::new(vec![]),
             pointer: Cell::new(None),
+            rendering: Cell::new(false),
         }));
         this.set_instructions(DEFAULT_INSTRUCTIONS);
         this.0.frame.show_all();
@@ -263,6 +276,21 @@ impl Prompt {
             if let Some(inner) = weak.upgrade() {
                 let p = Prompt(inner);
                 p.schedule();
+            }
+        });
+        let weak = Rc::downgrade(&this.0);
+        this.0
+            .scroller
+            .vadjustment()
+            .connect_value_changed(move |_| {
+                if let Some(inner) = weak.upgrade() {
+                    Prompt(inner).render_visible();
+                }
+            });
+        let weak = Rc::downgrade(&this.0);
+        this.0.scroller.connect_size_allocate(move |_, _| {
+            if let Some(inner) = weak.upgrade() {
+                Prompt(inner).render_visible();
             }
         });
         this.0.entry.connect_icon_press(|e, _, _| e.set_text(""));
@@ -459,9 +487,18 @@ impl Prompt {
             self.0.list.add(&row.widget);
             rows.push(row);
         }
+        let mut heights = [None, None];
         for (i, row) in rows.iter().enumerate() {
             if let Some(item) = items.get(i) {
-                row.update(item);
+                let kind = usize::from(!item.detail.is_empty());
+                if i < 16 || heights[kind].is_none() {
+                    row.update(item);
+                    if heights[kind].is_none() {
+                        heights[kind] = Some(row.widget.preferred_height().1);
+                    }
+                } else if let Some(height) = heights[kind] {
+                    row.defer(height);
+                }
                 row.widget.show();
             } else {
                 row.widget.hide();
@@ -476,6 +513,35 @@ impl Prompt {
             a.set_value(0.);
         }
     }
+    fn render_visible(&self) {
+        if !self.is_open() || self.0.rendering.replace(true) {
+            return;
+        }
+        let adjustment = self.0.scroller.vadjustment();
+        let top = adjustment.value() as i32;
+        let bottom = top + adjustment.page_size() as i32;
+        let first = self
+            .0
+            .list
+            .row_at_y(top)
+            .map_or(0, |row| row.index().saturating_sub(2).max(0)) as usize;
+        let last = self
+            .0
+            .list
+            .row_at_y(bottom)
+            .map_or(first + 16, |row| row.index().max(0) as usize + 3);
+        let items = self.items();
+        let rows = self.rows();
+        for (i, row) in rows
+            .iter()
+            .enumerate()
+            .take(last.min(items.len()))
+            .skip(first)
+        {
+            row.update(&items[i]);
+        }
+        self.0.rendering.set(false);
+    }
     pub fn select(&self, index: i32) {
         let len = self.0.items.borrow().len() as i32;
         if len == 0 {
@@ -485,7 +551,10 @@ impl Prompt {
         }
         let i = index.clamp(0, len - 1);
         self.0.selected.set(i);
-        let row = self.0.rows.borrow()[i as usize].widget.clone();
+        let row_handle = self.0.rows.borrow()[i as usize].clone();
+        let item = self.0.items.borrow()[i as usize].clone();
+        row_handle.update(&item);
+        let row = row_handle.widget;
         self.0.list.select_row(Some(&row));
         {
             let a = self.0.scroller.vadjustment();

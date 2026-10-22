@@ -640,3 +640,43 @@ fn test_reentrant_provider_and_selection_callbacks() {
         assert_eq!(calls.get(), 1);
     });
 }
+#[test]
+fn test_lazy_rows_keep_scroll_geometry_and_render_on_navigation() {
+    run(|| {
+        let f = Fixture::new();
+        let p = prompt(100);
+        f.show(&p);
+        assert!(p
+            .rows()
+            .iter()
+            .all(|row| row.widget.allocated_height() == 32));
+        assert!(p.rows()[50].widget.child().is_none());
+        p.select(99);
+        pump(30);
+        assert_eq!(p.rows()[99].title.text(), "item 99");
+        assert!(p.rows()[99].widget.child().is_some());
+        assert!(p
+            .rows()
+            .iter()
+            .all(|row| row.widget.allocated_height() == 32));
+        let s = QuickSwitcher::new("");
+        s.set_files(
+            (0..100)
+                .map(|i| format!("src/plan/main{i}.md").into())
+                .collect(),
+            vec![],
+        );
+        f.show(&s);
+        let height = s.rows()[0].widget.allocated_height();
+        assert!(s
+            .rows()
+            .iter()
+            .all(|row| row.widget.allocated_height() == height));
+        s.select(99);
+        pump(30);
+        assert!(s
+            .rows()
+            .iter()
+            .all(|row| row.widget.allocated_height() == height));
+    });
+}
