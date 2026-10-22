@@ -595,6 +595,7 @@ dependencies = [
 name = "impro-markdown"
 version = "0.1.0"
 dependencies = [
+ "fancy-regex",
  "gdk",
  "gio",
  "glib",
@@ -602,6 +603,9 @@ dependencies = [
  "impro-core",
  "impro-ui",
  "pango",
+ "regex",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]
