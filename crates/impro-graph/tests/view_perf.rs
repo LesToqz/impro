@@ -124,10 +124,10 @@ fn idle_cpu_and_open_to_first_frame() {
             },
         );
         let (frame, data) = (first.clone(), populated.clone());
-        let weak = view.downgrade();
-        view.canvas().connect_draw(move |_, _| {
+        let drawing = view.clone();
+        let handler = view.canvas().connect_draw(move |_, _| {
             frame.set(frame.get().or_else(|| Some(t0.elapsed())));
-            if weak.upgrade().is_some_and(|view| view.summary().nodes > 0) {
+            if drawing.summary().nodes > 0 {
                 data.set(data.get().or_else(|| Some(t0.elapsed())));
             }
             glib::Propagation::Proceed
@@ -142,6 +142,7 @@ fn idle_cpu_and_open_to_first_frame() {
             first.get().unwrap().as_secs_f64() * 1e3,
             populated.get().unwrap().as_secs_f64() * 1e3
         );
+        view.canvas().disconnect(handler);
         t::settle_now(&view);
         assert!(t::settle(&view, 15_000));
         t::pump(3000);
