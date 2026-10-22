@@ -38,7 +38,10 @@ fn pixels(name: &str, size: i32, scale: i32) -> Option<&'static [u8]> {
     if !VERIFIED.get()?.contains(name) {
         return None;
     }
-    let pixels = sources::pixels(name, size * scale)?;
+    if size <= 0 || scale <= 0 {
+        return None;
+    }
+    let pixels = sources::pixels(name, size.checked_mul(scale)?)?;
     let (_, source, _) = sources::SOURCES.iter().find(|(n, _, _)| *n == name)?;
     let theme = gtk::IconTheme::default()?;
     let info = theme.lookup_icon_for_scale(name, size, scale, gtk::IconLookupFlags::empty())?;
@@ -91,7 +94,7 @@ pub fn symbolic_surface(
     });
     let alpha = (foreground.alpha() * 255.0) as u32;
     let mut output = Vec::with_capacity(pixels.len());
-    for p in pixels.chunks_exact(4) {
+    for p in pixels.as_chunks::<4>().0 {
         let weights = [
             255_u32.saturating_sub(p[0] as u32 + p[1] as u32 + p[2] as u32),
             p[0] as u32,

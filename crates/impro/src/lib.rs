@@ -4,6 +4,7 @@ pub mod cli;
 mod commands;
 mod docks;
 mod preferences;
+mod startup_icons;
 pub mod style;
 mod views;
 mod window;

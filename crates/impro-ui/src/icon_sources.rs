@@ -1,6 +1,16 @@
 // Raster source identity and raw symbolic channels. Generated with regenerate.py.
 pub(super) const SOURCES: &[(&str, &str, &[u8])] = &[
     (
+        "text-x-generic-symbolic",
+        "/usr/share/icons/Yaru/scalable/mimetypes/text-x-generic-symbolic.svg",
+        include_bytes!("../assets/icons/text-x-generic-symbolic.svg"),
+    ),
+    (
+        "folder-symbolic",
+        "/usr/share/icons/Yaru/scalable/places/folder-symbolic.svg",
+        include_bytes!("../assets/icons/folder-symbolic.svg"),
+    ),
+    (
         "document-new-symbolic",
         "/usr/share/icons/Yaru/scalable/actions/document-new-symbolic.svg",
         include_bytes!("../assets/icons/document-new-symbolic.svg"),
@@ -83,6 +93,14 @@ pub(super) const SOURCES: &[(&str, &str, &[u8])] = &[
 ];
 pub(super) fn pixels(name: &str, size: i32) -> Option<&'static [u8]> {
     match (name, size) {
+        ("text-x-generic-symbolic", 32) => Some(include_bytes!(
+            "../assets/icons/32/text-x-generic-symbolic.rgba"
+        )),
+        ("text-x-generic-symbolic", 16) => Some(include_bytes!(
+            "../assets/icons/16/text-x-generic-symbolic.rgba"
+        )),
+        ("folder-symbolic", 32) => Some(include_bytes!("../assets/icons/32/folder-symbolic.rgba")),
+        ("folder-symbolic", 16) => Some(include_bytes!("../assets/icons/16/folder-symbolic.rgba")),
         ("document-new-symbolic", 16) => Some(include_bytes!(
             "../assets/icons/16/document-new-symbolic.rgba"
         )),
@@ -204,6 +222,14 @@ const COLORS: &[&str] = &[
 pub(super) fn colored_pixels(name: &str, size: i32, color: &str) -> Option<&'static [u8]> {
     let index = COLORS.iter().position(|c| *c == color)?;
     let bytes: &[u8] = match (name, size) {
+        ("text-x-generic-symbolic", 32) => {
+            include_bytes!("../assets/icons/32/text-x-generic-symbolic-colors.rgba")
+        }
+        ("text-x-generic-symbolic", 16) => {
+            include_bytes!("../assets/icons/16/text-x-generic-symbolic-colors.rgba")
+        }
+        ("folder-symbolic", 32) => include_bytes!("../assets/icons/32/folder-symbolic-colors.rgba"),
+        ("folder-symbolic", 16) => include_bytes!("../assets/icons/16/folder-symbolic-colors.rgba"),
         ("document-new-symbolic", 16) => {
             include_bytes!("../assets/icons/16/document-new-symbolic-colors.rgba")
         }

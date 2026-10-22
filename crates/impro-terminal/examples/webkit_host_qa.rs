@@ -2,6 +2,8 @@
 mod common;
 use common::*;
 use gtk::prelude::*;
+// This standalone QA host also supports WebKit feature levels before 2.40.
+#[allow(deprecated)]
 fn main() {
     gtk::init().expect("GTK display");
     {

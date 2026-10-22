@@ -300,7 +300,7 @@ impl MainWindow {
     pub fn quick_switcher(&self) -> Option<QuickSwitcher> {
         self.switcher.borrow().clone()
     }
-    pub fn open_command_palette(&self) {
+    fn ensure_command_palette(&self) {
         if self.command_palette().is_none() {
             let weak = self.weak();
             let palette = CommandPalette::new(move || {
@@ -311,9 +311,100 @@ impl MainWindow {
             });
             *self.palette.borrow_mut() = Some(palette);
         }
+    }
+    pub fn open_command_palette(&self) {
+        self.ensure_command_palette();
         if let Some(palette) = self.command_palette() {
             self.overlay.show_prompt(&palette);
         }
+    }
+
+    /// Warm one hidden palette in bounded idle slices after the complete first paint.
+    pub(crate) fn stage_command_palette_cache(&self) {
+        let weak = self.weak();
+        let mut palette: Option<CommandPalette> = None;
+        let mut realise = std::collections::VecDeque::<gtk::Widget>::new();
+        let mut measure = Vec::<gtk::Widget>::new();
+        let source = glib::idle_add_local_full(glib::Priority::LOW, move || {
+            let Some(this) = weak.upgrade().map(Self) else {
+                return glib::ControlFlow::Break;
+            };
+            if this.closed.get() {
+                this.palette_cache_idle.borrow_mut().take();
+                return glib::ControlFlow::Break;
+            }
+            let started = std::time::Instant::now();
+            if palette.is_none() {
+                this.ensure_command_palette();
+                if let Some(prompt) = this.command_palette() {
+                    if !prompt.is_open() {
+                        prompt.set_no_show_all(true);
+                        prompt.set_child_visible(false);
+                        if prompt.parent().is_none() {
+                            this.overlay.add_overlay(prompt.widget());
+                        }
+                        prompt.show();
+                        realise.push_back(prompt.widget().clone().upcast());
+                    }
+                    palette = Some(prompt);
+                }
+            } else if let Some(prompt) = &palette {
+                // A user can open the palette while warmup is pending. Let that
+                // interaction own its geometry and focus, then retain the cache.
+                if prompt.is_open() {
+                    this.overlay.cache_prompt(prompt);
+                    this.palette_cache_idle.borrow_mut().take();
+                    return glib::ControlFlow::Break;
+                }
+                // One native widget operation per dispatch; never accumulate
+                // a font fallback lookup with other widgets in the same slice.
+                if let Some(widget) = realise.pop_front() {
+                    let operation = std::time::Instant::now();
+                    widget.realize();
+                    if std::env::var_os("IMPRO_QA_TIMING").is_some() {
+                        println!(
+                            "palette-realize-{}-ms={:.3}",
+                            widget.type_().name(),
+                            operation.elapsed().as_secs_f64() * 1000.0
+                        );
+                    }
+                    if let Some(container) = widget.downcast_ref::<gtk::Container>() {
+                        realise.extend(container.children());
+                    }
+                    measure.push(widget);
+                } else if let Some(widget) = measure.pop() {
+                    // Children first: the final parent requests then hit GTK's cache.
+                    let operation = std::time::Instant::now();
+                    widget.preferred_width();
+                    widget.preferred_height_for_width(600);
+                    if std::env::var_os("IMPRO_QA_TIMING").is_some() {
+                        println!(
+                            "palette-measure-{}-ms={:.3}",
+                            widget.type_().name(),
+                            operation.elapsed().as_secs_f64() * 1000.0
+                        );
+                    }
+                } else {
+                    this.overlay.cache_prompt(prompt);
+                    this.palette_cache_idle.borrow_mut().take();
+                    if std::env::var_os("IMPRO_QA_TIMING").is_some() {
+                        println!(
+                            "palette-cache-final-ms={:.3}",
+                            started.elapsed().as_secs_f64() * 1000.0
+                        );
+                    }
+                    return glib::ControlFlow::Break;
+                }
+            }
+            if std::env::var_os("IMPRO_QA_TIMING").is_some() {
+                println!(
+                    "palette-cache-slice-ms={:.3}",
+                    started.elapsed().as_secs_f64() * 1000.0
+                );
+            }
+            glib::ControlFlow::Continue
+        });
+        *self.palette_cache_idle.borrow_mut() = Some(source);
     }
     pub fn open_quick_switcher(&self) {
         if self.quick_switcher().is_none() {

@@ -29,7 +29,13 @@ fn test_default_layout_and_title() {
         assert!(w.settings_dialog().is_none());
         assert!(w.graph_views().is_empty());
         assert!(w.gitgraph_views().is_empty());
-        assert!(w.command_palette().is_none());
+        let palette = w
+            .command_palette()
+            .expect("palette warmed after first paint");
+        assert!(palette.is_realized());
+        assert!(!palette.is_visible());
+        assert!(!palette.is_open());
+        assert!(w.overlay.prompt().is_none());
     });
 }
 #[test]

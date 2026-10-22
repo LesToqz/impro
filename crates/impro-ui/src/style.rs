@@ -194,6 +194,15 @@ pub fn apply_theme(
         .ok_or_else(|| StyleError("impro theme requires an initialized GTK display".into()))?;
     let settings = gtk::Settings::default()
         .ok_or_else(|| StyleError("impro theme requires an initialized GTK display".into()))?;
+    let started = std::time::Instant::now();
+    let trace = |phase: &str| {
+        if std::env::var_os("IMPRO_QA_TIMING").is_some() {
+            println!(
+                "style-{phase}-ms={:.3}",
+                started.elapsed().as_secs_f64() * 1000.0
+            );
+        }
+    };
     let themed = with_accent(theme, accent);
     let key = format!(
         "{}:{ui_font:?}:{editor_font:?}",
@@ -207,8 +216,10 @@ pub fn apply_theme(
         });
         css
     });
+    trace("render");
     // Stage strict parsing first. No RefCell borrow spans GTK calls or CSS builders.
     let validated = create_provider(&css)?;
+    trace("parse");
     let previous = provider();
     if let Some(provider) = previous {
         provider
@@ -222,7 +233,9 @@ pub fn apply_theme(
         );
         STATE.with(|s| s.borrow_mut().provider = Some(validated));
     }
+    trace("provider");
     settings.set_gtk_application_prefer_dark_theme(themed.dark);
+    trace("settings");
     STATE.with(|s| s.borrow_mut().current = Some(Rc::new(themed)));
     Ok(())
 }

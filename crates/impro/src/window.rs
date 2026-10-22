@@ -39,6 +39,7 @@ pub struct WindowWidgets {
     pub(crate) commands: RefCell<Vec<Command>>,
     pub(crate) settings_dialog: RefCell<Option<SettingsDialog>>,
     pub(crate) palette: RefCell<Option<CommandPalette>>,
+    pub(crate) palette_cache_idle: RefCell<Option<glib::SourceId>>,
     pub(crate) switcher: RefCell<Option<QuickSwitcher>>,
     pub(crate) recent: RefCell<Vec<PathBuf>>,
     pub(crate) switcher_epoch: Cell<u64>,
@@ -84,13 +85,11 @@ impl MainWindow {
     ) -> Self {
         let started = std::time::Instant::now();
         let trace = |phase: &str| {
-            if std::env::var_os("IMPRO_QA_TRACE").is_some()
-                || std::env::var_os("IMPRO_QA_TIMING").is_some()
-            {
-                eprintln!(
-                    "window-{phase}-ms={:.3}",
-                    started.elapsed().as_secs_f64() * 1000.0
-                );
+            let elapsed = started.elapsed().as_secs_f64() * 1000.0;
+            if std::env::var_os("IMPRO_QA_TIMING").is_some() {
+                println!("window-{phase}-ms={elapsed:.3}");
+            } else if std::env::var_os("IMPRO_QA_TRACE").is_some() {
+                eprintln!("window-{phase}-ms={elapsed:.3}");
             }
         };
         crate::style::init();
@@ -158,6 +157,7 @@ impl MainWindow {
             commands: RefCell::new(Vec::new()),
             settings_dialog: RefCell::new(None),
             palette: RefCell::new(None),
+            palette_cache_idle: RefCell::new(None),
             switcher: RefCell::new(None),
             recent: RefCell::new(Vec::new()),
             switcher_epoch: Cell::new(0),
@@ -226,7 +226,19 @@ impl MainWindow {
         this.configure_shell(autostart);
         trace("terminal-pane");
         impro_ui::icons::prepare_widget(&this.explorer);
+        crate::startup_icons::prepare(&this);
         trace("icons");
+        let weak = this.weak();
+        let painted = Cell::new(false);
+        this.window.connect_draw(move |_, _| {
+            if let Some(this) = weak.upgrade().map(Self) {
+                if this.layout_ready() && !painted.replace(true) {
+                    // LOW runs after GDK's paint and the QA capture idle.
+                    this.stage_command_palette_cache();
+                }
+            }
+            glib::Propagation::Proceed
+        });
         this.window.set_title(identity::WINDOW_TITLE);
         this
     }
@@ -720,6 +732,9 @@ impl MainWindow {
     pub fn shutdown(&self) {
         if self.closed.replace(true) {
             return;
+        }
+        if let Some(source) = self.palette_cache_idle.borrow_mut().take() {
+            source.remove();
         }
         for source in &self.dock_size_idle {
             if let Some(source) = source.borrow_mut().take() {

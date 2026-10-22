@@ -8,6 +8,7 @@ fn raw_icons_match_the_desktop_renderer_at_both_scales() {
         impro_ui::icons::init();
         pump(30);
         let image = gtk::Image::new();
+        let window = window(&image);
         let context = image.style_context();
         let theme = gtk::IconTheme::default().unwrap();
         for color in ["#a3b5b8", "#20352e", "#ffffff"] {
@@ -18,6 +19,8 @@ fn raw_icons_match_the_desktop_renderer_at_both_scales() {
             context.add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
             for (name, size) in [
                 ("preferences-system-symbolic", 16),
+                ("folder-symbolic", 16),
+                ("text-x-generic-symbolic", 16),
                 ("sidebar-show-symbolic", 16),
                 ("window-close-symbolic", 32),
             ] {
@@ -54,6 +57,9 @@ fn raw_icons_match_the_desktop_renderer_at_both_scales() {
             }
             context.remove_provider(&provider);
         }
+        unsafe {
+            window.destroy();
+        }
     });
 }
 
@@ -76,5 +82,15 @@ fn unknown_icons_and_sizes_keep_the_normal_theme_lookup() {
             image.state_flags()
         )
         .is_none());
+        for (size, scale) in [(i32::MAX, 2), (-16, -1), (16, 0)] {
+            assert!(impro_ui::icons::symbolic_surface(
+                "window-close-symbolic",
+                size,
+                scale,
+                &image.style_context(),
+                image.state_flags()
+            )
+            .is_none());
+        }
     });
 }
