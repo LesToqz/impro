@@ -12,3 +12,8 @@ gio.workspace = true
 pango.workspace = true
 impro-core.workspace = true
 impro-ui.workspace = true
+regex.workspace = true
+fancy-regex = "0.16"
+
+[dev-dependencies]
+tempfile.workspace = true

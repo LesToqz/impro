@@ -1,0 +1,22 @@
+.live-table {background:{border}; border:1px solid {border}; border-radius:8px;}
+.live-table-cell {background-color:{table_bg};}
+.live-table-cell.live-table-header {background-image:linear-gradient(alpha({overlay},0.045), alpha({overlay},0.045));}
+.live-table-cell.tl {border-top-left-radius:7px;}
+.live-table-cell.tr {border-top-right-radius:7px;}
+.live-table-cell.bl {border-bottom-left-radius:7px;}
+.live-table-cell.br {border-bottom-right-radius:7px;}
+.live-table-inner {margin:2px; padding:6px 9px; border:1px solid transparent; border-radius:5px;}
+.live-table-label, textview.live-markdown textview.live-table-editor,
+textview.live-markdown textview.live-table-editor text {color:{foreground}; background:transparent;
+ font-family:"{table_font}"; font-size:{table_size}pt; font-weight:normal;}
+.live-table-header .live-table-label, textview.live-markdown .live-table-header textview.live-table-editor {font-weight:600;}
+.live-table-add {background:alpha({overlay},0.035); color:{muted}; border:0; border-radius:4px; box-shadow:none;
+ min-height:0; min-width:0; padding:0; font-size:{table_add_size}pt;}
+.live-table-add:hover {background:alpha({overlay},0.09); color:{foreground};}
+.live-table-menu .live-table-check {color:{muted};}
+.live-table-grip {background-color:{surface}; border:1px solid {border}; border-radius:4px;}
+.live-table-grip.hot {background-image:linear-gradient(alpha({overlay},0.08), alpha({overlay},0.08));}
+.live-table-dot {min-width:2px; min-height:2px; border-radius:1px; background:{muted};}
+.live-table-grip.hot .live-table-dot {background:{foreground};}
+.live-table-cell.focused > .live-table-inner {border-color:alpha({accent},0.7); background-color:alpha({accent},0.07);}
+.live-table-label link {color:{accent_text};}
