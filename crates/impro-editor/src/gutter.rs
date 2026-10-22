@@ -61,6 +61,31 @@ pub fn layout_for(view: &gtk::TextView, text: &str) -> pango::Layout {
     layout.set_font_description(Some(&font));
     layout
 }
+/// The font a gutter label resolves to: a throwaway label with the same
+/// low-priority fallback rule (the view's family, 12px) beneath the screen's
+/// rules, so an explicit interface family (`* {font-family}`) wins exactly as
+/// it does for the labels of the reference gutter.
+fn label_font(view: &gtk::TextView) -> pango::FontDescription {
+    let family = view
+        .style_context()
+        .font(gtk::StateFlags::NORMAL)
+        .family()
+        .map(|f| f.to_string())
+        .unwrap_or_default();
+    let provider = gtk::CssProvider::new();
+    let css = format!(
+        "label.impro-gutter-num {{font-family: \"{}\"; font-size: 12px; font-feature-settings: \"tnum\";}}",
+        family.replace('\\', "\\\\").replace('"', "\\\"")
+    );
+    let _ = provider.load_from_data(css.as_bytes());
+    let label = gtk::Label::new(None);
+    let context = label.style_context();
+    context.add_class("impro-gutter-num");
+    context.add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION - 1);
+    let mut font = context.font(gtk::StateFlags::NORMAL);
+    font.set_absolute_size(12.0 * pango::SCALE as f64);
+    font
+}
 /// A drawn row in viewport coordinates, exposed for geometry/accessibility adapters.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct GutterRow {
@@ -362,13 +387,14 @@ impl ViewChrome {
         let Some(view) = self.0.view.upgrade() else {
             return;
         };
-        let font: pango::FontDescription = view.style_context().font(gtk::StateFlags::NORMAL);
-        let mut font = font;
-        font.set_absolute_size(12.0 * pango::SCALE as f64);
+        let font = label_font(&view);
+        let tabular = pango::AttrList::new();
+        tabular.insert(pango::AttrFontFeatures::new("tnum"));
         let layouts: Vec<_> = (0..10)
             .map(|d| {
                 let l = view.create_pango_layout(Some(&d.to_string()));
                 l.set_font_description(Some(&font));
+                l.set_attributes(Some(&tabular));
                 l
             })
             .collect();
