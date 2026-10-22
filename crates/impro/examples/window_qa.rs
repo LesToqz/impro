@@ -1,6 +1,8 @@
 //! Process-isolated Git integration and full-window performance/visual harness.
 #[path = "../tests/common/mod.rs"]
 mod common;
+#[path = "parity/scenes.rs"]
+mod scenes;
 use common::*;
 use gtk::prelude::*;
 use javascriptcore::ValueExt;
@@ -46,6 +48,10 @@ fn js(web: &webkit2gtk::WebView, script: &str) -> Value {
 fn main() {
     gtk::init().expect("X11 display");
     let mode = std::env::args().nth(1).unwrap_or_else(|| "git".into());
+    if mode == "scene" {
+        scenes::run();
+        return;
+    }
     if mode == "controls" {
         controls();
         return;

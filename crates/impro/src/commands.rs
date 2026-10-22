@@ -409,6 +409,11 @@ impl MainWindow {
     pub fn open_quick_switcher(&self) {
         if self.quick_switcher().is_none() {
             let switcher = QuickSwitcher::new(self.root());
+            switcher.set_instructions(&[
+                ("↑↓", "to navigate"),
+                ("↵", "to open"),
+                ("esc", "to dismiss"),
+            ]);
             let weak = self.weak();
             switcher.connect_chosen(move |item, _| {
                 if let (Some(this), Some(path)) = (weak.upgrade().map(Self), item.data::<PathBuf>())
