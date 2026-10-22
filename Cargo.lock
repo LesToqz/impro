@@ -608,13 +608,18 @@ dependencies = [
 name = "impro-settings-ui"
 version = "0.1.0"
 dependencies = [
+ "atk",
  "gdk",
+ "gdk-pixbuf",
  "gio",
  "glib",
  "gtk",
  "impro-core",
  "impro-ui",
+ "libc",
  "pango",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]

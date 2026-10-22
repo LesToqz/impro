@@ -1,0 +1,34 @@
+window.impro-settings, .impro-settings-content, .impro-settings-content viewport {
+    background-color: {bg}; color: {foreground}; }
+.impro-settings-nav { background-color: {bg}; border-right: 1px solid {border}; }
+.impro-settings-nav viewport { background-color: transparent; }
+.impro-settings-group-title { font-size: 12px; font-weight: 600; color: {faint}; }
+.impro-settings-heading { font-size: 15px; font-weight: 600; color: {foreground}; }
+.impro-settings-page-title { font-size: 20px; font-weight: 600; color: {foreground}; }
+.impro-settings-empty { font-size: 13px; color: {muted}; }
+.impro-settings-swatch { border-radius: 3px; min-width: 10px; min-height: 16px;
+    border: 1px solid {border_hover}; }
+.impro-settings combobox button, .impro-settings button.font { font-size: 13px; }
+.impro-settings button.font label { font-size: 13px; }
+.impro-settings scale { padding: 0; }
+.impro-settings scale trough { min-height: 4px; border-radius: 4px; border: 0;
+    background: {border_hover}; box-shadow: none; outline-width: 0; }
+.impro-settings scale highlight { min-height: 4px; border-radius: 4px; border: 0;
+    background: {accent}; }
+.impro-settings scale slider { min-width: 18px; min-height: 18px; margin: -7px;
+    border-radius: 9px; border: 1px solid alpha(#000000, 0.12); background: #ffffff;
+    box-shadow: 0 1px 2px alpha(#000000, 0.2); }
+.impro-settings scale slider:hover { border-color: {border_focus}; }
+.impro-settings scale:focus slider { box-shadow: 0 0 0 2px {border_focus}; }
+.impro-settings scale value { font-size: 13px; color: {muted}; min-width: 20px; }
+.impro-settings spinbutton { background: {input_bg}; color: {foreground};
+    border: 1px solid {border}; border-radius: 5px; box-shadow: none; font-size: 13px; }
+.impro-settings spinbutton entry, .impro-settings spinbutton entry:focus {
+    background: transparent; border: 0; box-shadow: none; min-height: 20px; padding: 4px 8px; }
+.impro-settings spinbutton button { background: transparent; box-shadow: none; border: 0;
+    border-left: 1px solid {border}; border-radius: 0; padding: 0 6px; min-height: 20px;
+    color: {muted}; }
+.impro-settings spinbutton button:hover { background: alpha({overlay}, 0.067);
+    color: {foreground}; }
+.impro-settings spinbutton:focus { border-color: {border_focus};
+    box-shadow: 0 0 0 2px {border_focus}; }
