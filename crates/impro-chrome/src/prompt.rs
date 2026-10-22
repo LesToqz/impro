@@ -54,6 +54,7 @@ pub struct ResultRow {
     pub title: gtk::Label,
     pub detail: gtk::Label,
     pub chips: gtk::Box,
+    cached: Rc<RefCell<Option<PromptItem>>>,
 }
 impl ResultRow {
     fn new() -> Self {
@@ -85,9 +86,24 @@ impl ResultRow {
             title,
             detail,
             chips,
+            cached: Rc::new(RefCell::new(None)),
         }
     }
     fn update(&self, item: &PromptItem) {
+        let same = self.cached.borrow().as_ref().is_some_and(|old| {
+            old.label == item.label
+                && old.detail == item.detail
+                && old.hotkey == item.hotkey
+                && old.label_ranges == item.label_ranges
+                && old.detail_ranges == item.detail_ranges
+                && old.muted == item.muted
+        });
+        if same {
+            return;
+        }
+        let mut cached = item.clone();
+        cached.data = None;
+        *self.cached.borrow_mut() = Some(cached);
         self.title
             .set_markup(&highlight_markup(&item.label, &item.label_ranges));
         self.detail
@@ -485,6 +501,9 @@ impl Prompt {
             }
         }
     }
+    pub fn r#move(&self, delta: i32, wrap: bool) {
+        self.move_selection(delta, wrap);
+    }
     pub fn move_selection(&self, delta: i32, wrap: bool) {
         let len = self.0.items.borrow().len() as i32;
         if len > 0 {
@@ -528,6 +547,7 @@ impl Prompt {
             return;
         }
         self.0.pending_choice.set(None);
+        self.0.busy.set(false);
         let host = self.0.host_closed.borrow().clone();
         if let Some(f) = host {
             f();
@@ -539,6 +559,13 @@ impl Prompt {
     }
     pub(crate) fn set_host_closed(&self, callback: impl Fn() + 'static) {
         *self.0.host_closed.borrow_mut() = Some(Rc::new(callback));
+    }
+    pub(crate) fn refresh_after_index(&self) {
+        let pending = self.0.pending_choice.take();
+        self.refresh();
+        if let Some(mods) = pending {
+            self.choose(mods);
+        }
     }
     pub(crate) fn set_search_pending(&self, pending: bool) {
         self.0.busy.set(pending);

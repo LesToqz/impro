@@ -117,7 +117,10 @@ fn test_hover_pauses_and_leave_restarts_grace_timer() {
 fn test_invalid_arguments() {
     run(|| {
         let f = Fixture::new();
-        assert!(f.host.notify("x", 0, "fatal").is_err());
+        assert_eq!(
+            f.host.notify("x", 0, "fatal").err().as_deref(),
+            Some("unknown notice level 'fatal'")
+        );
         assert!(f.host.notify("x", -1, "info").is_err());
         for level in NOTICE_LEVELS {
             let n = f.host.notify(level, 0, level).unwrap();

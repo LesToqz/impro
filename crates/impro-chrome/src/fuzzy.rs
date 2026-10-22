@@ -17,6 +17,10 @@ pub const CASE: f64 = 0.1;
 pub const CAP: usize = 40;
 /// Lowercase each character only when it remains one character.
 pub fn fold(text: &str) -> String {
+    let low = text.to_lowercase();
+    if low.chars().count() == text.chars().count() {
+        return low;
+    }
     text.chars()
         .map(|c| {
             let mut lower = c.to_lowercase();

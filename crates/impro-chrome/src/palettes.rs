@@ -5,7 +5,7 @@ use crate::{
 };
 use gtk::prelude::*;
 use std::{
-    cell::RefCell,
+    cell::{Cell, RefCell},
     collections::{HashMap, HashSet},
     path::{Path, PathBuf},
     rc::Rc,
@@ -41,7 +41,7 @@ type CommandRun = Rc<dyn Fn(&Command)>;
 pub struct CommandPalette {
     prompt: Prompt,
     recent: Rc<RefCell<Vec<String>>>,
-    pub recent_limit: usize,
+    recent_limit: Rc<Cell<usize>>,
     run: Rc<RefCell<Vec<CommandRun>>>,
 }
 impl std::ops::Deref for CommandPalette {
@@ -102,19 +102,19 @@ impl CommandPalette {
         let this = Self {
             prompt,
             recent,
-            recent_limit: 20,
+            recent_limit: Rc::new(Cell::new(20)),
             run: Rc::new(RefCell::new(vec![])),
         };
         let recent = this.recent.clone();
         let run = this.run.clone();
-        let limit = this.recent_limit;
+        let limit = this.recent_limit.clone();
         this.prompt.connect_chosen(move |item, _| {
             if let Some(c) = item.data::<Command>() {
                 {
                     let mut rec = recent.borrow_mut();
                     rec.retain(|id| id != &c.id);
                     rec.insert(0, c.id.clone());
-                    rec.truncate(limit);
+                    rec.truncate(limit.get());
                 }
                 (c.callback)();
                 let callbacks = run.borrow().clone();
@@ -124,6 +124,13 @@ impl CommandPalette {
             }
         });
         this
+    }
+    pub fn recent_limit(&self) -> usize {
+        self.recent_limit.get()
+    }
+    pub fn set_recent_limit(&self, limit: usize) {
+        self.recent_limit.set(limit);
+        self.recent.borrow_mut().truncate(limit);
     }
     pub fn recent(&self) -> Vec<String> {
         self.recent.borrow().clone()
@@ -162,18 +169,18 @@ struct Files {
 }
 impl Drop for Files {
     fn drop(&mut self) {
-        if let Ok(c) = self.cancel.get_mut() {
-            if let Some(c) = c {
-                c.store(true, Ordering::Relaxed);
-            }
+        if let Ok(Some(c)) = self.cancel.get_mut() {
+            c.store(true, Ordering::Relaxed);
         }
     }
 }
+type SourcePaths = (Arc<Vec<PathBuf>>, Arc<Vec<PathBuf>>);
 #[derive(Clone)]
 pub struct QuickSwitcher {
     prompt: Prompt,
     root: Rc<RefCell<PathBuf>>,
     files: Rc<RefCell<Arc<Files>>>,
+    source: Rc<RefCell<SourcePaths>>,
 }
 impl std::ops::Deref for QuickSwitcher {
     type Target = Prompt;
@@ -208,6 +215,7 @@ impl QuickSwitcher {
             prompt,
             root: Rc::new(RefCell::new(root.into())),
             files: state,
+            source: Rc::new(RefCell::new((Arc::new(vec![]), Arc::new(vec![])))),
         };
         this.install_provider();
         this
@@ -215,9 +223,15 @@ impl QuickSwitcher {
     pub fn root(&self) -> PathBuf {
         self.root.borrow().clone()
     }
-    /// Set before `set_files` when the project changes; supplied paths stay intact.
+    /// Reindex the supplied snapshot when the project root changes.
     pub fn set_root(&self, root: impl Into<PathBuf>) {
-        *self.root.borrow_mut() = root.into();
+        let root = root.into();
+        if *self.root.borrow() == root {
+            return;
+        }
+        *self.root.borrow_mut() = root;
+        let (paths, recent) = self.source.borrow().clone();
+        self.replace_files(paths, recent);
     }
     pub fn display_path(&self, path: &Path) -> String {
         display_path(path, &self.root.borrow())
@@ -225,6 +239,12 @@ impl QuickSwitcher {
     /// Replace the index from the caller's file list. Reindexing happens on a worker
     /// for large lists; `index_ready()` reports completion and visible results refresh.
     pub fn set_files(&self, paths: Vec<PathBuf>, recent: Vec<PathBuf>) {
+        let paths = Arc::new(paths);
+        let recent = Arc::new(recent);
+        *self.source.borrow_mut() = (paths.clone(), recent.clone());
+        self.replace_files(paths, recent);
+    }
+    fn replace_files(&self, paths: Arc<Vec<PathBuf>>, recent: Arc<Vec<PathBuf>>) {
         let root = self.root();
         let large = paths.len() > 5000;
         let files = Arc::new(Files {
@@ -253,7 +273,7 @@ impl QuickSwitcher {
             receiver.attach(None, move |_| {
                 if let (Some(p), Some(state)) = (weak.upgrade(), state.upgrade()) {
                     if Arc::ptr_eq(&state.borrow(), &expected) {
-                        p.refresh();
+                        p.refresh_after_index();
                     }
                 }
                 glib::ControlFlow::Break
@@ -283,6 +303,12 @@ impl QuickSwitcher {
                 if let Some(c) = old.take() {
                     c.store(true, Ordering::Relaxed);
                 }
+            }
+            if !files.ready.load(Ordering::Acquire) {
+                if let Some(p) = weak_prompt.upgrade() {
+                    p.set_search_pending(true);
+                }
+                return vec![];
             }
             if query.trim().is_empty() {
                 return files
@@ -361,8 +387,21 @@ fn display_path(path: &Path, root: &Path) -> String {
             std::env::current_dir().unwrap_or_default().join(p)
         }
     };
-    let path_abs = absolute(path);
-    let root_abs = absolute(root);
+    fn normalize(path: PathBuf) -> PathBuf {
+        let mut result = PathBuf::new();
+        for part in path.components() {
+            match part {
+                std::path::Component::ParentDir => {
+                    result.pop();
+                }
+                std::path::Component::CurDir => {}
+                other => result.push(other.as_os_str()),
+            }
+        }
+        result
+    }
+    let path_abs = normalize(absolute(path));
+    let root_abs = normalize(absolute(root));
     if !root.as_os_str().is_empty() {
         if let Ok(relative) = path_abs.strip_prefix(root_abs) {
             return if relative.as_os_str().is_empty() {
@@ -375,10 +414,11 @@ fn display_path(path: &Path, root: &Path) -> String {
     path.to_string_lossy().into()
 }
 
-fn build_files(files: &Files, paths: Vec<PathBuf>, recent: Vec<PathBuf>, root: &Path) {
+fn build_files(files: &Files, paths: Arc<Vec<PathBuf>>, recent: Arc<Vec<PathBuf>>, root: &Path) {
     let mut seen = HashSet::new();
     let entries: Vec<_> = paths
-        .into_iter()
+        .iter()
+        .cloned()
         .filter_map(|path| {
             let shown = display_path(&path, root);
             seen.insert(shown.clone())
@@ -393,13 +433,13 @@ fn build_files(files: &Files, paths: Vec<PathBuf>, recent: Vec<PathBuf>, root: &
     let mut sorted: Vec<_> = entries
         .iter()
         .enumerate()
-        .map(|(i, f)| (fuzzy::fold(&f.shown), &f.shown, i))
+        .map(|(i, f)| (impro_core::text::casefold(&f.shown), &f.shown, i))
         .collect();
     sorted.sort_unstable();
     let mut empty = vec![];
     let mut seen = HashSet::new();
-    for path in recent {
-        let shown = display_path(&path, root);
+    for path in recent.iter() {
+        let shown = display_path(path, root);
         if let Some(&i) = lookup.get(&shown) {
             if seen.insert(i) {
                 empty.push(entries[i].clone());

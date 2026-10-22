@@ -34,10 +34,12 @@ fn test_programmatic_sync_does_not_emit_request_and_icon_fallbacks() {
 #[test]
 fn test_button_accessibility_geometry_fade_and_keyboard_activation() {
     run(|| {
-        let f = Fixture::new();
+        theme("impro-dark");
+        let window = gtk::Window::new(gtk::WindowType::Toplevel);
+        window.set_default_size(900, 600);
         let bar = TitleBar::new(&gtk::MenuBar::new());
-        f.window.set_titlebar(Some(&bar));
-        bar.show_all();
+        window.set_titlebar(Some(&bar));
+        window.show_all();
         pump(40);
         let b = bar.dock_button();
         assert!(b.can_focus());
@@ -54,5 +56,8 @@ fn test_button_accessibility_geometry_fade_and_keyboard_activation() {
         b.grab_focus();
         assert!(b.activate());
         poll(|| b.is_active());
+        unsafe {
+            window.destroy();
+        }
     });
 }

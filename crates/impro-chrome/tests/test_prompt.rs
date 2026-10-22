@@ -499,13 +499,26 @@ fn benchmark_prompt() {
         let dispatch = start.elapsed();
         poll(|| s.index_ready() && s.items().len() == 100);
         pump(30);
+        let painted = Rc::new(Cell::new(None::<std::time::Duration>));
+        let flag = painted.clone();
         let start = std::time::Instant::now();
+        let handler = s.widget().connect_local("draw", true, move |_| {
+            flag.set(Some(start.elapsed()));
+            Some(false.to_value())
+        });
         f.host.show_prompt(&s);
         println!(
             "open ready 20k prompt: {:.3} ms; index dispatch {:.3} ms",
             start.elapsed().as_secs_f64() * 1000.,
             dispatch.as_secs_f64() * 1000.
         );
+        poll(|| painted.get().is_some());
+        println!(
+            "open to first draw {:.3} ms",
+            painted.get().unwrap().as_secs_f64() * 1000.
+        );
+        s.widget().disconnect(handler);
+        pump(50);
         let start = std::time::Instant::now();
         s.set_query("main");
         let dispatch = start.elapsed();
@@ -516,6 +529,12 @@ fn benchmark_prompt() {
             start.elapsed().as_secs_f64() * 1000.
         );
         let items = s.items();
+        let update = std::time::Instant::now();
+        s.set_items(items.clone());
+        println!(
+            "update 100 mapped rows {:.3} ms",
+            update.elapsed().as_secs_f64() * 1000.
+        );
         let start = std::time::Instant::now();
         let p = Prompt::new(|_| vec![], "");
         p.set_items(items);
@@ -577,5 +596,47 @@ fn test_async_cancel_does_not_deliver_stale_rows() {
         s.close();
         pump(50);
         assert!(!s.is_open());
+    });
+}
+#[test]
+fn test_root_change_reindexes_existing_snapshot_and_normalizes_paths() {
+    run(|| {
+        let f = Fixture::new();
+        let s = QuickSwitcher::new("/r");
+        s.set_files(vec!["/r/src/../plan/a.md".into()], vec![]);
+        f.show(&s);
+        assert_eq!(s.items()[0].detail, "plan");
+        s.set_root("/r/plan");
+        assert_eq!(s.items()[0].detail, "");
+        assert_eq!(s.display_path(std::path::Path::new("/r/plan")), ".");
+    });
+}
+#[test]
+fn test_reentrant_provider_and_selection_callbacks() {
+    run(|| {
+        let f = Fixture::new();
+        let p = prompt(5);
+        f.show(&p);
+        let weak = p.widget().downgrade();
+        let observed = Rc::new(Cell::new(0));
+        let out = observed.clone();
+        p.list().connect_row_selected(move |_, _| {
+            if let Some(widget) = weak.upgrade() {
+                widget.set_tooltip_text(Some("selected"));
+                out.set(out.get() + 1);
+            }
+        });
+        p.select(3);
+        p.set_query("item");
+        assert!(observed.get() > 0);
+        let calls = Rc::new(Cell::new(0));
+        let c = calls.clone();
+        let host = f.host.clone();
+        p.connect_closed(move || {
+            c.set(c.get() + 1);
+            host.hide_prompt();
+        });
+        p.close();
+        assert_eq!(calls.get(), 1);
     });
 }

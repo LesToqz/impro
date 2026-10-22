@@ -279,10 +279,18 @@ impl OverlayHost {
             .filter(|n| !n.leaving())
             .collect()
     }
+    /// Show a notice with the shared default hold duration.
+    pub fn notify_default(&self, text: &str, level: &str) -> Result<Notice, String> {
+        self.notify(
+            text,
+            impro_ui::motion::DURATIONS["notice_autohide"] as i32,
+            level,
+        )
+    }
     /// Show a notice; zero timeout stays until dismissed. Invalid inputs are errors.
     pub fn notify(&self, text: &str, timeout: i32, level: &str) -> Result<Notice, String> {
         if !NOTICE_LEVELS.contains(&level) {
-            return Err(format!("unknown notice level {level:?}"));
+            return Err(format!("unknown notice level {}", quoted(level)));
         }
         if timeout < 0 {
             return Err("timeout must be nonnegative".into());
@@ -346,6 +354,7 @@ impl OverlayHost {
                 }
             },
             impro_ui::motion::AnimateOptions {
+                easing: impro_ui::motion::easing("ease_in_out").expect("built-in curve"),
                 key: impro_ui::motion::MotionKey::unique(),
                 ..Default::default()
             },
@@ -378,6 +387,7 @@ impl OverlayHost {
                 }
             },
             impro_ui::motion::AnimateOptions {
+                easing: impro_ui::motion::easing("ease_in_out").expect("built-in curve"),
                 key: impro_ui::motion::MotionKey::unique(),
                 on_done: Some(Box::new(move || {
                     if let (Some(inner), Some(n)) = (done.upgrade(), done_n.upgrade()) {
@@ -507,4 +517,29 @@ pub fn css(ui: &impro_core::themes::UiColors) -> String {
         .into(),
     );
     impro_ui::render_css(include_str!("overlay.css"), &ui)
+}
+
+fn quoted(text: &str) -> String {
+    let quote = if text.contains('\'') && !text.contains('"') {
+        '"'
+    } else {
+        '\''
+    };
+    let mut out = String::new();
+    out.push(quote);
+    for c in text.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if c == quote => {
+                out.push('\\');
+                out.push(c);
+            }
+            c => out.push(c),
+        }
+    }
+    out.push(quote);
+    out
 }

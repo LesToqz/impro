@@ -74,7 +74,7 @@ fn glyph(button: &impl IsA<gtk::Button>, names: &[&str], fallback: &str) {
     button.style_context().add_class("flat");
     button.style_context().add_class("impro-settings-button");
     if let Some(name) =
-        gtk::IconTheme::default().and_then(|t| names.iter().find(|n| t.has_icon(n)).copied())
+        gtk::IconTheme::default().and_then(|t| choose_icon(names, |name| t.has_icon(name)))
     {
         button.add(&gtk::Image::from_icon_name(Some(name), gtk::IconSize::Menu));
     } else {
@@ -82,18 +82,52 @@ fn glyph(button: &impl IsA<gtk::Button>, names: &[&str], fallback: &str) {
     }
     if let Some(child) = button.child() {
         child.set_opacity(GLYPH_OPACITY);
+        let value = std::rc::Rc::new(std::cell::Cell::new(0.));
+        let key = impro_ui::motion::MotionKey::unique();
         let weak = child.downgrade();
-        impro_ui::motion::StateFader::new(
-            button,
-            move |p| {
-                if let Some(c) = weak.upgrade() {
-                    c.set_opacity(GLYPH_OPACITY + (1. - GLYPH_OPACITY) * p);
-                }
-            },
-            impro_ui::motion::DURATIONS["clickable_icon_opacity"] as f64,
-            0.,
-        );
+        let current = value.clone();
+        button.add_events(gdk::EventMask::ENTER_NOTIFY_MASK | gdk::EventMask::LEAVE_NOTIFY_MASK);
+        button.connect_enter_notify_event(move |button, event| {
+            if event.detail() != gdk::NotifyType::Inferior {
+                fade_glyph(button, &weak, &current, key, 1.);
+            }
+            glib::Propagation::Proceed
+        });
+        let weak = child.downgrade();
+        button.connect_leave_notify_event(move |button, event| {
+            if event.detail() != gdk::NotifyType::Inferior {
+                fade_glyph(button, &weak, &value, key, 0.);
+            }
+            glib::Propagation::Proceed
+        });
     }
+}
+fn fade_glyph(
+    button: &gtk::Button,
+    child: &glib::WeakRef<gtk::Widget>,
+    value: &std::rc::Rc<std::cell::Cell<f64>>,
+    key: impro_ui::motion::MotionKey,
+    target: f64,
+) {
+    let start = value.get();
+    let value = value.clone();
+    let child = child.clone();
+    impro_ui::motion::animate(
+        button,
+        "clickable_icon_opacity",
+        move |p| {
+            let opacity = start + (target - start) * p;
+            value.set(opacity);
+            if let Some(c) = child.upgrade() {
+                c.set_opacity(GLYPH_OPACITY + (1. - GLYPH_OPACITY) * opacity);
+            }
+        },
+        impro_ui::motion::AnimateOptions {
+            easing: impro_ui::motion::easing("ease_in_out").expect("built-in curve"),
+            key,
+            ..Default::default()
+        },
+    );
 }
 impl TitleBar {
     /// Menus are supplied by the window so actions and accelerators remain centralized.
@@ -234,4 +268,35 @@ pub fn css(ui: &impro_core::themes::UiColors) -> String {
     ui.insert("hover".into(), format!("alpha({}, 0.067)", ui["overlay"]));
     ui.insert("pressed".into(), format!("alpha({}, 0.12)", ui["overlay"]));
     impro_ui::render_css(include_str!("titlebar.css"), &ui)
+}
+
+fn choose_icon<'a>(names: &[&'a str], available: impl Fn(&str) -> bool) -> Option<&'a str> {
+    names.iter().find(|name| available(name)).copied()
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_settings_icon_fallback_chain_and_glyph() {
+        let names = [
+            "preferences-system-symbolic",
+            "emblem-system-symbolic",
+            "preferences-other-symbolic",
+        ];
+        for wanted in names {
+            assert_eq!(choose_icon(&names, |name| name == wanted), Some(wanted));
+        }
+        assert_eq!(choose_icon(&names, |_| false), None);
+    }
+    #[test]
+    fn test_titlebar_toggle_fallback_glyphs() {
+        for names in [
+            ["sidebar-show-symbolic", "panel-left-symbolic"],
+            ["sidebar-show-right-symbolic", "panel-right-symbolic"],
+            ["panel-bottom-symbolic", "sidebar-show-bottom-symbolic"],
+        ] {
+            assert_eq!(choose_icon(&names, |name| name == names[1]), Some(names[1]));
+            assert_eq!(choose_icon(&names, |_| false), None);
+        }
+    }
 }
