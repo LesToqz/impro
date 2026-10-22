@@ -118,6 +118,7 @@ struct Inner {
     widget: gtk::Overlay,
     catcher: gtk::EventBox,
     prompt: RefCell<Option<Prompt>>,
+    cached_prompt: RefCell<Option<Prompt>>,
     previous: RefCell<Option<glib::WeakRef<gtk::Widget>>>,
     notices: RefCell<Vec<Notice>>,
     shown: RefCell<Vec<PromptCallback>>,
@@ -145,6 +146,7 @@ impl OverlayHost {
             widget,
             catcher,
             prompt: RefCell::new(None),
+            cached_prompt: RefCell::new(None),
             previous: RefCell::new(None),
             notices: RefCell::new(vec![]),
             shown: RefCell::new(vec![]),
@@ -181,6 +183,57 @@ impl OverlayHost {
     pub fn prompt(&self) -> Option<Prompt> {
         self.0.prompt.borrow().clone()
     }
+    /// Pre-realise one prompt after the host window has been realised. Its
+    /// hidden widget tree is retained across opens; replacing the cache releases
+    /// the previous hidden tree. Providers still reload on every open.
+    pub fn cache_prompt(&self, prompt: &Prompt) {
+        if prompt
+            .parent()
+            .is_some_and(|parent| parent != *self.widget().upcast_ref::<gtk::Widget>())
+        {
+            return;
+        }
+        let old = self.0.cached_prompt.replace(Some(prompt.clone()));
+        if let Some(old) = old.filter(|p| p.widget() != prompt.widget() && !p.is_open()) {
+            if old.parent().as_ref() == Some(self.widget().upcast_ref()) {
+                self.remove(old.widget());
+            }
+        }
+        if prompt.is_open() {
+            return;
+        }
+        prompt.set_no_show_all(true);
+        prompt.set_child_visible(false);
+        if prompt.parent().is_none() {
+            self.add_overlay(prompt.widget());
+        }
+        prompt.show();
+        if self.is_realized() {
+            fn realise(widget: &gtk::Widget) {
+                widget.realize();
+                if let Some(container) = widget.downcast_ref::<gtk::Container>() {
+                    for child in container.children() {
+                        realise(&child);
+                    }
+                }
+            }
+            realise(prompt.widget().upcast_ref());
+            // Position uses the active prompt, so use the same geometry here.
+            let (x, y, width, max_height) =
+                prompt_geometry(self.allocated_width(), self.allocated_height());
+            let (top, right, bottom, left) = SHADOW_MARGINS;
+            let (min, natural) = prompt.preferred_height_for_width(width + left + right);
+            let allocation = gdk::Rectangle::new(
+                x - left,
+                y - top,
+                width + left + right,
+                (min - top - bottom).max((natural - top - bottom).min(max_height)) + top + bottom,
+            );
+            prompt.size_allocate(&allocation);
+        }
+        prompt.hide();
+    }
+
     pub fn show_prompt(&self, prompt: &Prompt) {
         if self.prompt().is_some_and(|p| p.widget() == prompt.widget()) {
             prompt.focus_input();
@@ -200,7 +253,10 @@ impl OverlayHost {
             self.add_overlay(&self.0.catcher);
         }
         self.0.catcher.show();
-        self.add_overlay(prompt.widget());
+        if prompt.parent().is_none() {
+            self.add_overlay(prompt.widget());
+        }
+        prompt.set_child_visible(true);
         for n in self.all_notices() {
             self.reorder_overlay(n.widget(), -1);
         }
@@ -236,7 +292,16 @@ impl OverlayHost {
             return;
         };
         p.close();
-        if p.parent().as_ref() == Some(self.widget().upcast_ref()) {
+        let cached = self
+            .0
+            .cached_prompt
+            .borrow()
+            .as_ref()
+            .is_some_and(|cached| cached.widget() == p.widget());
+        if cached {
+            p.set_child_visible(false);
+            p.hide();
+        } else if p.parent().as_ref() == Some(self.widget().upcast_ref()) {
             self.remove(p.widget());
         }
         if restore {

@@ -271,3 +271,31 @@ fn benchmark_notices() {
         assert_eq!(f.host.notices().len(), 5);
     });
 }
+
+#[test]
+fn test_cached_prompt_stays_realised_and_restores_focus_on_reopen() {
+    run(|| {
+        let f = Fixture::new();
+        let p = prompt(10);
+        f.host.cache_prompt(&p);
+        assert!(p.is_realized());
+        assert!(!p.is_mapped());
+        assert!(!p.is_open());
+        assert!(!p.is_visible());
+        for _ in 0..2 {
+            f.show(&p);
+            assert!(p.is_mapped());
+            p.set_query("item 2");
+            f.host.hide_prompt();
+            assert!(p.is_realized());
+            assert!(!p.is_mapped());
+            assert!(!p.is_open());
+            assert!(f.text.has_focus());
+        }
+        let replacement = prompt(1);
+        f.host.cache_prompt(&replacement);
+        assert!(p.parent().is_none());
+        f.show(&replacement);
+        assert_eq!(replacement.items().len(), 1);
+    });
+}

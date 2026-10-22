@@ -499,6 +499,15 @@ fn benchmark_prompt() {
         let dispatch = start.elapsed();
         poll(|| s.index_ready() && s.items().len() == 100);
         pump(30);
+        if std::env::var_os("IMPRO_CHROME_BENCH_CACHE").is_some() {
+            let prepare = std::time::Instant::now();
+            f.host.cache_prompt(&s);
+            println!(
+                "cache preparation {:.3} ms",
+                prepare.elapsed().as_secs_f64() * 1000.
+            );
+            pump(30);
+        }
         let painted = Rc::new(Cell::new(None::<std::time::Duration>));
         let flag = painted.clone();
         let start = std::time::Instant::now();

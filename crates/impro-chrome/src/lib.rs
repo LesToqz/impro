@@ -14,7 +14,9 @@
 //!   All normal HeaderBar/Widget APIs remain available.
 //! - [`OverlayHost::new`] takes an optional main child. `show_prompt(&Prompt)`,
 //!   `hide_prompt()` and `prompt()` manage one prompt, outside-click closing and
-//!   focus restoration. `connect_prompt_shown` and `connect_prompt_hidden` receive
+//!   focus restoration. `cache_prompt(&Prompt)` pre-realises one hidden prompt
+//!   after the host window is realised and retains it across opens.
+//!   `connect_prompt_shown` and `connect_prompt_hidden` receive
 //!   the prompt. `notify(text, timeout_ms, level)` returns `Result<Notice, String>`;
 //!   `notify_default(text, level)` uses the shared hold duration. Use zero for sticky
 //!   notices and info, success,

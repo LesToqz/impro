@@ -57,3 +57,14 @@ The older source docstring's timing values do not describe the current tokens.
 The shared motion engine supplies reduced-motion handling and removes its clock
 when movement finishes. A positive notice hold uses a single expiry source;
 sticky notices have no timers. Notice frame updates allocate no Rust collections.
+
+Prompt prewarming is opt-in: after the host window is realised, call
+`host.cache_prompt(&palette)` before the first open. The host keeps one hidden,
+realised prompt tree and reuses it on later opens. Caching another prompt releases
+the previous hidden tree. Query reset, provider reload and focus restoration still
+happen on every open/close. Ordinary `show_prompt` remains supported without
+prewarming. The window owner must call this hook to get the first-open benefit.
+
+The ignored `benchmark_prompt` records first draw once, separately from mapping,
+and prints three reopen samples. Set `IMPRO_CHROME_BENCH_CACHE=1` to include cache
+preparation before the timed open; the preparation cost is printed separately.
