@@ -593,7 +593,16 @@ dependencies = [
 name = "impro-graph"
 version = "0.1.0"
 dependencies = [
+ "cairo-rs",
+ "gdk",
+ "gio",
+ "glib",
+ "gtk",
+ "impro-core",
+ "impro-ui",
  "memchr",
+ "pango",
+ "pangocairo",
  "regex",
  "serde_json",
  "tempfile",

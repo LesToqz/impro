@@ -26,6 +26,7 @@ pub mod model;
 pub mod parse;
 pub mod prefs;
 pub mod query;
+pub mod view;
 
 pub use delta::{diff, GraphDelta};
 pub use filter::{build, local, GraphOptions, LocalGraph};

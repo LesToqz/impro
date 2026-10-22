@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
-description = "Project graph engine: link parsing, project index, filters, preferences and force layout"
+description = "Project graph: link parsing, project index, filters, preferences, force layout and the native Graph view"
 
 [lib]
 name = "impro_graph"
@@ -13,6 +13,15 @@ name = "impro_graph"
 serde_json = "1"
 regex = "1"
 memchr = "2"
+gtk = { workspace = true, features = ["v3_24"] }
+gdk.workspace = true
+glib.workspace = true
+gio.workspace = true
+cairo-rs.workspace = true
+pango.workspace = true
+pangocairo.workspace = true
+impro-core.workspace = true
+impro-ui.workspace = true
 
 [dev-dependencies]
 tempfile = "3"
