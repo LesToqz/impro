@@ -97,7 +97,11 @@ fn open_and_measure(run: &Run, path: &Path, label: &str) -> impro_markdown::live
     let handler = run.panel.connect_local("draw", true, move |_| {
         if seen.get().is_none() {
             if let Some(tab) = weak.upgrade().and_then(|p| p.current_tab()) {
-                if let Some(live) = livemd::for_view(&tab.view) {
+                if std::env::var_os("PERF_TXT").is_some() {
+                    if tab.buffer.char_count() > 1000 {
+                        seen.set(Some(begin.elapsed()));
+                    }
+                } else if let Some(live) = livemd::for_view(&tab.view) {
                     if live.enabled() && live.viewport_painted() && live.block_count() > 0 {
                         seen.set(Some(begin.elapsed()));
                     }
@@ -110,6 +114,10 @@ fn open_and_measure(run: &Run, path: &Path, label: &str) -> impro_markdown::live
     until(|| first.get().is_some());
     run.panel.disconnect(handler);
     let tab = run.panel.current_tab().unwrap();
+    if std::env::var_os("PERF_TXT").is_some() {
+        println!("{label}: txt first-draw-ms={:.1}", ms(first.get().unwrap()));
+        std::process::exit(0);
+    }
     let live = livemd::for_view(&tab.view).expect("live renderer");
     let decorated = first.get().unwrap();
     let settle = Instant::now();
@@ -288,7 +296,14 @@ fn main() {
         } else {
             text
         };
-        let path = notes.join(format!("{name}.md"));
+        let path = notes.join(format!(
+            "{name}.{}",
+            if std::env::var_os("PERF_TXT").is_some() {
+                "txt"
+            } else {
+                "md"
+            }
+        ));
         std::fs::write(&path, &text).unwrap();
         if run.panel.current_tab().is_some() {
             run.panel.close_current(|_| {});

@@ -130,7 +130,15 @@ impl Inner {
             let previous = || {
                 (0..index).rev().map(|i| {
                     let item = &blocks.items[i];
-                    (item.text.as_str(), item.list_level, item.number)
+                    if item.painted {
+                        (item.text.as_str(), item.list_level, item.number)
+                    } else {
+                        (
+                            item.text.as_str(),
+                            super::model::UNKNOWN,
+                            super::model::UNKNOWN,
+                        )
+                    }
                 })
             };
             plan_line(text, a, active, caret, previous)
@@ -172,14 +180,14 @@ impl Inner {
                 .unwrap_or_default()
         };
         for (rel, want) in &plan.wants {
-            if let Want::Image { target, .. } = want {
+            if let Want::Image { target, b: end, .. } = want {
                 let state = previous
                     .iter()
                     .find(|(t, _)| t == target)
                     .map_or(ImageState::Pending, |(_, l)| ImageState::Ready(l.clone()));
                 out.images.push(ImageSlot {
                     rel_a: *rel,
-                    rel_b: 0,
+                    rel_b: *end - a,
                     target: target.clone(),
                     state,
                     tag: None,

@@ -75,8 +75,9 @@ fn main() {
             let Some(tab) = panel.current_tab() else {
                 return glib::ControlFlow::Continue;
             };
-            let busy = impro_markdown::livemd::for_view(&tab.view)
-                .is_some_and(|live| live.pending() || live.unpainted_blocks() > 0);
+            let busy = impro_markdown::livemd::for_view(&tab.view).is_some_and(|live| {
+                live.pending() || live.unpainted_blocks() > 0 || live.jobs_in_flight() > 0
+            });
             if (busy || !tab.view.is_mapped()) && started.elapsed() < Duration::from_secs(20) {
                 return glib::ControlFlow::Continue;
             }

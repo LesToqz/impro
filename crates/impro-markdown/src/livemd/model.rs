@@ -267,7 +267,12 @@ fn expand_len(text: &str) -> usize {
     mdview::expand_tabs(text).chars().count()
 }
 
-/// Nesting level of a list item of indent `depth` from the blocks before it.
+/// Cached level / number of a block above that has not been painted yet.
+pub const UNKNOWN: usize = usize::MAX;
+
+/// Nesting level of a list item of indent `depth` from the blocks before it
+/// (nearest first). Items not painted yet carry `UNKNOWN`; their level follows
+/// from their own text, so the result never depends on the paint order.
 pub fn list_level<'a>(
     previous: impl Iterator<Item = (&'a str, usize, usize)>,
     depth: usize,
@@ -275,16 +280,29 @@ pub fn list_level<'a>(
     if depth == 0 {
         return 0;
     }
+    // `target` is the indent of the ancestor chain being climbed, `climbed` the
+    // number of levels between the item and that ancestor.
+    let (mut target, mut climbed) = (depth, 0);
     for (text, level, _) in previous {
         let Some(parent) = LIST.captures(text) else {
             break;
         };
         let parent_depth = expand_len(&parent[1]);
-        if parent_depth <= depth {
-            return level + usize::from(parent_depth < depth);
+        if parent_depth > target {
+            continue;
+        }
+        if level != UNKNOWN {
+            return level + climbed + usize::from(parent_depth < target);
+        }
+        if parent_depth < target {
+            climbed += 1;
+            target = parent_depth;
+            if target == 0 {
+                return climbed;
+            }
         }
     }
-    1
+    climbed + 1
 }
 /// Number shown for an ordered item: continue the sibling above or start at `initial`.
 pub fn list_number<'a>(
@@ -292,6 +310,10 @@ pub fn list_number<'a>(
     depth: usize,
     initial: usize,
 ) -> usize {
+    // Siblings above whose number is still unknown, nearest first, with the
+    // number they start at when they are ordered items.
+    let mut unknown: Vec<Option<usize>> = Vec::new();
+    let mut base = 0;
     for (text, _, number) in previous {
         let Some(item) = LIST.captures(text) else {
             break;
@@ -300,11 +322,29 @@ pub fn list_number<'a>(
         if other < depth {
             break;
         }
-        if other == depth {
-            return if number > 0 { number + 1 } else { initial };
+        if other > depth {
+            continue;
         }
+        if number != UNKNOWN {
+            base = number;
+            break;
+        }
+        let marker = &item[2];
+        let ordered = item.get(3).is_none() && marker.starts_with(|c: char| c.is_ascii_digit());
+        unknown.push(ordered.then(|| marker[..marker.len() - 1].parse().unwrap_or(0)));
     }
-    initial
+    for start in unknown.into_iter().rev() {
+        base = match start {
+            Some(_) if base > 0 => base + 1,
+            Some(start) => start,
+            None => 0,
+        };
+    }
+    if base > 0 {
+        base + 1
+    } else {
+        initial
+    }
 }
 
 /// Lowercase letters for odd levels (`a.`, `b.` ... `aa.`), the plain token otherwise.
@@ -708,6 +748,26 @@ mod tests {
         let ordered = [("1. a\n", 0, 1)];
         assert_eq!(list_number(ordered.iter().copied(), 0, 1), 2);
         assert_eq!(list_number(std::iter::empty(), 0, 5), 5);
+    }
+
+    #[test]
+    fn levels_and_numbers_do_not_depend_on_what_is_painted() {
+        let unknown = |text| (text, UNKNOWN, UNKNOWN);
+        // "- a / - b / - c" nested two deep, nothing above painted.
+        let above = [unknown("  - b\n"), unknown("- a\n")];
+        assert_eq!(list_level(above.iter().copied(), 4), 2);
+        let orphan = [unknown("    - b\n")];
+        assert_eq!(list_level(orphan.iter().copied(), 8), 2);
+        let sibling = [unknown("  - b\n"), unknown("- a\n")];
+        assert_eq!(list_level(sibling.iter().copied(), 2), 1);
+        let ordered = [unknown("2. b\n"), unknown("1. a\n")];
+        assert_eq!(list_number(ordered.iter().copied(), 0, 3), 3);
+        let skipped = [unknown("9. b\n"), unknown("5. a\n")];
+        assert_eq!(list_number(skipped.iter().copied(), 0, 1), 7);
+        let mixed = [unknown("- a\n"), (" 1. x\n", 0, 4)];
+        assert_eq!(list_number(mixed.iter().copied(), 1, 1), 1);
+        let after_known = [unknown("2. b\n"), ("1. a\n", 0, 1)];
+        assert_eq!(list_number(after_known.iter().copied(), 0, 3), 3);
     }
 
     #[test]
