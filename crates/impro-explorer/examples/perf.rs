@@ -5,6 +5,7 @@
 //! xvfb-run -a cargo run --release -p impro-explorer --example perf -- tree  [FILES]
 //! xvfb-run -a cargo run --release -p impro-explorer --example perf -- search PATH QUERY [--regex]
 //! xvfb-run -a cargo run --release -p impro-explorer --example perf -- idle
+//! xvfb-run -a cargo run --release -p impro-explorer --example perf -- notes [NOTES]
 //! ```
 //! Every scenario prints `key=value` lines. `max-block-ms` is the longest single
 //! main-loop iteration (dispatch plus any repaint) seen while the work ran, i.e. the
@@ -307,6 +308,55 @@ fn bigdir(entries: usize) {
     drop(window);
 }
 
+/// A notes list of `count` notes: first fill, then a refresh after one note changed.
+fn notes_scenario(count: usize) {
+    let temp = tempfile::tempdir().unwrap();
+    let folder = impro_core::notes::notes_dir(temp.path());
+    std::fs::create_dir_all(&folder).unwrap();
+    for i in 0..count {
+        std::fs::write(folder.join(format!("note_{i:06}.md")), "x").unwrap();
+    }
+    println!("notes={count}");
+    let started = Instant::now();
+    let panel = ExplorerPanel::new(temp.path());
+    let window = window_for(&panel);
+    let store = panel.notes_widgets().store;
+    for (label, start) in [("first-fill", true), ("refresh", false)] {
+        let mut probe = Probe::default();
+        let started = if start { started } else { Instant::now() };
+        if !start {
+            // Let the window's own first paint settle before the refresh.
+            run_until(&mut probe, Duration::from_millis(600), || false);
+            probe = Probe::default();
+            std::fs::write(folder.join("note_000000.md"), "changed").unwrap();
+            panel.refresh_notes();
+        }
+        let started = if start { started } else { Instant::now() };
+        let first = Rc::new(Cell::new(None::<Duration>));
+        let finished = run_until(&mut probe, Duration::from_secs(60), || {
+            if first.get().is_none() && store.iter_n_children(None) > 0 {
+                first.set(Some(started.elapsed()));
+            }
+            store.iter_n_children(None) as usize == count && !panel.notes_busy() && !panel.is_busy()
+        });
+        println!(
+            "{label}: rows={} first-row-ms={} all-rows-ms={} finished={finished}",
+            store.iter_n_children(None),
+            first.get().map_or("-".into(), ms),
+            ms(started.elapsed())
+        );
+        println!(
+            "  main-loop-dispatches={} max-block-ms={} main-thread-busy-ms={}",
+            probe.iterations,
+            ms(probe.max),
+            ms(probe.busy)
+        );
+        print_percentiles(&probe);
+        run_until(&mut probe, Duration::from_millis(300), || false);
+    }
+    drop(window);
+}
+
 fn tree_scenario(files: usize) {
     let temp = tempfile::tempdir().unwrap();
     let begin = Instant::now();
@@ -531,7 +581,8 @@ fn main() {
             make_tree(temp.path(), 20_000);
             search_path(temp.path(), "function", false);
         }
+        Some("notes") => notes_scenario(args.get(1).and_then(|n| n.parse().ok()).unwrap_or(20_000)),
         Some("idle") => idle(),
-        _ => eprintln!("usage: perf bigdir|tree|search|idle"),
+        _ => eprintln!("usage: perf bigdir|tree|search|notes|idle"),
     }
 }

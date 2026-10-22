@@ -130,3 +130,41 @@ pub fn decode_path(text: &str) -> std::path::PathBuf {
 pub fn display_name(name: &std::ffi::OsStr) -> String {
     name.to_string_lossy().into_owned()
 }
+
+// GTK advances and removes rows through a mutable `GtkTreeIter`, which the bindings
+// only hand out as `&TreeIter`: mutating through it is not allowed, and in release
+// builds the optimiser may keep using the copy from before the call. These helpers
+// pass a real mutable copy to GTK instead.
+
+/// The row after `iter`, if there is one.
+pub fn next_iter(model: &impl IsA<gtk::TreeModel>, iter: &gtk::TreeIter) -> Option<gtk::TreeIter> {
+    use glib::translate::*;
+    // SAFETY: `raw` is a private copy of a valid iterator of `model`.
+    unsafe {
+        let mut raw = *iter.to_glib_none().0;
+        let found = gtk::ffi::gtk_tree_model_iter_next(model.as_ref().to_glib_none().0, &mut raw);
+        (found != 0).then(|| from_glib_none(&raw as *const gtk::ffi::GtkTreeIter))
+    }
+}
+
+/// Remove the row `iter` of a list; the row that followed it, if there is one.
+pub fn remove_list_row(store: &gtk::ListStore, iter: &gtk::TreeIter) -> Option<gtk::TreeIter> {
+    use glib::translate::*;
+    // SAFETY: as for `next_iter`; GTK leaves the copy on the next row when it exists.
+    unsafe {
+        let mut raw = *iter.to_glib_none().0;
+        let more = gtk::ffi::gtk_list_store_remove(store.to_glib_none().0, &mut raw);
+        (more != 0).then(|| from_glib_none(&raw as *const gtk::ffi::GtkTreeIter))
+    }
+}
+
+/// Remove the row `iter` of a tree; the sibling that followed it, if there is one.
+pub fn remove_tree_row(store: &gtk::TreeStore, iter: &gtk::TreeIter) -> Option<gtk::TreeIter> {
+    use glib::translate::*;
+    // SAFETY: as for `next_iter`.
+    unsafe {
+        let mut raw = *iter.to_glib_none().0;
+        let more = gtk::ffi::gtk_tree_store_remove(store.to_glib_none().0, &mut raw);
+        (more != 0).then(|| from_glib_none(&raw as *const gtk::ffi::GtkTreeIter))
+    }
+}

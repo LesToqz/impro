@@ -274,15 +274,13 @@ impl ExplorerPanel {
     /// The sibling after `row`, unless it is the trailing placeholder.
     fn next_row(&self, row: &gtk::TreeIter) -> Option<gtk::TreeIter> {
         let store = &self.w().store;
-        let next = *row;
-        (store.iter_next(&next) && !util::string(store, &next, 2).is_empty()).then_some(next)
+        util::next_iter(store, row).filter(|next| !util::string(store, next, 2).is_empty())
     }
 
     /// Remove `row`; the following real sibling, if any.
     fn remove_row(&self, row: &gtk::TreeIter) -> Option<gtk::TreeIter> {
         let store = &self.w().store;
-        let next = *row;
-        (store.remove(&next) && !util::string(store, &next, 2).is_empty()).then_some(next)
+        util::remove_tree_row(store, row).filter(|next| !util::string(store, next, 2).is_empty())
     }
 
     /// Advance one merge by up to the deadline; `true` when the folder is fully merged

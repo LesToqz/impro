@@ -657,3 +657,131 @@ fn test_sort_compact_folders_first_and_git_colors() {
         assert!(set(&f.panel));
     });
 }
+
+fn write_notes(folder: &Path, names: impl IntoIterator<Item = String>) {
+    std::fs::create_dir_all(folder).unwrap();
+    for name in names {
+        std::fs::write(folder.join(format!("{name}.md")), "x").unwrap();
+    }
+}
+
+fn wait_notes_idle(f: &Fix) {
+    let panel = f.panel.clone();
+    pump_until("notes merged", move || !panel.notes_busy());
+}
+
+#[test]
+fn test_long_lists_merge_in_slices_and_in_place() {
+    run(|| {
+        let f = setup();
+        let count = 12_000;
+        write_notes(&f.folder(), (0..count).map(|i| format!("note-{i:05}")));
+        f.panel.refresh_notes();
+        // Rows arrive over several main-loop dispatches, never as one block.
+        let (inserted, deleted) = (Rc::new(RefCell::new(0usize)), Rc::new(RefCell::new(0usize)));
+        let (i, d) = (inserted.clone(), deleted.clone());
+        f.notes
+            .store
+            .connect_row_inserted(move |_, _, _| *i.borrow_mut() += 1);
+        f.notes
+            .store
+            .connect_row_deleted(move |_, _| *d.borrow_mut() += 1);
+        let mut largest = 0;
+        let mut dispatches_with_rows = 0;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+        while f.notes.store.iter_n_children(None) != count || f.panel.notes_busy() {
+            assert!(std::time::Instant::now() < deadline, "notes never finished");
+            let before = *inserted.borrow();
+            gtk::main_iteration_do(false);
+            let added = *inserted.borrow() - before;
+            largest = largest.max(added);
+            dispatches_with_rows += usize::from(added > 0);
+            std::thread::sleep(std::time::Duration::from_micros(200));
+        }
+        assert!(
+            dispatches_with_rows >= 3,
+            "{dispatches_with_rows} dispatches"
+        );
+        assert!(largest < count as usize, "one block of {largest} rows");
+        assert_eq!(*deleted.borrow(), 0, "the list is never cleared");
+        // An unchanged listing rewrites nothing.
+        *inserted.borrow_mut() = 0;
+        f.panel.refresh_notes();
+        pump(100);
+        wait_notes_idle(&f);
+        assert_eq!(*inserted.borrow(), 0);
+        assert_eq!(*deleted.borrow(), 0);
+        assert_eq!(f.notes.count.text().as_str(), count.to_string());
+    });
+}
+
+#[test]
+fn test_merge_follows_sort_changes_removals_and_keeps_the_selection_by_path() {
+    run(|| {
+        let f = setup();
+        write_notes(
+            &f.folder(),
+            ["alpha", "bravo", "charlie", "delta"].map(String::from),
+        );
+        f.panel.refresh_notes();
+        assert!(f.wait_names(&["alpha", "bravo", "charlie", "delta"]));
+        wait_notes_idle(&f);
+        let charlie = f.folder().join("charlie.md");
+        f.panel.select_note(&charlie);
+        assert_eq!(f.panel.selected_note().as_deref(), Some(charlie.as_path()));
+        // A note disappears above the selected one and another appears below it.
+        std::fs::remove_file(f.folder().join("alpha.md")).unwrap();
+        write_notes(&f.folder(), ["echo".to_owned()]);
+        f.panel.refresh_notes();
+        assert!(f.wait_names(&["bravo", "charlie", "delta", "echo"]));
+        wait_notes_idle(&f);
+        assert_eq!(f.panel.selected_note().as_deref(), Some(charlie.as_path()));
+        assert_eq!(
+            f.panel.notes_edited(&charlie).as_deref(),
+            Some("just now"),
+            "every row has its edited text"
+        );
+        assert!(f.panel.notes_edited(&f.folder().join("alpha.md")).is_none());
+        // The selected note itself goes: nothing stays selected on a neighbour.
+        std::fs::remove_file(&charlie).unwrap();
+        f.panel.refresh_notes();
+        assert!(f.wait_names(&["bravo", "delta", "echo"]));
+        wait_notes_idle(&f);
+        assert_eq!(f.panel.selected_note(), None);
+        // All notes gone: the empty page shows and the list has no rows.
+        for name in ["bravo", "delta", "echo"] {
+            std::fs::remove_file(f.folder().join(format!("{name}.md"))).unwrap();
+        }
+        f.panel.refresh_notes();
+        assert!(f.wait_names(&[]));
+        wait_notes_idle(&f);
+        assert_eq!(f.notes.stack.visible_child_name().as_deref(), Some("empty"));
+        assert_eq!(f.notes.count.text().as_str(), "0");
+    });
+}
+
+#[test]
+fn test_newer_listing_replaces_one_still_being_merged() {
+    run(|| {
+        let f = setup();
+        write_notes(&f.folder(), (0..9_000).map(|i| format!("a-{i:05}")));
+        f.panel.refresh_notes();
+        // Wait until the first merge is under way, then change the folder again.
+        let store = f.notes.store.clone();
+        pump_until("merge started", move || store.iter_n_children(None) > 0);
+        for i in 0..9_000 {
+            std::fs::remove_file(f.folder().join(format!("a-{i:05}.md"))).unwrap();
+        }
+        write_notes(&f.folder(), (0..40).map(|i| format!("b-{i:02}")));
+        f.panel.refresh_notes();
+        let panel = f.panel.clone();
+        let store = f.notes.store.clone();
+        pump_until("final listing", move || {
+            !panel.notes_busy() && store.iter_n_children(None) == 40
+        });
+        let names = f.names();
+        assert_eq!(names.first().map(String::as_str), Some("b-00"));
+        assert_eq!(names.last().map(String::as_str), Some("b-39"));
+        assert_eq!(f.notes.count.text().as_str(), "40");
+    });
+}

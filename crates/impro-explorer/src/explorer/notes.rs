@@ -4,7 +4,7 @@ use crate::pool::{self, Lane};
 use gio::prelude::*;
 use impro_core::notes;
 use impro_ui::motion::{self, AnimateOptions, StateFader};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 /// Quiet period before external notes changes refresh the explorer.
 const WATCH_DEBOUNCE: Duration = Duration::from_millis(150);
@@ -17,6 +17,23 @@ pub(crate) struct Listing {
     pub watch: Vec<PathBuf>,
     /// Notes with their modification time (seconds since the epoch).
     pub notes: Vec<(PathBuf, Option<f64>)>,
+    /// The "edited" text of each note, formatted on the worker.
+    pub edited: Vec<String>,
+}
+
+/// Main-thread time spent merging notes rows per step.
+const APPLY_BUDGET: Duration = Duration::from_millis(3);
+
+/// A listing being merged into the notes list a few milliseconds at a time.
+pub(crate) struct NotesTask {
+    listing: Listing,
+    /// What was selected when the merge began.
+    selected: Option<PathBuf>,
+    started: bool,
+    /// Notes merged so far.
+    pos: usize,
+    /// The old row to compare with the next note, if any are left.
+    cursor: Option<gtk::TreeIter>,
 }
 
 /// "just now", "5 min ago", "2 hr ago", "yesterday" or "3 Oct" for a modification time.
@@ -193,6 +210,8 @@ impl ExplorerPanel {
             }
         });
         tree.append_column(&column);
+        // Every row has the same height: GTK need not measure a long list to size it.
+        tree.set_fixed_height_mode(true);
         tree.set_activate_on_single_click(true);
         let weak = self.downgrade();
         tree.connect_row_activated(move |tree, path, _| {
@@ -602,7 +621,7 @@ impl ExplorerPanel {
             .into_iter()
             .filter(|p| !p.as_os_str().is_empty() && p.is_dir())
             .collect();
-            let notes = notes::list_notes(&root, &sort)
+            let notes: Vec<(PathBuf, Option<f64>)> = notes::list_notes(&root, &sort)
                 .unwrap_or_default()
                 .into_iter()
                 .map(|path| {
@@ -614,12 +633,20 @@ impl ExplorerPanel {
                     (path, modified)
                 })
                 .collect();
+            let now = glib::DateTime::now_local().ok();
+            let edited = notes
+                .iter()
+                .map(|(_, modified)| {
+                    modified.map_or_else(String::new, |t| note_edited_text(t, now.as_ref()))
+                })
+                .collect();
             let _ = sender.send(Msg::Notes {
                 generation,
                 listing: Listing {
                     exists,
                     watch,
                     notes,
+                    edited,
                 },
             });
         });
@@ -638,34 +665,118 @@ impl ExplorerPanel {
 
     fn apply_notes(&self, listing: Listing) {
         let imp = self.imp();
-        let w = self.w();
-        let selected = self.selected_note();
-        w.notes.store.clear();
-        let mut edited = HashMap::new();
-        let now = glib::DateTime::now_local().ok();
-        for (path, modified) in &listing.notes {
-            let name = path
-                .file_name()
-                .map(|n| n.to_string_lossy().into_owned())
-                .unwrap_or_default();
-            let stem: String = {
+        // A newer listing replaces one that is still being merged.
+        let selected = match imp.notes_task.take() {
+            Some(task) => task.selected,
+            None => self.selected_note(),
+        };
+        imp.notes_task.replace(Some(NotesTask {
+            listing,
+            selected,
+            started: false,
+            pos: 0,
+            cursor: None,
+        }));
+        self.run_notes_task();
+    }
+
+    /// Merge the pending listing for a few milliseconds; continue from an idle source.
+    fn run_notes_task(&self) {
+        let imp = self.imp();
+        if let Some(source) = imp.notes_apply_source.take() {
+            source.remove();
+        }
+        let Some(mut task) = imp.notes_task.take() else {
+            return;
+        };
+        if self.is_destroyed() {
+            return;
+        }
+        if self.step_notes(&mut task, Instant::now() + APPLY_BUDGET) {
+            self.finish_notes(task);
+            return;
+        }
+        *imp.notes_task.borrow_mut() = Some(task);
+        let weak = self.downgrade();
+        let source = glib::idle_add_local_full(glib::Priority::DEFAULT_IDLE, move || {
+            if let Some(panel) = weak.upgrade() {
+                panel.imp().notes_apply_source.take();
+                panel.run_notes_task();
+            }
+            glib::ControlFlow::Break
+        });
+        *imp.notes_apply_source.borrow_mut() = Some(source);
+    }
+
+    /// Bring the list rows in line with the listing, in place and in order: rows that
+    /// already show the right note are left alone (a long list needs no clearing, and
+    /// the view repaints only what changed). `true` once every note is merged.
+    fn step_notes(&self, task: &mut NotesTask, deadline: Instant) -> bool {
+        let imp = self.imp();
+        let store = &self.w().notes.store;
+        if !task.started {
+            task.started = true;
+            task.cursor = store.iter_first();
+        }
+        let mut counter = 0u32;
+        while task.pos < task.listing.notes.len() {
+            counter += 1;
+            if counter & 7 == 0 && Instant::now() >= deadline {
+                return false;
+            }
+            let index = task.pos;
+            let path = &task.listing.notes[index].0;
+            task.pos += 1;
+            let text = model_path(path);
+            let stem = || -> String {
+                let name = path.file_name().map(util::display_name).unwrap_or_default();
                 let count = name.chars().count();
                 name.chars().take(count.saturating_sub(3)).collect()
             };
-            w.notes.store.insert_with_values(
-                None,
-                &[
-                    (0, &"text-x-generic-symbolic"),
-                    (1, &stem),
-                    (2, &model_path(path)),
-                ],
-            );
-            edited.insert(
-                path.clone(),
-                modified.map_or_else(String::new, |t| note_edited_text(t, now.as_ref())),
-            );
+            match task.cursor.take() {
+                Some(row) => {
+                    if util::string(store, &row, 2) != text {
+                        store.set(&row, &[(1, &stem()), (2, &text)]);
+                    }
+                    task.cursor = util::next_iter(store, &row);
+                }
+                None => {
+                    store.insert_with_values(
+                        None,
+                        &[(0, &"text-x-generic-symbolic"), (1, &stem()), (2, &text)],
+                    );
+                }
+            }
+            // Not held across store calls: they repaint, which reads this map.
+            imp.notes_edited
+                .borrow_mut()
+                .insert(path.clone(), task.listing.edited[index].clone());
         }
-        *imp.notes_edited.borrow_mut() = edited;
+        // Rows of notes that are gone.
+        while let Some(row) = task.cursor.take() {
+            if counter & 7 == 7 && Instant::now() >= deadline {
+                task.cursor = Some(row);
+                return false;
+            }
+            counter += 1;
+            task.cursor = util::remove_list_row(store, &row);
+        }
+        true
+    }
+
+    fn finish_notes(&self, task: NotesTask) {
+        let imp = self.imp();
+        let w = self.w();
+        let NotesTask {
+            listing, selected, ..
+        } = task;
+        {
+            let mut edited = imp.notes_edited.borrow_mut();
+            if edited.len() != listing.notes.len() {
+                let current: HashSet<&PathBuf> = listing.notes.iter().map(|(p, _)| p).collect();
+                edited.retain(|path, _| current.contains(path));
+            }
+        }
         let count = listing.notes.len();
         w.notes.count.set_text(&count.to_string());
         w.notes
@@ -676,8 +787,10 @@ impl ExplorerPanel {
         let target = pending
             .or_else(|| imp.active_file.borrow().clone())
             .or(selected);
-        if let Some(target) = target {
-            self.select_note(&target);
+        match target {
+            Some(target) => self.select_note(&target),
+            // Rows are reused in place, so the selection stays on its row unless cleared.
+            None => w.notes.tree.selection().unselect_all(),
         }
         if imp.notes_requested.get().is_none() {
             self.set_notes_visible(imp.notes_enabled.get() && listing.exists);
@@ -771,6 +884,10 @@ impl ExplorerPanel {
         if let Some(source) = imp.notes_refresh.take() {
             source.remove();
         }
+        if let Some(source) = imp.notes_apply_source.take() {
+            source.remove();
+        }
+        imp.notes_task.take();
         if let Some((window, handler)) = imp.notes_window.take() {
             if let Some(window) = window.upgrade() {
                 window.disconnect(handler);
@@ -1017,6 +1134,13 @@ impl ExplorerPanel {
             split: self.w().notes_split.clone(),
             button: self.w().notes_button.clone(),
         }
+    }
+
+    /// The notes list is being fetched or filled.
+    #[doc(hidden)]
+    pub fn notes_busy(&self) -> bool {
+        let imp = self.imp();
+        imp.notes_running.get() || imp.notes_task.borrow().is_some()
     }
 
     #[doc(hidden)]
