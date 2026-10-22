@@ -111,10 +111,6 @@ fn test_window_defaults_and_theme_order() {
         // The stored theme is the default one in a clean directory.
         shown.insert("theme".into(), want["theme"].clone());
         assert_eq!(shown, want);
-        assert_eq!(
-            dialog.stack().transition_type(),
-            gtk::StackTransitionType::None
-        );
         let nav = dialog.nav_list();
         let rows = nav.rows();
         let order: Vec<String> = nav
@@ -617,7 +613,7 @@ fn test_nav_width_clamp_rows_and_column() {
             let height = row.allocated_height() - 2;
             assert!((24..=26).contains(&height), "{height}");
         }
-        let page = dialog.page_scroll("appearance").unwrap();
+        let page = dialog.content_scroll();
         let column = dialog.page_body("appearance").unwrap();
         let (x, y) = column.translate_coordinates(&page, 0, 0).unwrap();
         assert!(column.allocated_width() <= 700);
@@ -707,15 +703,9 @@ fn test_keyboard_navigation_model() {
         rows["appearance"].grab_focus();
         key(&*nav, k::Down);
         assert_eq!(nav.page_id().as_deref(), Some("editor"));
-        assert_eq!(
-            dialog.stack().visible_child_name().as_deref(),
-            Some("editor")
-        );
+        assert_eq!(visible_page(&dialog).as_deref(), Some("editor"));
         key(&*nav, k::k);
-        assert_eq!(
-            dialog.stack().visible_child_name().as_deref(),
-            Some("appearance")
-        );
+        assert_eq!(visible_page(&dialog).as_deref(), Some("appearance"));
         key(&*nav, k::Return);
         assert!(focused(dialog.row("theme").unwrap().upcast_ref()));
         key(dialog.deref_window(), k::Down);
@@ -795,10 +785,7 @@ fn test_search_filters_groups_and_escape_order() {
         entry.grab_focus();
         entry.set_text("cursor");
         pump(0);
-        assert_eq!(
-            dialog.stack().visible_child_name().as_deref(),
-            Some("results")
-        );
+        assert!(dialog.is_searching());
         let visible: Vec<_> = dialog
             .visible_rows()
             .iter()
@@ -833,7 +820,7 @@ fn test_search_filters_groups_and_escape_order() {
         }
         entry.set_text("zzzz");
         dialog.show_all(); // e.g. MainWindow.open_settings() while a search is active.
-        let empty = dialog.empty_label().unwrap();
+        let empty = dialog.empty_label();
         assert!(empty.get_visible());
         assert!(!dialog.section("terminal").unwrap().get_visible());
         assert!(!dialog.hotkey_box().get_visible());
@@ -842,15 +829,12 @@ fn test_search_filters_groups_and_escape_order() {
         key(&**dialog, k::Escape); // Clears first...
         assert_eq!(entry.text(), "");
         assert!(dialog.is_visible());
-        assert_eq!(
-            dialog.stack().visible_child_name().as_deref(),
-            Some("appearance")
-        );
+        assert_eq!(visible_page(&dialog).as_deref(), Some("appearance"));
         assert!(!empty.get_visible());
         let body = dialog.page_body("appearance").unwrap();
         assert_eq!(
             body.parent().as_ref(),
-            Some(dialog.page_column("appearance").unwrap().upcast_ref())
+            Some(dialog.section("appearance").unwrap().upcast_ref())
         );
         assert_eq!(dialog.visible_rows().len(), 4);
         dialog.show_all(); // show_all() must not resurrect filtered widgets.

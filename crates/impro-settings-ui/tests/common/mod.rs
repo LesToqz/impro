@@ -150,3 +150,13 @@ impl Drop for Fixture {
 pub fn last(changes: &Changes) -> (String, Value) {
     changes.borrow().last().cloned().expect("a change")
 }
+
+/// The id of the one page whose section is visible (`None` while several are, as in a search).
+pub fn visible_page(dialog: &SettingsDialog) -> Option<String> {
+    let ids: Vec<_> = impro_settings_ui::PAGES
+        .iter()
+        .filter(|p| dialog.section(p.0).unwrap().get_visible())
+        .map(|p| p.0)
+        .collect();
+    (ids.len() == 1).then(|| ids[0].to_owned())
+}

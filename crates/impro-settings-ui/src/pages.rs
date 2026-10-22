@@ -1,13 +1,13 @@
 //! Page builders and row factories of the settings window.
 use crate::{
-    dialog::{class, label, upgrade, Group, Inner, Page, Setter, PAGES},
+    dialog::{class, label, upgrade, Group, Inner, Page, Setter},
     graph_prefs::{graph_defaults, graph_limits, graph_step},
 };
 use atk::prelude::*;
 use gtk::prelude::*;
 use impro_core::{
     identity,
-    settings::{self, FONT_KEYS},
+    settings::{self},
     themes,
 };
 use impro_ui::widgets::{
@@ -101,9 +101,8 @@ impl Inner {
             _ => self.build_about(&mut builder),
         }
         self.building.set(previous);
-        let (scroll, column) = scrolled_page(&body);
-        self.stack.add_named(&scroll, PAGES[index].0);
-        scroll.show_all();
+        self.sections[index].pack_start(&body, false, false, 0);
+        body.show_all();
         for group in &builder.groups {
             group.widget.set_no_show_all(true);
         }
@@ -126,9 +125,7 @@ impl Inner {
             }
         }
         self.pages.borrow_mut()[index] = Some(Page {
-            scroll,
             body,
-            column,
             groups: builder.groups,
         });
         if self.narrow.get() {
@@ -1172,18 +1169,3 @@ impl Inner {
         self.group(b, None, &rows);
     }
 }
-
-fn scrolled_page(body: &gtk::Box) -> (gtk::ScrolledWindow, impro_ui::widgets::CenteredColumn) {
-    let scroll = gtk::ScrolledWindow::new(gtk::Adjustment::NONE, gtk::Adjustment::NONE);
-    scroll.set_policy(gtk::PolicyType::Never, gtk::PolicyType::Automatic);
-    let column = impro_ui::widgets::CenteredColumn::default();
-    column.set_focus_vadjustment(&scroll.vadjustment());
-    column.add(body);
-    scroll.add(&column);
-    (scroll, column)
-}
-
-#[allow(dead_code)]
-const _: () = {
-    let _ = FONT_KEYS;
-};

@@ -78,18 +78,8 @@ pub(crate) struct Group {
 
 #[derive(Clone)]
 pub(crate) struct Page {
-    pub scroll: gtk::ScrolledWindow,
     pub body: gtk::Box,
-    pub column: CenteredColumn,
     pub groups: Vec<Group>,
-}
-
-#[derive(Clone)]
-pub(crate) struct Results {
-    pub scroll: gtk::ScrolledWindow,
-    pub content: gtk::Box,
-    pub sections: Vec<gtk::Box>,
-    pub empty_label: gtk::Label,
 }
 
 pub(crate) type Setter = Rc<dyn Fn(&Value)>;
@@ -128,7 +118,15 @@ type SettingCb = Rc<dyn Fn(&str, &Value)>;
 
 pub(crate) struct Inner {
     pub window: gtk::Window,
-    pub stack: gtk::Stack,
+    /// One scrolled column holds a section per page (heading + body); only the current
+    /// page's section is visible, or every section with hits while searching. Nothing is
+    /// ever reparented, so styles stay resolved when a search starts or ends.
+    pub scroll: gtk::ScrolledWindow,
+    pub column: CenteredColumn,
+    pub sections: Vec<gtk::Box>,
+    pub headings: Vec<gtk::Label>,
+    pub empty_label: gtk::Label,
+    pub searched: Cell<bool>,
     pub nav_pane: gtk::Box,
     pub search_entry: SearchField,
     pub group_title: gtk::Label,
@@ -144,7 +142,6 @@ pub(crate) struct Inner {
     pub pages: RefCell<Vec<Option<Page>>>,
     pub reg: RefCell<Registry>,
     pub extras: RefCell<Extras>,
-    pub results: RefCell<Option<Results>>,
     pub nav_counts: RefCell<Option<[usize; 9]>>,
     pub hotkeys: RefCell<Vec<(String, String)>>,
     pub ignored_folders: Vec<String>,
@@ -153,6 +150,9 @@ pub(crate) struct Inner {
     pub on_size: RefCell<Vec<SizeCb>>,
     pub on_setting: RefCell<Vec<SettingCb>>,
     pub prebuild: Cell<bool>,
+    pub prebuild_enabled: Cell<bool>,
+    pub frame_seen: Cell<bool>,
+    pub warmed: RefCell<[bool; 9]>,
     pub building: Cell<usize>,
     pub search_query: RefCell<String>,
 }
@@ -260,7 +260,28 @@ impl SettingsDialog {
         let search_entry = SearchField::default();
         let group_title = class(&label("Options", 0.0), "group-title");
         let nav_list = NavList::new();
-        let stack = class(&gtk::Stack::new(), "content");
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let (scroll, column) = scrolled(&content);
+        scroll.style_context().add_class("impro-settings-content");
+        let mut sections = Vec::new();
+        let mut headings = Vec::new();
+        for (_, title, _) in PAGES {
+            let section = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            let heading = class(&label(title, 0.0), "page-title");
+            heading.set_margin_bottom(16);
+            heading.set_margin_start(16);
+            heading.set_no_show_all(true);
+            section.pack_start(&heading, false, false, 0);
+            section.set_no_show_all(true);
+            content.pack_start(&section, false, false, 0);
+            sections.push(section);
+            headings.push(heading);
+        }
+        let empty_label = class(&label("", 0.5), "empty");
+        empty_label.set_line_wrap(true);
+        empty_label.set_margin_top(48);
+        empty_label.set_no_show_all(true);
+        content.pack_start(&empty_label, false, false, 0);
         let stored = settings::get_values();
         let mut sizes = settings::default_font_sizes()
             .into_iter()
@@ -288,7 +309,12 @@ impl SettingsDialog {
         let graph = normalize_graph(&settings::get_graph());
         let inner = Rc::new(Inner {
             window,
-            stack,
+            scroll,
+            column,
+            sections,
+            headings,
+            empty_label,
+            searched: Cell::new(false),
             nav_pane,
             search_entry,
             group_title,
@@ -307,7 +333,6 @@ impl SettingsDialog {
                 ..Default::default()
             }),
             extras: RefCell::default(),
-            results: RefCell::new(None),
             nav_counts: RefCell::new(None),
             hotkeys: RefCell::new(crate::hotkeys::default_hotkeys()),
             ignored_folders: options.ignored_folders.unwrap_or_else(|| {
@@ -320,6 +345,9 @@ impl SettingsDialog {
             on_size: RefCell::default(),
             on_setting: RefCell::default(),
             prebuild: Cell::new(false),
+            prebuild_enabled: Cell::new(true),
+            frame_seen: Cell::new(false),
+            warmed: RefCell::new([false; 9]),
             building: Cell::new(0),
             search_query: RefCell::default(),
         });
@@ -470,6 +498,20 @@ impl SettingsDialog {
         self.inner.ensure_all_pages();
     }
 
+    /// Whether a search query is active (the page sections show hits instead of one page).
+    pub fn is_searching(&self) -> bool {
+        self.inner.searching.get()
+    }
+
+    /// Enable or disable background building of the remaining pages after the first
+    /// drawn frame (on by default; pages are always built on first visit regardless).
+    pub fn set_prebuild(&self, enabled: bool) {
+        self.inner.prebuild_enabled.set(enabled);
+        if enabled {
+            self.inner.schedule_prebuild();
+        }
+    }
+
     /// Whether the page has been built.
     pub fn page_built(&self, id: &str) -> bool {
         page_index(id).is_some_and(|i| self.inner.pages.borrow()[i].is_some())
@@ -486,8 +528,9 @@ impl SettingsDialog {
     pub fn search_entry(&self) -> SearchField {
         self.inner.search_entry.clone()
     }
-    pub fn stack(&self) -> gtk::Stack {
-        self.inner.stack.clone()
+    /// The scrolled window that shows the current page (or the search results).
+    pub fn content_scroll(&self) -> gtk::ScrolledWindow {
+        self.inner.scroll.clone()
     }
     pub fn group_title(&self) -> gtk::Label {
         self.inner.group_title.clone()
@@ -517,17 +560,13 @@ impl SettingsDialog {
         self.inner.ensure_for_key(key);
         self.inner.reg.borrow().value_labels.get(key).cloned()
     }
-    /// The scrolled window of a page (built on demand).
-    pub fn page_scroll(&self, id: &str) -> Option<gtk::ScrolledWindow> {
-        self.inner.page(id).map(|p| p.scroll)
-    }
     /// The body box of a page (built on demand).
     pub fn page_body(&self, id: &str) -> Option<gtk::Box> {
         self.inner.page(id).map(|p| p.body)
     }
-    /// The centred column of a page (built on demand).
-    pub fn page_column(&self, id: &str) -> Option<CenteredColumn> {
-        self.inner.page(id).map(|p| p.column)
+    /// The centred column shared by all pages.
+    pub fn content_column(&self) -> CenteredColumn {
+        self.inner.column.clone()
     }
     /// `(group box, card)` pairs of a page (built on demand).
     pub fn groups(&self, id: &str) -> Vec<(gtk::Box, SettingCard)> {
@@ -536,24 +575,13 @@ impl SettingsDialog {
             .map(|p| p.groups.into_iter().map(|g| (g.widget, g.card)).collect())
             .unwrap_or_default()
     }
-    /// The search-results section of a page, once a search has run.
+    /// The section of a page: its heading (shown while searching) and body.
     pub fn section(&self, id: &str) -> Option<gtk::Box> {
-        let results = self.inner.results.borrow().clone()?;
-        results.sections.get(page_index(id)?).cloned()
+        self.inner.sections.get(page_index(id)?).cloned()
     }
-    pub fn results_scroll(&self) -> Option<gtk::ScrolledWindow> {
-        self.inner
-            .results
-            .borrow()
-            .as_ref()
-            .map(|r| r.scroll.clone())
-    }
-    pub fn empty_label(&self) -> Option<gtk::Label> {
-        self.inner
-            .results
-            .borrow()
-            .as_ref()
-            .map(|r| r.empty_label.clone())
+    /// The "No settings match" label.
+    pub fn empty_label(&self) -> gtk::Label {
+        self.inner.empty_label.clone()
     }
     pub fn theme_combo(&self) -> gtk::ComboBoxText {
         self.inner.ensure_page(0);
@@ -669,6 +697,17 @@ impl Inner {
             let weak = weak.clone();
             move |_, event| prop(upgrade(&weak, |i| i.on_key(event)).unwrap_or(false))
         });
+        window.connect_draw({
+            let weak = weak.clone();
+            move |_, _| {
+                upgrade(&weak, |i| {
+                    if !i.frame_seen.replace(true) {
+                        i.schedule_prebuild();
+                    }
+                });
+                glib::Propagation::Proceed
+            }
+        });
         window.connect_configure_event({
             let weak = weak.clone();
             move |_, event| {
@@ -732,10 +771,8 @@ impl Inner {
         scroll.add(nav.widget());
         pane.pack_start(&scroll, true, true, 0);
         root.pack_start(pane, false, false, 0);
-        self.stack
-            .set_transition_type(gtk::StackTransitionType::None);
-        self.stack.set_hexpand(true);
-        root.pack_start(&self.stack, true, true, 0);
+        self.scroll.set_hexpand(true);
+        root.pack_start(&self.scroll, true, true, 0);
         for (id, title, icon) in PAGES {
             self.nav_list.add_page(id, title, icon);
         }
@@ -771,8 +808,10 @@ impl Inner {
         }
     }
 
+    /// Build the remaining pages and the search scaffold one per idle iteration, but only
+    /// after the first frame has been drawn (so they never delay the first paint).
     fn schedule_prebuild(self: &Rc<Self>) {
-        if self.prebuild.replace(true) {
+        if !self.prebuild_enabled.get() || !self.frame_seen.get() || self.prebuild.replace(true) {
             return;
         }
         let weak = Rc::downgrade(self);
@@ -780,18 +819,39 @@ impl Inner {
             let Some(inner) = weak.upgrade() else {
                 return glib::ControlFlow::Break;
             };
-            let next = inner.pages.borrow().iter().position(Option::is_none);
-            match next {
-                Some(index) => {
-                    inner.ensure_page(index);
-                    glib::ControlFlow::Continue
-                }
-                None => {
-                    inner.prebuild.set(false);
-                    glib::ControlFlow::Break
-                }
+            if !inner.prebuild_enabled.get() {
+                inner.prebuild.set(false);
+                return glib::ControlFlow::Break;
+            }
+            // One small step per idle iteration: build a page, then resolve its styles and
+            // sizes (the bulk of a first frame) while it is still hidden.
+            let unbuilt = inner.pages.borrow().iter().position(Option::is_none);
+            let cold = {
+                let warmed = inner.warmed.borrow();
+                let pages = inner.pages.borrow();
+                (0..PAGES.len()).find(|i| pages[*i].is_some() && !warmed[*i])
+            };
+            if let Some(index) = unbuilt {
+                inner.ensure_page(index);
+                glib::ControlFlow::Continue
+            } else if let Some(index) = cold {
+                inner.warm_page(index);
+                glib::ControlFlow::Continue
+            } else {
+                inner.prebuild.set(false);
+                glib::ControlFlow::Break
             }
         });
+    }
+
+    /// Resolve CSS and cache size requests of a built page before it is first shown.
+    fn warm_page(&self, index: usize) {
+        self.warmed.borrow_mut()[index] = true;
+        let page = self.pages.borrow()[index].clone();
+        if let Some(page) = page {
+            let width = page.body.preferred_width().1.clamp(300, 700);
+            let _ = page.body.preferred_height_for_width(width);
+        }
     }
 
     pub(crate) fn all_rows(&self) -> Vec<SettingRow> {
@@ -1137,90 +1197,47 @@ impl Inner {
         let Some(index) = index.filter(|i| *i >= 0).map(|i| i as usize) else {
             return;
         };
-        let Some((id, _, _)) = PAGES.get(index) else {
+        if index >= PAGES.len() {
             return;
-        };
+        }
         if self.searching.get() {
-            let results = self.results.borrow().clone();
-            if let Some(results) = results {
-                if let Some((_, y)) =
-                    results.sections[index].translate_coordinates(&results.content, 0, 0)
-                {
-                    results.scroll.vadjustment().set_value(y as f64);
-                }
+            let content = self.sections[index].parent();
+            let y = content.and_then(|c| self.sections[index].translate_coordinates(&c, 0, 0));
+            if let Some((_, y)) = y {
+                self.scroll.vadjustment().set_value(y as f64);
             }
         } else {
             self.ensure_page(index);
-            self.stack.set_visible_child_name(id);
-            if let Some(page) = self.pages.borrow()[index].clone() {
-                page.scroll.vadjustment().set_value(0.0);
-            }
+            self.show_only(index);
+            self.scroll.vadjustment().set_value(0.0);
         }
+    }
+
+    /// Show only the section of page `index` (normal, non-search view).
+    fn show_only(&self, index: usize) {
+        for (i, section) in self.sections.iter().enumerate() {
+            section.set_visible(i == index);
+        }
+    }
+
+    fn current_index(&self) -> usize {
+        self.nav_list
+            .page_id()
+            .and_then(|id| page_index(&id))
+            .unwrap_or(0)
     }
 
     // Search --------------------------------------------------------------------
 
-    fn ensure_results(self: &Rc<Self>) {
-        if self.results.borrow().is_some() {
-            return;
-        }
-        let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        let (scroll, _column) = scrolled(&content);
-        self.stack.add_named(&scroll, "results");
-        let mut sections = Vec::new();
-        for (_, title, _) in PAGES {
-            let section = gtk::Box::new(gtk::Orientation::Vertical, 0);
-            let heading = class(&label(title, 0.0), "page-title");
-            heading.set_margin_bottom(16);
-            heading.set_margin_start(16);
-            section.set_margin_bottom(32);
-            section.pack_start(&heading, false, false, 0);
-            content.pack_start(&section, false, false, 0);
-            sections.push(section);
-        }
-        let empty_label = class(&label("", 0.5), "empty");
-        empty_label.set_line_wrap(true);
-        empty_label.set_margin_top(48);
-        content.pack_start(&empty_label, false, false, 0);
-        scroll.show_all();
-        for section in &sections {
-            section.set_no_show_all(true);
-        }
-        empty_label.set_no_show_all(true);
-        empty_label.hide();
-        *self.results.borrow_mut() = Some(Results {
-            scroll,
-            content,
-            sections,
-            empty_label,
-        });
-    }
-
-    fn move_bodies(&self, into_sections: bool) {
-        let results = self.results.borrow().clone();
-        let pages = self.pages.borrow().clone();
-        let Some(results) = results else { return };
-        for (index, page) in pages.into_iter().enumerate() {
-            let Some(page) = page else { continue };
-            if into_sections {
-                page.column.remove(&page.body);
-                results.sections[index].pack_start(&page.body, false, false, 0);
-            } else {
-                results.sections[index].remove(&page.body);
-                page.column.add(&page.body);
-            }
-        }
-    }
-
     pub(crate) fn search(self: &Rc<Self>, query: &str) -> Option<usize> {
         let query = query.trim();
-        if query.is_empty() && !self.searching.get() && self.results.borrow().is_none() {
+        if query.is_empty() && !self.searching.get() && !self.searched.get() {
             return None;
         }
         *self.search_query.borrow_mut() = query.to_owned();
         if !query.is_empty() && !self.searching.get() {
             self.ensure_all_pages();
-            self.ensure_results();
+            self.searched.set(true);
             self.searching.set(true);
             let (hotkey_box, empty) = {
                 let extras = self.extras.borrow();
@@ -1232,24 +1249,23 @@ impl Inner {
             if let Some(widget) = empty {
                 widget.hide();
             }
-            self.move_bodies(true);
-            let scroll = self.results.borrow().as_ref().map(|r| r.scroll.clone());
-            if let Some(scroll) = scroll {
-                self.stack.set_visible_child(&scroll);
+            for (heading, section) in self.headings.iter().zip(&self.sections) {
+                heading.show();
+                section.set_margin_bottom(32);
             }
+            self.scroll.vadjustment().set_value(0.0);
         } else if query.is_empty() && self.searching.get() {
             self.searching.set(false);
-            self.move_bodies(false);
+            for (heading, section) in self.headings.iter().zip(&self.sections) {
+                heading.hide();
+                section.set_margin_bottom(0);
+            }
             if let Some(widget) = self.extras.borrow().hotkey_box.clone() {
                 widget.show();
             }
-            let id = self
-                .nav_list
-                .page_id()
-                .unwrap_or_else(|| "appearance".into());
-            self.stack.set_visible_child_name(&id);
+            self.show_only(self.current_index());
+            self.scroll.vadjustment().set_value(0.0);
         }
-        let results = self.results.borrow().clone();
         let pages = self.pages.borrow().clone();
         let mut counts = [0usize; 9];
         for (index, page) in pages.iter().enumerate() {
@@ -1262,14 +1278,16 @@ impl Inner {
                 total += visible;
             }
             counts[index] = total;
-            if let Some(results) = &results {
-                results.sections[index].set_visible(total > 0);
+        }
+        let active = !query.is_empty();
+        if active {
+            for (section, total) in self.sections.iter().zip(counts) {
+                section.set_visible(total > 0);
             }
         }
         if query.is_empty() {
             self.filter_hotkeys();
         }
-        let active = !query.is_empty();
         *self.nav_counts.borrow_mut() = active.then_some(counts);
         for (index, (id, _, _)) in PAGES.iter().enumerate() {
             if let Some(row) = self.nav_list.rows().get(*id) {
@@ -1278,12 +1296,9 @@ impl Inner {
         }
         self.nav_list.invalidate_filter();
         let hits: usize = counts.iter().sum();
-        if let Some(results) = &results {
-            results
-                .empty_label
-                .set_text(&format!("No settings match “{query}”."));
-            results.empty_label.set_visible(active && hits == 0);
-        }
+        self.empty_label
+            .set_text(&format!("No settings match “{query}”."));
+        self.empty_label.set_visible(active && hits == 0);
         active.then_some(hits)
     }
 
@@ -1311,13 +1326,8 @@ impl Inner {
 
     pub(crate) fn visible_rows(&self) -> Vec<SettingRow> {
         let ids: Vec<usize> = if self.searching.get() {
-            let results = self.results.borrow().clone();
             (0..PAGES.len())
-                .filter(|i| {
-                    results
-                        .as_ref()
-                        .is_some_and(|r| r.sections[*i].get_visible())
-                })
+                .filter(|i| self.sections[*i].get_visible())
                 .collect()
         } else {
             let id = self

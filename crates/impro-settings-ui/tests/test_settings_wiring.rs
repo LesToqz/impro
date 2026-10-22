@@ -93,17 +93,11 @@ fn test_open_on_hotkeys_page_for_f1() {
         let owner = Owner::new();
         let dialog = owner.open_settings(Some("hotkeys"));
         assert_eq!(dialog.page_id().as_deref(), Some("hotkeys"));
-        assert_eq!(
-            dialog.stack().visible_child_name().as_deref(),
-            Some("hotkeys")
-        );
+        assert_eq!(visible_page(&dialog).as_deref(), Some("hotkeys"));
         let row = dialog.nav_list().rows()["hotkeys"].clone();
         assert_eq!(dialog.focused_widget().as_ref(), Some(row.upcast_ref()));
         let reopened = owner.open_settings(Some("terminal"));
-        assert_eq!(
-            reopened.stack().visible_child_name().as_deref(),
-            Some("terminal")
-        );
+        assert_eq!(visible_page(&reopened).as_deref(), Some("terminal"));
         unsafe { owner.window.destroy() };
         pump(10);
     });
