@@ -1,6 +1,8 @@
 //! Caret handling, widget realization and placement, details (pills and the
 //! empty-line placeholder) and the document tail.
-use super::{model::BOTTOM_MARGIN, structure::INTERACTIVE, Aim, Inner, Kind, Role, Slot, BAND};
+use super::{
+    model::BOTTOM_MARGIN, structure::INTERACTIVE, Aim, Inner, Kind, Role, Slot, BAND, TABLE_BAND,
+};
 use crate::{blockedit, mdview};
 use gtk::prelude::*;
 use std::collections::BTreeSet;
@@ -328,6 +330,9 @@ impl Inner {
             if let Some(tag) = tag {
                 let current: i32 = tag.property("pixels-above-lines");
                 if current != height + lead {
+                    if std::env::var_os("DBG_MOVE").is_some() {
+                        eprintln!("tag {index} {current}->{}", height + lead);
+                    }
                     tag.set_property("pixels-above-lines", height + lead);
                 }
             }
@@ -359,10 +364,28 @@ impl Inner {
             let blocks = self.blocks.borrow();
             let top = blocks.len();
             let mut todo = Vec::new();
+            let (table_lo, table_hi) = (first.saturating_sub(TABLE_BAND), last + TABLE_BAND);
             for index in lo.min(top)..(hi + 1).min(top) {
                 let deco = &blocks.items[index];
+                // Tables are the heaviest widgets: they join the band later than the rest.
+                if deco.table.is_some() && (index < table_lo || index > table_hi) {
+                    continue;
+                }
                 if deco.painted && !deco.wants.is_empty() && deco.widgets.is_empty() {
                     todo.push((index, true));
+                }
+            }
+            let (table_far_lo, table_far_hi) =
+                (first.saturating_sub(3 * TABLE_BAND), last + 3 * TABLE_BAND);
+            if let Some(tables) = self.tables.borrow().as_ref() {
+                for view in tables.views() {
+                    if let Some(index) = blocks.find_id(view.block().id) {
+                        if (index < table_far_lo || index > table_far_hi)
+                            && !todo.contains(&(index, false))
+                        {
+                            todo.push((index, false));
+                        }
+                    }
                 }
             }
             // Widgets far from the viewport are released, but only rescan the whole
@@ -373,7 +396,10 @@ impl Inner {
                 self.band.set((0, 0));
                 let released = |i: usize| i < far_lo || i > far_hi;
                 for (index, deco) in blocks.items.iter().enumerate() {
-                    if released(index) && !deco.widgets.is_empty() {
+                    if released(index)
+                        && !deco.widgets.is_empty()
+                        && !todo.contains(&(index, false))
+                    {
                         todo.push((index, false));
                     }
                 }
@@ -514,9 +540,15 @@ impl Inner {
                     if slot.role == Role::Rule {
                         y += height / 2;
                     }
+                    // A table keeps the `(width, -1)` request `size_replacements` measures
+                    // with; a different one here would resize it on every layout pass.
                     widget.set_size_request(
                         if slot.role != Role::Image { width } else { -1 },
-                        if slot.role == Role::Rule { 1 } else { height },
+                        match slot.role {
+                            Role::Rule => 1,
+                            Role::Table => -1,
+                            _ => height,
+                        },
                     );
                 }
                 Role::Quote => {
@@ -534,6 +566,14 @@ impl Inner {
                     .buffer_to_window_coords(gtk::TextWindowType::Widget, x, y);
                 let allocation = widget.allocation();
                 if (allocation.x(), allocation.y()) != (wx, wy) {
+                    if std::env::var_os("DBG_MOVE").is_some() {
+                        eprintln!(
+                            "move {:?} {:?}->{:?}",
+                            slot.role as u8,
+                            (allocation.x(), allocation.y()),
+                            (wx, wy)
+                        );
+                    }
                     self.view.move_child(widget, wx, wy);
                 }
             }

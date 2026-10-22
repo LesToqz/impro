@@ -364,7 +364,7 @@ impl Inner {
     pub(super) fn slow(&self, label: &str, started: Instant) {
         static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
         let on = *ON.get_or_init(|| std::env::var_os("IMPRO_LIVEMD_TRACE").is_some());
-        if on && started.elapsed() > std::time::Duration::from_millis(3) {
+        if on && started.elapsed() > std::time::Duration::from_micros(std::env::var("TRACE_US").ok().and_then(|v| v.parse().ok()).unwrap_or(3000)) {
             eprintln!("livemd slow {label}: {:?}", started.elapsed());
         }
     }
@@ -519,7 +519,9 @@ impl Inner {
             }
             if self.work.borrow().is_some() || self.dirty.get().is_some() {
                 viewport = None;
+                let t = Instant::now();
                 self.rebuild_unit();
+                self.slow("rebuild_unit", t);
                 continue;
             }
             match self.next_unpainted() {
@@ -529,7 +531,21 @@ impl Inner {
                         demote = true;
                         break;
                     }
+                    if std::env::var_os("DBG_WARM").is_some() && index == 3 {
+                        static ONCE: std::sync::Once = std::sync::Once::new();
+                        ONCE.call_once(|| {
+                            let tag = self.tag("checked");
+                            let t = Instant::now();
+                            self.buffer.apply_tag(&tag, &self.iter(527), &self.iter(536));
+                            eprintln!("warm-apply {:?}", t.elapsed());
+                            let t = Instant::now();
+                            self.buffer.remove_tag(&tag, &self.iter(527), &self.iter(536));
+                            eprintln!("warm-remove {:?}", t.elapsed());
+                        });
+                    }
+                    let t = Instant::now();
                     self.paint(index);
+                    self.slow("paint", t);
                 }
                 None => {
                     done = true;

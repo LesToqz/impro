@@ -59,6 +59,8 @@ pub const SLICE: Duration = Duration::from_millis(4);
 pub const COLUMN: i32 = 700;
 /// Blocks beyond the visible ones whose widgets stay realized (each side).
 const BAND: usize = 24;
+/// Blocks beyond the visible ones in which tables (the heaviest widgets) get built.
+const TABLE_BAND: usize = 6;
 
 /// One run of highlighted code: `[start, end)` in characters of the text given
 /// to the highlighter, and the theme role (`keyword`, `string`, ...).
@@ -401,6 +403,58 @@ pub(crate) fn unregister(view: &gtk::TextView) {
 #[derive(Clone)]
 pub struct LiveMarkdown(pub(crate) Rc<Inner>);
 
+/// Measure a task box once, early: the first measurement loads the theme's tick
+/// image (about 30 ms), which would otherwise land inside a decoration slice.
+pub(crate) fn warm_widgets() {
+    if !gtk::is_initialized_main_thread() || gdk::Display::default().is_none() {
+        return;
+    }
+    glib::idle_add_local_full(glib::Priority::DEFAULT_IDLE, || {
+        let task = gtk::CheckButton::new();
+        task.style_context().add_class("live-md-task");
+        let _ = task.preferred_height();
+        let _ = task.preferred_width();
+        glib::ControlFlow::Break
+    });
+}
+
+/// Compile the Markdown patterns on a worker so the first block does not pay for it.
+fn prewarm() {
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    ONCE.call_once(|| {
+        std::thread::Builder::new()
+            .name("impro-live-warm".into())
+            .spawn(|| {
+                use crate::{blockedit, mdview};
+                use std::sync::LazyLock;
+                mdview::parse_inline("**b** *i* `c` [l](u) ![i](p) ~~s~~ [[w]] https://x.y");
+                for re in [
+                    &mdview::_LIST,
+                    &mdview::_FENCE,
+                    &mdview::_HEADING,
+                    &mdview::_RULE,
+                    &mdview::_TABLE_RULE,
+                    &mdview::SETEXT,
+                    &mdview::TRAILING_HASHES,
+                    &mdview::TASK,
+                    &model::LIST,
+                    &model::QUOTE,
+                    &model::WIKI,
+                    &model::URL,
+                    &model::TAIL_HASHES,
+                    &blockedit::LIST,
+                    &blockedit::HEADING,
+                    &blockedit::QUOTE,
+                    &blockedit::FENCE,
+                    &blockedit::RULE,
+                ] {
+                    LazyLock::force(re);
+                }
+            })
+            .ok();
+    });
+}
+
 impl LiveMarkdown {
     /// `open_file` opens a local link target; `path_getter` names the document
     /// (relative links and wiki names resolve against it).
@@ -409,6 +463,7 @@ impl LiveMarkdown {
         O: Fn(&Path) + 'static,
         P: Fn() -> Option<PathBuf> + 'static,
     {
+        prewarm();
         let buffer = view.buffer().expect("text view buffer");
         let insert_mark = buffer.get_insert().expect("buffer insert mark");
         let bound_mark = buffer.selection_bound().expect("buffer selection mark");

@@ -206,7 +206,7 @@ fn scroll_sweep(run: &Run, label: &str) {
     );
 }
 
-fn idle_cpu(label: &str) {
+fn idle_cpu(label: &str, view: &gtk::TextView) {
     let settle = Instant::now();
     while settle.elapsed() < Duration::from_millis(400) {
         pump();
@@ -214,9 +214,17 @@ fn idle_cpu(label: &str) {
     }
     let (cpu, wall) = (cpu_time(), Instant::now());
     let main = glib::MainLoop::new(None, false);
+    let draws = Rc::new(Cell::new(0usize));
+    let counter = draws.clone();
+    let probe = view.connect_local("draw", true, move |_| {
+        counter.set(counter.get() + 1);
+        Some(false.to_value())
+    });
     let finish = main.clone();
     glib::timeout_add_local_once(Duration::from_secs(1), move || finish.quit());
     main.run();
+    view.disconnect(probe);
+    println!("{label}: idle-draws-per-second={}", draws.get());
     println!(
         "{label}: idle-cpu-percent={:.3}",
         (cpu_time() - cpu) / wall.elapsed().as_secs_f64() * 100.0
@@ -236,7 +244,30 @@ fn main() {
     let notes = dir.path().join(".impro/Notes");
     std::fs::create_dir_all(&notes).unwrap();
     gtk::init().expect("GTK display");
+    if std::env::var_os("PERF_NOBLINK").is_some() {
+        gtk::Settings::default()
+            .unwrap()
+            .set_gtk_cursor_blink(false);
+    }
     let run = new_run();
+    if std::env::var_os("PERF_WATCHDOG").is_some() {
+        // Diagnostics: stop the process (under a debugger) when the main loop stalls.
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static BEAT: AtomicU64 = AtomicU64::new(0);
+        let origin = Instant::now();
+        glib::timeout_add_local(Duration::from_millis(1), move || {
+            BEAT.store(origin.elapsed().as_micros() as u64, Ordering::Relaxed);
+            glib::ControlFlow::Continue
+        });
+        std::thread::spawn(move || loop {
+            std::thread::sleep(Duration::from_millis(2));
+            let now = origin.elapsed().as_micros() as u64;
+            if BEAT.load(Ordering::Relaxed) > 0 && now - BEAT.load(Ordering::Relaxed) > 20_000 {
+                unsafe { libc::raise(libc::SIGINT) };
+                std::thread::sleep(Duration::from_millis(15));
+            }
+        });
+    }
     let which = std::env::args().nth(1).unwrap_or_default();
     let cases: [(&str, String); 3] = [
         ("note-500kb", mixed_note(500_000)),
@@ -259,6 +290,10 @@ fn main() {
         };
         let path = notes.join(format!("{name}.md"));
         std::fs::write(&path, &text).unwrap();
+        if run.panel.current_tab().is_some() {
+            run.panel.close_current(|_| {});
+            pump();
+        }
         let live = open_and_measure(&run, &path, name);
         if std::env::var_os("PERF_SOURCE").is_some() {
             run.panel.current_tab().unwrap().set_markdown_mode("source");
@@ -266,7 +301,14 @@ fn main() {
         }
         scroll_sweep(&run, name);
         typing(&run, name);
-        idle_cpu(name);
+        idle_cpu(name, &run.panel.current_tab().unwrap().view);
+        eprintln!("IDLE_BEGIN");
+        if std::env::var_os("PERF_HOLD").is_some() {
+            let hold = glib::MainLoop::new(None, false);
+            let quit = hold.clone();
+            glib::timeout_add_local_once(Duration::from_secs(40), move || quit.quit());
+            hold.run();
+        }
         let _ = live;
         let tab = run.panel.current_tab().unwrap();
         tab.buffer.set_modified(false);

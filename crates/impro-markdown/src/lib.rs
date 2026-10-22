@@ -21,6 +21,7 @@
 pub fn init() {
     livetable::init();
     impro_ui::register_css("markdown", css);
+    livemd::warm_widgets();
 }
 
 /// Stylesheet shared by every live Markdown view (a view's own `set_style`
