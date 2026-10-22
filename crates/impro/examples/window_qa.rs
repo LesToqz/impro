@@ -374,6 +374,13 @@ fn capture() {
     }
     w.terminal_bottom.set_cursor_blink(false);
     poll(|| !w.explorer.is_busy() && w.terminal_bottom.panes().iter().all(|p| p.pid().is_some()));
+    poll(|| {
+        w.layout_ready()
+            && w.terminal_bottom
+                .panes()
+                .iter()
+                .all(|p| terminal_text(p).contains("$ "))
+    });
     poll(|| w.editor.tabs().iter().all(|t| !t.highlighter.pending()));
     frame(&w.window);
     impro::app::capture_window(&w.window, &output).unwrap();
@@ -399,21 +406,51 @@ fn performance() {
     h.shell(false);
     frame(&h.w.window);
     let fresh = h.write("third.rs", "fn third() {}\n");
+    h.w.explorer.refresh();
+    poll(|| !h.w.explorer.is_busy());
+    h.w.explorer.set_current_file(Some(&fresh));
+    poll(|| h.w.explorer.selected_path().as_ref() == Some(&fresh));
+    h.w.explorer.focus_tree();
+    let tree = h.w.explorer.tree();
+    let (model, iter) = tree.selection().selected().unwrap();
+    tree.set_cursor(
+        &model.path(&iter).unwrap(),
+        None::<&gtk::TreeViewColumn>,
+        false,
+    );
+    frame(&h.w.window);
+    let press = |accelerator: &str| {
+        let key = event(&h.w.window, accelerator);
+        let event: &gdk::Event = &key;
+        h.w.window.emit_by_name::<bool>("key-press-event", &[event]);
+    };
     let started = Instant::now();
-    h.w.editor.open_file(&fresh);
+    eprintln!("performance: open key");
+    press("Return");
     wait_path(&h.w, &fresh);
     frame(&h.w.window);
+    h.w.window.display().sync();
     let open_ms = started.elapsed().as_secs_f64() * 1000.0;
     let started = Instant::now();
-    h.w.editor.open_file(tab.path());
+    eprintln!("performance: switch key");
+    press("<Control>Tab");
+    wait_path(&h.w, &tab.path());
     frame(&h.w.window);
+    h.w.window.display().sync();
     let switch_ms = started.elapsed().as_secs_f64() * 1000.0;
     let started = Instant::now();
-    h.w.toggle_terminal_bottom();
+    eprintln!("performance: dock key");
+    press("<Control>grave");
+    assert!(!h.w.terminal_bottom.get_visible());
     frame(&h.w.window);
+    h.w.window.display().sync();
     let toggle_ms = started.elapsed().as_secs_f64() * 1000.0;
     h.w.toggle_terminal_bottom();
     frame(&h.w.window);
+    if std::env::var_os("IMPRO_QA_QUIET_FOCUS").is_some() {
+        GtkWindowExt::set_focus(&h.w.window, None::<&gtk::Widget>);
+        frame(&h.w.window);
+    }
     // Event-driven deadline; this one-shot belongs only to the measurement harness.
     let done = Rc::new(std::cell::Cell::new(false));
     let finished = done.clone();
@@ -445,6 +482,21 @@ fn performance() {
     assert_eq!(graph_threads, 0);
     assert_eq!(web_processes, 0);
     glib::timeout_add_local_once(Duration::from_secs(10), move || finished.set(true));
+    let switches = || {
+        std::fs::read_to_string(format!("/proc/self/task/{}/status", std::process::id()))
+            .unwrap()
+            .lines()
+            .filter(|line| line.contains("ctxt_switches:"))
+            .map(|line| {
+                line.split_whitespace()
+                    .last()
+                    .unwrap()
+                    .parse::<u64>()
+                    .unwrap()
+            })
+            .sum::<u64>()
+    };
+    let before_switches = switches();
     let before = cpu_ticks();
     let started = Instant::now();
     while !done.get() {
@@ -453,7 +505,7 @@ fn performance() {
     let idle_ticks = cpu_ticks() - before;
     println!(
         "{}",
-        json!({"open_to_paint_ms":open_ms,"switch_to_paint_ms":switch_ms,"toggle_to_paint_ms":toggle_ms,"max_allocation_us":h.w.max_allocation_us(),"idle_ticks":idle_ticks,"idle_seconds":started.elapsed().as_secs_f64(),"motion_active":impro_ui::motion::active_count(),"motion_clock":impro_ui::motion::clock_attached(),"web_processes_before_git":web_processes,"graph_threads_before_open":graph_threads})
+        json!({"open_to_paint_ms":open_ms,"switch_to_paint_ms":switch_ms,"toggle_to_paint_ms":toggle_ms,"input":"synthetic GTK key event through ApplicationWindow", "max_allocation_us":h.w.max_allocation_us(),"idle_ticks":idle_ticks,"idle_main_context_switches":switches()-before_switches,"idle_seconds":started.elapsed().as_secs_f64(),"idle_focus":h.w.window.focused_widget().map(|widget| widget.type_().name().to_owned()),"motion_active":impro_ui::motion::active_count(),"motion_clock":impro_ui::motion::clock_attached(),"web_processes_before_git":web_processes,"graph_threads_before_open":graph_threads})
     );
 }
 

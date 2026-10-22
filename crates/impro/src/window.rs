@@ -73,9 +73,7 @@ impl Deref for MainWindow {
 impl MainWindow {
     /// Load settings before construction. Applications may pass their startup snapshot instead.
     pub fn new(app: &gtk::Application, root: impl AsRef<Path>) -> Self {
-        let mut values = settings::get_values();
-        values.insert("graph".into(), settings::get_graph());
-        Self::with_values(app, root, values)
+        Self::with_values(app, root, crate::preferences::load_values())
     }
 
     /// Build the complete workspace synchronously; expensive views remain lazy.

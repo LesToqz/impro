@@ -4,6 +4,22 @@ use impro_core::{settings, themes};
 use impro_settings_ui::SettingsDialog;
 use serde_json::{Map, Value};
 
+/// Read the startup snapshot once, including the opaque graph preferences.
+pub(crate) fn load_values() -> settings::Values {
+    let mut stored = settings::load();
+    let mut values = settings::defaults().clone();
+    for (key, value) in &mut values {
+        if let Some(saved) = stored.remove(key) {
+            *value = saved;
+        }
+    }
+    values.insert(
+        "graph".into(),
+        stored.remove("graph").unwrap_or(Value::Null),
+    );
+    values
+}
+
 impl MainWindow {
     pub fn settings_dialog(&self) -> Option<SettingsDialog> {
         self.settings_dialog.borrow().clone()
@@ -193,11 +209,13 @@ impl MainWindow {
         }
     }
     pub(crate) fn configure_shell(&self, autostart: bool) {
+        let autostart = autostart || self.startup_shell_pending.get();
         let shell = self.values()["terminal_shell"]
             .as_str()
             .unwrap_or_default()
             .to_owned();
         if shell.is_empty() {
+            self.startup_shell_pending.set(false);
             for panel in self.panels() {
                 panel.set_shell("");
             }
@@ -220,12 +238,12 @@ impl MainWindow {
             },
             move |valid| {
                 if let Some(this) = weak.upgrade().map(Self) {
+                    if this.values()["terminal_shell"].as_str() != Some(&expected) {
+                        return;
+                    }
                     if autostart {
                         this.startup_shell_pending.set(false);
                         this.window.queue_draw();
-                    }
-                    if this.values()["terminal_shell"].as_str() != Some(&expected) {
-                        return;
                     }
                     for panel in this.panels() {
                         panel.set_shell(if valid { &expected } else { "" });

@@ -286,3 +286,35 @@ fn test_explorer_font_size_reaches_result_rows() {
         }
     });
 }
+
+#[test]
+fn test_explorer_shortcuts_do_not_act_from_search_entry_or_results() {
+    run(|| {
+        let h = Harness::new();
+        let path = h.write("keep.py", "needle\n");
+        h.w.explorer.refresh();
+        poll(|| !h.w.explorer.is_busy());
+        h.w.explorer.set_current_file(Some(&path));
+        h.w.search_in_files();
+        let search = h.w.explorer.search();
+        search.entry().set_text("needle");
+        poll(|| !search.is_searching() && search.results().total_matches == 1);
+        let windows = gtk::Window::list_toplevels().len();
+        for target in [
+            search.entry().upcast::<gtk::Widget>(),
+            search.tree().upcast(),
+        ] {
+            target.grab_focus();
+            search.entry().set_position(-1);
+            for accelerator in ["Delete", "F2", "F5", "<Control><Shift>n"] {
+                let key = event(&h.w.window, accelerator);
+                assert!(!h.w.explorer.on_key(&key));
+                let event: &gdk::Event = &key;
+                h.w.window.emit_by_name::<bool>("key-press-event", &[event]);
+            }
+            assert_eq!(gtk::Window::list_toplevels().len(), windows);
+            assert_eq!(search.query(), "needle");
+            assert_eq!(std::fs::read_to_string(&path).unwrap(), "needle\n");
+        }
+    });
+}

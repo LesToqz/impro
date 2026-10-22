@@ -1,7 +1,7 @@
 //! Application lifecycle and a first-paint PNG helper reused by later window tasks.
 use crate::MainWindow;
 use gtk::prelude::*;
-use impro_core::{identity, settings};
+use impro_core::identity;
 use std::{
     cell::{Cell, RefCell},
     path::{Path, PathBuf},
@@ -10,8 +10,7 @@ use std::{
 };
 pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
     // Read preferences before GTK starts dispatching UI events; no startup file IO in callbacks.
-    let mut preferences = settings::get_values();
-    preferences.insert("graph".into(), settings::get_graph());
+    let preferences = crate::preferences::load_values();
     timing("preferences", started);
     let qa_path = std::env::var_os(identity::QA_SCREENSHOT_ENV).map(PathBuf::from);
     let flags = if qa_path.is_some() {

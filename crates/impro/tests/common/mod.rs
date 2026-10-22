@@ -155,6 +155,8 @@ impl Drop for Harness {
 pub fn event(window: &gtk::ApplicationWindow, accelerator: &str) -> gdk::EventKey {
     use glib::translate::*;
     let (key, modifiers) = gtk::accelerator_parse(accelerator);
+    let mapping = gdk::Keymap::for_display(&window.display())
+        .and_then(|map| map.entries_for_keyval(key).into_iter().next());
     let mut event = gdk::Event::new(gdk::EventType::KeyPress);
     unsafe {
         let raw: *mut gdk::ffi::GdkEvent = event.to_glib_none_mut().0;
@@ -162,6 +164,10 @@ pub fn event(window: &gtk::ApplicationWindow, accelerator: &str) -> gdk::EventKe
         (*raw).key.state = modifiers.into_glib();
         (*raw).key.window = window.window().unwrap().to_glib_full();
         (*raw).key.send_event = 1;
+        if let Some(mapping) = mapping {
+            (*raw).key.hardware_keycode = mapping.keycode() as u16;
+            (*raw).key.group = mapping.group() as u8;
+        }
     }
     event.set_device(window.display().default_seat().unwrap().keyboard().as_ref());
     event.downcast().unwrap()
