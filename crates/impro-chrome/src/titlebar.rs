@@ -34,24 +34,36 @@ mod imp {
             })
         }
     }
-    impl WidgetImpl for TitleBar {
-        fn size_allocate(&self, allocation: &gtk::Allocation) {
-            fn size(w: &gtk::Widget) {
-                if let Some(button) = w.downcast_ref::<gtk::Button>() {
-                    if button.style_context().has_class("titlebutton") {
-                        if let Some(image) =
-                            button.child().and_then(|w| w.downcast::<gtk::Image>().ok())
-                        {
-                            if image.pixel_size() != WINDOW_ICON_SIZE {
-                                image.set_pixel_size(WINDOW_ICON_SIZE);
-                            }
+    fn prepare_controls(header: &super::TitleBar) {
+        fn prepare(widget: &gtk::Widget) {
+            if let Some(button) = widget.downcast_ref::<gtk::Button>() {
+                if button.style_context().has_class("titlebutton") {
+                    if let Some(image) =
+                        button.child().and_then(|w| w.downcast::<gtk::Image>().ok())
+                    {
+                        if image.pixel_size() != WINDOW_ICON_SIZE {
+                            image.set_pixel_size(WINDOW_ICON_SIZE);
                         }
+                        impro_ui::icons::prepare_image(&image);
                     }
-                } else if let Some(c) = w.downcast_ref::<gtk::Container>() {
-                    c.forall(size);
                 }
+            } else if let Some(container) = widget.downcast_ref::<gtk::Container>() {
+                container.forall(prepare);
             }
-            self.obj().forall(size);
+        }
+        header.forall(prepare);
+    }
+    impl WidgetImpl for TitleBar {
+        fn preferred_width(&self) -> (i32, i32) {
+            prepare_controls(&self.obj());
+            self.parent_preferred_width()
+        }
+        fn preferred_height(&self) -> (i32, i32) {
+            prepare_controls(&self.obj());
+            self.parent_preferred_height()
+        }
+        fn size_allocate(&self, allocation: &gtk::Allocation) {
+            prepare_controls(&self.obj());
             self.parent_size_allocate(allocation);
         }
     }
@@ -76,7 +88,9 @@ fn glyph(button: &impl IsA<gtk::Button>, names: &[&str], fallback: &str) {
     if let Some(name) =
         gtk::IconTheme::default().and_then(|t| choose_icon(names, |name| t.has_icon(name)))
     {
-        button.add(&gtk::Image::from_icon_name(Some(name), gtk::IconSize::Menu));
+        let image = gtk::Image::from_icon_name(Some(name), gtk::IconSize::Menu);
+        impro_ui::icons::prepare_image(&image);
+        button.add(&image);
     } else {
         button.add(&gtk::Label::new(Some(fallback)));
     }

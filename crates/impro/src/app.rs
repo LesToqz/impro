@@ -9,6 +9,7 @@ use std::{
     time::Instant,
 };
 pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
+    impro_ui::icons::init();
     // Read preferences before GTK starts dispatching UI events; no startup file IO in callbacks.
     let preferences = crate::preferences::load_values();
     timing("preferences", started);
@@ -130,10 +131,10 @@ pub fn capture_window(window: &impl IsA<gtk::Widget>, path: &Path) -> Result<(),
 }
 
 fn timing(phase: &str, started: Instant) {
-    if std::env::var_os("IMPRO_QA_TRACE").is_some() {
-        eprintln!(
-            "app-{phase}-ms={:.3}",
-            started.elapsed().as_secs_f64() * 1000.0
-        );
+    let elapsed = started.elapsed().as_secs_f64() * 1000.0;
+    if std::env::var_os("IMPRO_QA_TIMING").is_some() {
+        println!("app-{phase}-ms={elapsed:.3}");
+    } else if std::env::var_os("IMPRO_QA_TRACE").is_some() {
+        eprintln!("app-{phase}-ms={elapsed:.3}");
     }
 }

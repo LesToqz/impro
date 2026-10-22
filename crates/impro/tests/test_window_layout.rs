@@ -29,7 +29,13 @@ fn test_default_layout_and_title() {
         assert!(w.settings_dialog().is_none());
         assert!(w.graph_views().is_empty());
         assert!(w.gitgraph_views().is_empty());
-        assert!(w.command_palette().is_none());
+        let palette = w
+            .command_palette()
+            .expect("palette warmed after first paint");
+        assert!(palette.is_realized());
+        assert!(!palette.is_visible());
+        assert!(!palette.is_open());
+        assert!(w.overlay.prompt().is_none());
     });
 }
 #[test]
@@ -314,10 +320,17 @@ fn test_show_right_before_realize() {
         let h = Harness::new();
         let w = impro::MainWindow::with_values(&h.app, h.dir.path(), h.w.values());
         assert!(!w.window.is_realized());
+        drain();
+        assert!(w.command_palette().is_none(), "no cache work before paint");
         w.toggle_terminal_right();
         w.show();
         poll(|| w.layout_ready());
         assert!(w.terminal_right.allocated_width() >= 380);
+        poll(|| {
+            w.command_palette()
+                .is_some_and(|p| p.is_realized() && !p.is_visible())
+        });
+        assert!(w.overlay.prompt().is_none());
         unsafe {
             w.window.destroy();
         }
