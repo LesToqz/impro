@@ -21,6 +21,7 @@ struct Probe {
     max: Duration,
     iterations: usize,
     busy: Duration,
+    samples: Vec<f64>,
 }
 
 /// Run the main loop until `done`, recording how long each dispatching iteration blocked.
@@ -37,6 +38,7 @@ fn run_until(probe: &mut Probe, timeout: Duration, mut done: impl FnMut() -> boo
             let spent = started.elapsed();
             probe.iterations += 1;
             probe.busy += spent;
+            probe.samples.push(spent.as_secs_f64() * 1000.);
             probe.max = probe.max.max(spent);
             if spent > Duration::from_millis(12) && std::env::var_os("PERF_VERBOSE").is_some() {
                 eprintln!(
@@ -50,6 +52,18 @@ fn run_until(probe: &mut Probe, timeout: Duration, mut done: impl FnMut() -> boo
         }
     }
     false
+}
+
+fn print_percentiles(probe: &Probe) {
+    let mut samples = probe.samples.clone();
+    samples.sort_by(f64::total_cmp);
+    if !samples.is_empty() {
+        println!(
+            "dispatch-p50-ms={:.3} dispatch-p95-ms={:.3}",
+            samples[(samples.len() - 1) / 2],
+            samples[(samples.len() - 1) * 95 / 100]
+        );
+    }
 }
 
 fn ms(duration: Duration) -> String {
@@ -171,6 +185,7 @@ fn bigdir(entries: usize) {
         ms(probe.max),
         ms(probe.busy)
     );
+    print_percentiles(&probe);
     // Responsiveness while rows keep arriving: how long does a click-sized task wait?
     drop(window);
 }
@@ -268,6 +283,7 @@ fn search_path(root: &Path, query: &str, regex: bool) {
         ms(probe.max),
         ms(probe.busy)
     );
+    print_percentiles(&probe);
     // Typing a new query cancels the previous run: measure how fast the old one stops.
     let cancel_started = Instant::now();
     search.search_now(Some("needle"));
@@ -352,6 +368,11 @@ fn main() {
                 args.get(2).expect("QUERY"),
                 args.iter().any(|a| a == "--regex"),
             );
+        }
+        Some("search-generated") => {
+            let temp = tempfile::tempdir().unwrap();
+            make_tree(temp.path(), 20_000);
+            search_path(temp.path(), "function", false);
         }
         Some("idle") => idle(),
         _ => eprintln!("usage: perf bigdir|tree|search|idle"),

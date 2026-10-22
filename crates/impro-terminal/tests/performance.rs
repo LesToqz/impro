@@ -75,7 +75,18 @@ fn terminal_performance() {
         }
         println!("pane-construction-ms={builds:?}");
         let construction = start.elapsed().as_secs_f64() * 1000.;
-        poll(|| paints.borrow().len() == 6);
+        let ctx = glib::MainContext::default();
+        let mut dispatches = Vec::new();
+        while paints.borrow().len() < 6 {
+            let at = Instant::now();
+            if ctx.iteration(false) {
+                dispatches.push(at.elapsed().as_secs_f64() * 1000.);
+            } else {
+                std::thread::sleep(std::time::Duration::from_micros(300));
+            }
+            assert!(start.elapsed().as_secs() < 6);
+        }
+        println!("first-paint-dispatch-ms={dispatches:?}");
         let first_paint = start.elapsed().as_secs_f64() * 1000.;
         poll(|| d.panel.panes().iter().all(|p| p.pid().is_some()));
         let open_ms = start.elapsed().as_secs_f64() * 1000.;
