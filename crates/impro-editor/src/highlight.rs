@@ -1070,10 +1070,46 @@ impl Highlighter {
             self.0.pending.set(false);
             return;
         };
-        let text = buffer
-            .text(&buffer.start_iter(), &buffer.end_iter(), true)
-            .unwrap_or_default()
-            .to_string();
+        let generation = self.0.generation.get();
+        let mut offset = 0;
+        let mut parts = Vec::new();
+        let weak = Rc::downgrade(&self.0);
+        let id = glib::idle_add_local(move || {
+            let Some(inner) = weak.upgrade() else {
+                return glib::ControlFlow::Break;
+            };
+            let h = Self(inner);
+            if h.0.generation.get() != generation || h.0.destroyed.get() {
+                return glib::ControlFlow::Break;
+            }
+            let started = Instant::now();
+            loop {
+                let end = (offset + 4096).min(buffer.char_count());
+                parts.push(
+                    buffer
+                        .text(
+                            &buffer.iter_at_offset(offset),
+                            &buffer.iter_at_offset(end),
+                            true,
+                        )
+                        .unwrap_or_default()
+                        .to_string(),
+                );
+                offset = end;
+                if offset == buffer.char_count() {
+                    h.0.source.take();
+                    h.lex(std::mem::take(&mut parts));
+                    return glib::ControlFlow::Break;
+                }
+                if started.elapsed() >= Duration::from_millis(2) {
+                    return glib::ControlFlow::Continue;
+                }
+            }
+        });
+        self.0.source.replace(Some(id));
+    }
+    #[allow(deprecated)]
+    fn lex(&self, parts: Vec<String>) {
         let visible = self
             .0
             .view
@@ -1088,6 +1124,7 @@ impl Highlighter {
         let reusable = self.0.ready.swap(false, Ordering::Relaxed);
         let (tx, rx) = glib::MainContext::channel(glib::Priority::DEFAULT_IDLE);
         std::thread::spawn(move || {
+            let text = parts.concat();
             let skipped =
                 text.len() > MAX_BYTES || text.split('\n').any(|s| s.chars().count() > MAX_LINE);
             let Ok(mut cache) = cache.lock() else {

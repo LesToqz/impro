@@ -199,6 +199,9 @@ impl History {
         b.end_user_action();
         self.0.restoring.set(false);
     }
+    pub fn set_loading(&self, loading: bool) {
+        self.0.restoring.set(loading);
+    }
     pub fn restoring(&self) -> bool {
         self.0.restoring.get()
     }

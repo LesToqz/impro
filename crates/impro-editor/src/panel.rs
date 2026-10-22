@@ -463,6 +463,13 @@ impl EditorPanel {
             return;
         }
         let path = file::absolute(path.as_ref());
+        {
+            let mut pending = self.imp().pending.borrow_mut();
+            if let Some(p) = pending.get_mut(&path) {
+                p.callbacks.push(Box::new(done));
+                return;
+            }
+        }
         if let Some(t) = self.tab_for_path(&path) {
             let n = self.notebook();
             n.set_current_page(n.page_num(&t.page));
@@ -471,19 +478,16 @@ impl EditorPanel {
             done(Some(t));
             return;
         }
-        {
-            let mut pending = self.imp().pending.borrow_mut();
-            if let Some(p) = pending.get_mut(&path) {
-                p.callbacks.push(Box::new(done));
-                return;
-            }
-        }
         let cancel = Arc::new(AtomicBool::new(false));
         let worker_cancel = cancel.clone();
         let worker_path = path.clone();
         let (tx, rx) = glib::MainContext::channel(glib::Priority::DEFAULT);
         std::thread::spawn(move || {
+            let started = std::time::Instant::now();
             let result = file::read_file(&worker_path);
+            if std::env::var_os("IMPRO_EDITOR_TRACE").is_some() {
+                eprintln!("worker read/decode: {:?}", started.elapsed());
+            }
             if !worker_cancel.load(Ordering::Relaxed) {
                 let _ = tx.send(result);
             }
@@ -492,21 +496,53 @@ impl EditorPanel {
         let key = path.clone();
         let source = rx.attach(None, move |result: std::io::Result<Document>| {
             if let Some(p) = weak.upgrade() {
-                let pending = p.imp().pending.borrow_mut().remove(&key);
-                if let Some(pending) = pending {
-                    let tab = if p.imp().closed.get() {
-                        None
-                    } else {
-                        match result {
-                            Ok(doc) => Some(p.insert_document(key.clone(), doc)),
-                            Err(e) => {
-                                p.error(e.to_string());
-                                None
+                if !p.imp().closed.get() && p.imp().pending.borrow().contains_key(&key) {
+                    match result {
+                        Ok(doc) => {
+                            let tab = p.insert_document(key.clone(), doc);
+                            if !tab.loading.get() {
+                                let pending = p.imp().pending.borrow_mut().remove(&key);
+                                if let Some(pending) = pending {
+                                    for callback in pending.callbacks {
+                                        callback((!tab.is_closed()).then(|| tab.clone()));
+                                    }
+                                }
+                                return glib::ControlFlow::Break;
+                            }
+                            let mut offset = tab.initial_load_offset();
+                            let weak = p.downgrade();
+                            let load_key = key.clone();
+                            let source = glib::idle_add_local(move || {
+                                let Some(panel) = weak.upgrade() else {
+                                    return glib::ControlFlow::Break;
+                                };
+                                if !tab.load_slice(&mut offset) {
+                                    return glib::ControlFlow::Continue;
+                                }
+                                let pending = panel.imp().pending.borrow_mut().remove(&load_key);
+                                if let Some(pending) = pending {
+                                    panel.update_status();
+                                    for callback in pending.callbacks {
+                                        callback((!tab.is_closed()).then(|| tab.clone()));
+                                    }
+                                }
+                                glib::ControlFlow::Break
+                            });
+                            if let Some(pending) = p.imp().pending.borrow_mut().get_mut(&key) {
+                                pending.source = source;
+                            } else {
+                                source.remove();
                             }
                         }
-                    };
-                    for callback in pending.callbacks {
-                        callback(tab.clone());
+                        Err(e) => {
+                            let pending = p.imp().pending.borrow_mut().remove(&key);
+                            p.error(e.to_string());
+                            if let Some(pending) = pending {
+                                for callback in pending.callbacks {
+                                    callback(None);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -614,8 +650,9 @@ impl EditorPanel {
         }
         let current = self.current_tab();
         for tab in self.tabs() {
-            tab.highlighter
-                .set_active(current.as_ref().is_some_and(|t| Rc::ptr_eq(t, &tab)));
+            tab.highlighter.set_active(
+                !tab.loading.get() && current.as_ref().is_some_and(|t| Rc::ptr_eq(t, &tab)),
+            );
         }
         self.update_tabs();
         self.update_status();
@@ -952,6 +989,17 @@ impl EditorPanel {
     }
     #[allow(deprecated)]
     pub fn save_tab(&self, tab: &Rc<EditorTab>, done: impl FnOnce(bool) + 'static) {
+        if tab.loading.get() {
+            let weak = self.downgrade();
+            self.open_file_with(tab.path(), move |tab| {
+                if let (Some(panel), Some(tab)) = (weak.upgrade(), tab) {
+                    panel.save_tab(&tab, done);
+                } else {
+                    done(false);
+                }
+            });
+            return;
+        }
         if tab.is_closed() {
             done(false);
             return;

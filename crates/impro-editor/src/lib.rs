@@ -6,6 +6,9 @@
 //! `save_current(done)`, `save_all(done)`, `save_tab(tab, done)`, `close_current(done)`,
 //! `close_tab(tab, done)` and `request_quit(done)` report success through callbacks.
 //! These callbacks run on the main thread. No nested main-loop waits are needed.
+//! Large files publish a first-screen prefix while bounded idle slices fill the buffer.
+//! The view is temporarily read-only; open completion callbacks see the full document,
+//! empty history and an unmodified buffer. Saves wait for loading to finish.
 //!
 //! Window integration:
 //!
@@ -30,7 +33,7 @@
 //!
 //! [`EditorTab`] exposes GTK buffer/view/page/scroll/header and highlighter/chrome
 //! handles; `path`, `ending`, `deleted`, `is_closed`, `cursor`, `text`, `undo(redo)`,
-//! `history_len`, `language`, `markdown_mode`, `markdown_location`,
+//! `history_len`, `max_load_slice`, `language`, `markdown_mode`, `markdown_location`,
 //! `set_markdown_mode`, `set_font_size`, `set_tab_stops`, `update_title`.
 //! Release tab snapshots before testing weak buffer finalization.
 //!
