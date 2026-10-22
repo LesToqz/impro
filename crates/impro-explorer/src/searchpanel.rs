@@ -843,7 +843,7 @@ impl SearchPanel {
             tag,
             escape(&directory)
         );
-        let path = group.path.to_string_lossy().into_owned();
+        let path = util::encode_path(&group.path);
         let parent = w.store.insert_with_values(
             None,
             None,
@@ -979,7 +979,7 @@ impl SearchPanel {
                 (0, &"text-x-generic-symbolic"),
                 (1, &""),
                 (2, &escape(&relative)),
-                (3, &path.to_string_lossy().into_owned()),
+                (3, &util::encode_path(path)),
                 (4, &0i32),
                 (5, &0i32),
                 (6, &0i32),
@@ -1094,7 +1094,7 @@ impl SearchPanel {
             let path: String = args[1].get().ok()?;
             f(
                 &panel,
-                Path::new(&path),
+                &util::decode_path(&path),
                 args[2].get().ok()?,
                 args[3].get().ok()?,
                 args[4].get().ok()?,

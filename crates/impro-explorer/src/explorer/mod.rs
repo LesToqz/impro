@@ -457,12 +457,7 @@ impl ExplorerPanel {
                 if let Some(panel) = weak.upgrade() {
                     panel.emit_by_name::<()>(
                         "search-result-activated",
-                        &[
-                            &path.to_string_lossy().into_owned(),
-                            &line,
-                            &column,
-                            &length,
-                        ],
+                        &[&model_path(path), &line, &column, &length],
                     );
                 }
             });
@@ -735,7 +730,7 @@ impl ExplorerPanel {
         self.connect_local("file-activated", false, move |args| {
             let panel = args[0].get::<ExplorerPanel>().ok()?;
             let path: String = args[1].get().ok()?;
-            f(&panel, Path::new(&path));
+            f(&panel, &util::decode_path(&path));
             None
         })
     }
@@ -747,7 +742,7 @@ impl ExplorerPanel {
         self.connect_local("path-renamed", false, move |args| {
             let panel = args[0].get::<ExplorerPanel>().ok()?;
             let (old, new): (String, String) = (args[1].get().ok()?, args[2].get().ok()?);
-            f(&panel, Path::new(&old), Path::new(&new));
+            f(&panel, &util::decode_path(&old), &util::decode_path(&new));
             None
         })
     }
@@ -759,7 +754,7 @@ impl ExplorerPanel {
         self.connect_local("path-deleted", false, move |args| {
             let panel = args[0].get::<ExplorerPanel>().ok()?;
             let path: String = args[1].get().ok()?;
-            f(&panel, Path::new(&path));
+            f(&panel, &util::decode_path(&path));
             None
         })
     }
@@ -774,7 +769,7 @@ impl ExplorerPanel {
             let path: String = args[1].get().ok()?;
             f(
                 &panel,
-                Path::new(&path),
+                &util::decode_path(&path),
                 args[2].get().ok()?,
                 args[3].get().ok()?,
                 args[4].get().ok()?,
@@ -792,7 +787,7 @@ impl ExplorerPanel {
 
     /// Activate a file as if it was opened from the tree (emits `file-activated`).
     pub(crate) fn emit_file_activated(&self, path: &Path) {
-        self.emit_by_name::<()>("file-activated", &[&path.to_string_lossy().into_owned()]);
+        self.emit_by_name::<()>("file-activated", &[&model_path(path)]);
     }
 }
 
@@ -804,7 +799,7 @@ pub(crate) fn set_accessible_name(widget: &impl IsA<gtk::Widget>, name: &str) {
 
 /// Convert a path to the string stored in the tree model.
 pub(crate) fn model_path(path: &Path) -> String {
-    path.to_string_lossy().into_owned()
+    util::encode_path(path)
 }
 
 pub(crate) fn css(ui: &impro_core::themes::UiColors) -> String {

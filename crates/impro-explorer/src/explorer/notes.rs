@@ -200,7 +200,7 @@ impl ExplorerPanel {
             if let Some(iter) = tree.model().and_then(|m| m.iter(path)) {
                 if let Some(model) = tree.model() {
                     let file = util::string(&model, &iter, 2);
-                    panel.emit_file_activated(Path::new(&file));
+                    panel.emit_file_activated(&util::decode_path(&file));
                 }
             }
         });
@@ -342,7 +342,7 @@ impl ExplorerPanel {
         model: &gtk::TreeModel,
         iter: &gtk::TreeIter,
     ) {
-        let path = PathBuf::from(util::string(model, iter, 2));
+        let path = util::decode_path(&util::string(model, iter, 2));
         let text = self
             .imp()
             .notes_edited
@@ -786,7 +786,11 @@ impl ExplorerPanel {
             return None;
         }
         let (_, iter) = self.w().notes.tree.selection().selected()?;
-        Some(PathBuf::from(util::string(&self.w().notes.store, &iter, 2)))
+        Some(util::decode_path(&util::string(
+            &self.w().notes.store,
+            &iter,
+            2,
+        )))
     }
 
     #[doc(hidden)]
