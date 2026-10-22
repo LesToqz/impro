@@ -5,16 +5,18 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-gtk.workspace = true
+gtk = { workspace = true, features = ["v3_24"] }
 gdk.workspace = true
 glib.workspace = true
 gio.workspace = true
 pango.workspace = true
+gdk-pixbuf.workspace = true
 impro-core.workspace = true
 impro-ui.workspace = true
 regex.workspace = true
 fancy-regex = "0.16"
 
 [dev-dependencies]
+impro-editor = { path = "../impro-editor" }
 tempfile.workspace = true
 serde_json.workspace = true

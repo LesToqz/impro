@@ -627,10 +627,12 @@ version = "0.1.0"
 dependencies = [
  "fancy-regex",
  "gdk",
+ "gdk-pixbuf",
  "gio",
  "glib",
  "gtk",
  "impro-core",
+ "impro-editor",
  "impro-ui",
  "pango",
  "regex",

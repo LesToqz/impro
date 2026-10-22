@@ -1,0 +1,29 @@
+textview.live-markdown, textview.live-markdown text {background:{bg}; color:{fg}; font-family:"{body_font}"; font-size:{size}pt;}
+.live-md-table {border:1px solid {border}; border-radius:8px; background:{bg};}
+.live-md-cell {color:{fg}; background:transparent; font-family:"{body_font}"; font-size:{size}pt;
+ border:0; border-right:1px solid {border}; border-bottom:1px solid {border}; padding:9px 12px;}
+.live-md-last-column {border-right:0;}
+.live-md-last-row {border-bottom:0;}
+{tables}
+.live-md-header {background:alpha({overlay},0.045); font-weight:600;}
+.live-md-top-left {border-top-left-radius:7px;}
+.live-md-top-right {border-top-right-radius:7px;}
+.live-md-tools {background:{surface}; border-radius:7px 7px 0 0; color:{muted}; font-size:12px; padding:0 12px;}
+.live-md-tools button {background:transparent; color:{muted}; border:0; border-radius:4px;
+ box-shadow:none; padding:0 6px; min-height:24px; min-width:36px; font-size:12px;}
+.live-md-tools.editing {background:transparent; border-radius:0;}
+.live-md-code-side {background:{surface};}
+.live-md-tools button:hover {background:alpha({overlay},0.067); color:{fg};}
+.live-md-code-card > border {border:1px solid {border}; border-radius:8px; background:transparent;}
+.live-md-code-footer {background:{surface}; border-radius:0 0 7px 7px;}
+.live-md-pill {background:{surface}; color:{fg}; border-radius:4px; padding:0 3px 1px;
+ font-family:"{code_font}"; font-size:{pill_size}pt;}
+.live-md-placeholder {background:transparent; color:{placeholder}; font-family:"{body_font}"; font-size:{size}pt;}
+.live-md-rule {background:alpha({overlay},0.16); min-height:1px; min-width:1px; border:0;}
+.live-md-quote {background:alpha({overlay},0.32); border-radius:1px;}
+.live-md-marker {color:{muted}; background:transparent; font-size:{size}pt;}
+.live-md-languages, .live-md-languages row {background:transparent; color:{fg};}
+.live-md-languages row:hover {background:alpha({overlay},0.067);}
+.live-md-task {padding:0; margin:0; min-width:18px; min-height:18px; background:transparent; border:0;}
+.live-md-task check {min-width:14px; min-height:14px; border:1px solid alpha({overlay},0.28);
+ border-radius:4px; background:alpha({overlay},0.035); box-shadow:none;}
