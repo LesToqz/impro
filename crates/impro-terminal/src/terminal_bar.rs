@@ -187,7 +187,7 @@ impl IconButton {
             self.button.remove(&old);
         }
         let child: gtk::Widget = if gtk::IconTheme::default().is_some_and(|t| t.has_icon(icon)) {
-            gtk::Image::from_icon_name(Some(icon), gtk::IconSize::Menu).upcast()
+            async_icon(icon).upcast()
         } else {
             gtk::Label::new(Some(glyph)).upcast()
         };
@@ -195,6 +195,113 @@ impl IconButton {
         child.show();
         self.button.add(&child);
     }
+}
+
+// Decode each themed icon once on GTK's worker, rather than once per pane
+// during preferred-size calculation. Waiters contain only weak widget handles.
+type IconWaiter = (glib::WeakRef<gtk::Image>, Rc<Cell<u64>>, u64);
+#[derive(Default)]
+struct CachedIcon {
+    surface: RefCell<Option<gtk::cairo::Surface>>,
+    waiters: RefCell<Vec<IconWaiter>>,
+}
+type IconKey = (String, i32, Vec<String>);
+thread_local! {
+    static ICONS: RefCell<std::collections::HashMap<IconKey, Rc<CachedIcon>>> = RefCell::new(std::collections::HashMap::new());
+    static ICON_THEME_HOOK: Cell<bool> = const { Cell::new(false) };
+}
+fn async_icon(name: &str) -> gtk::Image {
+    let image = gtk::Image::new();
+    image.set_size_request(16, 16);
+    let name = name.to_owned();
+    let generation = Rc::new(Cell::new(0u64));
+    image.connect_style_updated(move |image| {
+        let serial = generation.get().wrapping_add(1);
+        generation.set(serial);
+        let Some(screen) = image.screen() else { return };
+        let Some(theme) = gtk::IconTheme::for_screen(&screen) else {
+            return;
+        };
+        ICON_THEME_HOOK.with(|hook| {
+            if !hook.replace(true) {
+                theme.connect_changed(|_| ICONS.with(|icons| icons.borrow_mut().clear()));
+            }
+        });
+        let scale = image.scale_factor();
+        let Some(info) =
+            theme.lookup_icon_for_scale(&name, 16, scale, gtk::IconLookupFlags::empty())
+        else {
+            return;
+        };
+        let context = image.style_context();
+        let mut colors = vec![context.color(image.state_flags()).to_string()];
+        for role in ["success_color", "warning_color", "error_color"] {
+            colors.push(
+                context
+                    .lookup_color(role)
+                    .map(|c| c.to_string())
+                    .unwrap_or_default(),
+            );
+        }
+        let key = (
+            info.filename()
+                .map(|p| p.to_string_lossy().into_owned())
+                .unwrap_or_else(|| name.clone()),
+            scale,
+            colors,
+        );
+        let (cached, fresh) = ICONS.with(|icons| {
+            let mut icons = icons.borrow_mut();
+            if let Some(cached) = icons.get(&key) {
+                (cached.clone(), false)
+            } else {
+                // Intermediate CSS transition colours must not grow the cache forever.
+                if icons.len() >= 64 {
+                    icons.clear();
+                }
+                let cached = Rc::new(CachedIcon::default());
+                icons.insert(key.clone(), cached.clone());
+                (cached, true)
+            }
+        });
+        let surface = cached.surface.borrow().clone();
+        if let Some(surface) = surface {
+            image.set_from_surface(Some(&surface));
+            return;
+        }
+        cached
+            .waiters
+            .borrow_mut()
+            .push((image.downgrade(), generation.clone(), serial));
+        if fresh {
+            info.load_symbolic_for_context_async(&context, gio::Cancellable::NONE, move |result| {
+                let surface = result
+                    .ok()
+                    .and_then(|(pixbuf, _)| pixbuf.create_surface(scale, None::<&gdk::Window>));
+                if surface.is_none() {
+                    ICONS.with(|icons| {
+                        let mut icons = icons.borrow_mut();
+                        if icons
+                            .get(&key)
+                            .is_some_and(|entry| Rc::ptr_eq(entry, &cached))
+                        {
+                            icons.remove(&key);
+                        }
+                    });
+                }
+                *cached.surface.borrow_mut() = surface.clone();
+                let waiters = cached.waiters.take();
+                for (weak, generation, serial) in waiters {
+                    if generation.get() == serial {
+                        if let Some(image) = weak.upgrade() {
+                            image.set_from_surface(surface.as_ref());
+                        }
+                    }
+                }
+            });
+        }
+    });
+    image
 }
 
 #[derive(Clone)]

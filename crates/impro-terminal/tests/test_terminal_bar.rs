@@ -758,3 +758,45 @@ fn test_repeat_during_exit_brings_it_back() {
         assert_eq!(t.widget().opacity(), 1.);
     });
 }
+
+#[test]
+fn test_symbolic_icon_surfaces_follow_style_changes() {
+    run(|| {
+        let h = PaneHeader::new("bash", "terminal");
+        let w = window(&h.widget);
+        let image = h
+            .fullscreen_button
+            .button
+            .child()
+            .unwrap()
+            .downcast::<gtk::Image>()
+            .unwrap();
+        poll(|| image.surface().is_some());
+        let original = image.surface().unwrap();
+        let provider = gtk::CssProvider::new();
+        provider
+            .load_from_data(b"image { color: #ff0000; }")
+            .unwrap();
+        image
+            .style_context()
+            .add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 10);
+        poll(|| {
+            image
+                .surface()
+                .is_some_and(|s| s.to_raw_none() != original.to_raw_none())
+        });
+        h.set_maximized(true);
+        let replacement = h
+            .fullscreen_button
+            .button
+            .child()
+            .unwrap()
+            .downcast::<gtk::Image>()
+            .unwrap();
+        poll(|| replacement.surface().is_some());
+        assert!(image.parent().is_none());
+        unsafe {
+            w.destroy();
+        }
+    });
+}
