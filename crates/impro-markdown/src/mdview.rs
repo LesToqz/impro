@@ -656,7 +656,15 @@ pub fn link_target(target: &str, source_path: &Path) -> Option<LinkTarget> {
     if target.chars().any(|c| (c as u32) < 32) {
         return None;
     }
-    if let Some((scheme, rest)) = target.split_once(':') {
+    if let Some((scheme, rest)) = target.split_once(':').filter(|(scheme, _)| {
+        scheme
+            .as_bytes()
+            .first()
+            .is_some_and(u8::is_ascii_alphabetic)
+            && scheme
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b"+-.".contains(&b))
+    }) {
         if ["http", "https"].contains(&scheme.to_ascii_lowercase().as_str()) {
             let authority = rest.strip_prefix("//")?.split(['/', '?', '#']).next()?;
             if authority.is_empty() {

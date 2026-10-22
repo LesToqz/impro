@@ -654,8 +654,14 @@ fn test_no_idle_sources_after_burst_and_removal() {
         assert!(f.tables.bursting());
         f.tables.end_burst();
         assert!(!f.tables.bursting());
+        let cell = f.grid.cell(1, 0).unwrap().widget;
         f.tables.remove(1);
         support::pump(20);
+        assert_eq!(
+            cell.ref_count(),
+            1,
+            "cell signal handlers must not retain their widget"
+        );
         assert!(f.tables.views().is_empty());
         assert!(!impro_ui::motion::clock_attached());
     });

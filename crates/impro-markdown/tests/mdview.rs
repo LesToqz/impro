@@ -159,6 +159,19 @@ fn test_links_autolinks_and_safe_targets() {
         Some(LinkTarget::File(p.clone()))
     );
     assert_eq!(link_target("missing.md", &p), None);
+    let folder = d.path().join("folder");
+    std::fs::create_dir(&folder).unwrap();
+    let colon = folder.join("a:b.md");
+    std::fs::write(&colon, "").unwrap();
+    assert_eq!(
+        link_target("folder/a:b.md", &d.path().join("source.md")),
+        Some(LinkTarget::File(colon))
+    );
+    assert_eq!(link_target("https://[bad]", Path::new("/tmp/a.md")), None);
+    assert_eq!(
+        link_target("https://[::1]", Path::new("/tmp/a.md")),
+        Some(LinkTarget::Uri("https://[::1]".into()))
+    );
 }
 #[test]
 fn test_large_blocks_are_bounded() {
