@@ -101,6 +101,20 @@ fn bench(n: usize, edges: usize) {
                 painter.render(&scene, W as f64, H as f64, PaintOptions::default());
                 ms.push(t.elapsed().as_secs_f64() * 1e3);
             }
+            if n == 3000 && hover.is_none() {
+                if let Some(dir) = std::env::var_os("IMPRO_GRAPH_BENCH_IMAGES") {
+                    let dir = std::path::PathBuf::from(dir);
+                    std::fs::create_dir_all(&dir).expect("image directory");
+                    let mut file =
+                        std::fs::File::create(dir.join(format!("{}.png", name.replace(' ', "-"))))
+                            .expect("image file");
+                    painter
+                        .render(&scene, W as f64, H as f64, PaintOptions::default())
+                        .expect("surface")
+                        .write_to_png(&mut file)
+                        .expect("PNG");
+                }
+            }
             let s = painter.stats;
             println!(
                 "  {name:<9} hover={:<5} draw p50 {:.2} ms  p95 {:.2} ms  (nodes {} lines {} [{:.0} px] arrows {} labels {}) phases bg/lines/arrows/nodes/labels {:.1?} lines prep/raster/composite {:.1?}",
