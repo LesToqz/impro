@@ -51,9 +51,11 @@ fn terminal_performance() {
         let baseline = rss();
         let start = Instant::now();
         let paints = Rc::new(std::cell::RefCell::new(Vec::new()));
+        let mut builds = Vec::new();
         for _ in 0..6 {
             let at = Instant::now();
             d.panel.new_terminal();
+            builds.push(at.elapsed().as_secs_f64() * 1000.);
             let t = d
                 .panel
                 .panes()
@@ -71,6 +73,7 @@ fn terminal_performance() {
                 glib::Propagation::Proceed
             });
         }
+        println!("pane-construction-ms={builds:?}");
         let construction = start.elapsed().as_secs_f64() * 1000.;
         poll(|| paints.borrow().len() == 6);
         let first_paint = start.elapsed().as_secs_f64() * 1000.;
@@ -84,6 +87,9 @@ fn terminal_performance() {
             "paint-budget-met={}",
             paints.borrow().iter().all(|ms| *ms < 30.0)
         );
+        if std::env::var_os("IMPRO_PAINT_ONLY").is_some() {
+            return;
+        }
         while d.panel.pane_count() > 1 {
             d.panel.close_current();
         }
