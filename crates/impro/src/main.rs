@@ -1,5 +1,5 @@
-//! Command-line entry point; the full workspace window is supplied by the window task.
-mod app;
+//! Command-line entry point.
+use impro::app;
 use std::{
     ffi::OsString,
     path::{Path, PathBuf},

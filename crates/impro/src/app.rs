@@ -1,6 +1,7 @@
 //! Application lifecycle and a first-paint PNG helper reused by later window tasks.
+use crate::MainWindow;
 use gtk::prelude::*;
-use impro_core::{identity, settings, themes};
+use impro_core::{identity, settings};
 use std::{
     cell::Cell,
     path::{Path, PathBuf},
@@ -18,24 +19,6 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
     };
     let app = gtk::Application::new(Some(identity::APP_ID), flags);
     let failed = Rc::new(Cell::new(false));
-    let startup_failed = failed.clone();
-    app.connect_startup(move |app| {
-        impro_ui::init();
-        impro_ui::motion::set_reduce_motion(
-            preferences["reduce_motion"].as_bool().unwrap_or(false),
-        );
-        let theme = themes::get_theme(preferences["theme"].as_str());
-        if let Err(error) = impro_ui::apply_theme(
-            theme,
-            preferences["accent"].as_str(),
-            preferences["ui_font"].as_str(),
-            preferences["editor_font"].as_str(),
-        ) {
-            eprintln!("impro: {error}");
-            startup_failed.set(true);
-            app.quit();
-        }
-    });
     let activation_failed = failed.clone();
     let screenshot_failed = failed.clone();
     app.connect_activate(move |app| {
@@ -47,9 +30,10 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
             window.present();
             return;
         }
-        let window = placeholder_window(app, &root);
+        let owner = MainWindow::with_values(app, &root, preferences.clone());
+        let window = &owner.window;
         if let Some(path) = qa_path.as_ref() {
-            install_screenshot_helper(&window, path.clone(), started, screenshot_failed.clone());
+            install_screenshot_helper(window, path.clone(), started, screenshot_failed.clone());
         }
         window.show_all();
         window.present();
@@ -60,20 +44,6 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
     } else {
         exit
     }
-}
-fn placeholder_window(app: &gtk::Application, root: &Path) -> gtk::ApplicationWindow {
-    let window = gtk::ApplicationWindow::new(app);
-    window.set_title(identity::WINDOW_TITLE);
-    window.set_default_size(1200, 800);
-    let layout = gtk::Box::new(gtk::Orientation::Vertical, 12);
-    layout.set_halign(gtk::Align::Center);
-    layout.set_valign(gtk::Align::Center);
-    let title = gtk::Label::new(Some(identity::APP_NAME));
-    let folder = gtk::Label::new(Some(&root.display().to_string()));
-    layout.pack_start(&title, false, false, 0);
-    layout.pack_start(&folder, false, false, 0);
-    window.add(&layout);
-    window
 }
 /// Attach before show_all(). Captures the first completed paint, with no fixed sleep/timer.
 /// Later window implementations can reuse this directly.

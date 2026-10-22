@@ -13,3 +13,15 @@ impro-vte.workspace = true
 gdk.workspace = true
 impro-core.workspace = true
 impro-ui.workspace = true
+impro-chrome = { path = "../impro-chrome" }
+impro-editor = { path = "../impro-editor" }
+impro-explorer = { path = "../impro-explorer" }
+impro-gitviews = { path = "../impro-gitviews" }
+impro-settings-ui = { path = "../impro-settings-ui" }
+impro-markdown = { path = "../impro-markdown" }
+impro-terminal = { path = "../impro-terminal" }
+impro-graph = { path = "../impro-graph" }
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
