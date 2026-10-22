@@ -493,6 +493,7 @@ impl Prompt {
                 let kind = usize::from(!item.detail.is_empty());
                 if i < 16 || heights[kind].is_none() {
                     row.update(item);
+                    row.widget.show();
                     if heights[kind].is_none() {
                         heights[kind] = Some(row.widget.preferred_height().1);
                     }
