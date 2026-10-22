@@ -2,6 +2,7 @@
 //! label levels of detail and cached pango layouts.
 
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 
 use super::raster::{Canvas, LineMask};
 use super::scene::Scene;
@@ -28,6 +29,8 @@ pub struct DrawStats {
     pub arrows: usize,
     pub labels: usize,
     pub label_renders: usize,
+    /// The connection surface was reused without rasterising its geometry.
+    pub connections_reused: bool,
     /// Total length of the drawn connections in device pixels.
     pub line_px: f64,
     /// Milliseconds spent on background, lines, arrows, markers and labels.
@@ -214,6 +217,11 @@ pub struct Painter {
     sr: Vec<f32>,
     keys: Vec<u64>,
     segments: Vec<[f32; 4]>,
+    dense: bool,
+    label_cells: Vec<bool>,
+    connections: Option<cairo::ImageSurface>,
+    connections_key: Option<u64>,
+    connection_stats: DrawStats,
     /// Threads the connection raster may use.
     pub threads: usize,
     mask: LineMask,
@@ -237,6 +245,11 @@ impl Painter {
             sr: Vec::new(),
             keys: Vec::new(),
             segments: Vec::new(),
+            dense: false,
+            label_cells: Vec::new(),
+            connections: None,
+            connections_key: None,
+            connection_stats: DrawStats::default(),
             threads: std::thread::available_parallelism().map_or(1, |n| n.get().min(4)),
             mask: LineMask::default(),
             back: None,
@@ -305,18 +318,66 @@ impl Painter {
         let drawing = !scene.is_empty() || !scene.ghosts.is_empty();
         if drawing {
             self.project(scene, dev as f32);
-            if !scene.ghosts.is_empty() {
+            let visible = self
+                .sx
+                .iter()
+                .zip(&self.sy)
+                .filter(|(x, y)| **x >= 0.0 && **x <= pw as f32 && **y >= 0.0 && **y <= ph as f32)
+                .count();
+            // Below this density keep the original rendering, including fit
+            // views whose direction markers have already faded away.
+            self.dense = visible as f64 / (w * h).max(1.0) > 0.0008
+                && arrow_opacity(scene.cam.cam.zoom) > 0.0;
+            let cacheable = !scene.needs_frames();
+            let key = cacheable.then(|| self.connection_key(scene, pw, ph, dev));
+            let reuse = cacheable && self.connections_key == key;
+            if reuse {
+                if let (Some(layer), Ok(cr)) = (&self.connections, cairo::Context::new(&back)) {
+                    let _ = cr.set_source_surface(layer, 0.0, 0.0);
+                    let _ = cr.paint();
+                }
+                self.stats.lines = self.connection_stats.lines;
+                self.stats.line_px = self.connection_stats.line_px;
+                self.stats.arrows = self.connection_stats.arrows;
+                self.stats.connections_reused = true;
+                lap(1, &mut self.stats);
+            } else {
+                if !scene.ghosts.is_empty() {
+                    if let Some(mut canvas) = Self::canvas(&mut back, pw, ph) {
+                        self.ghosts(&mut canvas, scene, dev);
+                    }
+                }
+                if let Ok(cr) = cairo::Context::new(&back) {
+                    self.lines(&cr, scene, pw as usize, ph as usize, dev as f32);
+                }
+                lap(1, &mut self.stats);
                 if let Some(mut canvas) = Self::canvas(&mut back, pw, ph) {
-                    self.ghosts(&mut canvas, scene, dev);
+                    self.arrows(&mut canvas, scene, dev as f32);
+                }
+                self.connections_key = None;
+                if cacheable {
+                    let layer = self
+                        .connections
+                        .take()
+                        .filter(|s| s.width() == pw && s.height() == ph)
+                        .or_else(|| {
+                            cairo::ImageSurface::create(cairo::Format::ARgb32, pw, ph).ok()
+                        });
+                    if let Some(layer) = layer {
+                        layer.set_device_scale(dev, dev);
+                        if let Ok(cr) = cairo::Context::new(&layer) {
+                            cr.set_operator(cairo::Operator::Source);
+                            let _ = cr.set_source_surface(&back, 0.0, 0.0);
+                            let _ = cr.paint();
+                            self.connections_key = key;
+                            self.connection_stats = self.stats;
+                        }
+                        self.connections = Some(layer);
+                    }
                 }
             }
-            if let Ok(cr) = cairo::Context::new(&back) {
-                self.lines(&cr, scene, pw as usize, ph as usize, dev as f32);
-            }
-            lap(1, &mut self.stats);
+            lap(2, &mut self.stats);
             if let Some(mut canvas) = Self::canvas(&mut back, pw, ph) {
-                self.arrows(&mut canvas, scene, dev as f32);
-                lap(2, &mut self.stats);
                 self.nodes(&mut canvas, scene, dev as f32);
                 lap(3, &mut self.stats);
             }
@@ -358,6 +419,44 @@ impl Painter {
             self.sy.push(((cam.pan_y + s * ys[i] as f64) * d) as f32);
             self.sr.push((rad[i] as f64 * rs * d) as f32);
         }
+    }
+
+    /// Fingerprint every input used by the connection layer. The projected
+    /// geometry includes camera, layout and device scale; node colours and
+    /// label offsets are deliberately independent of this layer.
+    fn connection_key(&self, scene: &Scene, w: i32, h: i32, dev: f64) -> u64 {
+        let mut hash = std::collections::hash_map::DefaultHasher::new();
+        (w, h, dev.to_bits(), scene.style.show_arrow).hash(&mut hash);
+        scene.cam.cam.zoom.to_bits().hash(&mut hash);
+        scene.disp.line.to_bits().hash(&mut hash);
+        for values in [
+            &self.sx,
+            &self.sy,
+            &self.sr,
+            &scene.line_alpha,
+            &scene.line_mix,
+            &scene.arrow_alpha,
+        ] {
+            values.len().hash(&mut hash);
+            for value in values {
+                value.to_bits().hash(&mut hash);
+            }
+        }
+        for line in &scene.lines {
+            (line.a, line.b).hash(&mut hash);
+        }
+        scene.arrows.hash(&mut hash);
+        for color in [
+            scene.palette.background,
+            scene.palette.line,
+            scene.palette.line_highlight,
+            scene.palette.arrow,
+        ] {
+            for value in [color.r, color.g, color.b, color.a] {
+                value.to_bits().hash(&mut hash);
+            }
+        }
+        hash.finish()
     }
 
     fn ghosts(&mut self, canvas: &mut Canvas<'_>, scene: &Scene, dev: f64) {
@@ -545,6 +644,11 @@ impl Painter {
 
     fn draw_labels(&mut self, cr: &cairo::Context, scene: &Scene, w: f64, h: f64, dev: f64) {
         self.labels.begin_frame(dev);
+        self.label_cells.resize(
+            (w / 48.0).ceil() as usize * (h / 20.0).ceil() as usize,
+            false,
+        );
+        self.label_cells.fill(false);
         let hl = scene.highlight().filter(|h| *h < scene.len());
         if label_opacity(scene.cam.cam.zoom, scene.disp.label_detail) > 0.001 {
             for i in 0..scene.len() {
@@ -598,7 +702,7 @@ impl Painter {
         let drop = scene.drop[i] as f64;
         let text = scene.graph.nodes[i].label();
         let renders = self.labels.renders_this_frame;
-        let Some((surface, px, width, _height)) = self.labels.get(text, on_screen * dev, font)
+        let Some((surface, px, width, height)) = self.labels.get(text, on_screen * dev, font)
         else {
             return;
         };
@@ -606,6 +710,27 @@ impl Painter {
         let lw = width * k;
         let ly = sy + (world as f64 + 5.0) * rs + drop;
         let (x, y) = (sx - lw / 2.0, ly - LABEL_PAD as f64 * k);
+        if x + lw < 0.0 || x > w || y + height * k < 0.0 || y > h {
+            return;
+        }
+        if self.dense && !hovered {
+            let cols = (w / 48.0).ceil() as usize;
+            let rows = (h / 20.0).ceil() as usize;
+            let x0 = (x.max(0.0) / 48.0) as usize;
+            let x1 = ((x + lw).max(0.0) / 48.0).ceil() as usize;
+            let y0 = (y.max(0.0) / 20.0) as usize;
+            let y1 = ((y + height * k).max(0.0) / 20.0).ceil() as usize;
+            if (y0..y1.min(rows))
+                .any(|cy| (x0..x1.min(cols)).any(|cx| self.label_cells[cy * cols + cx]))
+            {
+                return;
+            }
+            for cy in y0..y1.min(rows) {
+                for cx in x0..x1.min(cols) {
+                    self.label_cells[cy * cols + cx] = true;
+                }
+            }
+        }
         let _ = cr.save();
         let c = scene.palette.text;
         cr.set_source_rgba(c.r as f64, c.g as f64, c.b as f64, alpha);
@@ -619,5 +744,66 @@ impl Painter {
         let _ = cr.restore();
         self.stats.labels += 1;
         self.stats.label_renders += (self.labels.renders_this_frame - renders) as usize;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::view::scene::Built;
+    use crate::Graph;
+
+    fn pixels(painter: &mut Painter, scene: &Scene, scale: f64) -> Vec<u8> {
+        let surface = painter
+            .render(
+                scene,
+                240.0,
+                180.0,
+                PaintOptions {
+                    hide_labels: true,
+                    scale,
+                },
+            )
+            .expect("surface");
+        let mut png = Vec::new();
+        surface.write_to_png(&mut png).expect("PNG");
+        png
+    }
+
+    #[test]
+    fn connection_cache_tracks_geometry_style_and_device_scale() {
+        let mut scene = Scene::new();
+        scene.set_size(240.0, 180.0);
+        scene.apply(Built::global(Graph::from_pairs(3, &[(0, 1), (1, 2)])));
+        while scene.advance(1.0 / 60.0) {}
+        let mut painter = Painter::new();
+        let first = pixels(&mut painter, &scene, 1.0);
+        assert!(!painter.stats.connections_reused);
+        assert_eq!(first, pixels(&mut painter, &scene, 1.0));
+        assert!(painter.stats.connections_reused);
+        for change in 0..8 {
+            match change {
+                0 => scene.cam.cam.pan_x += 12.0,
+                1 => scene.cam.cam.zoom *= 1.2,
+                2 => scene.disp.line *= 2.0,
+                3 => scene.palette.line.r = 0.9,
+                4 => scene.line_alpha[0] *= 0.5,
+                5 => scene.arrow_alpha[0] *= 0.5,
+                6 => scene.style.show_arrow = !scene.style.show_arrow,
+                _ => scene.palette.background.b *= 0.8,
+            }
+            let actual = pixels(&mut painter, &scene, 1.0);
+            assert!(!painter.stats.connections_reused, "change {change}");
+            assert_eq!(
+                actual,
+                pixels(&mut Painter::new(), &scene, 1.0),
+                "change {change}"
+            );
+        }
+        assert_eq!(
+            pixels(&mut painter, &scene, 2.0),
+            pixels(&mut Painter::new(), &scene, 2.0)
+        );
+        assert!(!painter.stats.connections_reused);
     }
 }
