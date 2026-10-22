@@ -919,16 +919,8 @@ impl ExplorerPanel {
         let selection = w.notes.tree.selection();
         selection.unselect_all();
         let wanted = model_path(path);
-        if let Some(iter) = w.notes.store.iter_first() {
-            loop {
-                if util::string(&w.notes.store, &iter, 2) == wanted {
-                    selection.select_iter(&iter);
-                    break;
-                }
-                if !w.notes.store.iter_next(&iter) {
-                    break;
-                }
-            }
+        if let Some(iter) = util::find_child(&w.notes.store, None, 2, &wanted) {
+            selection.select_iter(&iter);
         }
     }
 

@@ -168,3 +168,23 @@ pub fn remove_tree_row(store: &gtk::TreeStore, iter: &gtk::TreeIter) -> Option<g
         (more != 0).then(|| from_glib_none(&raw as *const gtk::ffi::GtkTreeIter))
     }
 }
+
+/// The first row below `parent` (the top level for `None`) whose `column` holds `wanted`.
+pub fn find_child(
+    model: &impl IsA<gtk::TreeModel>,
+    parent: Option<&gtk::TreeIter>,
+    column: i32,
+    wanted: &str,
+) -> Option<gtk::TreeIter> {
+    let mut row = match parent {
+        Some(parent) => model.iter_children(Some(parent)),
+        None => model.iter_first(),
+    };
+    while let Some(candidate) = row {
+        if string(model, &candidate, column) == wanted {
+            return Some(candidate);
+        }
+        row = next_iter(model, &candidate);
+    }
+    None
+}

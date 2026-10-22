@@ -492,16 +492,7 @@ impl ExplorerPanel {
             // Compare whole paths: two names can look alike once shown (invalid bytes).
             walked.push(component);
             let wanted = model_path(&walked);
-            let child = store.iter_children(Some(&row))?;
-            loop {
-                if util::string(store, &child, 2) == wanted {
-                    row = child;
-                    break;
-                }
-                if !store.iter_next(&child) {
-                    return None;
-                }
-            }
+            row = util::find_child(store, Some(&row), 2, &wanted)?;
         }
         Some(row)
     }
@@ -745,17 +736,9 @@ impl ExplorerPanel {
             }
             walked.push(component);
             let wanted = model_path(&walked);
-            let Some(child) = w.store.iter_children(Some(&row)) else {
+            let Some(child) = util::find_child(&w.store, Some(&row), 2, &wanted) else {
                 return;
             };
-            loop {
-                if util::string(&w.store, &child, 2) == wanted {
-                    break;
-                }
-                if !w.store.iter_next(&child) {
-                    return;
-                }
-            }
             row = child;
         }
         self.imp().want_select.borrow_mut().take();
