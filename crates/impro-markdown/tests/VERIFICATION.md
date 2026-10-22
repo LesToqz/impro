@@ -1,35 +1,33 @@
 # Markdown integration verification
 
-The executable tests cover pure behavior and GTK table widgets through a real
-TextBuffer/TextView host. The renderer, slash menu and selection toolbar remain
-owned by the next task. Their no-op modules were preserved. Do these checks with
-the real editor/window once that task wires `TableHost`; a standalone host cannot
-verify editor history, save behavior or replacement-block geometry.
+The executable tests cover pure behavior, GTK table widgets through a real
+TextBuffer/TextView host, and the live renderer (`livemd`), slash menu and
+selection toolbar through the real editor panel. Run them under an X11 display at
+scale 1 (pixel assertions read device pixels):
+`GDK_BACKEND=x11 xvfb-run -a cargo test -p impro-markdown -p impro-editor`.
 
-From the block key suite, retain these names and assertions in that task:
+Test files and what they pin:
 
-- `test_typing_live_shortcuts_and_save`
-- `test_active_prefixes_and_inline_span_visibility`
-- `test_home_left_selection_copy_click_and_undo_clamp`
-- `test_list_keys_children_renumber_and_one_step_undo`
-- `test_split_demote_quote_exit_and_numbering_after_interruption`
-- `test_code_keys_language_picker_copy_and_exit`
-- `test_fence_caret_positions_stay_in_code_content`
-- `test_divider_and_multiline_paste`
+- `test_livemd.rs`: block model, tags, widgets, gaps, tail, images, code card.
+- `test_block_keys.rs`: `test_typing_live_shortcuts_and_save`,
+  `test_active_prefixes_and_inline_span_visibility`,
+  `test_home_left_selection_copy_click_and_undo_clamp`,
+  `test_list_keys_children_renumber_and_one_step_undo`,
+  `test_split_demote_quote_exit_and_numbering_after_interruption`,
+  `test_code_keys_language_picker_copy_and_exit`,
+  `test_fence_caret_positions_stay_in_code_content`,
+  `test_divider_and_multiline_paste`.
+- `test_livetable_live.rs`: the table insertion flows
+  (`test_slash_table_focuses_the_first_header_cell_with_text_selected`,
+  `test_toolbar_table_focuses_first_header_cell`) plus live table integration
+  with the renderer, editor history and save.
+- `test_hit_safety.rs`, `test_reentrancy.rs`: pointer/hit-test sweeps and
+  re-entrancy of every handler against buffer edits.
+- `test_slashmenu.rs`, `test_seltoolbar.rs`: the two popups.
+- `crates/impro-editor/tests/test_md_modes.rs`: Markdown modes in the real tab.
 
-From the live table suite, verify the insertion flows:
-
-- `test_slash_table_focuses_the_first_header_cell_with_text_selected`
-- `test_toolbar_table_focuses_first_header_cell`
-
-The other 18 table widget tests retain the source suite's names. Assertions
-specific to saving, rebuilding the renderer's full block list and undo/redo
-history need the real editor. The host tests verify begin/end action boundaries,
-history forwarding and focus restoration, without implementing a second history
-engine. The spacing test checks fresh/in-place grid height and absence of extra
-line padding; the exact 181-pixel document extent remains a renderer check.
-Native cell selection/copy uses the TextView signals, while grid navigation
-exercises the same `TableView::key` method installed on key-press-event.
+`test_toolbar_table_focuses_first_header_cell` waits on focus timing and can
+fail when the machine is heavily loaded; it passes alone.
 
 ## Host wiring contract
 

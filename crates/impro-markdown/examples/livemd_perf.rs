@@ -118,6 +118,13 @@ fn open_and_measure(run: &Run, path: &Path, label: &str) -> impro_markdown::live
         println!("{label}: txt first-draw-ms={:.1}", ms(first.get().unwrap()));
         std::process::exit(0);
     }
+    if std::env::var_os("PERF_TXT").is_some() {
+        println!(
+            "{label}: plain-text first-draw-ms={:.1}",
+            ms(first.get().unwrap())
+        );
+        std::process::exit(0);
+    }
     let live = livemd::for_view(&tab.view).expect("live renderer");
     let decorated = first.get().unwrap();
     let settle = Instant::now();
@@ -165,6 +172,14 @@ fn typing(run: &Run, label: &str) {
         inserts.push(ms(start.elapsed()));
         tab.view.queue_draw();
         until(|| samples.borrow().len() > index);
+        // Let the frame clock go idle: a key typed right after a frame would
+        // otherwise wait for the next 16.7 ms frame slot, which says nothing
+        // about the renderer.
+        let quiet = Instant::now();
+        while quiet.elapsed() < Duration::from_millis(40) {
+            pump();
+            std::thread::sleep(Duration::from_millis(1));
+        }
         if index % 40 == 0 && std::env::var_os("PERF_TRACE").is_some() {
             eprintln!(
                 "typed {index}: insert {:.1}ms total {:.1}ms",
