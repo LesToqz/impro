@@ -13,6 +13,11 @@ pub(crate) fn prepare(window: &MainWindow) {
             let Ok(cell) = cell.downcast::<gtk::CellRendererPixbuf>() else {
                 continue;
             };
+            // The explorer subclass renders from its own asynchronous cache.
+            // Setting a surface clears icon-name, which that renderer needs.
+            if cell.is::<impro_explorer::icons::IconCell>() {
+                continue;
+            }
             let weak = tree.downgrade();
             TreeViewColumnExt::set_cell_data_func(
                 &column,
