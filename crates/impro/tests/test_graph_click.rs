@@ -456,7 +456,7 @@ fn clicks_on_the_canvas_leave_the_graph_in_view() {
             gdk::keys::constants::plus,
             gdk::keys::constants::minus,
         ] {
-            testing::key(&view, key.clone(), true);
+            testing::key(&view, key, true);
             frames(&view, 3);
             testing::key(&view, key, false);
         }
