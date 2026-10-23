@@ -82,7 +82,7 @@ impl<'a> Canvas<'a> {
         let pixel = [byte(rgb[2]), byte(rgb[1]), byte(rgb[0]), 255];
         for y in 0..self.h {
             let row = &mut self.px[y * self.stride..y * self.stride + self.w * 4];
-            for p in row.chunks_exact_mut(4) {
+            for p in row.as_chunks_mut::<4>().0 {
                 p.copy_from_slice(&pixel);
             }
         }
@@ -106,13 +106,13 @@ impl<'a> Canvas<'a> {
         }
         let row = &mut self.px[y * self.stride + x0 * 4..y * self.stride + x1 * 4];
         if a >= 255 {
-            for p in row.chunks_exact_mut(4) {
+            for p in row.as_chunks_mut::<4>().0 {
                 p[0] = src[2];
                 p[1] = src[1];
                 p[2] = src[0];
             }
         } else {
-            for p in row.chunks_exact_mut(4) {
+            for p in row.as_chunks_mut::<4>().0 {
                 p[0] = blend_channel(p[0], src[2], a);
                 p[1] = blend_channel(p[1], src[1], a);
                 p[2] = blend_channel(p[2], src[0], a);
@@ -236,7 +236,7 @@ impl<'a> Canvas<'a> {
                 }
             }
             xs[..n].sort_unstable_by(|p, q| p.total_cmp(q));
-            for pair in xs[..n].chunks_exact(2) {
+            for pair in xs[..n].as_chunks::<2>().0 {
                 let x0 = (pair[0] - 0.5).ceil().max(0.0) as usize;
                 let x1 = ((pair[1] - 0.5).ceil().max(0.0) as usize).min(self.w);
                 self.span(y, x0, x1, src, a);
@@ -968,7 +968,11 @@ mod tests {
     }
 
     fn total(px: &[u8]) -> f64 {
-        px.chunks_exact(4).map(|p| p[1] as f64 / 255.0).sum()
+        px.as_chunks::<4>()
+            .0
+            .iter()
+            .map(|p| p[1] as f64 / 255.0)
+            .sum()
     }
 
     /// Runs `f` on a zeroed canvas and returns the pixels.
@@ -1004,7 +1008,11 @@ mod tests {
         let centre = lum(&px, 32, 24);
         assert!((centre as i32 - 128).abs() <= 2);
         // some pixels lie strictly between empty and the centre value
-        assert!(px.chunks_exact(4).any(|p| p[1] > 5 && p[1] < centre - 5));
+        assert!(px
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .any(|p| p[1] > 5 && p[1] < centre - 5));
     }
 
     #[test]
@@ -1323,7 +1331,11 @@ mod tests {
             1,
         );
         assert!(total(&px) > 100.0);
-        assert!(px.chunks_exact(4).all(|p| p[1] == 0 || p[1] == 255));
+        assert!(px
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .all(|p| p[1] == 0 || p[1] == 255));
         let empty = stroke_flat(&[[f32::NAN, 0.0, 5.0, 5.0], [3.0, 3.0, 3.0, 3.0]], 1.0, 1);
         assert_eq!(total(&empty), 0.0);
     }

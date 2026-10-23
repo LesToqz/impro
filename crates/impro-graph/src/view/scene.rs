@@ -685,7 +685,7 @@ impl Scene {
         }
         if self.style.show_arrow {
             for (k, (s, t)) in self.arrows.iter().enumerate() {
-                let ta = if hl.map_or(true, |h| h == *s as usize || h == *t as usize) {
+                let ta = if hl.is_none_or(|h| h == *s as usize || h == *t as usize) {
                     1.0
                 } else {
                     HOVER_DIM
@@ -852,7 +852,7 @@ impl Scene {
         }
         if self.style.show_arrow {
             for (k, (s, t)) in self.arrows.iter().enumerate() {
-                let ta = if hl.map_or(true, |h| h == *s as usize || h == *t as usize) {
+                let ta = if hl.is_none_or(|h| h == *s as usize || h == *t as usize) {
                     1.0
                 } else {
                     HOVER_DIM

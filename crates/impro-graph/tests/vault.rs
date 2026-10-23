@@ -203,7 +203,7 @@ fn colour_rules_pick_the_first_match_and_cap_at_twelve() {
     assert_eq!(group("hub/Hub.md"), Some(2));
     assert_eq!(group("ring/ring-0.md"), None);
     assert_eq!(group("#hub/main"), None, "tags keep their kind colour");
-    assert!(g.nodes.iter().all(|n| n.group.map_or(true, |x| x < 12)));
+    assert!(g.nodes.iter().all(|n| n.group.is_none_or(|x| x < 12)));
 }
 
 #[test]
