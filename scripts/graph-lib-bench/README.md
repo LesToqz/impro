@@ -22,6 +22,7 @@ in [`RESULTS.md`](RESULTS.md); raw tables are in `results/`.
 | `src/bin/f_layout.rs` | F: layout engines (impro-graph `Layout`, `fjadra`, `force_graph`, `petgraph` structure) |
 | `src/bin/glarea_probe.rs` | `gtk::GLArea` feasibility probe (Xvfb / private Wayland compositor) |
 | `bench.sh` | phases that reproduce every table |
+| `compare.sh` | opens two short windows on the display it is run on and compares the cairo `DrawingArea` with the `GLArea` frame intervals (run by a user on a real session, see RESULTS.md section 11) |
 
 Resolutions are logical sizes 1920×1080, 2560×1440, 3840×2160 at device scale
 1 and 2 (surfaces up to 7680×4320 device pixels). Every bin takes
