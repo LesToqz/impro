@@ -75,8 +75,9 @@ Default ignored directories are `.git`, `.hg`, `.svn`, `__pycache__`,
 Notes (`.md` and `.markdown`) contribute wikilinks, aliases, heading/block
 targets, embeds, relative Markdown links, inline and frontmatter tags. Heading
 and block references connect to the containing file. Source parsers recognize
-Python imports, JavaScript/TypeScript imports and requires, Rust modules/uses,
-CSS imports/URLs, HTML references, shell sources and supported include forms.
+Python imports (`.py`), JavaScript/TypeScript imports, exports-from and requires
+(`.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.cjs`, `.vue`), CSS imports/URLs
+(`.css`, `.scss`, `.sass`), and HTML source/link references (`.html`, `.htm`).
 Fenced code and inline-code masking keep Markdown examples out of the link index.
 
 Notes use Markdown references and tags; source files contribute imports. Assets
@@ -118,10 +119,12 @@ per file (5184 square units); files next to surviving neighbours use at most
 24 units of jitter on either axis. Existing positions survive updates.
 
 Alpha/colour easing approaches by 16% per 60 Hz frame, zoom by 18%. Pan velocity
-filters with 25% new input and retains 86% per frame. Frame-independent easing
+filters with 20% new input and retains 86% per frame. Frame-independent easing
 caps elapsed time at 50 ms. Wheel zoom is `exp(-pixelDelta/480)`, with line and
 page input converted to 24 and 640 pixels; small control-wheel deltas double.
-Zoom keeps the world point under the pointer fixed. Hover leaves unrelated
+Wheel zoom toward a target below the current displayed zoom keeps the canvas
+centre fixed; otherwise it keeps the world point under the pointer fixed.
+This anchor rule also applies to control-wheel gestures. Hover leaves unrelated
 items at 28% opacity. A click allows six pixels of movement. Local marker
 weight is `12/(layer+1)`, keeping even the outer hop visible. Timeline reveal
 uses chronological file order when timestamps exist, at `clamp(items/12,8,72)`

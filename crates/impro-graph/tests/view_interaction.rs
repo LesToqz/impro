@@ -163,7 +163,7 @@ fn the_wheel_zooms_about_the_pointer_and_clamps() {
             world.1 * after.zoom + after.pan.1,
         );
         assert!((on_screen.0 - px).abs() < 1e-6 && (on_screen.1 - py).abs() < 1e-6);
-        // zooming out about the pointer keeps it fixed too
+        // zooming out returns to the earlier scale about the view centre
         t::wheel(&f.view, px, py, 480.0, false);
         assert!(t::settle(&f.view, 10_000));
         let back = t::info(&f.view);
@@ -182,6 +182,33 @@ fn the_wheel_zooms_about_the_pointer_and_clamps() {
         assert!((z1 / z0 - (16.0f64 / 480.0).exp()).abs() < 1e-9);
         // zoom is saved after it stops changing
         assert!(t::wait_for(3_000, || (f.view.prefs().scale - z1).abs() < 1e-9));
+    });
+}
+
+#[test]
+fn wheel_out_preserves_the_centre_and_wheel_in_preserves_the_pointer() {
+    run(|| {
+        let f = Fixture::new();
+        for ctrl in [false, true] {
+            for pixels in [16.0, -16.0] {
+                let before = t::info(&f.view);
+                let pointer = (180.0, 120.0);
+                let anchor = if pixels > 0.0 {
+                    (before.size.0 / 2.0, before.size.1 / 2.0)
+                } else {
+                    pointer
+                };
+                let world = (
+                    (anchor.0 - before.pan.0) / before.zoom,
+                    (anchor.1 - before.pan.1) / before.zoom,
+                );
+                t::wheel(&f.view, pointer.0, pointer.1, pixels, ctrl);
+                assert!(t::settle(&f.view, 3_000));
+                let after = t::info(&f.view);
+                assert!((world.0 * after.zoom + after.pan.0 - anchor.0).abs() < 1e-6);
+                assert!((world.1 * after.zoom + after.pan.1 - anchor.1).abs() < 1e-6);
+            }
+        }
     });
 }
 
