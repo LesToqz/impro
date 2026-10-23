@@ -158,7 +158,9 @@ fn graph_settings_process() {
         poll(|| w.layout_ready());
         let view = w.open_graph().expect("graph");
         ready(&view);
-        assert_eq!(t::info(&view).zoom, 0.04);
+        let saved_zoom = 0.04 * (120.0f64 / 480.0).exp();
+        let expected = if stage == "save" { 0.04 } else { saved_zoom };
+        assert!((t::info(&view).zoom - expected).abs() < 1e-9);
         assert!(t::nodes_on_screen(&view) > 0);
         assert!(view.panel().chip_visible());
         assert!(!view.panel_open());
@@ -179,6 +181,22 @@ fn graph_settings_process() {
             poll(|| disk()["graph"]["showTags"] == true);
             assert!(start.elapsed().as_millis() >= 230);
             assert!(start.elapsed().as_millis() < 2_000);
+            // Adding the tag reheats physics for several seconds. Saving a
+            // completed zoom must use the camera clock, independently of that.
+            assert!(t::info(&view).simulating);
+            let zoom_start = Instant::now();
+            t::wheel(&view, 180.0, 120.0, -120.0, false);
+            frame(&w.window);
+            t::pump(600);
+            assert_eq!(disk()["graph"]["scale"], json!(0.04));
+            assert!(
+                t::wait_for(1_300, || disk()["graph"]["scale"]
+                    .as_f64()
+                    .is_some_and(|scale| (scale - saved_zoom).abs() < 1e-9)),
+                "finished camera motion must save before unrelated physics settles"
+            );
+            assert!(zoom_start.elapsed().as_millis() >= 700);
+            assert!(zoom_start.elapsed().as_millis() < 2_000);
         } else {
             assert!(view.prefs().show_tags);
             poll(|| t::node_ids(&view).contains(&"#topic".into()));

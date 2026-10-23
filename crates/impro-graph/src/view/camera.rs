@@ -148,6 +148,7 @@ impl CameraState {
 
     /// Jumps to a zoom (no easing), keeping the view centre fixed.
     pub fn set_zoom_now(&mut self, zoom: f64, w: f64, h: f64) {
+        self.size = (w, h);
         let z = clamp_zoom(zoom);
         self.cam.pan_x = zoom_about(self.cam.pan_x, self.cam.zoom, z, w / 2.0);
         self.cam.pan_y = zoom_about(self.cam.pan_y, self.cam.zoom, z, h / 2.0);
@@ -157,6 +158,7 @@ impl CameraState {
 
     /// Eases toward a zoom about the view centre.
     pub fn set_zoom_target(&mut self, zoom: f64, w: f64, h: f64) {
+        self.size = (w, h);
         self.target_zoom = clamp_zoom(zoom);
         self.anchor = (w / 2.0, h / 2.0);
     }
@@ -265,6 +267,7 @@ impl CameraState {
         panning: bool,
         node: impl Fn(usize) -> Option<(f32, f32)>,
     ) -> bool {
+        self.size = size;
         let mut moved = self.sanitize(size.0, size.1);
         let panning = panning || self.dragging;
         let keys = self.keys;

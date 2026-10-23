@@ -990,8 +990,9 @@ impl Inner {
                     scene.update_hover(x, y);
                 }
             }
+            let previous_zoom = scene.cam.cam.zoom;
             let active = scene.advance(dt);
-            let moved = (scene.cam.target_zoom - self.prefs.borrow().scale).abs() > 1e-6;
+            let moved = previous_zoom != scene.cam.cam.zoom;
             (active, moved)
         };
         if zoom_moved {
