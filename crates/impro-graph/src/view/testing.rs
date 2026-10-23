@@ -22,6 +22,8 @@ pub struct SceneInfo {
     pub alpha: f64,
     pub settled: bool,
     pub ticks: u64,
+    /// Camera velocity in logical pixels per millisecond (per move while held).
+    pub camera_velocity: (f64, f64),
 }
 
 pub fn info(view: &GraphView) -> SceneInfo {
@@ -39,7 +41,107 @@ pub fn info(view: &GraphView) -> SceneInfo {
         alpha: s.layout.alpha(),
         settled: s.layout.settled(),
         ticks: s.layout.ticks(),
+        camera_velocity: (s.cam.vx, s.cam.vy),
     }
+}
+
+/// Label inputs shared with the painter, before glyph-mask coverage.
+#[derive(Clone, Debug)]
+pub struct LabelPaint {
+    pub font_size: f64,
+    pub screen_font_size: f64,
+    pub wrap_width: f64,
+    pub alpha: f64,
+    pub bitmap_font_size: Option<f64>,
+    pub bitmap_size: Option<(f64, f64)>,
+}
+
+/// Connection appearance after the painter's opacity and tint bucketing.
+#[derive(Clone, Debug)]
+pub struct LinePaint {
+    pub endpoints: [String; 2],
+    pub width: f64,
+    pub color: String,
+    pub alpha: f32,
+    pub emphasis: f32,
+}
+
+/// A direction marker accepted by the painter's visibility/length checks.
+#[derive(Clone, Debug)]
+pub struct ArrowPaint {
+    pub endpoints: [String; 2],
+    pub vertices: [(f32, f32); 4],
+    pub alpha: f32,
+}
+
+/// Nominal label metrics and the cached bitmap actually used by the painter.
+pub fn label_paint(view: &GraphView, id: &str) -> Option<LabelPaint> {
+    let scene = view.inner.scene.borrow();
+    let i = scene.graph.index_of(id)?;
+    let mut paint = super::draw::label_metrics(&scene, i);
+    if let Some((px, w, h)) = view
+        .inner
+        .painter
+        .borrow()
+        .labels
+        .metrics(scene.graph.nodes[i].label())
+    {
+        paint.bitmap_font_size = Some(px);
+        paint.bitmap_size = Some((w, h));
+    }
+    Some(paint)
+}
+
+/// Connection metrics, including connections outside the current viewport.
+pub fn line_paint(view: &GraphView) -> Vec<LinePaint> {
+    let scene = view.inner.scene.borrow();
+    scene
+        .lines
+        .iter()
+        .enumerate()
+        .map(|(k, line)| {
+            let emphasis = (scene.line_mix[k] * 10.0).round() / 10.0;
+            LinePaint {
+                endpoints: [
+                    scene.graph.nodes[line.a as usize].id.to_string(),
+                    scene.graph.nodes[line.b as usize].id.to_string(),
+                ],
+                width: scene.disp.line,
+                color: scene
+                    .palette
+                    .line
+                    .mix(scene.palette.line_highlight, emphasis)
+                    .to_hex(),
+                alpha: (scene.line_alpha[k] * scene.palette.line.a * 40.0).round() / 40.0,
+                emphasis,
+            }
+        })
+        .collect()
+}
+
+/// Direction geometry from the most recently painted frame, in logical pixels.
+pub fn arrow_paint(view: &GraphView) -> Vec<ArrowPaint> {
+    view.inner.painter.borrow().arrow_paint(
+        &view.inner.scene.borrow(),
+        view.canvas().scale_factor() as f32,
+    )
+}
+
+/// The cursor selected by the normal input handler.
+pub fn cursor_name(view: &GraphView) -> &'static str {
+    view.inner.cursor_name()
+}
+
+/// Advances scene physics and easing by a controlled interval, without running
+/// GTK, replay timers or settings writes. Returns whether another frame is needed.
+pub fn advance_frame(view: &GraphView, seconds: f64) -> bool {
+    let active = view
+        .inner
+        .scene
+        .borrow_mut()
+        .advance(seconds.clamp(0.0, 0.05));
+    view.inner.canvas.queue_draw();
+    active
 }
 
 /// Ids of the shown nodes, sorted.

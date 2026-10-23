@@ -357,23 +357,25 @@ impl Inner {
 
     /// Pointer cursor over markers, a closed hand while dragging.
     pub(super) fn update_cursor(&self) {
-        let name = {
-            let scene = self.scene.borrow();
-            let grabbing = scene.is_dragging()
-                || matches!(self.press.borrow().as_ref(), Some(Press::Pan { .. }));
-            if grabbing {
-                "grabbing"
-            } else if scene.hover.is_some() {
-                "pointer"
-            } else {
-                "default"
-            }
-        };
+        let name = self.cursor_name();
         if let Some(window) = self.canvas.window() {
             let cursor = (name != "default")
                 .then(|| gdk::Cursor::from_name(&window.display(), name))
                 .flatten();
             window.set_cursor(cursor.as_ref());
+        }
+    }
+
+    pub(super) fn cursor_name(&self) -> &'static str {
+        let scene = self.scene.borrow();
+        let grabbing =
+            scene.is_dragging() || matches!(self.press.borrow().as_ref(), Some(Press::Pan { .. }));
+        if grabbing {
+            "grabbing"
+        } else if scene.hover.is_some() {
+            "pointer"
+        } else {
+            "default"
         }
     }
 

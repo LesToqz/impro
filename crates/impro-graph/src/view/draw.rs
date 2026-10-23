@@ -150,6 +150,12 @@ impl LabelCache {
         self.entries.clear();
     }
 
+    pub(super) fn metrics(&self, text: &str) -> Option<(f64, f64, f64)> {
+        self.entries
+            .get(text)
+            .map(|label| (label.px, label.width, label.height))
+    }
+
     /// Sets the font family; bitmaps made with another family are dropped.
     pub fn set_family(&mut self, family: &str) {
         if self.family != family {
@@ -246,6 +252,30 @@ fn unreachable_context() -> cairo::Context {
     cairo::Context::new(unreachable_surface()).expect("context")
 }
 
+/// Nominal metrics used by both the painter and its read-only diagnostics.
+pub(super) fn label_metrics(scene: &Scene, i: usize) -> super::testing::LabelPaint {
+    let zoom = scene.cam.cam.zoom;
+    let hovered = scene.highlight() == Some(i);
+    let font_size = label_font_size(scene.layout.radius()[i]) as f64;
+    super::testing::LabelPaint {
+        font_size,
+        screen_font_size: if hovered && zoom < 1.0 {
+            font_size
+        } else {
+            font_size * zoom.sqrt()
+        },
+        wrap_width: LABEL_WRAP as f64,
+        alpha: scene.palette.text.a as f64
+            * if hovered {
+                1.0
+            } else {
+                label_opacity(zoom, scene.disp.label_detail) * scene.alpha[i] as f64
+            },
+        bitmap_font_size: None,
+        bitmap_size: None,
+    }
+}
+
 /// Reusable drawing state: scratch arrays, the back buffer and the label cache.
 pub struct Painter {
     sx: Vec<f32>,
@@ -283,6 +313,38 @@ impl Default for Painter {
 }
 
 impl Painter {
+    pub(super) fn arrow_paint(&self, scene: &Scene, dev: f32) -> Vec<super::testing::ArrowPaint> {
+        let (w, h) = scene.size;
+        let Some(dims) = self.arrow_dims(
+            scene,
+            (w * dev as f64) as usize,
+            (h * dev as f64) as usize,
+            dev,
+        ) else {
+            return Vec::new();
+        };
+        // Screen arrays belong to the last painted graph and may be older
+        // than an asynchronous data delivery.
+        if self.sx.len() != scene.len() {
+            return Vec::new();
+        }
+        scene
+            .arrows
+            .iter()
+            .enumerate()
+            .filter_map(|(k, &(a, b))| {
+                let (alpha, vertices) = self.arrow_shape(scene, k, &dims, dev)?;
+                Some(super::testing::ArrowPaint {
+                    endpoints: [
+                        scene.graph.nodes[a as usize].id.to_string(),
+                        scene.graph.nodes[b as usize].id.to_string(),
+                    ],
+                    alpha: (alpha * LINE_LEVELS).round() / LINE_LEVELS,
+                    vertices: vertices.map(|(x, y)| (x / dev, y / dev)),
+                })
+            })
+            .collect()
+    }
     pub fn new() -> Painter {
         Painter {
             sx: Vec::new(),
@@ -971,14 +1033,9 @@ impl Painter {
         hovered: bool,
     ) {
         let cam = scene.cam.cam;
-        let (s, rs) = (cam.zoom, cam.zoom.sqrt());
-        let text_a = scene.palette.text.a as f64;
-        let fade = label_opacity(s, scene.disp.label_detail);
-        let alpha = if hovered {
-            text_a
-        } else {
-            fade * scene.alpha[i] as f64 * text_a
-        };
+        let rs = cam.zoom.sqrt();
+        let metrics = label_metrics(scene, i);
+        let alpha = metrics.alpha;
         if alpha <= 0.001 {
             return;
         }
@@ -991,8 +1048,8 @@ impl Painter {
             return;
         }
         let world = scene.layout.radius()[i];
-        let font = label_font_size(world) as f64;
-        let on_screen = if hovered && s < 1.0 { font } else { font * rs };
+        let font = metrics.font_size;
+        let on_screen = metrics.screen_font_size;
         if on_screen < MIN_LABEL_PX {
             return;
         }

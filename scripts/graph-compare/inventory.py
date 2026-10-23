@@ -203,6 +203,25 @@ def font_changed(out,side,s):
     return img.crop(box).tobytes()!=before.crop(box).tobytes()
 
 
+def dart_metrics(s):
+    result = set()
+    for dart in s['paint']['arrows']:
+        tip, wing, notch, other = dart['vertices']
+        back = [(a+b)/2 for a,b in zip(wing,other)]
+        result.add((round(dart['alpha'],3),round(math.dist(tip,back),3),
+                    round(math.dist(wing,other)/2,3),round(math.dist(tip,notch),3)))
+    return [list(x) for x in sorted(result)]
+
+
+def hover_lines(s):
+    lines = {tuple(sorted(line['endpoints'])):line for line in s['paint']['lines']}
+    pairs = [('hub/Hub.md','hub/spoke-0.md'),('src/main.py','src/util.py')]
+    try:
+        return [lines[tuple(sorted(pair))]['alpha'] for pair in pairs]
+    except KeyError as error:
+        raise ValueError('Required hover connection was culled from the reference paint.') from error
+
+
 def repeat_distance(out,side,s):
     path=out/(side+'-repeat')/'measurements.json'
     if not path.exists():
@@ -277,17 +296,23 @@ def compare(reference, impro, out):
     for detail in ('-1','2'):
         add('label-detail-'+detail,'Label ink visibility and size with detail '+detail,'detail-'+detail,
             lambda s,side,n='detail-'+detail:label_pixels(out,side,n,s),tol=3,unit='3 px ink bounding box; visibility exact',source='draw')
-    missing('arrows','Arrow visibility, opacity and dart length at each zoom',
-            'Native view exposes no arrow geometry or paint telemetry; screenshot lines and labels cannot isolate arrow alpha reliably. Request a read-only painted-arrow helper.','draw')
+    add('arrows','Painted arrow opacity, length, half-width and notch at each zoom','zoom-1',
+        lambda _,side:{z:dart_metrics((rs if side=='reference' else is_)['zoom-'+z]) for z in ('0.1','0.25','0.7','1','2')},
+        tol=.01,unit='0.01 logical px/opacity; culled markers omitted',source='draw')
     for zoom in ('0.1','0.25','0.7','1','2'):
         add('label-alpha-'+zoom,'Peak screenshot label contrast versus text role at zoom '+zoom,'label-'+zoom,
             lambda s,side,n='label-'+zoom:label_alpha(out,side,n,s),tol=.15,unit='0.15 alpha estimate; font coverage differs',source='draw')
-    missing('label-font-size','Nominal label font size and wrapping width',
-            'Ink bounds and visibility are measured separately; the native label cache exposes neither effective font size nor wrap width. Request label paint telemetry.','draw')
+    add('label-font-size','Nominal label font size and wrapping width','label-1',
+        lambda s,_:[s['paint']['labels']['orphan.md'][k] for k in ('font_size','screen_font_size','wrap_width')],
+        tol=.01,unit='0.01 logical px; requested sizes before glyph coverage',source='draw')
+    for zoom in ('0.25','0.7','1','2'):
+        add('label-nominal-alpha-'+zoom,'Effective label alpha before glyph coverage: '+zoom,'label-'+zoom,
+            lambda s,_:s['paint']['labels']['orphan.md']['alpha'],tol=.001,unit='0.001 opacity',source='draw')
     add('hover-dim','Hover leaves unrelated markers at 28 percent opacity','hover',lambda s,_:[node(s,k)['alpha'] for k in ('orphan.md','src/main.py','hub/spoke-0.md','hub/Hub.md')],tol=.01,unit='0.01 opacity',source='draw',severity=2)
     add('cursor','Hover installs a pointer cursor','hover',lambda s,side:s['cursor']=='pointer' if side=='reference' else s['cursor_set'],source='input')
-    missing('hover-edges','Hover dims unrelated connections to 28 percent','Native node opacity is exposed and measured; connection opacity is private and the source-pair midpoint is not guaranteed visible after camera focus. Request line paint telemetry.','draw')
-    missing('cursor-shape','Exact grabbing and pointer cursor names','Reference CSS cursor is captured; native GDK cursor has no portable name getter through the allowed helpers. Request a cursor-name QA helper.','input')
+    add('hover-edges','Hover connection alpha after paint bucketing','hover',lambda s,_:hover_lines(s),tol=.001,unit='0.001 opacity; touching/unrelated connections',source='draw')
+    add('cursor-shape','Exact grabbing and pointer cursor names','hover',
+        lambda s,side:[s['cursor'],(rs if side=='reference' else is_)['controlled-motion']['extra']['grabbing_cursor']],source='input')
     for scene in ('click','ctrl-click','middle-click','slop-6','slop-7','tag-click','missing-click','tag-right','missing-right','key-enter'):
         add('events-'+scene,'Emitted graph actions: '+scene,scene,lambda s,_:s['events'],source='input',severity=1)
     add('menu-actions','Each file menu item emits its matching host action','menu-actions',lambda s,_:s['events'],source='input')
@@ -298,13 +323,14 @@ def compare(reference, impro, out):
     add('pan-distance','Background drag follows 80 by 32 screen pixels','pan',lambda s,_:pan_delta(s,s['extra']['held']),tol=.1,unit='0.1 px',source='camera')
     add('pan-inertia','Inertia travel after the scripted 8-move fling','pan',lambda s,_:[round(a-b,2) for a,b in zip(s['state']['pan'],s['extra']['held']['pan'])],tol=8,unit='8 px scheduling allowance',source='camera',severity=2)
     add('pan-stop','Pressing the background stops inertia immediately','stop-on-press',lambda s,_:round(math.dist(s['extra']['pressed']['pan'],s['extra']['later']['pan']),3),tol=.05,unit='0.05 px',source='camera')
-    missing('pan-decay','Frame-independent pan velocity decay coefficient','Travel is measured; the native testing API exposes no velocity or controlled frame advance, so exact decay cannot be separated from frame scheduling.','camera')
+    add('pan-decay','Pan velocity decay over a controlled 60 Hz frame','controlled-motion',lambda s,_:s['extra']['pan_decay'],tol=1e-6,unit='1e-6 retention factor',source='camera')
+    add('pan-filter','Released velocity after eight controlled 16 ms pointer moves','controlled-motion',lambda s,_:s['extra']['fling_velocity'],tol=1e-6,unit='1e-6 logical px/ms',source='camera')
     for scene in ('wheel-in','wheel-out','ctrl-wheel','wheel-max','wheel-min'):
         add('zoom-'+scene,'Wheel target factor or limit: '+scene,scene,lambda s,_:round(s['state']['zoom']/s['before']['state']['zoom'],7),tol=1e-6,unit='1e-6 zoom ratio',source='camera')
     for scene in ('wheel-in','wheel-out'):
         add('anchor-'+scene,'Distance the pointer anchor moves: '+scene,scene,lambda s,_:anchor_error(s),tol=.1,unit='0.1 px',source='camera',severity=2)
     add('reduced-motion','Live reduced-motion preference reaches the zoom target within 40 ms','reduced-wheel',lambda s,_:abs(s['extra']['at40']['zoom']-s['extra']['at40']['target_zoom'])<1e-6,source='camera')
-    missing('zoom-ease','Per-frame wheel zoom easing','Native immediate state is synchronous; the page round trip can paint before introspection. A controlled frame/time hook is required for matched ease samples.','camera')
+    add('zoom-ease','Wheel zoom easing over a controlled 60 Hz frame','controlled-motion',lambda s,_:s['extra']['zoom_ease'],tol=1e-6,unit='1e-6 fraction of remaining zoom',source='camera')
     for key in ('ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','-'):
         add('keyboard-'+key,'Held 200 ms key movement: '+key,'key-'+key,
             lambda s,_:pan_delta(s) if key.startswith('Arrow') else round(s['state']['zoom']/s['before']['state']['zoom'],4),tol=25 if key.startswith('Arrow') else .12,
@@ -341,7 +367,8 @@ def compare(reference, impro, out):
     add('status-ready','Status is hidden after a nonempty graph arrives','default',lambda s,_:s['status'],source='flow')
     add('status-empty','Empty-filter status text and zero nodes','empty',lambda s,_:[s['status'],s['state']['nodes']],source='flow',severity=2)
     add('status-local','No-active-file local status and zero nodes','local-empty',lambda s,_:[s['status'],s['state']['nodes']],source='flow',severity=2)
-    missing('status-loading','Initial Mapping this project… status','Both widgets receive data before the first settled snapshot; a blocked-index fixture or pre-data screenshot is needed to measure this transient.','flow')
+    add('status-loading','Initial Mapping this project… status before data delivery','default',
+        lambda _,side:(reference if side=='reference' else impro)['loading_status'],source='flow')
     add('truncation','Truncation cap count and notice text','cap',lambda s,_:[s['state']['nodes'],s['notice']],source='data')
     for scene in ('save','rename','delete'):
         add('live-'+scene,'Live '+scene+' updates visible IDs',scene,lambda s,_:sorted(s['nodes']),source='data',severity=2)
