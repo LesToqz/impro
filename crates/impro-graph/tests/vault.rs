@@ -472,3 +472,8 @@ fn incremental_updates_match_a_fresh_scan() {
         }
     }
 }
+
+#[test]
+fn live_updates_match_the_frozen_reference() {
+    common::golden::check_live();
+}

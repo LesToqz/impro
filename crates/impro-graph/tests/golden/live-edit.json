@@ -1,0 +1,110 @@
+{
+ "digests": [
+  "89fb0e665ca37d51",
+  "be4896a41ee2db20",
+  "be4896a41ee2db20",
+  "a64d4c64aa63a7b4",
+  "ad48167453e1352e",
+  "2b9ed76e78acb928",
+  "d2897997ccb782c3",
+  "d2897997ccb782c3",
+  "e20137a0858e5170",
+  "8603d88fe580ec0b"
+ ],
+ "ops": [
+  {
+   "op": "write",
+   "path": "a.md",
+   "text": "[[c]] #t2 #t1\n"
+  },
+  {
+   "op": "write",
+   "path": "a.md",
+   "text": "[[c]] #t2 #t1\n"
+  },
+  {
+   "op": "write",
+   "path": "c.md",
+   "text": "[[a]] [[zzz]]\n"
+  },
+  {
+   "op": "write",
+   "path": "new.md",
+   "text": "[[Eee]] [[img.png]]\n"
+  },
+  {
+   "op": "write",
+   "path": "zzz.md",
+   "text": "now exists\n"
+  },
+  {
+   "op": "write",
+   "path": "dir/sub/e.md",
+   "text": "---\naliases: [Other]\n---\n"
+  },
+  {
+   "op": "write",
+   "path": "img.png",
+   "text": "not binary now"
+  },
+  {
+   "op": "write",
+   "path": "n.py",
+   "text": "import m\n"
+  },
+  {
+   "op": "write",
+   "path": "k.js",
+   "text": "import './a'\n"
+  }
+ ],
+ "options": {
+  "existing_only": false,
+  "show_attachments": true,
+  "show_tags": true
+ },
+ "tree": {
+  "files": [
+   {
+    "path": "a.md",
+    "text": "[[b]] #t1\n"
+   },
+   {
+    "path": "b.md",
+    "text": "[[c]] [[a]]\n"
+   },
+   {
+    "path": "c.md",
+    "text": ""
+   },
+   {
+    "path": "dir/d.md",
+    "text": "[[a]] [[e]]\n"
+   },
+   {
+    "path": "dir/sub/e.md",
+    "text": "---\naliases: [Eee]\n---\n[[b]]\n"
+   },
+   {
+    "path": "f.md",
+    "text": "[[Eee]] [[img.png]] ![[img.png]]\n"
+   },
+   {
+    "path": "g.md",
+    "text": "[[b]]\n"
+   },
+   {
+    "b64": "AA==",
+    "path": "img.png"
+   },
+   {
+    "path": "m.py",
+    "text": "import n\n"
+   },
+   {
+    "path": "n.py",
+    "text": ""
+   }
+  ]
+ }
+}

@@ -1,0 +1,267 @@
+{
+ "digests": [
+  "411b26e0a3547aa9",
+  "e1deee484592f0fc",
+  "72e118886f7ffdce",
+  "62317d033bb941cb",
+  "62317d033bb941cb",
+  "f2a2abb704a6ca94",
+  "196c4738c85de2ad",
+  "196c4738c85de2ad",
+  "196c4738c85de2ad",
+  "196c4738c85de2ad",
+  "a897751fa6a8ef49",
+  "1580c308a8809cfc",
+  "1580c308a8809cfc",
+  "5382558c655cd491",
+  "bc39e1e0c574450b",
+  "bc39e1e0c574450b",
+  "bc39e1e0c574450b",
+  "47fb993b1f168345",
+  "47fb993b1f168345",
+  "47fb993b1f168345",
+  "fe0d358bacf74665",
+  "65694afee5d9f939",
+  "65694afee5d9f939",
+  "348d3c21ac1bf4d3",
+  "4584104cc95d8e9e",
+  "4584104cc95d8e9e",
+  "0351cd23a6001962",
+  "3bd406f9d8e32c93",
+  "d2cf612d8891191b"
+ ],
+ "ops": [
+  {
+   "op": "delete",
+   "path": "gamma.html"
+  },
+  {
+   "op": "delete",
+   "path": "a/b/alpha.py"
+  },
+  {
+   "from": "Sub/index.ts",
+   "op": "rename",
+   "to": "a/beta.ts"
+  },
+  {
+   "op": "set_text",
+   "path": "sub/deep/index.png",
+   "text": "---\ntags: [proj/a, proj/a/b]\n---\n[[sub/util.png#h|alias]]\n[[../sub/A.B#h|alias]]\n"
+  },
+  {
+   "op": "delete",
+   "path": "a/beta.ts"
+  },
+  {
+   "op": "delete",
+   "path": "Sub/strasse.md"
+  },
+  {
+   "op": "write",
+   "path": "src/index.png",
+   "text": "[t](../sub/gamma.md)\n<../sub/Gamma Ray.md>\n<./Alpha.md>\n![i](./X)\n#proj/a/b\n[[gamma.png]]\n"
+  },
+  {
+   "op": "set_text",
+   "path": "x.py",
+   "text": "import beta as m\nfrom .sub import alpha\nimport sub.deep.alpha as m\nfrom gamma import *\n"
+  },
+  {
+   "op": "write",
+   "path": "sub/util.png",
+   "text": "---\naliases: [main]\ntags: [proj/a, proj/a/b]\n---\n![i](util)\n"
+  },
+  {
+   "op": "delete",
+   "path": "x.markdown"
+  },
+  {
+   "op": "delete",
+   "path": "a.b.markdown"
+  },
+  {
+   "op": "delete",
+   "path": "other/Alpha.png"
+  },
+  {
+   "op": "write",
+   "path": "a/b/strasse.md",
+   "text": "[[Alpha#h|alias]]\n[t](sub/a.b.png)\n[[util]]\n[t](/strasse)\n[[MAIN]]\n"
+  },
+  {
+   "from": "main.css",
+   "op": "rename",
+   "to": "src/beta.md"
+  },
+  {
+   "op": "set_text",
+   "path": "src/index.png",
+   "text": "[[strasse.png]]\n[[delta.png]]\n"
+  },
+  {
+   "op": "write",
+   "path": "sub/é.txt",
+   "text": "[[index]]\n[t](./beta.png)\n[[x.md]]\n[[strasse.md]]\n[[GAMMA RAY]]\n"
+  },
+  {
+   "from": "Sub/delta.md",
+   "op": "rename",
+   "to": "other/a.b.md"
+  },
+  {
+   "op": "set_text",
+   "path": "src/index.png",
+   "text": "---\naliases: [index]\n---\n"
+  },
+  {
+   "op": "set_text",
+   "path": "strasse.js",
+   "text": "import './alpha'\nrequire('./sub')\nimport './main.css'\nimport x from './gamma'\n"
+  },
+  {
+   "op": "write",
+   "path": "a.b.md",
+   "text": "[[sub/main.md#h|alias]]\n"
+  },
+  {
+   "op": "delete",
+   "path": "strasse.js"
+  },
+  {
+   "op": "write",
+   "path": "sub/deep/Alpha.png",
+   "text": "![[DELTA]]\n`[[gamma]]`\n[[Alpha.md]]\n`[[gamma ray]]`\n[[MAIN]]\n"
+  },
+  {
+   "op": "write",
+   "path": "a/x.md",
+   "text": "[[É]]\n![[alpha]]\n[t](/BETA)\n[[gamma]]\n"
+  },
+  {
+   "op": "delete",
+   "path": "other/Alpha.markdown"
+  },
+  {
+   "op": "set_text",
+   "path": "sub/deep/index.png",
+   "text": null
+  },
+  {
+   "from": "Sub/main.css",
+   "op": "rename",
+   "to": "main.css"
+  },
+  {
+   "op": "write",
+   "path": "sub/Gamma Ray.js",
+   "text": "require('.')\nimport x from './gamma'\nexport * from './alpha'\n"
+  },
+  {
+   "op": "write",
+   "path": "alpha.md",
+   "text": "\n"
+  }
+ ],
+ "options": {
+  "existing_only": false,
+  "show_attachments": true,
+  "show_tags": true
+ },
+ "tree": {
+  "files": [
+   {
+    "path": "Sub/alpha.MD",
+    "text": "#T1\n![i](../Alpha.md)\n![i](/é.md)\n[[delta.md]]\n#t1/x\n[t](../delta)\n`[[STRASSE]]`\n"
+   },
+   {
+    "path": "Sub/delta.md",
+    "text": "[[gamma ray]]\n![i](/x.png)\n[t](Gamma%20Ray.png)\n[[index]]\n[[x.png]]\n"
+   },
+   {
+    "path": "Sub/index.ts",
+    "text": "require('./alpha')\nexport * from './alpha'\nimport x from '../beta'\nimport './main.css'\n"
+   },
+   {
+    "path": "Sub/main.css",
+    "text": ".a{background:url(img/a.png)}\n.a{background:url(alpha.css)}\n"
+   },
+   {
+    "path": "Sub/strasse.md",
+    "text": "[[main.md]]\n"
+   },
+   {
+    "path": "a/b/Alpha.md",
+    "text": "![[x.md]]\n<sub/ALPHA>\n[t](sub/x)\n#T1\n[[../BETA#h|alias]]\n"
+   },
+   {
+    "path": "a/b/alpha.py",
+    "text": "import sub.deep.alpha as m\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "a/strasse.png"
+   },
+   {
+    "path": "a.b.markdown",
+    "text": "`[[MAIN]]`\n[[../sub/Gamma Ray.md#h|alias]]\n![[gamma]]\n[[strasse]]\n"
+   },
+   {
+    "path": "alpha.html",
+    "text": "<img src=alpha.css>\n<img src=/alpha.css>\n<a href=\"/alpha.css\">\n<img src=alpha.css>\n"
+   },
+   {
+    "path": "gamma.html",
+    "text": "<a href=\"../main.js\">\n<a href=\"/alpha.css\">\n"
+   },
+   {
+    "path": "main.css",
+    "text": ".a{background:url(img/a.png)}\n"
+   },
+   {
+    "path": "other/Alpha.markdown",
+    "text": "![[gamma.md]]\n[[gamma.md#h|alias]]\n[[/X#h|alias]]\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "other/Alpha.png"
+   },
+   {
+    "path": "other/gamma.css",
+    "text": ".a{background:url(img/a.png)}\n"
+   },
+   {
+    "path": "src/Alpha.js",
+    "text": "import x from '../beta'\n"
+   },
+   {
+    "path": "src/a.b.md",
+    "text": "![i](../strasse)\n[[beta]]\n[t](./Alpha.md)\n`[[strasse.md]]`\n<../sub/ALPHA>\n[[util]]\n"
+   },
+   {
+    "path": "strasse.js",
+    "text": "export * from './sub'\nimport x from './main.css'\n"
+   },
+   {
+    "path": "sub/deep/delta.md",
+    "text": "---\naliases: [Gamma Ray, util]\ntags: [T1, t2]\n---\n[[alpha]]\n#proj/a\n[t](../util)\n"
+   },
+   {
+    "path": "sub/deep/gamma.css",
+    "text": ".a{background:url(x.png)}\n.a{background:url(x.png)}\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "sub/deep/index.png"
+   },
+   {
+    "path": "x.markdown",
+    "text": "---\naliases: [strasse, beta]\n---\n[[alpha]]\n`[[GAMMA]]`\n[[é]]\n[[util]]\n"
+   },
+   {
+    "path": "x.py",
+    "text": "import a.b\nfrom index import x\n"
+   }
+  ]
+ }
+}

@@ -29,9 +29,21 @@ GENERATED = {'chain_3000': ('chain', 3000), 'chain_3001': ('chain', 3001), 'chai
 READABLE = ('tg:111111', 'tg:000000', 'loc:dflt', 'fold:dflt:sub')
 
 
+def renderer_degrees(graph):
+    """The renderer counts distinct directed endpoint pairs (see compare.diff_graph)."""
+    pairs = {(l['source'], l['target']) for l in graph['links']}
+    for node in graph['nodes']:
+        node['out'] = sum(1 for p in pairs if p[0] == node['id'])
+        node['in'] = sum(1 for p in pairs if p[1] == node['id'])
+        node['size_hint'] = 1 + node['in'] + node['out']
+    return graph
+
+
 def canonical(value):
     def strip(v):
         if isinstance(v, dict):
+            if 'nodes' in v and 'links' in v:
+                v = renderer_degrees(json.loads(json.dumps(v)))
             return {k: strip(x) for k, x in v.items() if k != 'ctime'}
         if isinstance(v, list):
             return [strip(x) for x in v]

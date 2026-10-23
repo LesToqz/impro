@@ -1,0 +1,309 @@
+{
+ "digests": [
+  "293820799b05e37e",
+  "b53e5ee39cca96f1",
+  "854afc7c9cba558c",
+  "3aee8c4224ab5406",
+  "495654d7edf381a1",
+  "1a42ba0d324b9715",
+  "6d07a0c747de4f52",
+  "8767df275ed49c9e",
+  "8767df275ed49c9e",
+  "8767df275ed49c9e",
+  "8767df275ed49c9e",
+  "8767df275ed49c9e",
+  "7be9db9fca8de9a6",
+  "e1113d23e894181f",
+  "e1113d23e894181f",
+  "3207cc3d39397e50",
+  "3207cc3d39397e50",
+  "00f2ddfbe850e2e3",
+  "1bc5759ce194d4b2",
+  "1bc5759ce194d4b2",
+  "404fb3e79e4c1485",
+  "404fb3e79e4c1485",
+  "12f449b360dff282",
+  "67f001d9774bec28",
+  "f40e0f417956d9e4",
+  "4c4ef719c60d647b",
+  "9361b7f07eb400ba",
+  "9361b7f07eb400ba",
+  "9361b7f07eb400ba"
+ ],
+ "ops": [
+  {
+   "op": "write",
+   "path": "a.b.py",
+   "text": "\n"
+  },
+  {
+   "op": "set_text",
+   "path": "sub/alpha.md",
+   "text": "#t1\n![[a.b.md]]\n[[Straße.md#h|alias]]\n[[STRASSE]]\n[t](delta)\n[[é.png]]\n"
+  },
+  {
+   "op": "write",
+   "path": "sub/x.js",
+   "text": "require('./alpha')\nimport './main.css'\nrequire('lib')\nrequire('..')\nrequire('./Alpha')\n"
+  },
+  {
+   "from": "beta.png",
+   "op": "rename",
+   "to": "a/alpha.png"
+  },
+  {
+   "from": "a/alpha.css",
+   "op": "rename",
+   "to": "Sub/beta.css"
+  },
+  {
+   "op": "write",
+   "path": "a/delta.js",
+   "text": "require('./Alpha')\nexport * from '.'\nimport './gamma'\nimport 'lib'\n"
+  },
+  {
+   "op": "delete",
+   "path": "Sub/index.md"
+  },
+  {
+   "op": "set_text",
+   "path": "src/main.css",
+   "text": "@import 'x.png';\n.a{background:url(../main.css)}\n.a{background:url(alpha.css)}\n"
+  },
+  {
+   "op": "delete",
+   "path": "a/alpha.png"
+  },
+  {
+   "from": "src/é.txt",
+   "op": "rename",
+   "to": "delta.txt"
+  },
+  {
+   "op": "set_text",
+   "path": "delta.txt",
+   "text": "[t](../MAIN)\n![i](../main.png)\n[[main]]\n![i](../sub/delta.md)\n![i](/main.png)\n![i](x.png)\n"
+  },
+  {
+   "from": "a/delta.js",
+   "op": "rename",
+   "to": "src/x.md"
+  },
+  {
+   "from": "a/b/main.MD",
+   "op": "rename",
+   "to": "sub/deep/main.MD"
+  },
+  {
+   "op": "set_text",
+   "path": "Sub/alpha.txt",
+   "text": "![[ALPHA]]\n[t](../sub/UTIL)\n<../sub/strasse>\n[[é]]\n[[alpha.md]]\n"
+  },
+  {
+   "op": "write",
+   "path": "Sub/strasse.md",
+   "text": "---\ntags: [t1/x, t1]\n---\n[[MAIN]]\n[t](/straße)\n"
+  },
+  {
+   "op": "set_text",
+   "path": "other/Alpha.png",
+   "text": "[[x]]\n"
+  },
+  {
+   "op": "set_text",
+   "path": "a/b/index.MD",
+   "text": "---\naliases: [util]\ntags: [t1, T1]\n---\n"
+  },
+  {
+   "op": "set_text",
+   "path": "Sub/strasse.md",
+   "text": "[[../sub/é.md#h|alias]]\n![[gamma.png]]\n"
+  },
+  {
+   "op": "set_text",
+   "path": "sub/x.js",
+   "text": "import './alpha'\nexport * from './Alpha'\nimport './Alpha'\nexport * from './alpha'\nrequire('./sub')\n"
+  },
+  {
+   "from": "gamma.md",
+   "op": "rename",
+   "to": "a/b/Straße.md"
+  },
+  {
+   "op": "write",
+   "path": "a/alpha.txt",
+   "text": "---\n---\n[[a.b.png]]\n![[X]]\n[[gamma.png]]\n[t](sub/UTIL)\n![[é.md]]\n[[index]]\n[[a.b.md]]\n"
+  },
+  {
+   "from": "Sub/beta.css",
+   "op": "rename",
+   "to": "sub/deep/beta.css"
+  },
+  {
+   "from": "a/b/Straße.md",
+   "op": "rename",
+   "to": "Sub/delta.md"
+  },
+  {
+   "op": "delete",
+   "path": "src/main.css"
+  },
+  {
+   "from": "a/util.ts",
+   "op": "rename",
+   "to": "Alpha.ts"
+  },
+  {
+   "op": "write",
+   "path": "a/beta.md",
+   "text": "---\naliases: [delta, a.b]\ntags: [t1/x, T1]\n---\n[[main]]\n[[x]]\n[[../A.B#h|alias]]\n[[util.png]]\n#t2\n[[MAIN]]\n[t](./delta)\n"
+  },
+  {
+   "op": "set_text",
+   "path": "a/a.b.md",
+   "text": null
+  },
+  {
+   "op": "set_text",
+   "path": "alpha.py",
+   "text": "\n"
+  }
+ ],
+ "options": {
+  "existing_only": false,
+  "show_attachments": true,
+  "show_tags": true
+ },
+ "tree": {
+  "files": [
+   {
+    "path": "Sub/alpha.txt",
+    "text": "---\ntags: [t2, proj/a]\n---\n[[INDEX]]\n![i](./beta.png)\n"
+   },
+   {
+    "path": "Sub/index.md",
+    "text": "![[index.png]]\n[t](alpha.md)\n[[a.b.md]]\n[[a.b.md]]\n[[é]]\n`[[beta]]`\n[[/x#h|alias]]\n"
+   },
+   {
+    "path": "Sub/é.txt",
+    "text": "`[[Alpha]]`\n[t](/DELTA)\n[[é.md]]\n[[/util.md#h|alias]]\n[[a.b.png]]\n[[/Straße#h|alias]]\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "a/Gamma Ray.png"
+   },
+   {
+    "path": "a/a.b.md",
+    "text": "[[x]]\n[[ALPHA]]\n[t](gamma.md)\n"
+   },
+   {
+    "path": "a/alpha.css",
+    "text": ".a{background:url(img/a.png)}\n.a{background:url(img/a.png)}\n@import '/alpha.css';\n"
+   },
+   {
+    "path": "a/b/Alpha.md",
+    "text": "[[./a.b#h|alias]]\n"
+   },
+   {
+    "path": "a/b/a.b.MD",
+    "text": "---\ntags: [Proj, t1]\n---\n<ALPHA>\n[[Gamma Ray]]\n#t2\n[[BETA]]\n<sub/delta.png>\n[[../sub/main#h|alias]]\n[t](/strasse.png)\n#t1\n"
+   },
+   {
+    "path": "a/b/a.b.ts",
+    "text": "export * from './gamma'\nimport x from './main.css'\nimport './gamma'\nrequire('..')\n"
+   },
+   {
+    "path": "a/b/a.b.txt",
+    "text": "---\naliases: [Alpha, delta]\n---\n[t](./A.B)\n[[straße]]\n[[gamma]]\n#t1/x\n[[ALPHA#h|alias]]\n<../alpha.png>\n[t](../sub/util)\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "a/b/beta.png"
+   },
+   {
+    "path": "a/b/index.MD",
+    "text": "[t](sub/a.b)\n[[Straße]]\n![[alpha]]\n#proj/a\n"
+   },
+   {
+    "path": "a/b/main.MD",
+    "text": "---\naliases: [Alpha]\n---\n[[main.md#h|alias]]\n[[Alpha.md]]\n[[delta.md]]\n`[[UTIL]]`\n[t](../strasse)\n"
+   },
+   {
+    "path": "a/util.markdown",
+    "text": "[[Straße]]\n</delta.md>\n"
+   },
+   {
+    "path": "a/util.ts",
+    "text": "export * from './main.css'\nimport x from './alpha'\nimport '../beta'\n"
+   },
+   {
+    "path": "alpha.py",
+    "text": "\n"
+   },
+   {
+    "path": "beta.js",
+    "text": "\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "beta.png"
+   },
+   {
+    "path": "delta.css",
+    "text": "@import 'img/a.png';\n.a{background:url(/alpha.css)}\n.a{background:url(x.png)}\n.a{background:url(/alpha.css)}\n"
+   },
+   {
+    "path": "gamma.md",
+    "text": "[t](../Alpha.png)\n[t](./GAMMA%20RAY)\n[[a.b.md]]\n[t](Gamma%20Ray.md)\n#t1\n<../é.png>\n`[[é]]`\n[[beta]]\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "other/Alpha.png"
+   },
+   {
+    "path": "other/util.js",
+    "text": "import x from '..'\n"
+   },
+   {
+    "path": "src/a.b.ts",
+    "text": "require('./Alpha')\nrequire('lib')\nexport * from './alpha'\nexport * from '../sub/alpha'\nimport x from '..'\n"
+   },
+   {
+    "path": "src/beta.js",
+    "text": "export * from './gamma'\nexport * from './Alpha'\n"
+   },
+   {
+    "path": "src/main.css",
+    "text": "@import '/alpha.css';\n@import 'img/a.png';\n@import '../main.css';\n"
+   },
+   {
+    "path": "src/é.txt",
+    "text": "---\naliases: [beta]\n---\n<../sub/é.md>\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "sub/Gamma Ray.png"
+   },
+   {
+    "path": "sub/alpha.md",
+    "text": "[[delta.png]]\n![i](a.b.png)\n[t](/é.md)\n[t](./a.b.png)\n[[x.png]]\n[[BETA]]\n[[delta]]\n#t1/x\n"
+   },
+   {
+    "path": "sub/deep/Gamma Ray.MD",
+    "text": "---\naliases: [index, delta]\n---\n[[Alpha.md]]\n[[./DELTA#h|alias]]\n![i](/util.md)\n`[[é]]`\n[[ALPHA]]\n"
+   },
+   {
+    "path": "sub/deep/a.b.md",
+    "text": "[t](sub/É)\n"
+   },
+   {
+    "path": "sub/deep/util.MD",
+    "text": "---\naliases: [gamma]\n---\n[[beta.png]]\n[[delta.png#h|alias]]\n![i](sub/alpha)\n"
+   },
+   {
+    "path": "sub/util.md",
+    "text": "#t2\n[[strasse]]\n"
+   }
+  ]
+ }
+}

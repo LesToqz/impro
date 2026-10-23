@@ -2,6 +2,9 @@
 //! Shared helpers: a temporary project, a deterministic vault generator and a
 //! comparable snapshot of a graph.
 
+pub mod golden;
+pub mod oracle_dump;
+
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 

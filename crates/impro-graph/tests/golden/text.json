@@ -1,0 +1,3726 @@
+{
+ "digests": [
+  "66d0888b7b9d7f4b",
+  "fc35dbc9279cc222",
+  "2ba294d7687c8dee",
+  "a2def15c6cd68c6d",
+  "afbbfc69769b430d",
+  "f891b92c8c452424",
+  "a6a994fdf9a8251d",
+  "1922d4b964c7769c",
+  "968fbebad49abde4",
+  "33020a45863a328e",
+  "53f191b7e9e8aaf0",
+  "d757f71bb84ef1d4",
+  "96188722a26b318d",
+  "fcdc026ea3f5e85f",
+  "8bf1dc1919eed9ec",
+  "80cb530c17a75f84",
+  "03dc10bb98953030",
+  "5b82330990fc579a",
+  "244b25b43e3c87f6",
+  "f1e866fc1a62feb2",
+  "6d05a2b16078237d",
+  "766b5036c7a3fad0",
+  "20cbac45063e887f",
+  "7d34979a9448927f",
+  "4b54f293197b3d6f",
+  "d85120c69d6ccee9",
+  "d3b853ecbaad5ff7",
+  "de0d8789021523bf",
+  "31dad6db5dc670cf",
+  "b6e9f91dbb3f8827",
+  "b17ea45f47182df6",
+  "4abf40ceb16e604b",
+  "1b9b03642618156d",
+  "2171acee0bffb09f",
+  "229d7a8957c7adb3",
+  "1444810cfc63533c",
+  "0f8f3120cc7fe2e6",
+  "f858594a092f94ea",
+  "5287cdb5999972ad",
+  "69d4b6de698a2228",
+  "7ec79fc3dbf68219",
+  "882095916d4b9ebb",
+  "fd51f057aaf70c48",
+  "c27a942ea7dc36ae",
+  "6d15d262c795ec89",
+  "0bc7f12807cf0801",
+  "154c4b6177585374",
+  "0b60924143674095",
+  "66bcb90304a84934",
+  "9f85f9db3424cb17",
+  "d3ab6e1b3c0d823e",
+  "4b8948b24762edfa",
+  "09ad8f8d2d8eeb33",
+  "6d9b8f82153d9e5a",
+  "860643ec8716b769",
+  "a7cee313bce9e3b5",
+  "4e97d5d5570a22ad",
+  "a08d2ba73299a9f1",
+  "1a59bc4d794c24c3",
+  "fa6cf80c45b1ec1a",
+  "4de9242cb11d465c",
+  "d800be86dd1c910c",
+  "bdbe64a263253e06",
+  "aae64e1c73062ec6",
+  "21850d66ad8cb9a8",
+  "96c54346b223b2dc",
+  "3a87a507fa42dac1",
+  "ba937d7b88c2cf6d",
+  "8f45950c0f4d0e46",
+  "0be9a0df573a1942",
+  "3abb54d4120c7fee",
+  "55b0ba331890cfc7",
+  "0c6944af6ec46afc",
+  "fd1e3d762af6e1eb",
+  "e4ea32e74ec83a95",
+  "7df7c27175e96fbd",
+  "a4cff5ad5502c8b3",
+  "6bc1a78386dfc131",
+  "fb749f1ac680d93d",
+  "b4c98aef345eafd3",
+  "284daad560637e7c",
+  "c5642cc8f58e401a",
+  "4272e5504c2c68cb",
+  "13467636445d799e",
+  "4419e0762f4d67ac",
+  "b036885ec339ff13",
+  "e3623521bca0dc08",
+  "5fe067190f5dc4c8",
+  "bdb0c1bf31a1800a",
+  "42550a29a984049b",
+  "3781fe87de044439",
+  "9e8a67838e3d6716",
+  "990e4197e795ad74",
+  "4ef81d82a187470c",
+  "43e7fa0eb77e2bc8",
+  "7a02ae8a835215b2",
+  "88bb8c6eb5677c63",
+  "02df2f09adde05f8",
+  "7ff5916648c74cfb",
+  "1b9099b87408f2a5",
+  "622a2b76dac81560",
+  "4d0e526fd53ffab0",
+  "3470a97d67085236",
+  "fbe5213c65508bca",
+  "385c910d2c893727",
+  "d572753380fe7381",
+  "aa5095834a8d29c1",
+  "db582ca3ba182e2e",
+  "ad1cae88e795bd48",
+  "33a147acf13f7920",
+  "1fe65afef317e784",
+  "4d5c45d0d0f5f54b",
+  "bac2d4bee80cb681",
+  "0473a04cfbeed7ba",
+  "8304c585f1e4403d",
+  "5fb5b56526f57e98",
+  "6c5b77230992e239",
+  "adb013f4e92a34a2",
+  "4643c97b5d15b254",
+  "725721f3a7940d94",
+  "0c5af5b12f417b44",
+  "1f678bb49dba240c",
+  "aa9728ad79be5e22",
+  "307a492c170aca52",
+  "f2d63c39edd5580c",
+  "b7d399dd88e642d1",
+  "12dd3b3607d3c9e6",
+  "607ecebdc021fb80",
+  "bbe94da8de47672e",
+  "47c8fc142a9f3466",
+  "933cb6b0644fe5f9",
+  "5a347c7a39ea2b12",
+  "93ac73e1c61a8469",
+  "891cf7efbb32350b",
+  "c4a98c6ea1f96b5d",
+  "a2398cc06d7e281c",
+  "c64edf1a4a483e91",
+  "a0b67ea1f1233865",
+  "479d666c2adc3667",
+  "6fa0ffba12cff1ec",
+  "1a5cc1463e045bbd",
+  "9bc2383ffbadd349",
+  "d0eb19d032e55ac6",
+  "40a0e755aa6c3c65",
+  "40133ab6b34e06d0",
+  "4fed390186104143",
+  "11868515f483e46c",
+  "d84f9843c6b153c9",
+  "16dd81524f9c6928",
+  "fa285e00e94ec90b",
+  "1b1c276b55a4ca24",
+  "c4b2103c009fdaeb",
+  "80e1ed8ce15e1da7",
+  "cddfff28451ea294",
+  "2ddfa6b5b6cb1134",
+  "2a2d87bf656f256a",
+  "65136872c730f0bb",
+  "882edb2ac7851bf6",
+  "863591afa1927255",
+  "775a0f066bfbc1be",
+  "4169099afa24d979",
+  "0842311b00d6bb35",
+  "2cbbdae5c7be36f3",
+  "3471867cd7230ef4",
+  "57bd7e16f9ed1d4d",
+  "754b39552c87c949",
+  "b709bd13930eaa16",
+  "56a3ec4067d70e6c",
+  "bd2e3766eee4fe41",
+  "b9f6e397fb09a960",
+  "e37533ca53e138e4",
+  "4e728908284d79f7",
+  "ee9cae54a45ff087",
+  "e059c45ad849105b",
+  "895e34c44b81b373",
+  "88a9c4ae34fc18a4",
+  "73902a58399d50f6",
+  "7daf019a6103f86c",
+  "c553d9b6b3b75947",
+  "2332db594e861e58",
+  "eb0896f71d8634a6",
+  "654609bb9288c95e",
+  "69c7ce6f6d009bae",
+  "d1c9446aa5f45b26",
+  "e8993cddeb520afd",
+  "37a6f07dc7e9c1bb",
+  "df74968758e4d0b6",
+  "d4bbc74fc3ba91bb",
+  "2816f1a8c74da828",
+  "42ca776133ef7726",
+  "38f686547616509e",
+  "d343a50dbe995004",
+  "f1890e0d0a5b6c2c",
+  "605ecbeaa7be60a7",
+  "08c14155e7ac6fa9",
+  "e7c49e35479756e0",
+  "5b41443e7727e493",
+  "68c119ada3935fae",
+  "a0135c5b2463b9c2",
+  "10bb0a82aa06fc5d",
+  "a1527b0a0f3ee7af",
+  "2c5a2fe57181764b",
+  "fa62c24f6fb17598",
+  "010820e35ed1d748",
+  "d43ed92cd6739eaf",
+  "05573300f32c1d85",
+  "8c9b79adeac6ec81",
+  "4f15b171cd811a5b",
+  "934b5398b86f1c93",
+  "47d8ef286253e811",
+  "531a9845148aa8b8",
+  "67c46995f9e91b68",
+  "3b7297fd239e2035",
+  "56fd179b35fb2b67",
+  "f0b1c546e85b7d62",
+  "bcaa0d556fb37a8e",
+  "22a4e75fcc6e2819",
+  "21d0a89b941cf833",
+  "e6477fae0f8f5923",
+  "ea9a0ce77a4a88a1",
+  "eedbffb3236f9981",
+  "38e0280e1cd2a95b",
+  "0850f74cdb59776a",
+  "5c6ebeeac2757ad6",
+  "c04c922a91c5731f",
+  "322435391b0bedfd",
+  "9739a0a1dc7334cf",
+  "1db0bb83173ab4f6",
+  "4fa17083657098ea",
+  "539ded5101fd1206",
+  "002b1449f0c0aa3a",
+  "68e4ab843bd2e079",
+  "41a4b7f0375ee434",
+  "b1508ba95151f6f3",
+  "8dbd9368df790c2e",
+  "d081121956b72710",
+  "a7947bd5b1421252",
+  "37f19b72305fbeef",
+  "d6e2c23d8fa931b4",
+  "4a5866d62c95d3b1",
+  "c3d855abd81b86dc",
+  "1360a4a804f21ac2",
+  "049589765e7d9e20",
+  "7c9483e08adf55d9",
+  "6f642264af41d1bc",
+  "a85181a0dbe03f35",
+  "752545da3c0fdec1",
+  "12d9a0b0d54c54bb",
+  "733371c49d3c7326",
+  "b9ab1170c6a8caef",
+  "d9971f4a912d36fe",
+  "7f1e5168c4818ef4",
+  "da81a5d4f62a182c",
+  "85448dc73756d96a",
+  "de27ef9439df6eb7",
+  "7badf1d939eb56cd",
+  "6748f1a704f42164",
+  "c2d9c07e337b06dc",
+  "d66430cd7dfb9413",
+  "938e01078a38ba91",
+  "c3cb936cb80fa764",
+  "de18d8fe9f7e6a9b",
+  "e1a631a03761d600",
+  "b0c689bd9955c73b",
+  "721d30615844f57d",
+  "1d02933be770efa0",
+  "e16bfc1c6999d639",
+  "72d046575b827b3a",
+  "096ab5b3f962d2b0",
+  "1e85c61b69a7170f",
+  "3a92ce1c10605c22",
+  "777ffb4566591fa2",
+  "f77f632939b0d15f",
+  "04268823e47e56fc",
+  "9d1ba4c10031ce45",
+  "492d35654c2008d6",
+  "fc3e40c8bf7bf763",
+  "d39ca435ab0cd4e0",
+  "fcd49d9589d21687",
+  "2fffeff2b36971cf",
+  "3c2edb3a1874fba3",
+  "3e1667a23a4d7f83",
+  "1f20152e81c372c9",
+  "10a02cb3dc09cbe6",
+  "7471ffb33fbfeeaf",
+  "385947757c69c2df",
+  "1e4e921f52d38eb4",
+  "8247ac12d13abd86",
+  "6c9caf4704115a56",
+  "185660029cdd23cf",
+  "ec70b33649916a92",
+  "deb13e51e61f849f",
+  "9aef75271e4a7122",
+  "43163bbe7757d9c6",
+  "92b068e1ad98205f",
+  "e5871ff264c90e8a",
+  "c900cecf08026186",
+  "d4b68b0baeb72fb1",
+  "5e41c03b9457fd80",
+  "1edbe2d65f6905ab",
+  "1c03cb7c581e1854",
+  "7be31471e4ce3f2a",
+  "fabcf6b011946a7f",
+  "c0821f6e0a278504",
+  "d33662e11c2d3a11",
+  "945d6d1a7c6bc496",
+  "4176f82dc37b2eeb",
+  "21ad2b481eb55df6",
+  "b85f5ec8442ca91e",
+  "ab65f69e400a21c1",
+  "31cff32626e734b0",
+  "afb0ae7a1da98ab9",
+  "ec2875f58596b7ca",
+  "22692311143551e2",
+  "109dfbb592709508",
+  "8d742efd33066a7b",
+  "a4a82735a4e6d74e",
+  "d840dc68833321a8",
+  "ccd134fad049d828",
+  "e2c5b75d9a64b2d0",
+  "7f95e1e86a200a3a",
+  "ccba44bfb415e4e5",
+  "5c2e461aeec53ae0",
+  "730f91cdbc3cc5f8",
+  "6801a43d0854e60c",
+  "d79c23a43eb22842",
+  "12545c7722e42c16",
+  "4a96a41c1f1e9fa1",
+  "554b732024b2abbf",
+  "323b124506d9bc9f",
+  "5b4cd166fa7c6d4c",
+  "044d5fd123746a4e",
+  "70ec319be5e1788e",
+  "22c697e6ec071561",
+  "633d7f6cbc6b5845",
+  "ca4862cfa0b7e0fc",
+  "2f7f1ee14dc042ef",
+  "bc4dc122a7307cd1",
+  "93f522eec5504d38",
+  "e7cb1b568653d9a1",
+  "0cd3f8607a7740e0",
+  "d7552cd1165174e0",
+  "d0fdadd7d6f74db4",
+  "095b7adeb07211cd",
+  "a669fd1e19608a01",
+  "6b5270a8d8ec198b",
+  "099c21756d553669",
+  "d5bdd1cb2f323071",
+  "bfdca8b52b4ea55e",
+  "44a3876ddcb3a9c9",
+  "75f05c2f5024c3d8",
+  "567b59599a6478e1",
+  "efdad596820a1950",
+  "edd88114cd3963da",
+  "548e2949a1ff5424",
+  "b8617db9420fa960",
+  "25b40132014bec27",
+  "730045c699dad402",
+  "94126aeb353d5342",
+  "e39036c1f36b689b",
+  "ee51e3898defe71c",
+  "1fd41c7588d2c738",
+  "a3d3be198f3ef990",
+  "3e3b5bb7bddb2d1a",
+  "ff8fb861c1742632",
+  "c0522a9650a55ff3",
+  "dc2f65e3f9de1d04",
+  "7f3963105e95adeb",
+  "652767d06020715f",
+  "c4e1ed4517f86c28",
+  "7112373de0d816c5",
+  "3e0ce143868e7cc4",
+  "21e0478cc2edbd3e",
+  "9e04bea8f5a1bbb2",
+  "df5589f37e254bf2",
+  "1a441f591569bdb4",
+  "79b217faf9f3d597",
+  "b0d910752c56208f",
+  "af13e38220b0724c",
+  "0e1eb22677900eb3",
+  "8d62061bc60051e0",
+  "efbf79a274394ac6",
+  "1df24ddbd58bd098",
+  "a907b1c0dd4d2f2f",
+  "a9977441e144dc68",
+  "d68a2b4b7485c7fb",
+  "8cfe6dcb816bfd95",
+  "464d18b3213bb97a",
+  "9296e787a5fcf32a",
+  "e9e26a52933a76df",
+  "70417cd911532a01",
+  "da4bf88546b898a1",
+  "366a926c75ace4f9",
+  "3643a9a7b1524fa0",
+  "ad2d67c1e5a04c42",
+  "2fd26972cde643ff",
+  "826e39de72834ff0",
+  "4624046d7b3b32f9",
+  "05ab58458383fece",
+  "1b3c5b720738bf0c",
+  "9fb7e89d5e20b15f",
+  "26bc610c1d09b0bd",
+  "e6a64d81110de4c6",
+  "b9b9a009fdfc06ac",
+  "8207eabd826d8472",
+  "dca190b8615a1da2",
+  "5ca76f8927f16354",
+  "0a4bf305003fd2b3",
+  "a4ac176aff2e99ab",
+  "86856367510cb244",
+  "dd00f6a80d10dc61",
+  "34938f31665844b6",
+  "4bba128ae19567af",
+  "690ab2befdeaba5c",
+  "dc2edc06b4a4ee83",
+  "8eb24a17b1785571",
+  "6fe38c07919e45f4",
+  "aa78be879d87fbc3",
+  "89bf380ceefe8bd1",
+  "435c27261846dc64",
+  "242855ae69463a7a",
+  "42f53caaa5d5f2f1",
+  "51a76fe737bf036f",
+  "5f8315662ef2e0d6",
+  "5b0537ddedd0e637",
+  "19dad6c79a0920b4",
+  "947625f9367e46be",
+  "9af351d7e9ba1ca1",
+  "0942afac4cab96f4",
+  "4706bc0e4e0df668",
+  "294d51125f1c8b09",
+  "31ba9911f24a8bdf",
+  "abcc40c54f5f156a",
+  "647c436d18b3331a",
+  "3d476314f5f1febf",
+  "cd8f1c0f0d0af181",
+  "e7859f9ea60e58a8",
+  "eb3d742caf196912",
+  "422cbc4cb284a7f5",
+  "2e61a7b0a1fa2478",
+  "2e50e81706592dc8",
+  "385087d68f8b0ac6",
+  "1bc33376017d9abb",
+  "135935c023493c8a",
+  "5bf978c290d94361",
+  "f4e13dc10b2bbeb8",
+  "8de76463fe3f141c",
+  "7ebac3cfd0b7d40e",
+  "949c28f376b89f1d",
+  "3cc02c5854612ad0",
+  "6d0cef70ab7940f1",
+  "09d48c2420b90cc6",
+  "6a4a18b1a19eab5c",
+  "7241c7b3b1a6c232",
+  "a7ee6cb14208b14b",
+  "6336bc401f3624ee",
+  "72543ea7ae2c1c21",
+  "c9de3ad5a76d53c4",
+  "f9ceec9d686e7e07",
+  "a1002e2f562cd804",
+  "08f05f45a47f6d3f",
+  "9eb11f2004f88d03",
+  "85cd4e045d31e4e0",
+  "a08687fbbb3e99d7",
+  "ae139734e7da7cc6",
+  "1fad8a7fda4f646f",
+  "ca85f0d3e3627f7f",
+  "2cb4f81f47231948",
+  "9937c180483c47db",
+  "cd23701af626b94b",
+  "d7a949ed879e8240",
+  "5d3a356c514fb745",
+  "48f3cfd4cec720ed",
+  "9a1c594a63c37ab2",
+  "1cf18d4204afe0d4",
+  "457672791ae67844",
+  "d76e4905acb70739",
+  "13e6108114a4344a",
+  "fa141566432c7223",
+  "e3f5abd03e160b5d",
+  "0009eff3e872fcc0",
+  "cc65c1c133f453ce",
+  "fb591cb574e96908",
+  "11a7a39a406102a7",
+  "1c26799cae30ea37",
+  "830a45fdcc88f2d9",
+  "4f227af0594c26a4",
+  "8eac6108dd9fd662",
+  "ad5ac12482bb370d",
+  "f5f2198bb0d072b2",
+  "f540613bad9e6376",
+  "5bbb58fe5f5b73bd",
+  "e848b92e47309c45",
+  "82c8648607fbc919",
+  "8cb3dcc0f618cb96",
+  "0c311106b5f62809",
+  "4af9970b3551ebdd",
+  "632f2c7d2f425dae",
+  "194187f4a51a572e",
+  "4c0d959febaa10df",
+  "62b86abfb0190e1d",
+  "c2a9daeae60f3233",
+  "63bbc3d5038e0e1d",
+  "ede5d60559b3950b",
+  "92d65d5198e9d9a7",
+  "9dfe9999002c8bf4",
+  "faf3fd6cab3ab691",
+  "f58baf60d995a788",
+  "e197563614f86410",
+  "d974fd18571dfd71",
+  "a8d3be6ccb3a7f42",
+  "ee3aff1a2f2ad37b",
+  "84536a8139dd1aef",
+  "0f6f821e4751897a",
+  "058224389265f1ef",
+  "2c1f5b17fc310ed1",
+  "2e0e142a1aa3f1c3",
+  "f4c7b2f22fda062b",
+  "ff12c743fd8ef493",
+  "d25a83b04d31c528",
+  "944fadf686f4e398",
+  "b7464c06919f009f",
+  "054a0d1380e6dd13",
+  "4ad3566d94fa0c7d",
+  "fdb8f06b38881b42",
+  "3d4b52027078c5e1",
+  "9a0db4e2fe667459",
+  "b6c00b6a15f7460f",
+  "8ae4d07f1c68eba6",
+  "97aefd34244d9487",
+  "3b9c12bbfdbc24f2",
+  "4b0889634053aa6e",
+  "9824733ec27301f4",
+  "de1fef854441d0d7",
+  "dcd66379d8df054a",
+  "daa372a520b9731f",
+  "ac409c1eb9ec649c",
+  "3ea843f8897d53e7",
+  "505019ce01ed21a0",
+  "34bbe83ba86eceb9",
+  "08329cbf375e69cc",
+  "5761b49c3ee439a3",
+  "79c00d47ac883637",
+  "ee57ebcb49aeea35",
+  "9e1724201b41e648",
+  "b139a64a9c15d8d3",
+  "a1f55eb603aa2713",
+  "dc48a64832d8d09b",
+  "8059878f1208d220",
+  "17a6ee564e21238e",
+  "bb33b429e039bf8e",
+  "321600277955085e",
+  "38a0352737e29f2c",
+  "bd845895af81bb0a",
+  "2aacec16f7bac982",
+  "beff379c2ae0bf63",
+  "44cb78a3bc2a6637",
+  "a3d814ee625a6204",
+  "db70b0c92a5ad4ad",
+  "681c423a0cc18306",
+  "4d2aa63bc7a6cc25",
+  "3032ae2596e2c0ea",
+  "43cb034c8a890de8",
+  "ffbe517ab6f30c32",
+  "42c0ea3f3267d49f",
+  "e44df7a69f987bf9",
+  "901bb9e295ae223a",
+  "ba3b9975183be91a",
+  "6cb41e151a5352e0",
+  "ee874b34a5dbd787",
+  "2716e5ec80effe45",
+  "8e1bc451dfd0b20b",
+  "8844a8167d0848c9",
+  "425f4efe68662267",
+  "344e5ca56c035342",
+  "a71e3f759dc64adb",
+  "45b9876545a6a28f",
+  "4ad999af94c215a6",
+  "36a0c8f24c5be740",
+  "8c7cc0760f7a0ca4",
+  "5f6a5581869faeb9",
+  "c8e536c26fbac11e",
+  "71a06ba9e6e188d7",
+  "b3478365ef12d338",
+  "fd71c0ee668523c1",
+  "7e2311932ea30d2d",
+  "c497c8d724f687e6",
+  "d4af7f25f03430d7",
+  "62675906781104cd",
+  "147c48887aa288f4",
+  "0e2ecdedfc037710",
+  "773ab94204140971",
+  "fc428b2ef09a30d6",
+  "60b3a56c39c03b63",
+  "9dfedb9eea58a050",
+  "32ce1aac99f65aba",
+  "6906b3ebd9aa9813",
+  "0f667edf1e9b8b60",
+  "1e386293118c7633",
+  "752115d66efa186c",
+  "f3d399790245bc27",
+  "e9a6032779319b6c",
+  "432ed1b25409497d",
+  "d700bd6f704b8bc2",
+  "b8135c7d4576694d",
+  "765193477213ef1f",
+  "2f920b7057d473d3",
+  "7c8a157673de7a0f",
+  "4886bf6c335fe4c2",
+  "2eb29f84936f7ee7",
+  "6ae0bfb1ec7cc52b",
+  "960d0f70c8454191",
+  "16231ec830e2da77",
+  "9b5175149974c5cc",
+  "84e60b3fb0ba48eb",
+  "ce4921f20c89042c",
+  "4f3a2ceb23915df5",
+  "455df8750097c0c6",
+  "159a5226690c1833",
+  "6b2fc637882abbbe"
+ ],
+ "snippets": [
+  {
+   "name": "links/Mixed Case.MD",
+   "path": "Mixed Case.MD",
+   "text": "[[alpha]]\n"
+  },
+  {
+   "name": "links/a.md",
+   "path": "a.md",
+   "text": ""
+  },
+  {
+   "name": "links/after fence.md",
+   "path": "after fence.md",
+   "text": "af\n"
+  },
+  {
+   "name": "links/alpha.md",
+   "path": "alpha.md",
+   "text": "# Alpha\nhello world\n[beta](beta.md) [beta2](./beta.md) [enc](sub/with%20space.md) [anch](beta.md#top) [q](beta.md?x=1) [ang](<sub/with space.md>) [t](beta.md \"title\") [self](alpha.md) [[alpha]] <beta.md> <https://example.com> [web](https://x.y/z.md) [mail](mailto:a@b.c) [frag](#local) [abs](/beta.md) [up](../outside.md) [x](nofile.md)\n"
+  },
+  {
+   "name": "links/beta.md",
+   "path": "beta.md",
+   "text": "beta text\n[back](alpha.md)\n```\n[[fenced]] [x](fenced.md) #fencedtag\n```\n~~~md\n[[tilde]]\n~~~\n`[[inline]]` ``[[double `tick`]]`` [[real]]\n<!-- [[commented]] -->\n    [[indented-is-link]]\n````\n```\n[[still fenced]]\n````\n[[after fence]]\n"
+  },
+  {
+   "name": "links/bom.md",
+   "path": "bom.md",
+   "text": "﻿---\ntags: [bomtag]\n---\n[[alpha]]\n"
+  },
+  {
+   "name": "links/cr.md",
+   "path": "cr.md",
+   "text": "line1\r\n[[alpha]]\r\n[[beta]]\r\n"
+  },
+  {
+   "name": "links/dup.md",
+   "path": "dup.md",
+   "text": "[[a]] [[a]] [[a]] ![[a]] [a](a.md) [a2](a.md)\n"
+  },
+  {
+   "name": "links/empty.md",
+   "path": "empty.md",
+   "text": ""
+  },
+  {
+   "name": "links/fenced.md",
+   "path": "fenced.md",
+   "text": "fenced\n"
+  },
+  {
+   "name": "links/index.md",
+   "path": "index.md",
+   "text": "# Index\n[[alpha]] [[Alpha|the first]] [[alpha#Heading]] [[alpha^block1]] [[alpha#H^b]] ![[pic.png]] ![[alpha]] [[missing note]] [[ missing spaced ]] [[a|b|c]]\n[[alpha\\|escaped]] [[]] [[|alias only]] [[#heading only]]\n"
+  },
+  {
+   "name": "links/long.markdown",
+   "path": "long.markdown",
+   "text": "[[Mixed Case]] [[mixed case.md]] [[ALPHA.MD]]\n"
+  },
+  {
+   "name": "links/real.md",
+   "path": "real.md",
+   "text": "real\n"
+  },
+  {
+   "name": "links/sub/with space.md",
+   "path": "sub/with space.md",
+   "text": "spaced\n[up](../alpha.md) [[../alpha]] [[sub/with space]] [[/alpha]] [[./alpha]] [[nested/deep]] [[Sub/With Space]]\n"
+  },
+  {
+   "name": "links/sub/nested/deep.md",
+   "path": "sub/nested/deep.md",
+   "text": "deep [rel](../../beta.md) [rel2](../with%20space.md) [r3](./../../alpha.md#x)\n"
+  },
+  {
+   "name": "markup/file.md",
+   "path": "file.md",
+   "text": ""
+  },
+  {
+   "name": "markup/html.md",
+   "path": "html.md",
+   "text": "a<br>b <div class=\"x\">t</div> <details><summary>s</summary></details> <b>x</b>\n<file.md> <sub/page.md> <v1.2> <a.b> <https://example.com> <mailto:a@b.c> <>\n"
+  },
+  {
+   "name": "markup/v1.2",
+   "path": "v1.2",
+   "text": "x\n"
+  },
+  {
+   "name": "markup/sub/page.md",
+   "path": "sub/page.md",
+   "text": ""
+  },
+  {
+   "name": "dups/Same.md",
+   "path": "Same.md",
+   "text": ""
+  },
+  {
+   "name": "dups/top.md",
+   "path": "top.md",
+   "text": "[[same]] [[Same]] [[note]] [[other]] [[x/same]] [[y/z/same]] [[z/same]] [[SAME]]\n"
+  },
+  {
+   "name": "dups/B/a2.md",
+   "path": "B/a2.md",
+   "text": ""
+  },
+  {
+   "name": "dups/a/b/c/same.md",
+   "path": "a/b/c/same.md",
+   "text": ""
+  },
+  {
+   "name": "dups/a-1/q.md",
+   "path": "a-1/q.md",
+   "text": "[[a2]]\n"
+  },
+  {
+   "name": "dups/a_1/a2.md",
+   "path": "a_1/a2.md",
+   "text": ""
+  },
+  {
+   "name": "dups/ab/a2.md",
+   "path": "ab/a2.md",
+   "text": ""
+  },
+  {
+   "name": "dups/ab/cd/a2.md",
+   "path": "ab/cd/a2.md",
+   "text": ""
+  },
+  {
+   "name": "dups/ext/dup.markdown",
+   "path": "ext/dup.markdown",
+   "text": ""
+  },
+  {
+   "name": "dups/ext/dup.md",
+   "path": "ext/dup.md",
+   "text": ""
+  },
+  {
+   "name": "dups/ext/q.md",
+   "path": "ext/q.md",
+   "text": "[[dup]] [[dup.png]] ![[dup]] [[dup.markdown]]\n"
+  },
+  {
+   "name": "dups/u/Ünï.md",
+   "path": "u/Ünï.md",
+   "text": "[[ünï]] [[Ünï]] [[ÜNÏ]]\n"
+  },
+  {
+   "name": "dups/u/ünï.md",
+   "path": "u/ünï.md",
+   "text": ""
+  },
+  {
+   "name": "dups/x/note.md",
+   "path": "x/note.md",
+   "text": "# x/note\n[[same]] [[other]] [[Note]]\n"
+  },
+  {
+   "name": "dups/x/other.md",
+   "path": "x/other.md",
+   "text": ""
+  },
+  {
+   "name": "dups/x/same.md",
+   "path": "x/same.md",
+   "text": ""
+  },
+  {
+   "name": "dups/y/note.md",
+   "path": "y/note.md",
+   "text": "# y/note\n[[same]] [[other]]\n"
+  },
+  {
+   "name": "dups/y/same.md",
+   "path": "y/same.md",
+   "text": ""
+  },
+  {
+   "name": "dups/y/z/note.md",
+   "path": "y/z/note.md",
+   "text": "[[same]] [[note]]\n"
+  },
+  {
+   "name": "dups/y/z/same.md",
+   "path": "y/z/same.md",
+   "text": ""
+  },
+  {
+   "name": "dups/z/a2.md",
+   "path": "z/a2.md",
+   "text": ""
+  },
+  {
+   "name": "dups/zz/a1.md",
+   "path": "zz/a1.md",
+   "text": "[[a2]]\n"
+  },
+  {
+   "name": "aliases/alias-both.md",
+   "path": "alias-both.md",
+   "text": "---\nalias: Ignored\naliases: [Used]\n---\n"
+  },
+  {
+   "name": "aliases/alias-case.md",
+   "path": "alias-case.md",
+   "text": "---\nAliases: [CaseKey]\nTAGS: [CaseTag]\n---\n"
+  },
+  {
+   "name": "aliases/alias-code.py",
+   "path": "alias-code.py",
+   "text": "x = 1\n"
+  },
+  {
+   "name": "aliases/alias-dup.md",
+   "path": "alias-dup.md",
+   "text": "---\naliases: [shared]\n---\n"
+  },
+  {
+   "name": "aliases/alias-dup2.md",
+   "path": "alias-dup2.md",
+   "text": "---\naliases: [Shared]\n---\n"
+  },
+  {
+   "name": "aliases/alias-empty.md",
+   "path": "alias-empty.md",
+   "text": "---\naliases:\nalias: z\n---\n"
+  },
+  {
+   "name": "aliases/alias-holder.md",
+   "path": "alias-holder.md",
+   "text": "---\naliases: [real, Nick, \"Quoted Name\", 'Single']\n---\n"
+  },
+  {
+   "name": "aliases/alias-list.md",
+   "path": "alias-list.md",
+   "text": "---\naliases:\n  - Item One\n  - Item Two\n---\n"
+  },
+  {
+   "name": "aliases/alias-nested.md",
+   "path": "alias-nested.md",
+   "text": "---\naliases: [a/b, \"c#d\"]\n---\n"
+  },
+  {
+   "name": "aliases/alias-one.md",
+   "path": "alias-one.md",
+   "text": "---\nalias: Solo\n---\n"
+  },
+  {
+   "name": "aliases/closed.md",
+   "path": "closed.md",
+   "text": "---\naliases: [InClosed]\n...\n[[InClosed]]\n"
+  },
+  {
+   "name": "aliases/real-two.md",
+   "path": "real-two.md",
+   "text": "---\naliases: [real]\n---\n"
+  },
+  {
+   "name": "aliases/real.md",
+   "path": "real.md",
+   "text": "# real\n"
+  },
+  {
+   "name": "aliases/source.md",
+   "path": "source.md",
+   "text": "[[real]] [[nick]] [[quoted name]] [[Single]] [[Solo]] [[item one]] [[Item Two]] [[Ignored]] [[Used]] [[shared]] [[casekey]] [[a/b]] [[c#d]] [[z]] [[alias-code]] [[nomatch]]\n"
+  },
+  {
+   "name": "aliases/unclosed.md",
+   "path": "unclosed.md",
+   "text": "---\naliases: [Unclosed]\n[[Unclosed]]\n"
+  },
+  {
+   "name": "aliases/weird.md",
+   "path": "weird.md",
+   "text": "---\naliases: [a, , b]\ntags: x y, z\n---\n[[a]] [[b]]\n"
+  },
+  {
+   "name": "aliases/sub/alias-dup3.md",
+   "path": "sub/alias-dup3.md",
+   "text": "---\naliases: shared\n---\n"
+  },
+  {
+   "name": "tags/a.md",
+   "path": "a.md",
+   "text": "---\ntags: [x, y/z, \"quoted\"]\n---\n#inline #a/b #a/b/c text#no #123 #1a #_u #-d #a-b #é\n"
+  },
+  {
+   "name": "tags/b.md",
+   "path": "b.md",
+   "text": "---\ntags:\n  - x\n  - \"#hash\"\n  - Y/Z\n---\n#X #y/z/w #y\n"
+  },
+  {
+   "name": "tags/c.md",
+   "path": "c.md",
+   "text": "---\ntags: one two, three\n---\n[[a]] #tag-in-link\n[l](a.md#frag) http://a.b/#nolink mailto:#x\n"
+  },
+  {
+   "name": "tags/code.py",
+   "path": "code.py",
+   "text": "# comment #pytag\nprint(\"#str\")\n"
+  },
+  {
+   "name": "tags/d.md",
+   "path": "d.md",
+   "text": "# Heading\n## sub\n#tag at start\n(#paren) \"#quote\" a/#slash a#b /#c [#d] {#e} \\#esc\n`#code` ```\n#fence\n```\n#end"
+  },
+  {
+   "name": "tags/e.md",
+   "path": "e.md",
+   "text": "no tags 100% #100 # #/ #// #a// #a/ #/a\n"
+  },
+  {
+   "name": "tags/f.md",
+   "path": "f.md",
+   "text": "---\ntags: []\n---\n#only\n"
+  },
+  {
+   "name": "tags/g.md",
+   "path": "g.md",
+   "text": "---\ntags: x\n---\n#X\n"
+  },
+  {
+   "name": "tags/h.md",
+   "path": "h.md",
+   "text": "#Case #case #CASE #Éa #éa\n"
+  },
+  {
+   "name": "tags/i.md",
+   "path": "i.md",
+   "text": "<!-- #hidden -->\n#shown <!-- #hidden2\n"
+  },
+  {
+   "name": "tags/j.md",
+   "path": "j.md",
+   "text": "---\ntags: [ \"a b\", c.d, e/f/, /g, \"#h#i\", -j, _k, 9, 9a ]\n---\n"
+  },
+  {
+   "name": "tags/k.md",
+   "path": "k.md",
+   "text": "#tag1#tag2 #tag3,#tag4 #tag5; #tag6. #tag7! 😀#emoji #日本語 #ñandú\n"
+  },
+  {
+   "name": "tags/tag/x.md",
+   "path": "tag/x.md",
+   "text": "x\n"
+  },
+  {
+   "name": "attachments/.hidden",
+   "path": ".hidden",
+   "text": "h\n"
+  },
+  {
+   "name": "attachments/LICENSE",
+   "path": "LICENSE",
+   "text": "license\n"
+  },
+  {
+   "name": "attachments/Makefile",
+   "path": "Makefile",
+   "text": "all:\n"
+  },
+  {
+   "name": "attachments/README",
+   "path": "README",
+   "text": "readme\n"
+  },
+  {
+   "name": "attachments/a.b.c",
+   "path": "a.b.c",
+   "text": "plain\n"
+  },
+  {
+   "name": "attachments/code.py",
+   "path": "code.py",
+   "text": "x = 1\n"
+  },
+  {
+   "name": "attachments/data.csv",
+   "path": "data.csv",
+   "text": "a,b\n"
+  },
+  {
+   "name": "attachments/doc.md",
+   "path": "doc.md",
+   "text": "![[img.png]] [[ref.pdf]] [[ref.pdf]] ![[nothere.png]] ![[missing.md]] [[nothere.txt]] [[noext]] ![[dir/inner.jpg]] [pdf](files/spec.pdf) [none](files/none.pdf) [t](x.TXT) [[up.PNG]] [[code.py]] [[noimg.svg]] [[fake.md.png]] ![[a.b.c]] ![[.hidden]] [[trail.]]\n"
+  },
+  {
+   "name": "attachments/noimg.svg",
+   "path": "noimg.svg",
+   "text": "<svg/>"
+  },
+  {
+   "name": "attachments/other.md",
+   "path": "other.md",
+   "text": "[[LICENSE]] [[Makefile]] [[license]] [x](LICENSE)\n"
+  },
+  {
+   "name": "attachments/ref2.md",
+   "path": "ref2.md",
+   "text": "[[data.csv]] [[README]] [[data]]\n"
+  },
+  {
+   "name": "attachments/x.TXT",
+   "path": "x.TXT",
+   "text": "text file\n"
+  },
+  {
+   "name": "code_py/iface.pyi",
+   "path": "iface.pyi",
+   "text": "import pkg\n"
+  },
+  {
+   "name": "code_py/main.py",
+   "path": "main.py",
+   "text": "import os, sys\nimport pkg\nimport pkg.mod\nimport pkg.mod as m\nfrom pkg import mod, other\nfrom pkg.mod import thing\nfrom . import sibling\nfrom .sibling import x\nfrom .. import up\nfrom ..up import y\nfrom ... import toofar\nfrom .pkg import z\nimport src_only\nimport util\nfrom pkg.sub import *\nimport pkg.sub\nimport a.b.c\ndef f():\n    import lazy\n    from pkg import lazy2\nif True:\n    import cond\n"
+  },
+  {
+   "name": "code_py/note.md",
+   "path": "note.md",
+   "text": "[[main]] [[main.py]] [[pkg/mod]] [[pkg/mod.py]]\n"
+  },
+  {
+   "name": "code_py/sibling.py",
+   "path": "sibling.py",
+   "text": "import main\n"
+  },
+  {
+   "name": "code_py/tricky.py",
+   "path": "tricky.py",
+   "text": "\"\"\"docstring\nimport pkg\n\"\"\"\n# import util\ns = \"import sibling\"\nimport up  # trailing\ntry:\n    import sibling\nexcept ImportError:\n    pass\nfrom pkg import (mod,\n    other)\nimport pkg.mod\n"
+  },
+  {
+   "name": "code_py/up.py",
+   "path": "up.py",
+   "text": ""
+  },
+  {
+   "name": "code_py/util.py",
+   "path": "util.py",
+   "text": ""
+  },
+  {
+   "name": "code_py/a/__init__.py",
+   "path": "a/__init__.py",
+   "text": ""
+  },
+  {
+   "name": "code_py/a/b/__init__.py",
+   "path": "a/b/__init__.py",
+   "text": ""
+  },
+  {
+   "name": "code_py/a/b/c.py",
+   "path": "a/b/c.py",
+   "text": "import a.b.c\nimport b.c\nimport c\n"
+  },
+  {
+   "name": "code_py/dir.v2/m.py",
+   "path": "dir.v2/m.py",
+   "text": "import dir.v2\nimport m\nfrom . import m\n"
+  },
+  {
+   "name": "code_py/pkg/__init__.py",
+   "path": "pkg/__init__.py",
+   "text": "from . import mod\nfrom .mod import thing\nfrom .. import main\n"
+  },
+  {
+   "name": "code_py/pkg/mod.py",
+   "path": "pkg/mod.py",
+   "text": "import pkg\nimport pkg.sub\nfrom . import other\nfrom .other import q\n"
+  },
+  {
+   "name": "code_py/pkg/other.py",
+   "path": "pkg/other.py",
+   "text": "import util\nimport mod\n"
+  },
+  {
+   "name": "code_py/pkg/sub/__init__.py",
+   "path": "pkg/sub/__init__.py",
+   "text": "from .. import mod\nfrom ... import main\nfrom ...up import y\n"
+  },
+  {
+   "name": "code_py/pkg/sub/util.py",
+   "path": "pkg/sub/util.py",
+   "text": "import util\n"
+  },
+  {
+   "name": "code_py/src/src_only.py",
+   "path": "src/src_only.py",
+   "text": "x = 1\n"
+  },
+  {
+   "name": "code_py/src/util.py",
+   "path": "src/util.py",
+   "text": ""
+  },
+  {
+   "name": "code_js/a.js",
+   "path": "a.js",
+   "text": "module.exports = 1\n"
+  },
+  {
+   "name": "code_js/a.ts",
+   "path": "a.ts",
+   "text": ""
+  },
+  {
+   "name": "code_js/a.tsx",
+   "path": "a.tsx",
+   "text": ""
+  },
+  {
+   "name": "code_js/app.js",
+   "path": "app.js",
+   "text": "import a from './a';\nimport './b.css';\nimport {x} from \"./sub\";\nimport y from 'lib';\nimport z from '/abs';\nconst q = require('./q');\nconst r = require ( \"../r\" );\nexport * from './a.js';\nexport {s} from './s';\nimport('./dyn');\nimport w from '.';\nimport v from '..';\nimport u from './data.json';\nimport t from './comp.vue';\nimport s from './missing';\nimport a2 from './a/';\nimport h from 'http://x/y.js';\nimport i from '#local';\nimport m from './m.mjs';\nimport * as ns from './ns';\nimport def, {n} from './mix';\n"
+  },
+  {
+   "name": "code_js/b.css",
+   "path": "b.css",
+   "text": ""
+  },
+  {
+   "name": "code_js/comp.vue",
+   "path": "comp.vue",
+   "text": "<script>\nimport c from \"./a\"\n</script>\n"
+  },
+  {
+   "name": "code_js/cts.cts",
+   "path": "cts.cts",
+   "text": "import a from './a'\n"
+  },
+  {
+   "name": "code_js/data.json",
+   "path": "data.json",
+   "text": "{}"
+  },
+  {
+   "name": "code_js/dyn.js",
+   "path": "dyn.js",
+   "text": ""
+  },
+  {
+   "name": "code_js/index.js",
+   "path": "index.js",
+   "text": "import \"./app\"\n"
+  },
+  {
+   "name": "code_js/m.mjs",
+   "path": "m.mjs",
+   "text": "import 'app.js'\nimport './app.js'\n"
+  },
+  {
+   "name": "code_js/mix.cjs",
+   "path": "mix.cjs",
+   "text": "const x = require('./q'), y = require('./r')\n// import './commented'\n/* import './block' */\n"
+  },
+  {
+   "name": "code_js/note.md",
+   "path": "note.md",
+   "text": "[[app]] [[app.js]] [[sub/index]]\n"
+  },
+  {
+   "name": "code_js/ns.ts",
+   "path": "ns.ts",
+   "text": "import type { T } from './a';\nexport type { U } from './sub'\nimport x = require('./q')\n"
+  },
+  {
+   "name": "code_js/q.jsx",
+   "path": "q.jsx",
+   "text": ""
+  },
+  {
+   "name": "code_js/r.js",
+   "path": "r.js",
+   "text": ""
+  },
+  {
+   "name": "code_js/real-one.js",
+   "path": "real-one.js",
+   "text": ""
+  },
+  {
+   "name": "code_js/s.ts",
+   "path": "s.ts",
+   "text": ""
+  },
+  {
+   "name": "code_js/svelte.svelte",
+   "path": "svelte.svelte",
+   "text": "import a from './a'\n"
+  },
+  {
+   "name": "code_js/tpl.ts",
+   "path": "tpl.ts",
+   "text": "const s = `import './in-template'`;\nconst t = \"import './in-string'\";\nimport './real-one'\n"
+  },
+  {
+   "name": "code_js/x.mts",
+   "path": "x.mts",
+   "text": "import a from './a'\n"
+  },
+  {
+   "name": "code_js/a/index.mjs",
+   "path": "a/index.mjs",
+   "text": ""
+  },
+  {
+   "name": "code_js/mid/b.ts",
+   "path": "mid/b.ts",
+   "text": ""
+  },
+  {
+   "name": "code_js/mid/deep/x.ts",
+   "path": "mid/deep/x.ts",
+   "text": "import '../../a'\nimport '../b'\nimport './y'\nimport '../../../out'\n"
+  },
+  {
+   "name": "code_js/mid/deep/y/index.tsx",
+   "path": "mid/deep/y/index.tsx",
+   "text": ""
+  },
+  {
+   "name": "code_js/sub/index.js",
+   "path": "sub/index.js",
+   "text": ""
+  },
+  {
+   "name": "code_js/sub/index.ts",
+   "path": "sub/index.ts",
+   "text": ""
+  },
+  {
+   "name": "code_style/app.js",
+   "path": "app.js",
+   "text": ""
+  },
+  {
+   "name": "code_style/base.css",
+   "path": "base.css",
+   "text": "@import \"./reset.css\";\n"
+  },
+  {
+   "name": "code_style/beta.md",
+   "path": "beta.md",
+   "text": ""
+  },
+  {
+   "name": "code_style/comment.html",
+   "path": "comment.html",
+   "text": ""
+  },
+  {
+   "name": "code_style/data.css",
+   "path": "data.css",
+   "text": ""
+  },
+  {
+   "name": "code_style/extra.css",
+   "path": "extra.css",
+   "text": ""
+  },
+  {
+   "name": "code_style/main.css",
+   "path": "main.css",
+   "text": "@import 'base.css';\n@import \"./theme\";\n@import url(extra.css);\n@import url('quoted.css');\n.a { background: url(img/bg.png); }\n.b { background: url( 'img/bg2.png' ); }\n.c { background: url(\"img/bg3.png\") }\n.d { background: url(data:image/png;base64,AAA); }\n.e { background: url(http://x/y.png); }\n.f { background: url(#frag); }\n/* @import 'commented.css'; */\n@import url(//cdn/x.css);\n.g { background:url(../up.png) }\n@IMPORT 'upper.css';\n"
+  },
+  {
+   "name": "code_style/page.html",
+   "path": "page.html",
+   "text": "<link href=\"main.css\" rel=stylesheet><script src=app.js></script>\n<img src=\"img/bg.png\"><a href=\"sub/page2.html#x\">x</a><a href='quoted.html'>q</a>\n<a href=\"https://x\">ext</a><a href=\"mailto:a@b\">m</a><a href=\"#top\">t</a><a href=\"/main.css\">root</a>\n<img SRC=\"IMG/BG.PNG\"><a href = \"spaced.html\">s</a><a data-href=\"data.css\">d</a><!-- <a href=\"comment.html\"> -->\n<a href=\"beta.md\">md</a>\n"
+  },
+  {
+   "name": "code_style/page.vue",
+   "path": "page.vue",
+   "text": "<template><img src=\"img/bg.png\"></template>\n<style>@import \"main.css\";</style>\n"
+  },
+  {
+   "name": "code_style/quoted.css",
+   "path": "quoted.css",
+   "text": ""
+  },
+  {
+   "name": "code_style/quoted.html",
+   "path": "quoted.html",
+   "text": ""
+  },
+  {
+   "name": "code_style/reset.css",
+   "path": "reset.css",
+   "text": ""
+  },
+  {
+   "name": "code_style/spaced.html",
+   "path": "spaced.html",
+   "text": ""
+  },
+  {
+   "name": "code_style/theme",
+   "path": "theme",
+   "text": ""
+  },
+  {
+   "name": "code_style/theme.css",
+   "path": "theme.css",
+   "text": ""
+  },
+  {
+   "name": "code_style/upper.css",
+   "path": "upper.css",
+   "text": ""
+  },
+  {
+   "name": "code_style/x.htm",
+   "path": "x.htm",
+   "text": "<script src=\"app.js\"></script>\n"
+  },
+  {
+   "name": "code_style/old/main.sass",
+   "path": "old/main.sass",
+   "text": "@import base\n@import 'x.sass'\n"
+  },
+  {
+   "name": "code_style/old/x.sass",
+   "path": "old/x.sass",
+   "text": ""
+  },
+  {
+   "name": "code_style/sass/_partial.scss",
+   "path": "sass/_partial.scss",
+   "text": ""
+  },
+  {
+   "name": "code_style/sass/main.scss",
+   "path": "sass/main.scss",
+   "text": "@import 'partial';\n@use \"other\";\n@forward 'fwd';\n@import 'a', 'b';\n.x { b: url(i.png) }\n"
+  },
+  {
+   "name": "code_style/sass/other.scss",
+   "path": "sass/other.scss",
+   "text": ""
+  },
+  {
+   "name": "code_style/sass/partial.scss",
+   "path": "sass/partial.scss",
+   "text": ""
+  },
+  {
+   "name": "code_style/sub/page2.html",
+   "path": "sub/page2.html",
+   "text": "<a href=\"../page.html\">up</a><a href=\"./page2.htm\">self</a>\n"
+  },
+  {
+   "name": "code_other/Thing.java",
+   "path": "Thing.java",
+   "text": ""
+  },
+  {
+   "name": "code_other/app.rb",
+   "path": "app.rb",
+   "text": "require 'x'\nrequire_relative 'helper'\nrequire_relative './other'\n"
+  },
+  {
+   "name": "code_other/c.json",
+   "path": "c.json",
+   "text": "{\"$ref\": \"./d.json\"}"
+  },
+  {
+   "name": "code_other/c.toml",
+   "path": "c.toml",
+   "text": "x = \"d.toml\"\n"
+  },
+  {
+   "name": "code_other/c.yaml",
+   "path": "c.yaml",
+   "text": "include: d.yaml\n"
+  },
+  {
+   "name": "code_other/conf.xml",
+   "path": "conf.xml",
+   "text": "<a href=\"d.xml\"/>"
+  },
+  {
+   "name": "code_other/d.json",
+   "path": "d.json",
+   "text": "{}"
+  },
+  {
+   "name": "code_other/d.yaml",
+   "path": "d.yaml",
+   "text": ""
+  },
+  {
+   "name": "code_other/helper.rb",
+   "path": "helper.rb",
+   "text": ""
+  },
+  {
+   "name": "code_other/lib.sh",
+   "path": "lib.sh",
+   "text": ""
+  },
+  {
+   "name": "code_other/lib2.sh",
+   "path": "lib2.sh",
+   "text": ""
+  },
+  {
+   "name": "code_other/m.md",
+   "path": "m.md",
+   "text": "[[main]] [[run.sh]] [[lib.rs]]\n"
+  },
+  {
+   "name": "code_other/main.c",
+   "path": "main.c",
+   "text": "#include \"util.h\"\n#include <stdio.h>\n#include \"sub/x.h\"\n"
+  },
+  {
+   "name": "code_other/main.cpp",
+   "path": "main.cpp",
+   "text": "#include \"util.hpp\"\n"
+  },
+  {
+   "name": "code_other/main.go",
+   "path": "main.go",
+   "text": "package main\nimport \"fmt\"\nimport \"./local\"\n"
+  },
+  {
+   "name": "code_other/main.java",
+   "path": "main.java",
+   "text": "import java.util.List;\nimport pkg.Thing;\n"
+  },
+  {
+   "name": "code_other/other.rb",
+   "path": "other.rb",
+   "text": ""
+  },
+  {
+   "name": "code_other/other.sh",
+   "path": "other.sh",
+   "text": ""
+  },
+  {
+   "name": "code_other/q.sql",
+   "path": "q.sql",
+   "text": "select 1;\n"
+  },
+  {
+   "name": "code_other/run.sh",
+   "path": "run.sh",
+   "text": "source ./lib.sh\n. ./other.sh\nsource lib2.sh\nbash ./third.sh\n"
+  },
+  {
+   "name": "code_other/third.sh",
+   "path": "third.sh",
+   "text": ""
+  },
+  {
+   "name": "code_other/util.h",
+   "path": "util.h",
+   "text": ""
+  },
+  {
+   "name": "code_other/util.hpp",
+   "path": "util.hpp",
+   "text": ""
+  },
+  {
+   "name": "code_other/src/a.rs",
+   "path": "src/a.rs",
+   "text": "use crate::b;\n"
+  },
+  {
+   "name": "code_other/src/c.rs",
+   "path": "src/c.rs",
+   "text": ""
+  },
+  {
+   "name": "code_other/src/custom.rs",
+   "path": "src/custom.rs",
+   "text": ""
+  },
+  {
+   "name": "code_other/src/d.rs",
+   "path": "src/d.rs",
+   "text": ""
+  },
+  {
+   "name": "code_other/src/lib.rs",
+   "path": "src/lib.rs",
+   "text": "mod a;\nmod b;\npub mod c;\nuse crate::a::thing;\nuse self::b::x;\nuse super::s;\nuse std::io;\nextern crate foo;\n#[path = \"custom.rs\"]\nmod d;\n"
+  },
+  {
+   "name": "code_other/src/b/mod.rs",
+   "path": "src/b/mod.rs",
+   "text": ""
+  },
+  {
+   "name": "code_other/sub/x.h",
+   "path": "sub/x.h",
+   "text": "#include \"../util.h\"\n"
+  },
+  {
+   "name": "specials/.dotfile.md",
+   "path": ".dotfile.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/emoji😀.md",
+   "path": "emoji😀.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/empty.md",
+   "path": "empty.md",
+   "text": ""
+  },
+  {
+   "name": "specials/empty.py",
+   "path": "empty.py",
+   "text": ""
+  },
+  {
+   "name": "specials/empty.txt",
+   "path": "empty.txt",
+   "text": ""
+  },
+  {
+   "name": "specials/ignored-ref.md",
+   "path": "ignored-ref.md",
+   "text": "[[skipped]] [[deeper]] [[nested]] [[upper]] [[in]]\n"
+  },
+  {
+   "name": "specials/link-target.md",
+   "path": "link-target.md",
+   "text": "lt [[ok]]\n"
+  },
+  {
+   "name": "specials/nfd-é.md",
+   "path": "nfd-é.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/nfd.md",
+   "path": "nfd.md",
+   "text": "[[ünï]]\n"
+  },
+  {
+   "name": "specials/ok-big.md",
+   "path": "ok-big.md",
+   "text": "![[big.png]] [[big.txt]] [[big.md]]\n"
+  },
+  {
+   "name": "specials/ok.md",
+   "path": "ok.md",
+   "text": "ok [[big]] [[binary]] [[latin]] [[nul]] [[huge.py]] [[ünï]] [[sp ace]] [[日本語]] [[emoji😀]]\n"
+  },
+  {
+   "name": "specials/sp ace.md",
+   "path": "sp ace.md",
+   "text": "space [[ok]]\n"
+  },
+  {
+   "name": "specials/sym-ref.md",
+   "path": "sym-ref.md",
+   "text": "[[sym-file]] [[sym-dir/target]] [[sym-loop/ok]] [[target]]\n"
+  },
+  {
+   "name": "specials/ünï.md",
+   "path": "ünï.md",
+   "text": "unicode [[ok]]\n"
+  },
+  {
+   "name": "specials/日本語.md",
+   "path": "日本語.md",
+   "text": "[[ok]] #日本語\n"
+  },
+  {
+   "name": "specials/.cache/skipped.md",
+   "path": ".cache/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.cache/sub/deeper.md",
+   "path": ".cache/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.ceo/skipped.md",
+   "path": ".ceo/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.ceo/sub/deeper.md",
+   "path": ".ceo/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.dotdir/in.md",
+   "path": ".dotdir/in.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.git/skipped.md",
+   "path": ".git/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.git/sub/deeper.md",
+   "path": ".git/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.github/skipped.md",
+   "path": ".github/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.github/sub/deeper.md",
+   "path": ".github/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.hg/skipped.md",
+   "path": ".hg/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.hg/sub/deeper.md",
+   "path": ".hg/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.idea/skipped.md",
+   "path": ".idea/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.idea/sub/deeper.md",
+   "path": ".idea/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.mypy_cache/skipped.md",
+   "path": ".mypy_cache/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.mypy_cache/sub/deeper.md",
+   "path": ".mypy_cache/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.next/skipped.md",
+   "path": ".next/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.next/sub/deeper.md",
+   "path": ".next/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.pytest_cache/skipped.md",
+   "path": ".pytest_cache/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.pytest_cache/sub/deeper.md",
+   "path": ".pytest_cache/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.svn/skipped.md",
+   "path": ".svn/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.svn/sub/deeper.md",
+   "path": ".svn/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.tox/skipped.md",
+   "path": ".tox/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.tox/sub/deeper.md",
+   "path": ".tox/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.venv/skipped.md",
+   "path": ".venv/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.venv/sub/deeper.md",
+   "path": ".venv/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.vscode/skipped.md",
+   "path": ".vscode/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/.vscode/sub/deeper.md",
+   "path": ".vscode/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/Venv/upper.md",
+   "path": "Venv/upper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/__pycache__/skipped.md",
+   "path": "__pycache__/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/__pycache__/sub/deeper.md",
+   "path": "__pycache__/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/build/skipped.md",
+   "path": "build/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/build/sub/deeper.md",
+   "path": "build/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/dist/skipped.md",
+   "path": "dist/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/dist/sub/deeper.md",
+   "path": "dist/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.cache/nested.md",
+   "path": "keep/.cache/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.ceo/nested.md",
+   "path": "keep/.ceo/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.git/nested.md",
+   "path": "keep/.git/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.github/nested.md",
+   "path": "keep/.github/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.hg/nested.md",
+   "path": "keep/.hg/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.idea/nested.md",
+   "path": "keep/.idea/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.mypy_cache/nested.md",
+   "path": "keep/.mypy_cache/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.next/nested.md",
+   "path": "keep/.next/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.pytest_cache/nested.md",
+   "path": "keep/.pytest_cache/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.svn/nested.md",
+   "path": "keep/.svn/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.tox/nested.md",
+   "path": "keep/.tox/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.venv/nested.md",
+   "path": "keep/.venv/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/.vscode/nested.md",
+   "path": "keep/.vscode/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/__pycache__/nested.md",
+   "path": "keep/__pycache__/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/build/nested.md",
+   "path": "keep/build/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/dist/nested.md",
+   "path": "keep/dist/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/node_modules/nested.md",
+   "path": "keep/node_modules/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/target/nested.md",
+   "path": "keep/target/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/vendor/nested.md",
+   "path": "keep/vendor/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/keep/venv/nested.md",
+   "path": "keep/venv/nested.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/node_modules/skipped.md",
+   "path": "node_modules/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/node_modules/sub/deeper.md",
+   "path": "node_modules/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/real/target.md",
+   "path": "real/target.md",
+   "text": "target [[ok]]\n"
+  },
+  {
+   "name": "specials/target/skipped.md",
+   "path": "target/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/target/sub/deeper.md",
+   "path": "target/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/vendor/skipped.md",
+   "path": "vendor/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/vendor/sub/deeper.md",
+   "path": "vendor/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/venv/skipped.md",
+   "path": "venv/skipped.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "specials/venv/sub/deeper.md",
+   "path": "venv/sub/deeper.md",
+   "text": "[[ok]]\n"
+  },
+  {
+   "name": "one/only.md",
+   "path": "only.md",
+   "text": "[[only]] #solo\n"
+  },
+  {
+   "name": "live_base/a.md",
+   "path": "a.md",
+   "text": "[[b]] #t1\n"
+  },
+  {
+   "name": "live_base/b.md",
+   "path": "b.md",
+   "text": "[[c]] [[a]]\n"
+  },
+  {
+   "name": "live_base/c.md",
+   "path": "c.md",
+   "text": ""
+  },
+  {
+   "name": "live_base/f.md",
+   "path": "f.md",
+   "text": "[[Eee]] [[img.png]] ![[img.png]]\n"
+  },
+  {
+   "name": "live_base/g.md",
+   "path": "g.md",
+   "text": "[[b]]\n"
+  },
+  {
+   "name": "live_base/m.py",
+   "path": "m.py",
+   "text": "import n\n"
+  },
+  {
+   "name": "live_base/n.py",
+   "path": "n.py",
+   "text": ""
+  },
+  {
+   "name": "live_base/dir/d.md",
+   "path": "dir/d.md",
+   "text": "[[a]] [[e]]\n"
+  },
+  {
+   "name": "live_base/dir/sub/e.md",
+   "path": "dir/sub/e.md",
+   "text": "---\naliases: [Eee]\n---\n[[b]]\n"
+  },
+  {
+   "name": "fuzz/0",
+   "path": "x.md",
+   "text": "^?---﻿@import href=[[a]]:`"
+  },
+  {
+   "name": "fuzz/2",
+   "path": "x.js",
+   "text": "`x/y../---<!--require(tagé./﻿[x](y.md)(\t%![[i.png]]from b- [a]>\"./b\"``` [x](y.md)[a]&nbsp;]href=)日[x](y.md)aa\\]].md"
+  },
+  {
+   "name": "fuzz/3",
+   "path": "x.css",
+   "text": "---\n\\![[i.png]]aliases:tags:url(mailto:[[#t...:require(#\t- .mdimport &nbsp;tags:from aliases:[[<!--url(]\\bx/y>?(!<[@import ]]/\n---\nx/yaliases:../"
+  },
+  {
+   "name": "fuzz/4",
+   "path": "x.html",
+   "text": "a ?amailto:"
+  },
+  {
+   "name": "fuzz/5",
+   "path": "x.ts",
+   "text": "url(\r\n﻿href=~~~]日#t-->from taghttp://```?:'./a'['["
+  },
+  {
+   "name": "fuzz/6",
+   "path": "x.vue",
+   "text": " @import require("
+  },
+  {
+   "name": "fuzz/7",
+   "path": "x.scss",
+   "text": "@import '][x](y.md)\r\nrequire(#é...\"|日!!日"
+  },
+  {
+   "name": "fuzz/8",
+   "path": "x.sass",
+   "text": " from ?...]](\"url(a([[a]].mdaliases:`:'./a'tag﻿```#t"
+  },
+  {
+   "name": "fuzz/9",
+   "path": "x.htm",
+   "text": "[\r\n![[i.png]]./[ .md\r\n\n-->require(\"mailto:`[[a]]aliases:&nbsp;%20^)<\naa\"mailto:<!--?[a]-->-->~~~"
+  },
+  {
+   "name": "fuzz/10",
+   "path": "x.mjs",
+   "text": "---\n&nbsp;\n```\r\n)import ![[a]]\n...-->~~~[[a]]!'<mailto:- ../~~~url(/```)../]]]]>import ~~~)tag%20from  ~~~@import a%20\n---\n'./a'[[a]]../"
+  },
+  {
+   "name": "fuzz/11",
+   "path": "x.rs",
+   "text": "?\t😀`:😀)]]]../😀@import [x](y.md)😀![[i.png]]^^😀url(~~~?\"href=tags:http://x/y:日.md%- </>@import >"
+  },
+  {
+   "name": "fuzz/12",
+   "path": "x.md",
+   "text": "\\#t日)\r\nx/y😀é%<!--`>%'[%![[i.png]]!mailto:!!["
+  },
+  {
+   "name": "fuzz/14",
+   "path": "x.js",
+   "text": ":bé'./a' |%?^@import './a'?\"./b\"url(]][x](y.md)-->ahttp://&nbsp;]from [#tags:\n...\nhttp:///[x](y.md)![[i.png]]b>\\&nbsp;[[b😀\"./b\""
+  },
+  {
+   "name": "fuzz/15",
+   "path": "x.css",
+   "text": "%20😀﻿\t'import -->/'|![a] :日"
+  },
+  {
+   "name": "fuzz/16",
+   "path": "x.html",
+   "text": "[a]asrc=<---[[a]]b ?require(\"|﻿[x](y.md)aliases:#ta)>?"
+  },
+  {
+   "name": "fuzz/17",
+   "path": "x.ts",
+   "text": "<\n<\"./b\"%20[[a]]'./a'[x](y.md)a\r\n\"./b\"...&nbsp;\"---'./a'import ---"
+  },
+  {
+   "name": "fuzz/18",
+   "path": "x.vue",
+   "text": "%[[a]][[tag\"./b\"[]%http://:b./\n.mdmailto:日?@import "
+  },
+  {
+   "name": "fuzz/19",
+   "path": "x.scss",
+   "text": "tags:&nbsp;from ---:#t:./```]---"
+  },
+  {
+   "name": "fuzz/20",
+   "path": "x.sass",
+   "text": "../"
+  },
+  {
+   "name": "fuzz/21",
+   "path": "x.htm",
+   "text": "![a]日'./a'tags:\r\n[[---\"./b\""
+  },
+  {
+   "name": "fuzz/22",
+   "path": "x.mjs",
+   "text": "日![[i.png]]-->﻿~~~[[a]][[a]]:[[/.mdsrc=import 日a@import .md- [[#trequire(![[i.png]]-->"
+  },
+  {
+   "name": "fuzz/23",
+   "path": "x.rs",
+   "text": "^﻿%../[import  [x](y.md)mailto:b!]]aliases:http://import é src=http://&nbsp;asrc=)mailto:`require(^tags:^\"./b\"[a >![[i.png]]/é:"
+  },
+  {
+   "name": "fuzz/24",
+   "path": "x.md",
+   "text": "<!--mailto:^![a]src=|aémailto:tags:\\[x](y.md)![[i.png]]b\t"
+  },
+  {
+   "name": "fuzz/26",
+   "path": "x.js",
+   "text": "\"./b\"-->/---b`'![[i.png]]\\﻿@import [[a]]a\\%20./src=#t\"@import http://<!--﻿~~~\"<)]][[\t😀#t"
+  },
+  {
+   "name": "fuzz/27",
+   "path": "x.css",
+   "text": "---\n.md![[i.png]]  ]]]#t\n#[[a]]?...<src=é]](#...\n---\n---'./a'>tag]﻿.../"
+  },
+  {
+   "name": "fuzz/28",
+   "path": "x.html",
+   "text": "@import #t<!--mailto:http://%%#baliases:require(#tags:"
+  },
+  {
+   "name": "fuzz/29",
+   "path": "x.ts",
+   "text": "---\n.mdrequire(^mailto:!?b` #:require()|>href=[a]`😀)...(\"./b\"...[x](y.md)@import ]mailto:>?\r\n<é(#t\n---\n😀...http://[[a]]~~~é`require("
+  },
+  {
+   "name": "fuzz/30",
+   "path": "x.vue",
+   "text": ":<!---->[x](y.md)\t```...@import ]../ .md[a]#t\r\n`"
+  },
+  {
+   "name": "fuzz/31",
+   "path": "x.scss",
+   "text": "^)é😀from é😀tags:mailto:"
+  },
+  {
+   "name": "fuzz/32",
+   "path": "x.sass",
+   "text": "---\n]]--- 😀\r\n\r\n^@import /\turl(- [[a]]<#\n|&nbsp;?%-->- [a]![[i.png]]日src=-->a]\n?'\n~~~\n---\n|`mailto:```:http://^<!\"b'./a'["
+  },
+  {
+   "name": "fuzz/33",
+   "path": "x.htm",
+   "text": "---\n[a]&nbsp;./'.md﻿%20require(@import - tag\t!?import .md]][[a]]&nbsp;!![[i.png]]require()tags:url([[tagé[[---é😀./import import 日@import é\n---\n\n ?]]require(([a]from ![[i.png]]./[>>[["
+  },
+  {
+   "name": "fuzz/34",
+   "path": "x.mjs",
+   "text": "mailto:src=mailto:[a]\t-->#turl(~~~\ttags:\nfrom \n[bhttp://[a]..../import http://./from /"
+  },
+  {
+   "name": "fuzz/35",
+   "path": "x.rs",
+   "text": "\"&nbsp;![[i.png]]require(>^...: \\]```? \t`![[i.png]]x/y[[>require(|\"require(aliases:|```from ---http:///b"
+  },
+  {
+   "name": "fuzz/36",
+   "path": "x.md",
+   "text": "\">#t---"
+  },
+  {
+   "name": "fuzz/38",
+   "path": "x.js",
+   "text": "#\"./b\"é`\\/mailto:%import \n...?tagimport # import mailto:"
+  },
+  {
+   "name": "fuzz/39",
+   "path": "x.css",
+   "text": "---\nmailto:&nbsp;\"﻿[a]href=%20-->bx/y@import  #\r\n\n\"😀﻿\t<!--\n---\n?'>|"
+  },
+  {
+   "name": "fuzz/40",
+   "path": "x.html",
+   "text": "---\nb~~~'.md日require(\r\n[[[日'<'/-->mailto:[[a]][---<!--aliases:\n~~~?\n)aliases:!>```é😀%mailto:|- ]\n---\n[a]%20`<!--/]]\r\n~~~tags:...mailto:![[i.png]]"
+  },
+  {
+   "name": "fuzz/41",
+   "path": "x.ts",
+   "text": "href=from [x](y.md)é'é"
+  },
+  {
+   "name": "fuzz/42",
+   "path": "x.vue",
+   "text": "~~~b%20\""
+  },
+  {
+   "name": "fuzz/43",
+   "path": "x.scss",
+   "text": "[?mailto:http://href=...![[i.png]]```[a]^- ]日@import ... !\n"
+  },
+  {
+   "name": "fuzz/44",
+   "path": "x.sass",
+   "text": "\t<!--- ../  [[a]]\"./b\"![[i.png]]---\nmailto:../]]"
+  },
+  {
+   "name": "fuzz/45",
+   "path": "x.htm",
+   "text": "..."
+  },
+  {
+   "name": "fuzz/46",
+   "path": "x.mjs",
+   "text": "`url(]'./a'require(/[a]import ![[i.png]]src=|`href=([[)~~~\ntags:mailto:tags:href=%%20```tags: ~~~)😀require(aliases:?#'./a'from "
+  },
+  {
+   "name": "fuzz/47",
+   "path": "x.rs",
+   "text": "---\n-->\"./b\"%20\n#-->~~~b&nbsp;-->---[\t:#tb[x](y.md)\\`\n---\n%src=href=[a]﻿tag'./a'\"./b\"![[i.png]]---"
+  },
+  {
+   "name": "fuzz/48",
+   "path": "x.md",
+   "text": "---\n&nbsp;mailto:... ]][[a]]from ```]!x/yurl([[a]]./  ```?[src=[x](y.md)\\[x](y.md)[[%require( b-->%20! b[[a]][\"require(\n---\ntag"
+  },
+  {
+   "name": "fuzz/50",
+   "path": "x.js",
+   "text": "---\n<- -->\nhttp://??aliases:#t/src=]] ...?'.md!.mdrequire(%20\nurl([x](y.md).md<! #]![[i.png]][[a]]from \n...!%20[[a]]\n./\n---\ntags:b'é\naliases:&nbsp;../>é:src="
+  },
+  {
+   "name": "fuzz/51",
+   "path": "x.css",
+   "text": "../```"
+  },
+  {
+   "name": "fuzz/52",
+   "path": "x.html",
+   "text": "?#|😀 ...```~~~'./a'%:[x](y.md)---\"#t\n?[[---.md[[a]]\t\\mailto:(a\\import /"
+  },
+  {
+   "name": "fuzz/53",
+   "path": "x.ts",
+   "text": "![[i.png]]mailto:﻿`...x/y[url()&nbsp;\"[x](y.md)-->%`!)require(\"./b\"tagbtag#t- .md\\- "
+  },
+  {
+   "name": "fuzz/54",
+   "path": "x.vue",
+   "text": "^-->|url()b\n./href=)^[x](y.md)>![[i.png]]é[x](y.md)mailto:tags:href=|\t[require(é😀 /^- from [x](y.md)]~~~(]]`<!---->"
+  },
+  {
+   "name": "fuzz/55",
+   "path": "x.scss",
+   "text": "([a]!&nbsp;<@import <!--[[ \r\n- \"\n\n```![[i.png]]😀from - -->http://[a](^%http://[x](y.md)./<!amailto:import <..../"
+  },
+  {
+   "name": "fuzz/56",
+   "path": "x.sass",
+   "text": "---\n%20:`/\t|é:!😀-->../\n(\"./b\"- (\n---\nfrom  )require(x/y.md\\~~~...---"
+  },
+  {
+   "name": "fuzz/57",
+   "path": "x.htm",
+   "text": "url(.md#- url(<!--tags:']]]]&nbsp;(a?)]]\\<"
+  },
+  {
+   "name": "fuzz/58",
+   "path": "x.mjs",
+   "text": "(.md:\"./b\"./%&nbsp;[a]\r\n[x](y.md)!tag"
+  },
+  {
+   "name": "fuzz/59",
+   "path": "x.rs",
+   "text": "---\nérequire(href=- [&nbsp;[```'./a'-->-->!from \n---\n\t@import href=amailto:é[x](y.md)http://?日]])url(url(tags:"
+  },
+  {
+   "name": "fuzz/60",
+   "path": "x.md",
+   "text": "---\n\"./b\":href=<!--\n#t'./a'|~~~tags:]]?|日[[a]]\n---\n日|:<<!-----^...../import "
+  },
+  {
+   "name": "fuzz/62",
+   "path": "x.js",
+   "text": "---\n>&nbsp;~~~'http://'./a'[a]\\|``` ...../|^\"[[#require([\n---\n"
+  },
+  {
+   "name": "fuzz/63",
+   "path": "x.css",
+   "text": "--><!--["
+  },
+  {
+   "name": "fuzz/64",
+   "path": "x.html",
+   "text": "\"href=.mdmailto:../?\\x/y:[x](y.md)#%20@import (<!--\r\nimport ---[x/y>x/y\"'bé`#😀\n^\"./b\" \\)./"
+  },
+  {
+   "name": "fuzz/65",
+   "path": "x.ts",
+   "text": ">\"./b\".md\\"
+  },
+  {
+   "name": "fuzz/66",
+   "path": "x.vue",
+   "text": "#.md|~~~>'./?"
+  },
+  {
+   "name": "fuzz/67",
+   "path": "x.scss",
+   "text": "---\n(?tag\r\naliases:tags:url([[a]]#t>require(%&nbsp;-->b~~~\n---\n/é<!--[a]import url(- tags:😀[x](y.md)href=[[a]"
+  },
+  {
+   "name": "fuzz/68",
+   "path": "x.sass",
+   "text": "---\néaé... aurl( \n\n---\n%20tags:😀a/href=日!"
+  },
+  {
+   "name": "fuzz/69",
+   "path": "x.htm",
+   "text": "---\n tags:@import ``` 😀^x/y\t()tagtags:- tags:[a]-->---x/y[[a]](mailto::#%é\r\n![[i.png]]\n---\n\\"
+  },
+  {
+   "name": "fuzz/70",
+   "path": "x.mjs",
+   "text": "[[.md`\n'[a]mailto:\n \\!日'./a'\"./b\"href=x/ytags:.md'./a'"
+  },
+  {
+   "name": "fuzz/71",
+   "path": "x.rs",
+   "text": ":\\\n\n:[ &nbsp;- x/y|- <%20\">\"./b\".md"
+  },
+  {
+   "name": "fuzz/72",
+   "path": "x.md",
+   "text": "---\n[\"😀\t(|- ﻿aliases:\n&nbsp;\n---\n日😀>\t-->from !http://^\r\n"
+  },
+  {
+   "name": "fuzz/74",
+   "path": "x.js",
+   "text": "~~~'./a''./a'\""
+  },
+  {
+   "name": "fuzz/75",
+   "path": "x.css",
+   "text": "﻿./?b\r\n\ntags:`[x](y.md)tags:tag[x](y.md)@import  \t%(%<!(href=\t\r\na﻿[x](y.md)]]#t@import a[a]|[a]tags:\"./b\"%20"
+  },
+  {
+   "name": "fuzz/76",
+   "path": "x.html",
+   "text": "é>\"./b\"tags:tag \n\"./b\")- -->b&nbsp;\t]]\\#\"./b\" :![[i.png]]src=---😀http://\na<!--...x/y日\\require(src=url("
+  },
+  {
+   "name": "fuzz/77",
+   "path": "x.ts",
+   "text": "a日:./ [[-->---require([[a]]b\"./b\"@import \"./b\"- :|<````"
+  },
+  {
+   "name": "fuzz/78",
+   "path": "x.vue",
+   "text": "\"./b\"[x](y.md)x/yhref=@import (tag@import &nbsp;"
+  },
+  {
+   "name": "fuzz/79",
+   "path": "x.scss",
+   "text": "bmailto:x/y]#^\\@import 😀\"./b\"<!--```#t|src=/import src=<!--`a![[i.png]]require("
+  },
+  {
+   "name": "fuzz/80",
+   "path": "x.sass",
+   "text": "\t 😀\naliases:\ntag'\"url( ``````require(|url( [a]\r\n/[x](y.md)]]#t&nbsp;@import éé#t😀../b`&nbsp;x/y@import  url(```---😀"
+  },
+  {
+   "name": "fuzz/81",
+   "path": "x.htm",
+   "text": "---\n-->😀src=\r\n&nbsp;[x](y.md)\"a%20.md%|\r\n#<!--from ]aliases:- - import :./'😀[x](y.md)#tb]]#taliases:'\n---\n#t:../`'./a'[[aliases:>import  "
+  },
+  {
+   "name": "fuzz/82",
+   "path": "x.mjs",
+   "text": "---\nb-->\n[[a]]'./a'\r\n/:\n---\n \n---\"./b\"..."
+  },
+  {
+   "name": "fuzz/83",
+   "path": "x.rs",
+   "text": "---\n\n<!--😀\n[tags:b'%20﻿&nbsp;(>\nhref=\n:- \n/aliases:^#thref=]src=.md%20\n---\n"
+  },
+  {
+   "name": "fuzz/84",
+   "path": "x.md",
+   "text": ")mailto:tag!```~~~![[i.png]]<!--```@import \t/\n'./a'[a]aliases:#timport './a'[a]"
+  },
+  {
+   "name": "fuzz/86",
+   "path": "x.js",
+   "text": "- #aliases:---%---'./a' ["
+  },
+  {
+   "name": "fuzz/87",
+   "path": "x.css",
+   "text": "---\n./]href=]\t^'./a'>href=`\n---\nimport %20[[a]]\t😀\"./b\"~~~^:[a]````"
+  },
+  {
+   "name": "fuzz/88",
+   "path": "x.html",
+   "text": "```.md~~~>[['./a'%20>日&nbsp;#require(é[x](y.md))]/\t\"./b\"'mailto:\r\n\t"
+  },
+  {
+   "name": "fuzz/89",
+   "path": "x.ts",
+   "text": "mailto:b\"./b\"url("
+  },
+  {
+   "name": "fuzz/90",
+   "path": "x.vue",
+   "text": "---\nx/y\r\n[x](y.md)import [x](y.md)\t'日[^\n﻿~~~- http://日é\n```\nurl((@import href=\r\n[a]...]].mdmailto:^src=./]]mailto:[![[i.png]]~~~\n---\n@import >﻿-->)taga#~~~)"
+  },
+  {
+   "name": "fuzz/91",
+   "path": "x.scss",
+   "text": "日.md  \\\">tags:"
+  },
+  {
+   "name": "fuzz/92",
+   "path": "x.sass",
+   "text": "'./a'mailto:\n./%^http://#['./a'./href=require('./a'^x/y\"(require(from tags:tags:\nb'\\#- ^@import \r\n\"'? [[a]]```"
+  },
+  {
+   "name": "fuzz/93",
+   "path": "x.htm",
+   "text": "[[href=日http://../:...[[a]]([[a]]url(]...\\﻿`../'./a'.md<!--`%%&nbsp;~~~b﻿tags:'./a'![[i.png]]from ]![[i.png]]\nrequire(...#../#t'./a'"
+  },
+  {
+   "name": "fuzz/94",
+   "path": "x.mjs",
+   "text": "mailto:\trequire(http://```\r\n http://]`[a]url(http://"
+  },
+  {
+   "name": "fuzz/95",
+   "path": "x.rs",
+   "text": "\n<import [[a]]]\t...[x](y.md)&nbsp;\\][[a]]#import <%)url(<"
+  },
+  {
+   "name": "fuzz/96",
+   "path": "x.md",
+   "text": "---\naliases:)^\n---\n日"
+  },
+  {
+   "name": "fuzz/98",
+   "path": "x.js",
+   "text": "日'../@import --><^!"
+  },
+  {
+   "name": "fuzz/99",
+   "path": "x.css",
+   "text": "---\nsrc=url(]]aurl('./a'~~~tag\n---\n\"../日http://aliases:mailto:./|]"
+  },
+  {
+   "name": "fuzz/100",
+   "path": "x.html",
+   "text": "---\n\"./b\"\n---\n😀@import "
+  },
+  {
+   "name": "fuzz/101",
+   "path": "x.ts",
+   "text": "~~~%~~~tag]tag\n]\"./b\"]\\href=b]]'\n^[\n\r\n"
+  },
+  {
+   "name": "fuzz/102",
+   "path": "x.vue",
+   "text": "http://tag[x](y.md)]]/tags:"
+  },
+  {
+   "name": "fuzz/103",
+   "path": "x.scss",
+   "text": "#t![[i.png]]src=/>x/y\t[x](y.md)\n:]|😀\n'😀[x](y.md))import href=^(...import #tmailto:)\"tagé[[a]]é[mailto:tag"
+  },
+  {
+   "name": "fuzz/104",
+   "path": "x.sass",
+   "text": " \\>:\ta|![[i.png]]./]] `)'./a'href=b\"src=```![[i.png]]'^...-->href=﻿[a]'./a'%\"./b\"http://![[i.png]]tags:#t\\"
+  },
+  {
+   "name": "fuzz/105",
+   "path": "x.htm",
+   "text": "```x/yaliases:!]from ﻿#url(~~~\\url(aliases:><!--(/<!--...a'./a'日\"./b\"%&nbsp;#t]?---./http://]<\r\nx/y'../<aurl("
+  },
+  {
+   "name": "fuzz/106",
+   "path": "x.mjs",
+   "text": "href=```&nbsp;<(#[/(mailto:日b\t-->[url(-->%20'aliases:#[\"./b\".md[x](y.md) b\\<"
+  },
+  {
+   "name": "fuzz/107",
+   "path": "x.rs",
+   "text": "😀[[url( (require('?\"./b\"tag)[[a]]"
+  },
+  {
+   "name": "fuzz/108",
+   "path": "x.md",
+   "text": "---\nrequire(mailto:\"./b\"-->]<href=from  './a' bmailto:import \t./aliases:url([x](y.md)[[a]]./%20tags:'http://[!http://#t http://?&nbsp;\n---\n~~~' ~~~#t#b^`src=src=]#mailto:|"
+  },
+  {
+   "name": "fuzz/110",
+   "path": "x.js",
+   "text": "---\na\n![[i.png]]require(&nbsp;aliases:(!][a]% \"[x](y.md)\"./b\"mailto:require(-->\t-->\n---\n\n"
+  },
+  {
+   "name": "fuzz/111",
+   "path": "x.css",
+   "text": "href=b>]]^]x/y/tagurl(![[i.png]]mailto:http://#t```[x](y.md)src=%20!😀\n][[a]]#../aliases:[\"./b\"😀]]😀[x](y.md)|@import `require("
+  },
+  {
+   "name": "fuzz/112",
+   "path": "x.html",
+   "text": "[]]import aliases:b![[i.png]])\n"
+  },
+  {
+   "name": "fuzz/113",
+   "path": "x.ts",
+   "text": "import ahref=../?([x](y.md)import \n\r\naurl([x](y.md)...<[x](y.md)http://[x](y.md)&nbsp;"
+  },
+  {
+   "name": "fuzz/114",
+   "path": "x.vue",
+   "text": " mailto:#t/---?]]---```src= src=%20%20)'<````"
+  },
+  {
+   "name": "fuzz/115",
+   "path": "x.scss",
+   "text": "---\n~~~)?from \naliases:~~~|#t' &nbsp;atags:[x](y.md)a\r\n!|]]é`@import >[[|/日?url(#t---'日...]- @import \n---\n /~~~[a]?\"<!--\n'[[\\\ttags:"
+  },
+  {
+   "name": "fuzz/116",
+   "path": "x.sass",
+   "text": "---\nimport -->require(\"./b\"~~~?|../😀\n---\n\\%20[[a]]aliases:?[["
+  },
+  {
+   "name": "fuzz/117",
+   "path": "x.htm",
+   "text": "\nrequire(\t>/`'```require(![[i.png]]\n~~~\"./b\"\" \"mailto:- \r\naliases:? ]'?\t[-->[b.mdhttp://"
+  },
+  {
+   "name": "fuzz/118",
+   "path": "x.mjs",
+   "text": "!require([a][a]tag```[[[x](y.md)--><!--import -->?![[i.png]]/"
+  },
+  {
+   "name": "fuzz/119",
+   "path": "x.rs",
+   "text": "---\n!'./a''href=aliases:./]```|a'\"./b\"../require(![[i.png]][[^[x](y.md) :href=[x](y.md)﻿`import a﻿\"日(é../\n?éhref=\n'./a'<!--\r\n\n---\n日"
+  },
+  {
+   "name": "fuzz/120",
+   "path": "x.md",
+   "text": "---\n../﻿éhttp:// ../http://<!-- http://#t\"./b\"﻿a#t)>:😀|日)from ```\r\n...]]aliases:%20tags:'./a'%20<\n---\n"
+  },
+  {
+   "name": "fuzz/122",
+   "path": "x.js",
+   "text": "?[[./(http://<x/y?@import './a'日`é|"
+  },
+  {
+   "name": "fuzz/123",
+   "path": "x.css",
+   "text": "---\n:...)![[i.png]]]]é[[[[a]]-->`? .md!b[[a]][\n---\n[[[from b|[x](y.md)from tag '>@import "
+  },
+  {
+   "name": "fuzz/124",
+   "path": "x.html",
+   "text": "<!--?tag?#t%../?\nmailto:- /'tag[```\"/a\r\n' ('#thttp://?\"http://[[a]])( ﻿'./a'"
+  },
+  {
+   "name": "fuzz/125",
+   "path": "x.ts",
+   "text": "![[i.png]]tags:.md.//http://\t tags:\n#t#!http://!﻿:url(日)mailto:-->[[﻿"
+  },
+  {
+   "name": "fuzz/126",
+   "path": "x.vue",
+   "text": "require(- &nbsp;tag'./a'[x](y.md)../`< -->- require([[a]]---[[a]]|'./a'.md~~~\\\t#tb\n'`aliases:"
+  },
+  {
+   "name": "fuzz/127",
+   "path": "x.scss",
+   "text": "a[[a]]\tx/y(.md%...---/]][[[a]./\"|日\n...^ from mailto:...!tag from \""
+  },
+  {
+   "name": "fuzz/128",
+   "path": "x.sass",
+   "text": "---\n&nbsp;b^﻿%:! %tag\nhttp://^[a]<tags:/bhref='./a''...---'./a'require([a]'\"./b\"[x](y.md)<!--x/y||[a]src=\n---\n[a]tags: url(.md\t./:...'./```>\\"
+  },
+  {
+   "name": "fuzz/129",
+   "path": "x.htm",
+   "text": "\"é﻿#[[a]]:|日é:require(]]url(\r\nfrom %```a|[[a]] [﻿&nbsp;[a]require(]'./a'"
+  },
+  {
+   "name": "fuzz/130",
+   "path": "x.mjs",
+   "text": "]]).md😀(\n\"./b\"b@import \n\n?[[a]]>---!"
+  },
+  {
+   "name": "fuzz/131",
+   "path": "x.rs",
+   "text": "\t- :(import '\t.mda%20.md-->é\t%20\"./---]](😀>burl(<"
+  },
+  {
+   "name": "fuzz/132",
+   "path": "x.md",
+   "text": ")\n😀tags:@import tag![[i.png]]src=<"
+  },
+  {
+   "name": "fuzz/134",
+   "path": "x.js",
+   "text": "mailto:^%]]...import aliases:mailto:﻿(#t~~~日from %\\'./a'http://]][[ href= aliases:!% ...![[i.png]]\n<!--tag...\n"
+  },
+  {
+   "name": "fuzz/135",
+   "path": "x.css",
+   "text": "---\n...(/mailto:tags:[[\n]]\n---\n'./a'[x](y.md)日\n[x](y.md)require(- @import aliases:../href=x/ymailto:]]"
+  },
+  {
+   "name": "fuzz/136",
+   "path": "x.html",
+   "text": "---\n\\|﻿#[[<src=[[%...[x](y.md)#t'/x/y\" ><!--aliases:\n---\n:<!--@import <'./a'tags:a"
+  },
+  {
+   "name": "fuzz/137",
+   "path": "x.ts",
+   "text": "```tags:x/y﻿<url('./a'\"^^?<!--"
+  },
+  {
+   "name": "fuzz/138",
+   "path": "x.vue",
+   "text": "\r\n'./a'!tagimport aliases:﻿aliases:---@import <!--]]'éimport \ntag/) 日#~~~mailto:"
+  },
+  {
+   "name": "fuzz/139",
+   "path": "x.scss",
+   "text": "x/y@import %src='./a'|\n﻿"
+  },
+  {
+   "name": "fuzz/140",
+   "path": "x.sass",
+   "text": "../[[a]]>'./a'...\\require(&nbsp;^- x/y#:tag[aliases:%20%20import from a%20[['"
+  },
+  {
+   "name": "fuzz/141",
+   "path": "x.htm",
+   "text": "# >]\nmailto:\\- <!--\n`?import tags:)#url((😀日é#t日#t\t../---]]```require(!:---]]%"
+  },
+  {
+   "name": "fuzz/142",
+   "path": "x.mjs",
+   "text": "\"-->\".././"
+  },
+  {
+   "name": "fuzz/143",
+   "path": "x.rs",
+   "text": ":src=[[a]]<]!é@import :../from x/y[x](y.md)[[a]]src='%﻿]]../mailto:href=﻿tags:~~~---\"@import #t\""
+  },
+  {
+   "name": "fuzz/144",
+   "path": "x.md",
+   "text": "---\n#trequire([a]\n^ )\"src=日éhref=\n---\n'./a'aliases:'./a'- \"mailto::src=href=mailto:from .//\"./b\""
+  },
+  {
+   "name": "fuzz/146",
+   "path": "x.js",
+   "text": "%  ?%import ]require([x](y.md)'\n!<asrc=[[a]]'../[x](y.md)mailto:]]"
+  },
+  {
+   "name": "fuzz/147",
+   "path": "x.css",
+   "text": "---'./a'./éfrom # `a&nbsp;"
+  },
+  {
+   "name": "fuzz/148",
+   "path": "x.html",
+   "text": "#tags:😀日(日@import ("
+  },
+  {
+   "name": "fuzz/149",
+   "path": "x.ts",
+   "text": "---\n\"http:///a./-->>(......#t\r\n-->href=a../]http://[[from src=]#t```---[#t>﻿\"tags:(import href=😀\n---\n"
+  },
+  {
+   "name": "fuzz/150",
+   "path": "x.vue",
+   "text": "---\nhref=href=?'./a'`from @import ../>\n---\n aliases:.md<url(- ~~~<!--`:😀  "
+  },
+  {
+   "name": "fuzz/151",
+   "path": "x.scss",
+   "text": "---\n<:../^&nbsp;src=\"./b\"#t- href=b\n[[b日b :\n%url(\n\n---\n#t[x](y.md)require('./a'href=/\t....md[[a]](/\n\"./b\"\""
+  },
+  {
+   "name": "fuzz/152",
+   "path": "x.sass",
+   "text": "#t\"./b\"#aliases:' ./&nbsp;<!-- "
+  },
+  {
+   "name": "fuzz/153",
+   "path": "x.htm",
+   "text": "[x](y.md)!![[]"
+  },
+  {
+   "name": "fuzz/154",
+   "path": "x.mjs",
+   "text": "...?#:'./a'-->"
+  },
+  {
+   "name": "fuzz/155",
+   "path": "x.rs",
+   "text": ".md import <tags:~~~require(@import <!--```]]#\nimport \".md^ url(]\r\n../日"
+  },
+  {
+   "name": "fuzz/156",
+   "path": "x.md",
+   "text": "|)./ ]😀]\n?```\\?﻿﻿tag!..../]%20 b%url(```[[.md- a"
+  },
+  {
+   "name": "fuzz/158",
+   "path": "x.js",
+   "text": "![[i.png]]`][x](y.md)\t[[../href=href=[a]x/y:\t.md'\n'./a'.md- &nbsp;\\|%~~~- ^)\"'./a'"
+  },
+  {
+   "name": "fuzz/159",
+   "path": "x.css",
+   "text": "---\n@import \"./b\"url(@import [a]):http://...```from .md\r\n```[['.md#ttagé日[a]\\]%/日\n---\n]]aliases: "
+  },
+  {
+   "name": "fuzz/160",
+   "path": "x.html",
+   "text": "#t&nbsp;url(~~~'aliases:#<%20a.mdrequire(\n[[a]]![[i.png]]tags:<(url(tags:./[a]<!--[a]]]~~~#témailto:#\t/|&nbsp;😀require(url("
+  },
+  {
+   "name": "fuzz/161",
+   "path": "x.ts",
+   "text": "---\n'a)![[i.png]]?tag😀.md~~~afrom from ?...>http://%20/x/yurl(require([\n日\n\nimport (src=﻿)#t```../import src=\n---\nimport ]http://#../http://\r\n]\n#\"😀`"
+  },
+  {
+   "name": "fuzz/162",
+   "path": "x.vue",
+   "text": "éimport \n<﻿^require(-  url(![[i.png]]"
+  },
+  {
+   "name": "fuzz/163",
+   "path": "x.scss",
+   "text": "﻿!\n[>:- \t\nb...require()!tags:日?- [a]"
+  },
+  {
+   "name": "fuzz/164",
+   "path": "x.sass",
+   "text": "---\n![[i.png]]href=\"./b\"[a]\r\nimport  ...\t??require(href=|../﻿aliases:﻿...@import \nhref= \\<!--^- \n---\nimport émailto:']]\ttags:<http://&nbsp;[x](y.md)url()"
+  },
+  {
+   "name": "fuzz/165",
+   "path": "x.htm",
+   "text": "?&nbsp; \r\n\n:[[a]]---~~~\r\n\nhref=@import  ﻿ #tag![[i.png]]<!--http://&nbsp;../('./a'<\"]"
+  },
+  {
+   "name": "fuzz/166",
+   "path": "x.mjs",
+   "text": "![[i.png]]../%é'./a'aliases:\"./b\"\r\n/---[a](./:```http://[http://<!--~~~![[i.png]]"
+  },
+  {
+   "name": "fuzz/167",
+   "path": "x.rs",
+   "text": "/[a]\n﻿#```[[a]]\"./b\"😀[[src=%20\n😀 :&nbsp;a./"
+  },
+  {
+   "name": "fuzz/168",
+   "path": "x.md",
+   "text": "---\n#url(/src=src=href=- require(require(^'aliases:#\r\n\n---\n﻿<!--\n.md^mailto:﻿&nbsp;src=😀src=<"
+  },
+  {
+   "name": "fuzz/170",
+   "path": "x.js",
+   "text": "http://)`a([[\r\n-->) "
+  },
+  {
+   "name": "fuzz/171",
+   "path": "x.css",
+   "text": "['./a'![[i.png]]---[x](y.md)#]\n%20&nbsp;#t😀..../\n\n\n\n%20.md]\"&nbsp;url(- href=require([[from %20[[a]]mailto:]\r\n```%require(?...src="
+  },
+  {
+   "name": "fuzz/172",
+   "path": "x.html",
+   "text": "[a]?--->aliases:![[i.png]]\"./b\"- from \"./b\"﻿[[a]]]|&nbsp;\r\n\\```[aliases:!bhref=---\\\nurl(!a/href=- x/y\\)../"
+  },
+  {
+   "name": "fuzz/173",
+   "path": "x.ts",
+   "text": "---\nurl(./%]]éhref= .md.mdx/y日!?a[x](y.md)éx/yurl([x](y.md)>tags:tags:\\[[aurl(..../#t -->-->?[[\n\n---\n[[#(url(./'"
+  },
+  {
+   "name": "fuzz/174",
+   "path": "x.vue",
+   "text": "---\n~~~! .mdb]'./a' a\"./b\"\r\n|@import tags:./...|%~~~@import &nbsp;\\😀~~~日 mailto:from http://~~~[[[[a]x/y\n---\n)(]http://%"
+  },
+  {
+   "name": "fuzz/175",
+   "path": "x.scss",
+   "text": "../\t"
+  },
+  {
+   "name": "fuzz/176",
+   "path": "x.sass",
+   "text": "﻿-->>.mdbaliases:>[a]\n- tagsrc=[[a]]@import aliases:<%\\`%20>日[a]<---- %./日---aimport \"src=\n.md<'./a'!"
+  },
+  {
+   "name": "fuzz/177",
+   "path": "x.htm",
+   "text": "%é?\t#t---```- url(\t[x](y.md)\"<!-- mailto:\r\n.md)![[i.png]]mailto:\r\n```...:[a]href=\r\n)#url(\nurl(﻿\"/? "
+  },
+  {
+   "name": "fuzz/178",
+   "path": "x.mjs",
+   "text": "'-->😀.md---from \"from \n>#t]#t\n[x](y.md)aliases:[x](y.md)\n>\\.md"
+  },
+  {
+   "name": "fuzz/179",
+   "path": "x.rs",
+   "text": "---\n😀?]]http://][[a]][x](y.md)\nahttp://`import ~~~\t![[i.png]]|&nbsp;<<'-->#t-->tags:?\n---\n\n'![[i.png]])%tag\n-->x/y```:from |"
+  },
+  {
+   "name": "fuzz/180",
+   "path": "x.md",
+   "text": "<!--- aliases:'./a'\\aliases:[[a]]!'src=...tags:[a]>src=from [[a]]http://!url(src= http://]]- require(%20aliases:src=<!--\"./b\"]]\n"
+  },
+  {
+   "name": "fuzz/182",
+   "path": "x.js",
+   "text": "---\n<|```mailto:日\"require(.md%/>from [x](y.md)./../&nbsp;>import '.md\t---tags:<(<\r\n%\"./b\">\n---\n\"./b\""
+  },
+  {
+   "name": "fuzz/183",
+   "path": "x.css",
+   "text": "<href=^|\n﻿...﻿'./a'"
+  },
+  {
+   "name": "fuzz/184",
+   "path": "x.html",
+   "text": "?"
+  },
+  {
+   "name": "fuzz/185",
+   "path": "x.ts",
+   "text": "---\n>- (\\ [[[a]])\n---\n!@import 日\r\n:require(\t^[[a]]?[[```"
+  },
+  {
+   "name": "fuzz/186",
+   "path": "x.vue",
+   "text": "'[[a]]]][x](y.md)!>%^from @import 日(\n﻿&nbsp;[a] ~~~:mailto:"
+  },
+  {
+   "name": "fuzz/187",
+   "path": "x.scss",
+   "text": "﻿"
+  },
+  {
+   "name": "fuzz/188",
+   "path": "x.sass",
+   "text": "---\n@import \n\n😀![[i.png]]\"./b\"mailto:url([a][x](y.md)<[\"'%aliases:'./a'`<]\\<!--%20.md < #é?<!--aliases:require([a]:[[﻿...\n---\n"
+  },
+  {
+   "name": "fuzz/189",
+   "path": "x.htm",
+   "text": "---\n[http://- \"import tag%from .mdfrom [[a]])\n---\n"
+  },
+  {
+   "name": "fuzz/190",
+   "path": "x.mjs",
+   "text": "`#../\n[x](y.md)- x/ya \n﻿>@import x/y"
+  },
+  {
+   "name": "fuzz/191",
+   "path": "x.rs",
+   "text": "---\nmailto:aliases:\"./b\"%)\\\"mailto:%20'./a'/%20- &nbsp;import .mdurl(😀)\n---\nrequire(---!from "
+  },
+  {
+   "name": "fuzz/192",
+   "path": "x.md",
+   "text": "[[a]]url(`.md#[x](y.md):\"'./a'href=[a]```[[a]]../[a]😀bfrom %tag!\\<?from '﻿?"
+  },
+  {
+   "name": "fuzz/194",
+   "path": "x.js",
+   "text": "😀\n😀^:#t:![[i.png]]>src=\"~~~\n[[a]]~~~#t%src=\t< [[tags:#url(\n﻿"
+  },
+  {
+   "name": "fuzz/195",
+   "path": "x.css",
+   "text": "#-->.md\t/b﻿from | tag]]日"
+  },
+  {
+   "name": "fuzz/196",
+   "path": "x.html",
+   "text": "x/y][[a]]../\n"
+  },
+  {
+   "name": "fuzz/197",
+   "path": "x.ts",
+   "text": "é\\日@import \"tag|:[[a]]\r\ntags:"
+  },
+  {
+   "name": "fuzz/198",
+   "path": "x.vue",
+   "text": "[x](y.md)> "
+  },
+  {
+   "name": "fuzz/199",
+   "path": "x.scss",
+   "text": "---\n日x/y)\tsrc=tags:aliases:aliases:\"\n%20from ^%20?ésrc=<!--\"./b\"[&nbsp;&nbsp;...\n---\nx/y./[[a]]tag![[i.png]]]%\t-->- \"./b\"日"
+  },
+  {
+   "name": "fuzz/200",
+   "path": "x.sass",
+   "text": "#😀 \n|- "
+  },
+  {
+   "name": "fuzz/201",
+   "path": "x.htm",
+   "text": "---\n)(]]\turl(src=require(%![[i.png]]b```%./é\\]```:require(./﻿/日~~~src=\n/😀日-->(é.md?src='[[😀url(~~~\n---\n?)\n日[a]-->![[i.png]]b|src=\r\n"
+  },
+  {
+   "name": "fuzz/202",
+   "path": "x.mjs",
+   "text": "\\\t require([x](y.md)~~~日>url( './a'"
+  },
+  {
+   "name": "fuzz/203",
+   "path": "x.rs",
+   "text": "^]\t...%20)éimport src="
+  },
+  {
+   "name": "fuzz/204",
+   "path": "x.md",
+   "text": "---\n<!--- (x/yrequire('﻿[a]?%^http://../(../\t\t >.md|-->./\n---\na\n'./a'😀.mdsrc=x/y"
+  },
+  {
+   "name": "fuzz/206",
+   "path": "x.js",
+   "text": "tag [[require((%#[x](y.md)~~~[a][a]\n[[a]]`😀&nbsp;[[src=%20![[i.png]]<'./a'[[a]][aliases:../\\[x](y.md)"
+  },
+  {
+   "name": "fuzz/207",
+   "path": "x.css",
+   "text": "---\n[a]|#import require( \n<!--tag\n&nbsp;import 😀[[- [a]- <#t...(\n|日http://<!--\n---\n\n%20😀:"
+  },
+  {
+   "name": "fuzz/208",
+   "path": "x.html",
+   "text": "---\n\"./b\".mdimport [a]...日x/yurl(]b---\n---\nfrom ../\"#"
+  },
+  {
+   "name": "fuzz/209",
+   "path": "x.ts",
+   "text": "require(mailto:href=\"./b\"src="
+  },
+  {
+   "name": "fuzz/210",
+   "path": "x.vue",
+   "text": "---\n<-->```é\\)%20~~~:b[x](y.md)![[i.png]]...\\:&nbsp; ~~~#t\"./b\"tags:[\t&nbsp;#%./bhref=^😀>http://é...#😀<\n...\n---\n"
+  },
+  {
+   "name": "fuzz/211",
+   "path": "x.scss",
+   "text": "[[#^- \t|!url(url([/tags:@import <aliases:^bb[[[x](y.md)tag' &nbsp;---aliases:&nbsp;```b日`é>~~~\r\n\"./b\"./\"./b\"./\"./b\""
+  },
+  {
+   "name": "fuzz/212",
+   "path": "x.sass",
+   "text": "src= émailto:!./([x](y.md)...&nbsp;\r\nhttp://---../'./a''%#t!![[i.png]]...?)?%20--><http://[[a]]```...%20&nbsp;\r\nsrc="
+  },
+  {
+   "name": "fuzz/213",
+   "path": "x.htm",
+   "text": "src=('./a'.md[x](y.md)http://"
+  },
+  {
+   "name": "fuzz/214",
+   "path": "x.mjs",
+   "text": "\n[[a]]#[|\"./b\"[[aliases:@import "
+  },
+  {
+   "name": "fuzz/215",
+   "path": "x.rs",
+   "text": ":\"./b\"\".md#t<!--\"./b\"// é>"
+  },
+  {
+   "name": "fuzz/216",
+   "path": "x.md",
+   "text": "!\t%`﻿---@import a~~~\r\n[[a]]'`@import \\~~~>href=?é[<!--#t%'./a' @import ^href=?import ^---#t---mailto:[[a]](>"
+  },
+  {
+   "name": "fuzz/218",
+   "path": "x.js",
+   "text": "![[i.png]]![[i.png]]'./a']/[)&nbsp;from ...btag[[a]]"
+  },
+  {
+   "name": "fuzz/219",
+   "path": "x.css",
+   "text": "---\n)import \nsrc= é\n---\n../(\r\n../(&nbsp;> #t"
+  },
+  {
+   "name": "fuzz/220",
+   "path": "x.html",
+   "text": "http://@import [from (../|aliases:.md-->x/y%\n>)` 日😀﻿href=[#t[[a]]%20\n```from #t']]😀"
+  },
+  {
+   "name": "fuzz/221",
+   "path": "x.ts",
+   "text": "---\n\"...'./a'b~~~~~~ébtags:href=﻿ mailto:%20http://!\r\n%'http:// ...#src=tags:\n---\né)require(@import ﻿|b"
+  },
+  {
+   "name": "fuzz/222",
+   "path": "x.vue",
+   "text": "[[a]]﻿😀日/ tags:[a]>require(%- `tags:%^- 日)tags:]]#t`[[[[bsrc=```\"[a]^\n![[i.png]]x/y\"./b\"`"
+  },
+  {
+   "name": "fuzz/223",
+   "path": "x.scss",
+   "text": "\tx/y[a] ---\n![x](y.md) x/y'./```|\"[[\"]]"
+  },
+  {
+   "name": "fuzz/224",
+   "path": "x.sass",
+   "text": "---\ntag[[a]]é -->[a][[a]]```tag-->]]require(@import taga[http://src=\\<^\"\n%%20- [.md@import \n---\nbimport ..."
+  },
+  {
+   "name": "fuzz/225",
+   "path": "x.htm",
+   "text": "\\%20#[a]a './a'%mailto:aliases:.md../%20```)<!--日b...import 😀./[%]😀\t|:![[i.png]]`\"./b\""
+  },
+  {
+   "name": "fuzz/226",
+   "path": "x.mjs",
+   "text": "﻿.md@import ```tagb?http://[[^#t[tag<!--/:\t\n@import )[[a]][x](y.md)![[i.png]]##../"
+  },
+  {
+   "name": "fuzz/227",
+   "path": "x.rs",
+   "text": "url(href=href=(tag---\r\nérequire(% /mailto:"
+  },
+  {
+   "name": "fuzz/228",
+   "path": "x.md",
+   "text": "[a]```- require(require(@import \t'`b@import src=#```<![[i.png]]![[i.png]]mailto:tag&nbsp;tags:[[a]]~~~]]%20&nbsp;#thttp://mailto:< [x](y.md)`|\"aliases:x/yb"
+  },
+  {
+   "name": "fuzz/230",
+   "path": "x.js",
+   "text": "tagrequire(~~~\r\nmailto:b[[é[[a]]#t![[i.png]]^😀"
+  },
+  {
+   "name": "fuzz/231",
+   "path": "x.css",
+   "text": "mailto:\"./b\" src=tag#thref=>\"./b\"---x/y?日import ../é.md"
+  },
+  {
+   "name": "fuzz/232",
+   "path": "x.html",
+   "text": "---\n\"```'./a'\"http://%20...^-->\n---\n?##%(tags:>ax/ytagtag)]]import "
+  },
+  {
+   "name": "fuzz/233",
+   "path": "x.ts",
+   "text": "---\n#%20%20```\r\nrequire(b(#t日tags:]url(-->#t\"./b\"﻿href=tags: './a'#<!--http://|]#t href=.md#tsrc=\n---\na"
+  },
+  {
+   "name": "fuzz/234",
+   "path": "x.vue",
+   "text": "url([[.md)[x](y.md)!![[i.png]][[\n'![[i.png]]-->:```#t😀(!.mdaliases:tags:)require(日'./a'../ "
+  },
+  {
+   "name": "fuzz/235",
+   "path": "x.scss",
+   "text": "\n]][['./a'\"'\"./b\"`[['./a' ./src=x/y[x](y.md)tag../😀~~~------\t|#ttags:#```src=mailto:#\r\n\"./b\"..."
+  },
+  {
+   "name": "fuzz/236",
+   "path": "x.sass",
+   "text": "|..../~~~---<require('./a'<require(tags:a﻿﻿from ../src=src=%20:tag...#/]]\"./b\"@import b:../"
+  },
+  {
+   "name": "fuzz/237",
+   "path": "x.htm",
+   "text": "---\n\n<x/y>aaimport a\"from ?--> \\from <!--]]\\a../\n---\n]require([[(b[\"./b\""
+  },
+  {
+   "name": "fuzz/238",
+   "path": "x.mjs",
+   "text": "\n- ![[i.png]]'﻿/---./]../#./#>[a]tags:~~~@import /(#mailto:-->aliases:%/&nbsp;http://"
+  },
+  {
+   "name": "fuzz/239",
+   "path": "x.rs",
+   "text": "\\import [[a]]href= "
+  },
+  {
+   "name": "fuzz/240",
+   "path": "x.md",
+   "text": "url('./a''url(<[x](y.md)[[a]]tag.md\n(\nurl(aliases:tags:`?%20😀日[?'./a'url(http://--><"
+  },
+  {
+   "name": "fuzz/242",
+   "path": "x.js",
+   "text": "---\n\\[a]#t[[%20b'---tag`\n---\n)import -->\n]]src=\""
+  },
+  {
+   "name": "fuzz/243",
+   "path": "x.css",
+   "text": "(`(tag"
+  },
+  {
+   "name": "fuzz/244",
+   "path": "x.html",
+   "text": "\"😀[x](y.md)../a../日/- \\'---[[a]]\n- ./tags:tags:|#>'./a'-->tags:%20"
+  },
+  {
+   "name": "fuzz/245",
+   "path": "x.ts",
+   "text": "./#t\r\na ` 'é'./a'require(http://- 日\"./b\"@import #url(import [[---éx/y!~~~%20- @import - ../ /```..."
+  },
+  {
+   "name": "fuzz/246",
+   "path": "x.vue",
+   "text": "---\n<!--\\tags:(#---x/y﻿url(>![[i.png]]# !é]]url(%\\\"...![[i.png]]...  tags:#[a]]﻿@import >\n---\n\n[[a]]mailto:#((x/y'./---日x/y(```"
+  },
+  {
+   "name": "fuzz/247",
+   "path": "x.scss",
+   "text": "---\n ?~~~<<!--...\\\\-->\"./b\"aliases:]]^mailto:x/y]][a]../a]]&nbsp;a- - require(﻿href=aliases:import `!\n---\n\r\n:(#tags:'from "
+  },
+  {
+   "name": "fuzz/248",
+   "path": "x.sass",
+   "text": "||'./a'/[a]!```<!--baliases:#tsrc= bfrom href=tag] .mdx/y<]>tag"
+  },
+  {
+   "name": "fuzz/249",
+   "path": "x.htm",
+   "text": "---\n#![[i.png]]mailto:from %20@import ---^\":\"]bimport &nbsp;\"./b\"<!--\n---\nfrom >[[a]]- - >"
+  },
+  {
+   "name": "fuzz/250",
+   "path": "x.mjs",
+   "text": "---\nurl([[.md/tags:tags:]tag%require(\r\n[a]\"./b\"src=~~~(:-->!'./a'?%#日`日\n'./a'- <日!\"./b\"\t\n---\n"
+  },
+  {
+   "name": "fuzz/251",
+   "path": "x.rs",
+   "text": "---\n].md:\r\n>#timport [[a]]-->[[a]]\"./b\"./tags:tag\né`&nbsp;aliases:[x](y.md)x/y(<﻿#[x](y.md) \nx/y^[x](y.md)tag[x](y.md)tags:from \n---\n/\\[a]]].././mailto:\n:src=(mailto:~~~"
+  },
+  {
+   "name": "fuzz/252",
+   "path": "x.md",
+   "text": "|^﻿\n&nbsp;src="
+  },
+  {
+   "name": "fuzz/254",
+   "path": "x.js",
+   "text": "[a]- <!-- \r\n\r\n-->#\r\nurl( >]]]&nbsp;```tag#timport ~~~http://'./a')url(\")"
+  },
+  {
+   "name": "fuzz/255",
+   "path": "x.css",
+   "text": "---\nfrom ^<!--aliases:![[i.png]]#mailto:...:]] @import |import ```(aurl(^\n---\n"
+  },
+  {
+   "name": "fuzz/256",
+   "path": "x.html",
+   "text": "'[[(%20'./a'```&nbsp;[a]<!-- "
+  },
+  {
+   "name": "fuzz/257",
+   "path": "x.ts",
+   "text": "---\n%<\"aé><:...!@import http://- %\n---\nrequire(![a]b#)/"
+  },
+  {
+   "name": "fuzz/258",
+   "path": "x.vue",
+   "text": "\t"
+  },
+  {
+   "name": "fuzz/259",
+   "path": "x.scss",
+   "text": "~~~tags:<!--http://a./../&nbsp;\r\nrequire(~~~|^"
+  },
+  {
+   "name": "fuzz/260",
+   "path": "x.sass",
+   "text": "日from #t[a]<!--"
+  },
+  {
+   "name": "fuzz/261",
+   "path": "x.htm",
+   "text": "\"./b\"from '?from -->日b)~~~"
+  },
+  {
+   "name": "fuzz/262",
+   "path": "x.mjs",
+   "text": "\"./b\"---href=aliases:/---😀"
+  },
+  {
+   "name": "fuzz/263",
+   "path": "x.rs",
+   "text": "a@import >﻿-->---\r\n`"
+  },
+  {
+   "name": "fuzz/264",
+   "path": "x.md",
+   "text": "---\n%﻿%&nbsp;-->)a#]]require(<!--日%tags:\n!tag(btags:'./a'http://: :![[i.png]]x/yb%20src=\n./\r\n 😀./\n---\na./(\n...]"
+  },
+  {
+   "name": "fuzz/266",
+   "path": "x.js",
+   "text": "---\nsrc=﻿[\t^]]url(😀tags:aliases:import \n---```src=\r\na^#t[\"./b\"[[\n..//é#href=href=# [[﻿import (\n---\n]日[[[%20#t/- [[\"require(\""
+  },
+  {
+   "name": "fuzz/267",
+   "path": "x.css",
+   "text": "|...mailto:(`[x](y.md)`|﻿&nbsp; ~~~&nbsp;?x/y#```src=!x/y-->src= &nbsp;[a]?é\tb"
+  },
+  {
+   "name": "fuzz/268",
+   "path": "x.html",
+   "text": "---\n]b%```#t!---../`?'b- ```@import `\r\n^@import './a'>~~~src=href=?[[a]]src=href=[[a]]#t`[[a]]<!--]]\n---\n'./a']<#t<!--)][[@import b@import éimport !:"
+  },
+  {
+   "name": "fuzz/269",
+   "path": "x.ts",
+   "text": "😀&nbsp;require([x](y.md)]```a![[i.png]] ?\"﻿\n-->``` ﻿[日(`mailto:﻿ import ?tags:../"
+  },
+  {
+   "name": "fuzz/270",
+   "path": "x.vue",
+   "text": "\"``` ?---.md)\nurl(~~~%b"
+  },
+  {
+   "name": "fuzz/271",
+   "path": "x.scss",
+   "text": "a)<!--]]\r\na\n[a]%)from  \r\n\"%\t./mailto:\t' ^%url(\n[[a]]a[`#(#﻿src=]﻿http://.//"
+  },
+  {
+   "name": "fuzz/272",
+   "path": "x.sass",
+   "text": "--->日[[a]]'./a'.md%20 ^../:`aliases:mailto:\n'tags:aliases: ``````.mdé%20^)<!--[[a]]\"- !"
+  },
+  {
+   "name": "fuzz/273",
+   "path": "x.htm",
+   "text": "<!--../<!--[>...a[]%:'./a'日x/y```[[a]]]].md^\" 😀:😀\\http://aliases:[x](y.md)😀|"
+  },
+  {
+   "name": "fuzz/274",
+   "path": "x.mjs",
+   "text": "~~~src= #t[[a]]:😀-->%20﻿src=![[i.png]][["
+  },
+  {
+   "name": "fuzz/275",
+   "path": "x.rs",
+   "text": "---\n\t-->#\"./b\"[x](y.md)href=&nbsp;./#src=\\>é @import \"mailto: é[x](y.md)[[tag\t\n---\nhttp://!#t)(.mdhref=\""
+  },
+  {
+   "name": "fuzz/276",
+   "path": "x.md",
+   "text": "\r\né&nbsp;?http:// [x](y.md)![[i.png]]﻿'%20import @import !#t#[[tagtags:.md```(href=tag|b"
+  },
+  {
+   "name": "fuzz/278",
+   "path": "x.js",
+   "text": "../é.md~~~]]/:\"%20.md﻿😀![[i.png]]\t```[a]!src=?href=#[<!--\t]]%...|[x](y.md)`\\|é[a]````/"
+  },
+  {
+   "name": "fuzz/279",
+   "path": "x.css",
+   "text": "%20 \t#import \"./b\"]]]<!--'./a'"
+  },
+  {
+   "name": "fuzz/280",
+   "path": "x.html",
+   "text": "---\n\"./b\"😀require(]\n---\n%20^\n😀[x](y.md)日\r\n- &nbsp;\n:"
+  },
+  {
+   "name": "fuzz/281",
+   "path": "x.ts",
+   "text": "---\n\"```<a]][<url(!x/ytags:bx/yfrom !src=```[[\t- ![[i.png]]\n- \n%20#t\r\n\n---\n日\"./b\":"
+  },
+  {
+   "name": "fuzz/282",
+   "path": "x.vue",
+   "text": "url( ?| .md&nbsp;.md)![[i.png]]aliases:\tfrom 'tag<]] ﻿\"﻿mailto:[x](y.md)---^`aliases:a.mdrequire(日import ?%[[a]]import ()"
+  },
+  {
+   "name": "fuzz/283",
+   "path": "x.scss",
+   "text": "[a]![[i.png]]\r\nimport /@import [x](y.md)b...'./a'aliases:- [a]"
+  },
+  {
+   "name": "fuzz/284",
+   "path": "x.sass",
+   "text": "---\n[a]---<!--\n---\ntags:b./﻿brequire("
+  },
+  {
+   "name": "fuzz/285",
+   "path": "x.htm",
+   "text": "---\n[a]]ax/ytags:href=@import tag---\r\n[require('\"./b\"日from /<.md@import ~~~([['\n---\n<!--:tag~~~]é/`\n[a]@import require(<!--#é"
+  },
+  {
+   "name": "fuzz/286",
+   "path": "x.mjs",
+   "text": "src=' :../href="
+  },
+  {
+   "name": "fuzz/287",
+   "path": "x.rs",
+   "text": "`? barequire(é[x](y.md)[x](y.md)\\aimport a<!--%\" ./"
+  },
+  {
+   "name": "fuzz/288",
+   "path": "x.md",
+   "text": "---\n!%20~~~日]]\n---\n#---|...src=[x](y.md)../%20 href=\\'"
+  },
+  {
+   "name": "fuzz/290",
+   "path": "x.js",
+   "text": "- (!\"b[x](y.md)url(:]]src=[x](y.md)[[a]]aliases:[a]﻿]]?!#![[i.png]]import "
+  },
+  {
+   "name": "fuzz/291",
+   "path": "x.css",
+   "text": "x/yé.md>é]require((url([[![[i.png]].mdhref=?]:'\n<!--%20http://<!--(#t../["
+  },
+  {
+   "name": "fuzz/292",
+   "path": "x.html",
+   "text": "---\nrequire([\n---\n%[![[i.png]]\"./b\" "
+  },
+  {
+   "name": "fuzz/293",
+   "path": "x.ts",
+   "text": "---\n\"tagfrom tags:[a]\n---\n.md`.../aliases:\r\nrequire("
+  },
+  {
+   "name": "fuzz/294",
+   "path": "x.vue",
+   "text": "import tags:\\!url('/]]😀tagtags:é[a].mdaliases:\r\nmailto:"
+  },
+  {
+   "name": "fuzz/295",
+   "path": "x.scss",
+   "text": "[[a]]tag@import .md\"\r\n"
+  },
+  {
+   "name": "fuzz/296",
+   "path": "x.sass",
+   "text": "|"
+  },
+  {
+   "name": "fuzz/297",
+   "path": "x.htm",
+   "text": "#t!../...\r\n\r\n#thref=\n?'%[[a]][a]|ésrc=aliases:[[ href=﻿[([x](y.md)'./a'```:require([a]'./a'@import #t"
+  },
+  {
+   "name": "fuzz/298",
+   "path": "x.mjs",
+   "text": "x/y\"x/y`require(- 'x/y#ttags:[a]\n \\?%!<.md'./a'&nbsp;(\r\n'!require(<😀x/y\t%20tags:"
+  },
+  {
+   "name": "fuzz/299",
+   "path": "x.rs",
+   "text": ".md./a@import ~~~]```?日```./.mdsrc=']from !-->src=@import @import ''./a'/[[a]]>![[i.png]][x](y.md)````- tags:aliases:[x](y.md)\t&nbsp;:\""
+  },
+  {
+   "name": "fuzzmd/0",
+   "path": "x.md",
+   "text": "><- a"
+  },
+  {
+   "name": "fuzzmd/1",
+   "path": "x.md",
+   "text": "---\n?\"( './a'[x](y.md)[a]\"./b\"mailto:(]- src=😀[[a]]require(ab%20\\\n---\nb\n- x/y@import from - tags:- @import "
+  },
+  {
+   "name": "fuzzmd/2",
+   "path": "x.md",
+   "text": "![[i.png]]src=%&nbsp;/﻿tags:url(src=aliases:url("
+  },
+  {
+   "name": "fuzzmd/3",
+   "path": "x.md",
+   "text": "\r\namailto:\t日éimport 日:&nbsp;- !-->]]tag"
+  },
+  {
+   "name": "fuzzmd/4",
+   "path": "x.md",
+   "text": "---\n#|mailto:\\```\nmailto:\n---\n#require((#- - "
+  },
+  {
+   "name": "fuzzmd/5",
+   "path": "x.md",
+   "text": "%]<~~~^])[[a]?... "
+  },
+  {
+   "name": "fuzzmd/6",
+   "path": "x.md",
+   "text": "[[#t)% ([[aliases:~~~./-->&nbsp;]日@import )http://![[i.png]] href='>😀```]@import ...[x](y.md)&nbsp;\r\n\n-->http://http://"
+  },
+  {
+   "name": "fuzzmd/7",
+   "path": "x.md",
+   "text": "[\n#?(... a`url(\\(%\\\"./b\"!?<\\- ?require(/[[ (#t"
+  },
+  {
+   "name": "fuzzmd/8",
+   "path": "x.md",
+   "text": "---\n>%20````[x/y\\```\n---\nurl(日[[a]]\":'./a'require([|from x/y`\t- "
+  },
+  {
+   "name": "fuzzmd/9",
+   "path": "x.md",
+   "text": "---- "
+  },
+  {
+   "name": "fuzzmd/10",
+   "path": "x.md",
+   "text": "---\n日[import ````日.md[@import #import &nbsp;src=:![[./][a]日!'&nbsp;tag\n---\n[x](y.md)src=\naliases:[x](y.md)---?------<<!--"
+  },
+  {
+   "name": "fuzzmd/11",
+   "path": "x.md",
+   "text": "\"```]href=)﻿../tags:url(\n[a]mailto:\t\tfrom &nbsp;../[x](y.md)\\ &nbsp;http://require(<`!"
+  },
+  {
+   "name": "fuzzmd/12",
+   "path": "x.md",
+   "text": "\nfrom ^>(...../#t\\<!--\"./b\"b./~~~ require(`<!--%?a src=%20![[i.png]]tags:\nsrc=\"./b\"]#tx/y[x](y.md)|\t"
+  },
+  {
+   "name": "fuzzmd/13",
+   "path": "x.md",
+   "text": "import href=- <!--<'tag![[i.png]][[a]]]]😀src=src=b`[![[i.png]]"
+  },
+  {
+   "name": "fuzzmd/14",
+   "path": "x.md",
+   "text": "#t\"`#t.md/tag&nbsp;\n]]'./a'\t?bsrc=:!aliases:[[&nbsp;^&nbsp;<!--url(mailto:url(]<aliases:b![[i.png]]?\n| ﻿[[a]]"
+  },
+  {
+   "name": "fuzzmd/15",
+   "path": "x.md",
+   "text": " ]]./src=[[- ([[a]]\"./b\":日﻿\n\té!http://😀é"
+  },
+  {
+   "name": "fuzzmd/16",
+   "path": "x.md",
+   "text": "---\n[x](y.md)>:[x](y.md) >日)\\url(\\/#~~~~~~[[a]]- \"😀tags:\n---\n- a﻿\"./b\"../src=\n\"./b\"\"mailto:\r\n `%20"
+  },
+  {
+   "name": "fuzzmd/17",
+   "path": "x.md",
+   "text": "---\ntag[a]x/ytags:\n\n\\mailto:[[a]]![[i.png]]-->/\r\n![[i.png]]../![a]日[x](y.md)\tbhttp://tags:\"./b\"\t>x/y😀[[a]]...]\n---\ntags:!'./a']]\r\n"
+  },
+  {
+   "name": "fuzzmd/18",
+   "path": "x.md",
+   "text": "#t./href= - 😀.md﻿`\n:<!--?\nfrom - "
+  },
+  {
+   "name": "fuzzmd/19",
+   "path": "x.md",
+   "text": "tag%%20)-->[a]#\nb^'./a'\"./b\"mailto:...\r\n~~~-->[x](y.md)\\|[x](y.md)href="
+  },
+  {
+   "name": "fuzzmd/20",
+   "path": "x.md",
+   "text": ">﻿![[i.png]]url(aimport #t@import )```@import ...---b![x](y.md)日url(]]?```"
+  },
+  {
+   "name": "fuzzmd/21",
+   "path": "x.md",
+   "text": "b]\nrequire(>-->src=|href=%20^\t\n]\n"
+  },
+  {
+   "name": "fuzzmd/22",
+   "path": "x.md",
+   "text": "#|.md[[-->%20\n[a]&nbsp;[[...~~~%```src=\"|\"[[a]]-->[x](y.md) ``` :b[[a]].mdé-->'./a'\nrequire(...[x](y.md)"
+  },
+  {
+   "name": "fuzzmd/23",
+   "path": "x.md",
+   "text": "``href=mailto:./&nbsp;/\\from \n```].md\"tag[x](y.md))\n]http://"
+  },
+  {
+   "name": "fuzzmd/24",
+   "path": "x.md",
+   "text": "|'\n😀(.md```\nx/y>src=../: \r\n/^import from (url(é---mailto:[\"from <!--http://[x](y.md).md"
+  },
+  {
+   "name": "fuzzmd/25",
+   "path": "x.md",
+   "text": "a@import url(aliases:#thref=?taghref="
+  },
+  {
+   "name": "fuzzmd/26",
+   "path": "x.md",
+   "text": "-->日!a[a]href='...日:é`]]].md😀#😀?-->\"./b\"!from href=[./...\"  [[a]]"
+  },
+  {
+   "name": "fuzzmd/27",
+   "path": "x.md",
+   "text": "---\n@import /<﻿\t%20 é\\.md<!--[x](y.md)import %20\"#http://%\n[x](y.md)'./a'---url([x](y.md)[x](y.md)href=[[a]]./\"%20'#>[[|#t'./a'![[i.png]]\n---\n`- - ﻿^url('/"
+  },
+  {
+   "name": "fuzzmd/28",
+   "path": "x.md",
+   "text": "---\n]\t\n---\n:\r\n%20|"
+  },
+  {
+   "name": "fuzzmd/29",
+   "path": "x.md",
+   "text": "\n../```>\n'./a'\n(日mailto:href=|tags:-->`- ```aliases:- /\t./ ])-->'./a']]aliases:|!'./a'require(from %20x/y )[tags:"
+  },
+  {
+   "name": "fuzzmd/30",
+   "path": "x.md",
+   "text": "[)%'![[i.png]]^- ~~~^%\\tag```[[![[i.png]]</'|"
+  },
+  {
+   "name": "fuzzmd/31",
+   "path": "x.md",
+   "text": "![[i.png]]require(... require(...url([a]|x/y\"./b\"'./a'@import  ﻿...aliases:\n[?x/y import ?\"./b\"href=src=tagrequire('./a'mailto:'tags:("
+  },
+  {
+   "name": "fuzzmd/32",
+   "path": "x.md",
+   "text": "]require(é]\thttp://mailto:%src=url(- src=% url(./- from ~~~%#t~~~'./a'src=url(>#t@import - aliases:a\n\\bimport @import ﻿bimport http://"
+  },
+  {
+   "name": "fuzzmd/33",
+   "path": "x.md",
+   "text": "![[i.png]]éhttp://😀]]![[i.png]]):url(`~~~]]- \r\n😀![[i.png]]b\r\n<\t![[i.png]]%20\"./b\"`[aliases:]é﻿\n|]]<!--![[i.png]]\t[[\t"
+  },
+  {
+   "name": "fuzzmd/34",
+   "path": "x.md",
+   "text": ":'\r\na<!--é[x](y.md)&nbsp;src=/<\"- %20- [a]x/y%20':src=%20[x](y.md)mailto:: [[![[i.png]]href=- x/y.mdx/y&nbsp;[[\n:"
+  },
+  {
+   "name": "fuzzmd/35",
+   "path": "x.md",
+   "text": "[[<url(.mdx/ymailto:[x](y.md)[]]- ~~~日(- "
+  },
+  {
+   "name": "fuzzmd/36",
+   "path": "x.md",
+   "text": "!src=b\nurl(^mailto:\n"
+  },
+  {
+   "name": "fuzzmd/37",
+   "path": "x.md",
+   "text": "!.././]:!from ...x/y日src=.md)-->url(# \\aliases:日```tag ']\r\n---mailto:```[a]!\naliases:...require("
+  },
+  {
+   "name": "fuzzmd/38",
+   "path": "x.md",
+   "text": "日[[--> !|\n﻿from tags:\t../"
+  },
+  {
+   "name": "fuzzmd/39",
+   "path": "x.md",
+   "text": "~~~[[>\ntags: é...>\\"
+  },
+  {
+   "name": "fuzzmd/40",
+   "path": "x.md",
+   "text": "<!-->x/y'./a':import (<!--require(﻿aliases:x/y---)..."
+  },
+  {
+   "name": "fuzzmd/41",
+   "path": "x.md",
+   "text": "\nfrom 'mailto:--->b.md!😀...%20%20url(![[i.png]]url(```😀\\|aliases:```[x](y.md)[~~~"
+  },
+  {
+   "name": "fuzzmd/42",
+   "path": "x.md",
+   "text": "---\ntags:%20-->require(\\)\na...a[x](y.md) ```érequire(src=[[\n---\n"
+  },
+  {
+   "name": "fuzzmd/43",
+   "path": "x.md",
+   "text": "(tag'./a'[[tag[[a]]😀"
+  },
+  {
+   "name": "fuzzmd/44",
+   "path": "x.md",
+   "text": "---\nmailto:mailto:?\\日日from ﻿\t#t../[x](y.md)\n---\n../url(require(\r\n!]]?import url(>href=/ "
+  },
+  {
+   "name": "fuzzmd/45",
+   "path": "x.md",
+   "text": "[a]```'\"'./a'...tag#t !日url(\n>"
+  },
+  {
+   "name": "fuzzmd/46",
+   "path": "x.md",
+   "text": "')'./a'([x](y.md)é\\ ![[i.png]]'.md\\"
+  },
+  {
+   "name": "fuzzmd/47",
+   "path": "x.md",
+   "text": "---\n/http:// ]![[i.png]]|#&nbsp;tag\r\n../)src=<!--x/y@import |\n---\n\"./b\"http://?|\r\n]]from '"
+  },
+  {
+   "name": "fuzzmd/48",
+   "path": "x.md",
+   "text": "---\n#t\t\nrequire(../!b|from ^ [\n---\nhref='./a'<!--```[[!"
+  },
+  {
+   "name": "fuzzmd/49",
+   "path": "x.md",
+   "text": "[] ]../?---[[aliases:/```#tx/y"
+  },
+  {
+   "name": "fuzzmd/50",
+   "path": "x.md",
+   "text": "\" './a'(/```%20%|\"%20b[[a---.md"
+  },
+  {
+   "name": "fuzzmd/51",
+   "path": "x.md",
+   "text": "<!--<:...%```- &nbsp;x/y:\"#t./[[<\\日[a]../"
+  },
+  {
+   "name": "fuzzmd/52",
+   "path": "x.md",
+   "text": ")日>href=\ntags:./require(require(`x/y\\...^src=<\n\t] "
+  },
+  {
+   "name": "fuzzmd/53",
+   "path": "x.md",
+   "text": "[a]\n'./a'.md```-->-->日'./a'\n%http://href=\r\n[[)[[~~~:../#\"./b\"':%!(]~~~#t~~~"
+  },
+  {
+   "name": "fuzzmd/54",
+   "path": "x.md",
+   "text": "require(]]b---.md'</mailto:~~~x/yé.md>b][[```url(src=[[[\\<!--!%20/~~~atag<require(/﻿~~~mailto:\n"
+  },
+  {
+   "name": "fuzzmd/55",
+   "path": "x.md",
+   "text": "''.md&nbsp;\"./b\"~~~&nbsp;[x](y.md)😀#url()require(url(%20import #![[i.png]]mailto:---@import ./éfrom %20"
+  },
+  {
+   "name": "fuzzmd/56",
+   "path": "x.md",
+   "text": "%---]/...#t'./a'(\n)#"
+  },
+  {
+   "name": "fuzzmd/57",
+   "path": "x.md",
+   "text": "?x/y "
+  },
+  {
+   "name": "fuzzmd/58",
+   "path": "x.md",
+   "text": "<'./a' ```from ./%[[:mailto:#'\"\t&nbsp;@import [(日import \"require(`"
+  },
+  {
+   "name": "fuzzmd/59",
+   "path": "x.md",
+   "text": "---\nabé\n---x/y]<!--|mailto:[x](y.md)\r\n...^%\n-->\r\n|\"|tag- #]]&nbsp;[x](y.md) |from ^\r\n %\n---\n-->﻿/src=\"<!--[[[["
+  },
+  {
+   "name": "fuzzmd/60",
+   "path": "x.md",
+   "text": "`import require(from url(/from [[?][ aliases:\"\">tags:../-->|~~~-->éx/y\n?http://&nbsp;http://../\r\nsrc='./a'#t<[x](y.md)< ```"
+  },
+  {
+   "name": "fuzzmd/61",
+   "path": "x.md",
+   "text": "---\n<import ![[i.png]]@import mailto:\t[﻿- from .md<]]bhttp://]../(require(日[x](y.md)%'./a'mailto:[[a]][x](y.md)mailto:[[http://x/y./\n---\n"
+  },
+  {
+   "name": "fuzzmd/62",
+   "path": "x.md",
+   "text": "x/y\r\n/tag-->#t...[|```%import ---"
+  },
+  {
+   "name": "fuzzmd/63",
+   "path": "x.md",
+   "text": "/.md![[i.png]](from import -->!:"
+  },
+  {
+   "name": "fuzzmd/64",
+   "path": "x.md",
+   "text": "---\nsrc=![[i.png]]\tmailto:'require(url(%20﻿mailto:\n---\n[[a]]]http://?é😀\"from |<`x/ya-->./"
+  },
+  {
+   "name": "fuzzmd/65",
+   "path": "x.md",
+   "text": "'.md!```?@import -->\ntag\\---é&nbsp;\turl(-->./ url(\"./b\"]require(![[i.png]]x/y\\\r\nfrom ./\"./b\"\n/- from ( "
+  },
+  {
+   "name": "fuzzmd/66",
+   "path": "x.md",
+   "text": "---\n\"'./a'-->\"mailto:\n日%20!]]&nbsp;[[.md]]^-->a[x](y.md)x/yéfrom \r\n ]]src=[[[a]]ax/y%---url(\"-->\n---\n|`mailto:'./a'``.md[[a]]tag"
+  },
+  {
+   "name": "fuzzmd/67",
+   "path": "x.md",
+   "text": "---\n%\t\"!\n<- tag\"tags:href=tags:/x/y@import />]\n<!--%%20'%import './a'./\n---\n[['./a'url(\n日<!--``` ![[i.png]]"
+  },
+  {
+   "name": "fuzzmd/68",
+   "path": "x.md",
+   "text": "[a](import ﻿#t>>﻿src=href=)b%aliases:[x](y.md)\r\n\r\n?url(from from ...\ntag\"\"```)|from !![[i.png]]src=b😀[[a]]...[[]"
+  },
+  {
+   "name": "fuzzmd/69",
+   "path": "x.md",
+   "text": "---\n x/yé\n```~~~x/y:\".md~~~-->)%20-->) <!--(./%...%20%20\"./b\"|![[i.png]]é&nbsp;(x/y%20<aliases:]\t['./a'---\n---\nhref=```%src=!' ]\t\"./b\""
+  },
+  {
+   "name": "fuzzmd/70",
+   "path": "x.md",
+   "text": "\"./b\"\t@import 日...../&nbsp;日^`[require(---😀|日[: tags:aliases:"
+  },
+  {
+   "name": "fuzzmd/71",
+   "path": "x.md",
+   "text": ">mailto:---^ %[[./ ("
+  },
+  {
+   "name": "fuzzmd/72",
+   "path": "x.md",
+   "text": "日﻿url(a#%20"
+  },
+  {
+   "name": "fuzzmd/73",
+   "path": "x.md",
+   "text": "-->x/yurl(--><./日:!!-->\t]]...- - ../"
+  },
+  {
+   "name": "fuzzmd/74",
+   "path": "x.md",
+   "text": "]]\ntags: mailto:?http://\n]from ...![[i.png]]#t---aliases:import 😀?😀﻿(日[x](y.md)./^!\t\nx/y---import http://[[a]]"
+  }
+ ]
+}
