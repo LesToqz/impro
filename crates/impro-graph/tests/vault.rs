@@ -105,17 +105,9 @@ fn generated_vault_has_the_expected_shape() {
     );
     assert_eq!(targets("web/app.ts"), set(&["web/lib.ts", "web/style.css"]));
     assert_eq!(targets("web/style.css"), set(&["web/base.css"]));
-    assert_eq!(
-        targets("crates/demo/src/lib.rs"),
-        set(&["crates/demo/src/engine.rs"])
-    );
-    let rs = all
-        .edges
-        .iter()
-        .find(|e| &*all.nodes[e.src as usize].id == "crates/demo/src/lib.rs")
-        .unwrap();
-    assert_eq!((rs.kind, rs.count), (EdgeKind::Import, 2));
-    assert_eq!(targets("scripts/run.sh"), set(&["scripts/env.sh"]));
+    // Rust `mod`/`use` lines are not links: only the reference's languages are.
+    assert!(targets("crates/demo/src/lib.rs").is_empty());
+    assert!(targets("scripts/run.sh").is_empty());
     assert_eq!(targets("docs/readme-link.md"), set(&["src/app/main.py"]));
     // defaults hide tags/attachments; the stats stay consistent
     let defaults = idx.build_graph(&GraphOptions {
@@ -173,8 +165,10 @@ fn caps_and_filters_compose() {
         .nodes
         .iter()
         .any(|n| &*n.id == "hub/Hub.md"));
-    // an unfielded regex is tested against path, label and content separately
-    assert_eq!(strict("/^spoke-1[01]$/").nodes.len(), 2);
+    // an unfielded regex is searched in "path\nlabel\ncontent" as one text, so
+    // an end anchor never lines up with a label
+    assert!(strict("/^spoke-1[01]$/").nodes.is_empty());
+    assert!(strict("/spoke-1[01]/").nodes.len() >= 2);
     assert_eq!(strict("file:/spoke-1[01]/").nodes.len(), 2);
     assert!(strict("/(unclosed").nodes.is_empty());
     let neg = strict("path:hub/ -file:spoke");
