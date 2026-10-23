@@ -55,6 +55,22 @@ for phase in "$@"; do
     layout)
       run layout-app     $BIN/f_layout app
       run layout-dense   $BIN/f_layout dense ;;
+    gui-x) # GTK toplevel on a virtual X server (GLX, llvmpipe); never the user's session
+      unset WAYLAND_DISPLAY DISPLAY; export GDK_BACKEND=x11 T=150
+      for size in 1920x1080 3840x2160; do
+        for mode in gl blit cairo current; do
+          [ "$size" = 3840x2160 ] && [ "$mode" = cairo ] && continue
+          PROBE_MODE=$mode PROBE_SIZE=$size run probe-x-$mode-$size \
+            xvfb-run -a -s '-screen 0 3840x2160x24' dbus-run-session -- $BIN/glarea_probe
+        done
+      done ;;
+    gui-wl) # GTK toplevel on the private headless Wayland compositor
+      unset WAYLAND_DISPLAY DISPLAY; export T=150
+      WL="$(git rev-parse --show-toplevel)/.ceo/scratch/run-wl.sh"   # copy of run-wl.sh from the graph-click QA archive
+      for mode in gl blit cairo current; do
+        PROBE_MODE=$mode PROBE_SIZE=1600x900 run probe-wl-$mode \
+          dbus-run-session -- bash "$WL" $BIN/glarea_probe
+      done ;;
     *) echo "unknown phase $phase" >&2; exit 2 ;;
   esac
 done
