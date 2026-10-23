@@ -162,8 +162,8 @@ fn main() {
         t.elapsed().as_secs_f64() * 1e3
     );
     println!("\n| engine | ticks | ms/tick p50 | p95 | settle total ms | deterministic | quality |\n|---|---:|---:|---:|---:|---|---|");
-    type Run = Box<dyn Fn() -> Outcome>;
-    let runs: Vec<Run> = vec![
+    type Run<'a> = Box<dyn Fn() -> Outcome + 'a>;
+    let runs: Vec<Run<'_>> = vec![
         Box::new(|| app(&fx, &edges)),
         Box::new(|| fjadra_run(&fx, &edges)),
         Box::new(|| force_graph_run(&fx, &edges, 30)),

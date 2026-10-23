@@ -128,11 +128,11 @@ fn pipeline(device: &wgpu::Device, module: &wgpu::ShaderModule, layout: &wgpu::P
             module,
             entry_point: Some(vs),
             compilation_options: Default::default(),
-            buffers: &[wgpu::VertexBufferLayout {
+            buffers: &[Some(wgpu::VertexBufferLayout {
                 array_stride: 16,
                 step_mode: wgpu::VertexStepMode::Instance,
                 attributes: &wgpu::vertex_attr_array![0 => Float32x4],
-            }],
+            })],
         },
         fragment: Some(wgpu::FragmentState {
             module,
@@ -210,7 +210,7 @@ fn main() {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
-            bind_group_layouts: &[&bgl],
+            bind_group_layouts: &[Some(&bgl)],
             immediate_size: 0,
         });
         let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {

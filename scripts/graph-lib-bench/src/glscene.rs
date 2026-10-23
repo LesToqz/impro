@@ -78,11 +78,6 @@ struct Pipe {
     vao: glow::VertexArray,
 }
 
-struct Pipe {
-    prog: glow::Program,
-    vao: glow::VertexArray,
-}
-
 /// Vertex array with the shared corner buffer on attribute 0 and a static
 /// per-instance buffer on attribute 1 (and 2 for the label buffer).
 unsafe fn pipe(

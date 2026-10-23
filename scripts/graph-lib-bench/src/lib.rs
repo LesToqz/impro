@@ -10,3 +10,7 @@ pub mod labels;
 pub mod egl;
 #[cfg(feature = "glscene")]
 pub mod glscene;
+#[cfg(feature = "labels")]
+pub mod cairo_scene;
+#[cfg(feature = "cur")]
+pub mod cur_scene;

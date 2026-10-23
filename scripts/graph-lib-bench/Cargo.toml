@@ -20,7 +20,7 @@ gl = ["glscene", "dep:khronos-egl"]
 vg = ["gl", "dep:femtovg"]
 wgpu = ["dep:wgpu", "dep:pollster", "dep:bytemuck"]
 layout = ["dep:petgraph", "dep:fjadra", "dep:force_graph", "dep:impro-graph"]
-glarea = ["dep:gtk", "dep:gdk", "dep:glib", "dep:libloading", "glscene"]
+glarea = ["dep:gtk", "dep:gdk", "dep:glib", "dep:libloading", "glscene", "cur"]
 
 [dependencies]
 impro-graph = { path = "../../crates/impro-graph", optional = true }

@@ -5,12 +5,12 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use graph_lib_bench::cur_scene::build_scene;
 use graph_lib_bench::fixture::{self, Fixture};
 use graph_lib_bench::harness::{header, sweep, Cam, LabelDraw, Opts, Renderer};
 use impro_graph::geometry::Camera;
 use impro_graph::view::draw::{PaintOptions, Painter};
-use impro_graph::view::scene::{Built, Scene};
-use impro_graph::Graph;
+use impro_graph::view::scene::Scene;
 
 struct Cur {
     scene: Rc<RefCell<Scene>>,
@@ -46,23 +46,6 @@ impl Renderer for Cur {
             s.nodes, s.lines, s.arrows, s.labels
         )
     }
-}
-
-fn build_scene(fx: &Fixture) -> Scene {
-    let pairs: Vec<(u32, u32)> = fx.edges.clone();
-    let mut scene = Scene::new();
-    scene.set_size(1920.0, 1080.0);
-    scene.apply(Built::global(Graph::from_pairs(fx.x.len(), &pairs)));
-    scene.layout.settle(600);
-    for i in 0..fx.x.len() {
-        scene.layout.set_position(i, fx.x[i], fx.y[i]);
-    }
-    for _ in 0..600 {
-        if !scene.advance(1.0 / 60.0) {
-            break;
-        }
-    }
-    scene
 }
 
 fn main() {

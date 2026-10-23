@@ -28,10 +28,11 @@ impl Cam {
 
 pub const FRAMES: usize = 60;
 
-/// Frame `k` of a constant-velocity pan at zoom 1 (25 logical px per frame).
+/// Frame `k` of a constant-velocity pan at zoom 1 (25 logical px per frame):
+/// the view centre goes from world x = -750 to +750, across the disc.
 pub fn pan_cam(k: usize, w: f64, h: f64) -> Cam {
     Cam {
-        x: w / 2.0 - 25.0 * k as f64,
+        x: w / 2.0 + 750.0 - 25.0 * k as f64,
         y: h / 2.0,
         zoom: 1.0,
     }
