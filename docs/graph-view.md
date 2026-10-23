@@ -188,6 +188,11 @@ filters, forces, groups and traversal; saves debounce for 250 ms, normalize valu
 and merge through core's atomic settings store. Camera pan and the layout itself
 are not a persisted editor session.
 
+Saved zoom is restored within the supported bounds and survives graph rebuilds.
+After the initial nonempty layout settles, a restored zoom that leaves every
+marker off-screen is replaced by a fit of the graph. Visible saved zooms stay
+unchanged. Pointer or camera-key input cancels this one-time startup recovery.
+
 Replay reveals files in creation-time order, using stable index order for missing
 timestamps, then each file's outgoing references. It is a visualization of indexed
 file timestamps and links, not a replay of Git commits. The replay button restarts

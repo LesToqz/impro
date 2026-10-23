@@ -48,6 +48,34 @@ fn the_canvas_is_labelled_and_reports_a_status_before_data_arrives() {
 }
 
 #[test]
+fn reopening_at_a_saved_zoom_extreme_keeps_markers_and_controls_visible() {
+    run(|| {
+        for zoom in [0.04, 6.0] {
+            let f = Fixture::with(
+                &[("a.md", "[[b]]\n"), ("b.md", "[[a]]\n")],
+                json!({"scale":zoom,"close":true,"linkDistance":480,"centerStrength":0,"repelStrength":24}),
+            );
+            assert!(
+                t::nodes_on_screen(&f.view) > 0,
+                "saved zoom {zoom}: {:?}",
+                t::info(&f.view)
+            );
+            assert!(f.view.panel().chip_visible());
+            if zoom == 0.04 {
+                assert_eq!(
+                    t::info(&f.view).zoom,
+                    zoom,
+                    "a visible saved zoom is retained"
+                );
+                f.view.rebuild();
+                f.wait_ready();
+                assert_eq!(t::info(&f.view).zoom, zoom, "rebuild retains zoom");
+            }
+        }
+    });
+}
+
+#[test]
 fn the_first_frame_is_the_status_text_and_costs_almost_nothing() {
     run(|| {
         let project = tempfile::tempdir().expect("dir");

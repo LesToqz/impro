@@ -298,6 +298,7 @@ impl Inner {
             let zoom = prefs.scale;
             scene.cam.cam.zoom = zoom;
             scene.cam.target_zoom = zoom;
+            scene.restore_camera = (zoom - 1.0).abs() > 1e-9;
         }
         self.panel.set_presets(self.preset_colors());
         let reduce = self.effective_reduce();

@@ -44,6 +44,7 @@ impl Inner {
         self.panel.close_popovers();
         self.canvas.grab_focus();
         self.pointer.set(Some((x, y)));
+        self.scene.borrow_mut().restore_camera = false;
         if button == 3 {
             if let Some((i, _)) = self.node_at(x, y) {
                 self.context_for(i, x, y);
@@ -271,7 +272,11 @@ impl Inner {
         if px == 0.0 {
             return;
         }
-        self.scene.borrow_mut().cam.wheel(x, y, px);
+        {
+            let mut scene = self.scene.borrow_mut();
+            scene.restore_camera = false;
+            scene.cam.wheel(x, y, px);
+        }
         self.kick();
     }
 
@@ -316,6 +321,7 @@ impl Inner {
                 handled = false;
             }
             if handled && down {
+                scene.restore_camera = false;
                 scene.cam.stop_tracking();
             }
         }
