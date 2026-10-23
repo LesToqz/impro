@@ -1,7 +1,7 @@
 # Parity results — 2026-10-23 (finalize)
 
-Two repeated runs cover 98 cases at 1× (44 scenes plus the seven live-note
-scenes, dark and light, minus none skipped) and 22 cases at 2×. At 1×, **94 are
+Two repeated runs cover 98 cases at 1× (forty-two scenes plus the seven live-note
+scenes, dark and light) and 22 cases at 2×. At 1×, **94 are
 pixel-identical**, two (`settings-about`) differ only by branding text, and two
 are native-graph structural comparisons whose structure is identical. At 2× all
 **22 are pixel-identical**. There are no capture errors and no skipped scenes.
