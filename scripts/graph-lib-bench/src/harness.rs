@@ -28,6 +28,32 @@ impl Cam {
 
 pub const FRAMES: usize = 60;
 
+/// Camera that fits the whole fixture into `w × h` with a 40 px margin.
+pub fn fit_cam(fx: &Fixture, w: f64, h: f64) -> Cam {
+    let (mut x0, mut y0, mut x1, mut y1) = (f32::MAX, f32::MAX, f32::MIN, f32::MIN);
+    for i in 0..fx.x.len() {
+        let r = fx.radius[i];
+        x0 = x0.min(fx.x[i] - r);
+        y0 = y0.min(fx.y[i] - r);
+        x1 = x1.max(fx.x[i] + r);
+        y1 = y1.max(fx.y[i] + r);
+    }
+    let zoom = ((w - 80.0) / (x1 - x0) as f64).min((h - 80.0) / (y1 - y0) as f64);
+    Cam {
+        x: w / 2.0 - zoom * ((x0 + x1) / 2.0) as f64,
+        y: h / 2.0 - zoom * ((y0 + y1) / 2.0) as f64,
+        zoom,
+    }
+}
+
+/// Frame `k` of a pan at the fit zoom: the whole graph drags 10 px per
+/// frame sideways (every node on screen all the time).
+pub fn pan_fit_cam(fx: &Fixture, k: usize, w: f64, h: f64) -> Cam {
+    let mut c = fit_cam(fx, w, h);
+    c.x += 10.0 * (k as f64 - FRAMES as f64 / 2.0);
+    c
+}
+
 /// Frame `k` of a constant-velocity pan at zoom 1 (25 logical px per frame):
 /// the view centre goes from world x = -750 to +750, across the disc.
 pub fn pan_cam(k: usize, w: f64, h: f64) -> Cam {
@@ -206,10 +232,13 @@ where
         let t = Instant::now();
         r.frame(fx, &first, &labels);
         let cold = t.elapsed().as_secs_f64() * 1e3;
-        for (name, path) in [
-            ("pan", pan_cam as fn(usize, f64, f64) -> Cam),
-            ("zoom-out", zoom_cam as fn(usize, f64, f64) -> Cam),
-        ] {
+        type Path<'a> = Box<dyn Fn(usize, f64, f64) -> Cam + 'a>;
+        let paths: [(&str, Path<'_>); 3] = [
+            ("pan", Box::new(pan_cam)),
+            ("pan-fit", Box::new(|k, w, h| pan_fit_cam(fx, k, w, h))),
+            ("zoom-out", Box::new(zoom_cam)),
+        ];
+        for (name, path) in paths {
             let mut ms = Vec::with_capacity(o.frames);
             let mut label_n = 0;
             for k in 0..o.frames {

@@ -50,7 +50,7 @@ fn fjadra_run(fx: &Fixture, edges: &[(u32, u32)]) -> Outcome {
     let mut ms = Vec::new();
     while !sim.is_finished() && ms.len() < 2000 {
         let t = Instant::now();
-        sim.step();
+        sim.tick(1);
         ms.push(t.elapsed().as_secs_f64() * 1e3);
     }
     let pos: Vec<[f64; 2]> = sim.positions().collect();

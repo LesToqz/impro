@@ -9,8 +9,8 @@ in [`RESULTS.md`](RESULTS.md); raw tables are in `results/`.
 
 | path | what |
 |---|---|
-| `src/fixture.rs` | deterministic 3000-node fixtures: `app` (2600 isolated notes on a phyllotaxis disc, 80 small clusters, one 50-spoke hub, ≈430 edges) and `dense` (3000 nodes, ≈8700 edges) |
-| `src/harness.rs` | camera paths (60-frame constant-velocity pan at zoom 1, 60-frame zoom-out 2 → 0.04), 300-label selection, timing table |
+| `src/fixture.rs` | deterministic 3000-node fixtures: `app` (2600 isolated notes on a phyllotaxis disc ≈60 world units apart as the app's layout settles them, 80 small clusters, one 50-spoke hub, 346 edges), `packed` (the same, 2.8× tighter) and `dense` (3000 nodes, ≈8700 edges) |
+| `src/harness.rs` | camera paths (60-frame constant-velocity `pan` at zoom 1, `pan-fit` at the fit-all zoom, 60-frame `zoom-out` 2 → 0.04), 300-label selection, timing table |
 | `src/labels.rs` | Pango label bitmaps, cached per (text, size) |
 | `src/glscene.rs`, `src/egl.rs` | instanced OpenGL scene and the surfaceless EGL context |
 | `src/bin/a_current.rs` | A: the real `impro_graph::view::draw::Painter` |

@@ -24,21 +24,25 @@ for phase in "$@"; do
       run a-plain        $BIN/a_current
       run a-labels       $BIN/a_current --labels
       run a-motion       $BIN/a_current --motion --labels
+      run a-packed       $BIN/a_current --fixture packed --res $SUBSET
       run a-dense        $BIN/a_current --fixture dense --res $SUBSET ;;
     b)
       run b-plain        $BIN/b_cairo
       run b-labels       $BIN/b_cairo --labels
+      run b-packed       $BIN/b_cairo --fixture packed --res $SUBSET
       run b-dense        $BIN/b_cairo --fixture dense --res $SUBSET ;;
     c)
       run c-plain        $BIN/c_skia
       run c-cached       $BIN/c_skia --cached
       run c-labels       $BIN/c_skia --labels
+      run c-packed       $BIN/c_skia --fixture packed --res $SUBSET
       run c-dense        $BIN/c_skia --fixture dense --res $SUBSET ;;
     d) # real VM GPU through the render node (default Mesa choice)
       export T=60  # the GPU is shared with the user's desktop: at most 60 s per run
       run d-hw           $BIN/d_gl
       run d-hw-readback  $BIN/d_gl --readback
       run d-hw-labels    $BIN/d_gl --labels --readback
+      run d-hw-packed    $BIN/d_gl --fixture packed --readback --res $SUBSET
       run d-hw-dense     $BIN/d_gl --fixture dense --readback --res $SUBSET ;;
     d-sw) # forced software rasteriser
       export LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe T=400

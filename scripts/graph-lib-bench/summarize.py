@@ -22,4 +22,4 @@ for path in sys.argv[1:]:
         def cell(k):
             v = d.get(k)
             return f"{v[0]}/{v[1]}/{v[3]}" if v else "-"
-        print(f"  {res:<14} cold {d['cold']:>7}  pan {cell('pan'):<20} zoom-out {cell('zoom-out'):<20} rss {d['rss']}")
+        print(f"  {res:<14} cold {d['cold']:>7}  pan {cell('pan'):<19} pan-fit {cell('pan-fit'):<19} zoom-out {cell('zoom-out'):<20} rss {d['rss']}")

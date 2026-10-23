@@ -22,7 +22,7 @@ use graph_lib_bench::cairo_scene::Plain;
 use graph_lib_bench::cur_scene::build_scene;
 use graph_lib_bench::fixture::{self, Fixture};
 use graph_lib_bench::glscene::GlScene;
-use graph_lib_bench::harness::{pan_cam, percentile, pick_labels, zoom_cam, Cam, LabelDraw, Renderer, FRAMES};
+use graph_lib_bench::harness::{pan_cam, pan_fit_cam, percentile, pick_labels, zoom_cam, Cam, LabelDraw, Renderer, FRAMES};
 use gtk::prelude::*;
 use impro_graph::geometry::Camera;
 use impro_graph::view::draw::{PaintOptions, Painter};
@@ -220,7 +220,7 @@ fn main() {
             }
             let (lw, lh) = (a.allocated_width() as f64, a.allocated_height() as f64);
             let k = st.frame;
-            st.cam = if k < FRAMES { pan_cam(k, lw, lh) } else { zoom_cam((k - FRAMES).min(FRAMES - 1), lw, lh) };
+            st.cam = if k < FRAMES { pan_fit_cam(&st.fx, k, lw, lh) } else { zoom_cam((k - FRAMES).min(FRAMES - 1), lw, lh) };
             if st.with_labels {
                 let cam = st.cam;
                 let mut labels = std::mem::take(&mut st.labels);

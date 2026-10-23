@@ -87,8 +87,10 @@ impl Builder {
 }
 
 /// 3000 nodes: 2600 isolated, 80 small clusters (stars, rings, chains),
-/// one 50-spoke hub. About 430 edges.
-pub fn app_like() -> Fixture {
+/// one 50-spoke hub. About 350 edges. `spread` scales every coordinate: the
+/// app's own layout settles isolated notes about 60 world units apart
+/// (`spread` 2.8); `spread` 1 packs them 21 apart, a harder case.
+pub fn app_like(spread: f32) -> Fixture {
     let mut b = Builder {
         x: Vec::new(),
         y: Vec::new(),
@@ -154,7 +156,8 @@ pub fn app_like() -> Fixture {
         }
     }
     debug_assert_eq!(b.x.len(), NODES);
-    b.finish("app")
+    b.x.iter_mut().chain(b.y.iter_mut()).for_each(|v| *v *= spread);
+    b.finish(if spread == 1.0 { "packed" } else { "app" })
 }
 
 /// Stress variant: 3000 nodes on one phyllotaxis disc, ~8000 edges between
@@ -192,6 +195,7 @@ pub fn dense() -> Fixture {
 pub fn by_name(name: &str) -> Fixture {
     match name {
         "dense" => dense(),
-        _ => app_like(),
+        "packed" => app_like(1.0),
+        _ => app_like(2.8),
     }
 }
