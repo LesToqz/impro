@@ -3,6 +3,9 @@
 //! in-memory preferences store.
 #![allow(dead_code)]
 
+pub mod bigproject;
+pub mod drive;
+
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -99,6 +102,22 @@ impl Fixture {
     }
 
     pub fn in_dir(project: tempfile::TempDir, prefs: Value, scan: bool) -> Fixture {
+        Fixture::in_dir_sized(project, prefs, scan, (900, 600))
+    }
+
+    /// The user's kind of project (3 000 files) in a window of `size` logical pixels.
+    pub fn big(size: (i32, i32)) -> Fixture {
+        let project = tempfile::tempdir().expect("tempdir");
+        bigproject::BigProject::default().write(project.path());
+        Fixture::in_dir_sized(project, json!({}), true, size)
+    }
+
+    pub fn in_dir_sized(
+        project: tempfile::TempDir,
+        prefs: Value,
+        scan: bool,
+        size: (i32, i32),
+    ) -> Fixture {
         let store = Arc::new(MemoryStore::new(prefs));
         let view = GraphView::with_options(
             project.path(),
@@ -131,7 +150,7 @@ impl Fixture {
             view.connect_updated(move |_| s.lock().expect("seen").updates += 1);
         }
         let window = gtk::Window::new(gtk::WindowType::Toplevel);
-        window.set_default_size(900, 600);
+        window.set_default_size(size.0, size.1);
         window.add(&*view);
         window.show_all();
         window.move_(0, 0);

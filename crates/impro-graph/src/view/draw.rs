@@ -311,6 +311,9 @@ pub struct Painter {
     group_clock: u64,
     back: Option<cairo::ImageSurface>,
     back_size: (i32, i32),
+    /// Tests: keep a copy of every frame as it stood before its labels.
+    pub capture: bool,
+    pub(super) unlabelled: Option<cairo::ImageSurface>,
     pub labels: LabelCache,
     pub stats: DrawStats,
 }
@@ -379,6 +382,8 @@ impl Painter {
             group_clock: 0,
             back: None,
             back_size: (0, 0),
+            capture: false,
+            unlabelled: None,
             labels: LabelCache::new(),
             stats: DrawStats::default(),
         }
@@ -511,6 +516,17 @@ impl Painter {
                 self.nodes(&mut canvas, scene, dev as f32);
                 lap(3, &mut self.stats);
             }
+        }
+        if self.capture {
+            self.unlabelled = cairo::ImageSurface::create(cairo::Format::ARgb32, pw, ph)
+                .ok()
+                .inspect(|copy| {
+                    if let Ok(cr) = cairo::Context::new(copy) {
+                        cr.set_operator(cairo::Operator::Source);
+                        let _ = cr.set_source_surface(&back, 0.0, 0.0);
+                        let _ = cr.paint();
+                    }
+                });
         }
         if !scene.is_empty() {
             if let Ok(cr) = cairo::Context::new(&back) {

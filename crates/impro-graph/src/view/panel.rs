@@ -1154,6 +1154,21 @@ impl Panel {
         self.parts.chip.is_visible()
     }
 
+    /// The root of the controls (strip or panel), as placed on the canvas.
+    pub fn controls_root(&self) -> &gtk::Box {
+        &self.root
+    }
+
+    /// The three buttons of the closed strip, top to bottom.
+    pub fn chip_buttons(&self) -> Vec<gtk::Widget> {
+        self.parts.chip.children()
+    }
+
+    /// The strip itself.
+    pub fn chip(&self) -> &gtk::Box {
+        &self.parts.chip
+    }
+
     /// Title text of a section header.
     pub fn section_title(&self, id: &str) -> Option<String> {
         SECTIONS.iter().find(|s| s.0 == id).map(|s| s.2.to_string())

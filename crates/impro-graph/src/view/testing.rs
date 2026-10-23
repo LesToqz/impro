@@ -27,7 +27,11 @@ pub struct SceneInfo {
 }
 
 pub fn info(view: &GraphView) -> SceneInfo {
-    let s = view.inner.scene.borrow();
+    scene_info(&view.inner)
+}
+
+fn scene_info(inner: &super::widget::Inner) -> SceneInfo {
+    let s = inner.scene.borrow();
     SceneInfo {
         zoom: s.cam.cam.zoom,
         target_zoom: s.cam.target_zoom,
@@ -427,4 +431,219 @@ pub fn frame_reasons(view: &GraphView) -> Vec<&'static str> {
 /// Number of cached label bitmaps.
 pub fn label_cache_len(view: &GraphView) -> usize {
     view.inner.painter.borrow().labels.len()
+}
+
+/// A frame the canvas has just painted, for [`set_probe`] callbacks.
+pub struct FrameShot<'a> {
+    inner: &'a super::widget::Inner,
+}
+
+/// How a painted frame differs from a fresh redraw of the same scene.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct FrameCheck {
+    /// The frame was drawn in the cheaper moving level of detail.
+    pub motion: bool,
+    /// Pixels (before labels) that differ from the fresh redraw.
+    pub differing: usize,
+    /// Bounding box `[x0, y0, x1, y1]` of the differing pixels, device pixels.
+    pub bbox: Option<[i32; 4]>,
+    /// The connection layer was reused from an earlier frame.
+    pub reused: bool,
+    /// Bytes that differ between two fresh redraws of the same scene.
+    pub noise: usize,
+}
+
+impl FrameShot<'_> {
+    pub fn info(&self) -> SceneInfo {
+        scene_info(self.inner)
+    }
+
+    pub fn stats(&self) -> super::draw::DrawStats {
+        self.inner.painter.borrow().stats
+    }
+
+    /// True while the scene's geometry changes between frames.
+    pub fn moving(&self) -> bool {
+        self.inner.scene.borrow().moving()
+    }
+
+    /// Redraws the scene with a fresh painter (no caches, no history) and
+    /// compares the result with what this frame painted, ignoring labels.
+    /// `None` unless the view was told to capture frames ([`capture_frames`]).
+    pub fn compare_fresh(&self) -> Option<FrameCheck> {
+        let scene = self.inner.scene.borrow();
+        let mut painter = self.inner.painter.borrow_mut();
+        let shown = painter.unlabelled.take()?;
+        let (w, h) = (
+            self.inner.canvas.allocated_width() as f64,
+            self.inner.canvas.allocated_height() as f64,
+        );
+        let mut fresh = super::draw::Painter::new();
+        fresh.threads = painter.threads;
+        fresh.motion = painter.motion;
+        fresh.capture = true;
+        fresh.render(
+            &scene,
+            w,
+            h,
+            super::draw::PaintOptions {
+                hide_labels: true,
+                scale: self.inner.canvas.scale_factor() as f64,
+            },
+        )?;
+        let mut other = fresh.unlabelled.take()?;
+        let mut again = super::draw::Painter::new();
+        again.threads = painter.threads;
+        again.motion = painter.motion;
+        again.capture = true;
+        again.render(
+            &scene,
+            w,
+            h,
+            super::draw::PaintOptions {
+                hide_labels: true,
+                scale: self.inner.canvas.scale_factor() as f64,
+            },
+        )?;
+        let mut again = again.unlabelled.take()?;
+        let noise = {
+            let (a, b) = (other.data().ok()?, again.data().ok()?);
+            a.iter().zip(b.iter()).filter(|(x, y)| x != y).count()
+        };
+        let mut shown = shown;
+        let (width, height, stride) = (
+            shown.width() as usize,
+            shown.height() as usize,
+            shown.stride() as usize,
+        );
+        let a = shown.data().ok()?;
+        let b = other.data().ok()?;
+        let mut check = FrameCheck {
+            noise,
+            motion: painter.motion,
+            reused: painter.stats.connections_reused,
+            ..FrameCheck::default()
+        };
+        for y in 0..height {
+            for x in 0..width {
+                let i = y * stride + x * 4;
+                if a[i..i + 4] != b[i..i + 4] {
+                    check.differing += 1;
+                    let (x, y) = (x as i32, y as i32);
+                    let bb = check.bbox.get_or_insert([x, y, x, y]);
+                    *bb = [bb[0].min(x), bb[1].min(y), bb[2].max(x), bb[3].max(y)];
+                }
+            }
+        }
+        Some(check)
+    }
+}
+
+/// Keeps a copy of every painted frame as it stood before its labels, so
+/// probes can call [`FrameShot::compare_fresh`].
+pub fn capture_frames(view: &GraphView, on: bool) {
+    view.inner.painter.borrow_mut().capture = on;
+}
+
+/// Calls `f` after every frame the canvas paints (replaces an earlier probe).
+pub fn set_probe(view: &GraphView, f: impl Fn(&FrameShot) + 'static) {
+    *view.inner.probe.borrow_mut() = Some(std::rc::Rc::new(move |inner| f(&FrameShot { inner })));
+}
+
+/// Removes the probe.
+pub fn clear_probe(view: &GraphView) {
+    *view.inner.probe.borrow_mut() = None;
+}
+
+/// A widget rectangle in logical pixels relative to the view's top-left corner.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Rect {
+    pub x: f64,
+    pub y: f64,
+    pub w: f64,
+    pub h: f64,
+}
+
+impl Rect {
+    pub fn centre(&self) -> (f64, f64) {
+        (self.x + self.w / 2.0, self.y + self.h / 2.0)
+    }
+
+    pub fn right(&self) -> f64 {
+        self.x + self.w
+    }
+}
+
+/// Where the controls ended up.
+#[derive(Clone, Debug, Default)]
+pub struct ControlsGeometry {
+    /// The pane the view fills.
+    pub pane: Option<Rect>,
+    /// The closed strip and its buttons (empty while the panel is open).
+    pub chip: Option<Rect>,
+    pub chip_buttons: Vec<Rect>,
+    /// The open panel's frame and its header buttons.
+    pub panel: Option<Rect>,
+    pub head_buttons: Vec<Rect>,
+}
+
+fn rect_in(widget: &impl IsA<gtk::Widget>, parent: &gtk::Widget) -> Option<Rect> {
+    let w: &gtk::Widget = widget.upcast_ref();
+    if !w.is_visible() || !w.is_mapped() {
+        return None;
+    }
+    let (x, y) = w.translate_coordinates(parent, 0, 0)?;
+    let a = w.allocation();
+    Some(Rect {
+        x: x as f64,
+        y: y as f64,
+        w: a.width() as f64,
+        h: a.height() as f64,
+    })
+}
+
+/// Allocations of the controls strip, the panel and their buttons.
+pub fn controls_geometry(view: &GraphView) -> ControlsGeometry {
+    let root: gtk::Widget = view.inner.root_box.clone().upcast();
+    let panel = &view.inner.panel;
+    let mut g = ControlsGeometry {
+        pane: rect_in(&view.inner.root_box, &root),
+        ..ControlsGeometry::default()
+    };
+    if panel.chip_visible() {
+        g.chip = rect_in(panel.chip(), &root);
+        g.chip_buttons = panel
+            .chip_buttons()
+            .iter()
+            .filter_map(|b| rect_in(b, &root))
+            .collect();
+    }
+    if panel.is_open() {
+        g.panel = rect_in(panel.controls_root(), &root);
+        g.head_buttons = [panel.close_button(), panel.reset_button()]
+            .iter()
+            .filter_map(|b| rect_in(*b, &root))
+            .collect();
+    }
+    g
+}
+
+/// The view painted as it appears on screen (panel and strip included), as
+/// premultiplied ARGB32 rows: `(width, height, stride, bytes)` in device pixels.
+pub fn snapshot(view: &GraphView) -> Option<(i32, i32, i32, Vec<u8>)> {
+    let scale = view.scale_factor();
+    let (w, h) = (
+        view.allocated_width().max(1) * scale,
+        view.allocated_height().max(1) * scale,
+    );
+    let mut surface = cairo::ImageSurface::create(cairo::Format::ARgb32, w, h).ok()?;
+    surface.set_device_scale(scale as f64, scale as f64);
+    {
+        let cr = cairo::Context::new(&surface).ok()?;
+        view.draw(&cr);
+    }
+    surface.flush();
+    let stride = surface.stride();
+    let data = surface.data().ok()?.to_vec();
+    Some((w, h, stride, data))
 }

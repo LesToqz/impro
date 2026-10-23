@@ -141,6 +141,7 @@ pub(super) fn create(root: &Path, options: ViewOptions) -> GraphView {
             handlers: Handlers::default(),
             closed: Cell::new(false),
             stats: Cell::new(FrameStats::default()),
+            probe: RefCell::new(None),
             me: RefCell::new(me.clone()),
         }
     });

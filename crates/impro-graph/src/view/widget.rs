@@ -166,6 +166,8 @@ pub(super) struct Inner {
     pub handlers: Handlers,
     pub closed: Cell<bool>,
     pub stats: Cell<FrameStats>,
+    /// Tests: called after every painted frame.
+    pub probe: RefCell<Option<Rc<dyn Fn(&Inner)>>>,
     pub me: RefCell<Weak<Inner>>,
 }
 
