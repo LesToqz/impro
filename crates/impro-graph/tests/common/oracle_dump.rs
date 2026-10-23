@@ -150,6 +150,8 @@ fn code_class(kind: CodeKind) -> String {
         CodeKind::Script => "script".into(),
         CodeKind::Style => "style".into(),
         CodeKind::Html => "html".into(),
+        #[allow(unreachable_patterns)]
+        other => format!("{other:?}").to_lowercase(),
     }
 }
 
