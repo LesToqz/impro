@@ -319,11 +319,16 @@ fn test_real_divider_drag_and_height_remembered_across_collapse_and_hide() {
         let before = f.notes.split.position();
         let handle = f.notes.split.handle_window().unwrap();
         let origin = handle.origin();
-        let (x, y) = (origin.1 + handle.width() / 2, origin.2 + 3);
+        // XTest moves the pointer in device pixels, GDK reports logical ones
+        let scale = f.window.scale_factor();
+        let (x, y) = (
+            (origin.1 + handle.width() / 2) * scale,
+            (origin.2 + 3) * scale,
+        );
         xtest.motion(x, y);
         xtest.button(1, true);
         pump(80);
-        xtest.motion(x, y - 65);
+        xtest.motion(x, y - 65 * scale);
         pump(80);
         xtest.button(1, false);
         pump(80);
