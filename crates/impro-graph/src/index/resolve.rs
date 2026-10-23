@@ -17,12 +17,9 @@ pub struct Lookup {
     pub by_alias: HashMap<Box<str>, Vec<FileId>>,
 }
 
+/// Case-insensitive key of a path or name (the full case fold).
 pub fn lower(s: &str) -> String {
-    if s.is_ascii() {
-        s.to_ascii_lowercase()
-    } else {
-        s.to_lowercase()
-    }
+    crate::parse::text::casefold(s)
 }
 
 /// Appends `rel` to `base` resolving `.` and `..`; false if it leaves the root
