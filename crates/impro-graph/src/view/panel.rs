@@ -711,6 +711,9 @@ impl Panel {
                             r.hide();
                             Self::set_row_visible(&p.parts.chip, true);
                             p.root.queue_resize();
+                            if let Some(parent) = p.root.parent() {
+                                parent.queue_resize();
+                            }
                         }
                     });
                 }
