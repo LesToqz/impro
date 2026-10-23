@@ -6,7 +6,6 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
-use std::time::UNIX_EPOCH;
 
 use super::entry::{kind_of, parse_entry, FileEntry, FileKind, Resolved};
 use super::resolve::{Lookup, Resolver};
@@ -155,13 +154,17 @@ pub fn ctime_of(path: &Path) -> Option<f64> {
 }
 
 fn times(m: &fs::Metadata) -> Option<f64> {
-    let secs = |t: std::time::SystemTime| {
-        t.duration_since(UNIX_EPOCH)
-            .map(|d| d.as_secs_f64())
-            .unwrap_or(0.0)
-    };
-    if let Ok(created) = m.created() {
-        return Some(secs(created));
+    #[cfg(any(target_os = "macos", target_os = "ios", target_os = "freebsd"))]
+    {
+        use std::time::UNIX_EPOCH;
+        if let Ok(created) = m.created() {
+            return Some(
+                created
+                    .duration_since(UNIX_EPOCH)
+                    .map(|d| d.as_secs_f64())
+                    .unwrap_or(0.0),
+            );
+        }
     }
     #[cfg(unix)]
     {
@@ -172,7 +175,12 @@ fn times(m: &fs::Metadata) -> Option<f64> {
     }
     #[cfg(not(unix))]
     {
-        m.modified().ok().map(secs)
+        let secs = |t: std::time::SystemTime| {
+            t.duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs_f64())
+                .unwrap_or(0.0)
+        };
+        m.created().or_else(|_| m.modified()).ok().map(secs)
     }
 }
 
@@ -199,12 +207,11 @@ fn read_checked(
     }
     let ctime = times(&meta);
     let path: Arc<str> = Arc::from(rel);
-    if kind_of(rel) == FileKind::Attachment {
-        // resolvable by name; contents are never needed
-        return Some(parse_entry(path, String::new(), ctime));
-    }
+    let attachment = kind_of(rel) == FileKind::Attachment;
+    // A file too large to read as text is not a source; an attachment stays
+    // resolvable by name, just without searchable text.
     if meta.len() > config.max_file_size {
-        return None;
+        return attachment.then(|| parse_entry(path, String::new(), ctime));
     }
     let mut data = Vec::with_capacity(meta.len() as usize + 1);
     fs::File::open(&abs)
@@ -212,10 +219,15 @@ fn read_checked(
         .take(config.max_file_size + 1)
         .read_to_end(&mut data)
         .ok()?;
-    if data.len() as u64 > config.max_file_size || data.contains(&0) {
-        return None;
+    if data.len() as u64 > config.max_file_size {
+        return attachment.then(|| parse_entry(path, String::new(), ctime));
     }
-    let text = String::from_utf8(data).ok()?;
+    // Binary files stay resolvable as attachments but are never text sources.
+    let text = match String::from_utf8(data) {
+        Ok(t) if !t.as_bytes().contains(&0) => t,
+        _ if attachment => String::new(),
+        _ => return None,
+    };
     Some(parse_entry(path, text, ctime))
 }
 

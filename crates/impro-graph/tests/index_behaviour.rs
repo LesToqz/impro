@@ -593,3 +593,35 @@ fn rename_moves_files_and_folders() {
     assert_eq!(change.removed.len(), 2);
     assert_eq!(idx.len(), 1);
 }
+
+#[test]
+fn file_time_is_the_older_of_change_and_modified_time() {
+    let p = Project::new();
+    let old = p.write("old.md", "");
+    p.write("fresh.md", "");
+    let long_ago = std::time::UNIX_EPOCH + std::time::Duration::from_secs(1_000_000);
+    std::fs::File::options()
+        .write(true)
+        .open(old)
+        .unwrap()
+        .set_modified(long_ago)
+        .unwrap();
+    let g = p.scan().build_graph(&GraphOptions::default());
+    let time = |id: &str| g.nodes[g.index_of(id).unwrap()].ctime.unwrap();
+    assert_eq!(
+        time("old.md"),
+        1_000_000.0,
+        "an old mtime wins over a newer change time"
+    );
+    assert!(time("fresh.md") > 1_000_000_000.0);
+}
+
+#[test]
+fn graphs_match_the_frozen_reference_answers() {
+    common::golden::check_graphs();
+}
+
+#[test]
+fn link_and_import_extraction_matches_the_frozen_reference() {
+    common::golden::check_text();
+}

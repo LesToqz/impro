@@ -1,0 +1,256 @@
+{
+ "digests": [
+  "62ae12deca427506",
+  "c33d19407d7daaed",
+  "12abd06aae0947c6",
+  "2a9c3b741e7e8929",
+  "2a9c3b741e7e8929",
+  "2a9c3b741e7e8929",
+  "01b10250e4ebbbfb",
+  "b614bf4010e83281",
+  "ee70f2108c582fe8",
+  "38ae68e820341089",
+  "e11b3b488927b829",
+  "9f9908f70e4c2494",
+  "c4c7f8c5dc378a8a",
+  "c4c7f8c5dc378a8a",
+  "c4c7f8c5dc378a8a",
+  "761fb69b2b9ca09a",
+  "2682f9b40d733c26",
+  "2682f9b40d733c26",
+  "086e1e37032fb57c",
+  "9a3cb35a8c21e068",
+  "9a3cb35a8c21e068",
+  "73b573ccc94399d3",
+  "5b9cc017f2e12cdd",
+  "5b9cc017f2e12cdd",
+  "5b9cc017f2e12cdd",
+  "5b9cc017f2e12cdd",
+  "5b9cc017f2e12cdd",
+  "5b9cc017f2e12cdd",
+  "5b9cc017f2e12cdd",
+  "5b9cc017f2e12cdd",
+  "5b9cc017f2e12cdd"
+ ],
+ "ops": [
+  {
+   "from": "a/util.js",
+   "op": "rename",
+   "to": "index.js"
+  },
+  {
+   "op": "set_text",
+   "path": "index.js",
+   "text": "import '.'\n"
+  },
+  {
+   "from": "src/util.css",
+   "op": "rename",
+   "to": "other/Straße.md"
+  },
+  {
+   "op": "set_text",
+   "path": "sub/deep/é.css",
+   "text": "@import 'sub/beta.css';\n@import 'x.png';\n"
+  },
+  {
+   "op": "write",
+   "path": "Sub/util.png",
+   "text": "[t](util)\n[[sub/Alpha.md#h|alias]]\n"
+  },
+  {
+   "op": "write",
+   "path": "other/x.css",
+   "text": "@import '/alpha.css';\n.a{background:url(../main.css)}\n"
+  },
+  {
+   "op": "delete",
+   "path": "sub/strasse.markdown"
+  },
+  {
+   "op": "set_text",
+   "path": "strasse.markdown",
+   "text": "[t](é.md)\n[[strasse.md]]\n![[alpha]]\n"
+  },
+  {
+   "op": "set_text",
+   "path": "strasse.markdown",
+   "text": "\n"
+  },
+  {
+   "from": "Sub/strasse.py",
+   "op": "rename",
+   "to": "src/a.b.py"
+  },
+  {
+   "op": "write",
+   "path": "sub/beta.md",
+   "text": "![[Straße]]\n"
+  },
+  {
+   "from": "sub/deep/é.css",
+   "op": "rename",
+   "to": "sub/Gamma Ray.css"
+  },
+  {
+   "op": "set_text",
+   "path": "Sub/util.png",
+   "text": null
+  },
+  {
+   "op": "set_text",
+   "path": "sub/gamma.png",
+   "text": "[t](../sub/Alpha)\n[[a.b.md]]\n[[Alpha.png]]\n"
+  },
+  {
+   "op": "set_text",
+   "path": "a/strasse.md",
+   "text": "---\naliases: [beta, alpha]\ntags: [proj/a/b, t2]\n---\n#t1\n[[index.png]]\n[[é.md]]\n[[GAMMA RAY]]\n[[util]]\n[[util]]\n![i](index)\n"
+  },
+  {
+   "op": "write",
+   "path": "other/é.md",
+   "text": "![[beta.md]]\n[[../sub/gamma.png#h|alias]]\n"
+  },
+  {
+   "op": "write",
+   "path": "a/delta.txt",
+   "text": "\n"
+  },
+  {
+   "op": "write",
+   "path": "src/main.md",
+   "text": "[[alpha]]\n"
+  },
+  {
+   "op": "write",
+   "path": "beta.md",
+   "text": "---\naliases: [alpha]\n---\n[[é.png#h|alias]]\n[[GAMMA]]\n[[util.png]]\n[[main.png]]\n![i](main.png)\n![[a.b]]\n[[../sub/beta.md#h|alias]]\n![i](sub/beta)\n"
+  },
+  {
+   "op": "set_text",
+   "path": "a/delta.css",
+   "text": "\n"
+  },
+  {
+   "op": "write",
+   "path": "Gamma Ray.js",
+   "text": "\n"
+  },
+  {
+   "op": "delete",
+   "path": "other/é.md"
+  },
+  {
+   "op": "delete",
+   "path": "Sub/a.b.txt"
+  },
+  {
+   "op": "write",
+   "path": "sub/beta.txt",
+   "text": "---\n---\n`[[É]]`\n[[alpha.png]]\n[t](./alpha.png)\n[[./Straße#h|alias]]\n"
+  },
+  {
+   "op": "set_text",
+   "path": "other/x.css",
+   "text": null
+  },
+  {
+   "op": "set_text",
+   "path": "a/delta.txt",
+   "text": null
+  },
+  {
+   "op": "delete",
+   "path": "sub/gamma.png"
+  },
+  {
+   "op": "write",
+   "path": "delta.png",
+   "text": "![[beta.md]]\n![i](/index.png)\n[t](./GAMMA)\n#proj/a/b\n[[é]]\n[[strasse]]\n"
+  },
+  {
+   "op": "set_text",
+   "path": "Sub/util.png",
+   "text": null
+  },
+  {
+   "op": "set_text",
+   "path": "a/delta.css",
+   "text": null
+  }
+ ],
+ "options": {
+  "existing_only": false,
+  "show_attachments": true,
+  "show_tags": true
+ },
+ "tree": {
+  "files": [
+   {
+    "path": "Straße.js",
+    "text": "require('lib')\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "Sub/a.b.png"
+   },
+   {
+    "path": "Sub/a.b.txt",
+    "text": "---\ntags: [t2, T1]\n---\n![[a.b.md]]\n"
+   },
+   {
+    "path": "Sub/strasse.py",
+    "text": "\n"
+   },
+   {
+    "path": "a/delta.css",
+    "text": ".a{background:url(/alpha.css)}\n@import 'img/a.png';\n@import 'sub/beta.css';\n@import '/alpha.css';\n"
+   },
+   {
+    "path": "a/strasse.md",
+    "text": "[[main]]\n![i](../sub/delta.md)\n![i](/main.png)\n![i](x.png)\n`[[main.png]]`\n[[alpha.md]]\n<../sub/MAIN>\n![i](sub/index)\n"
+   },
+   {
+    "path": "a/util.js",
+    "text": "import x from './gamma'\nrequire('./main.css')\nimport '../sub/alpha'\n"
+   },
+   {
+    "path": "a.b.css",
+    "text": ".a{background:url(alpha.css)}\n.a{background:url(x.png)}\n"
+   },
+   {
+    "path": "alpha.ts",
+    "text": "import x from 'lib'\nrequire('./util.js')\nimport x from './util.js'\nrequire('lib')\nimport './main.css'\n"
+   },
+   {
+    "path": "src/Straße.html",
+    "text": "<a href=\"alpha.css\">\n<img src=../main.js>\n<img src=../main.js>\n"
+   },
+   {
+    "path": "src/index.ts",
+    "text": "\n"
+   },
+   {
+    "path": "src/util.css",
+    "text": "@import 'x.png';\n@import '/alpha.css';\n"
+   },
+   {
+    "path": "strasse.markdown",
+    "text": "[[alpha.md]]\n"
+   },
+   {
+    "path": "sub/deep/é.css",
+    "text": ".a{background:url(x.png)}\n.a{background:url(alpha.css)}\n@import 'x.png';\n.a{background:url(sub/beta.css)}\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "sub/gamma.png"
+   },
+   {
+    "path": "sub/strasse.markdown",
+    "text": "---\ntags: [t1/x, t1]\n---\n[[MAIN]]\n[t](/straße)\n"
+   }
+  ]
+ }
+}

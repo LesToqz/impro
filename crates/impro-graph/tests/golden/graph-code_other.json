@@ -1,0 +1,8148 @@
+{
+ "scenarios": [
+  {
+   "full": {
+    "fold:dflt:sub": {
+     "focus": null,
+     "links": [],
+     "nodes": [
+      {
+       "folder": "sub",
+       "group": null,
+       "id": "sub/x.h",
+       "in": 0,
+       "kind": "code",
+       "label": "x",
+       "out": 0,
+       "path": "sub/x.h",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "fold:dflt:sub/": {
+     "focus": null,
+     "links": [],
+     "nodes": [
+      {
+       "folder": "sub",
+       "group": null,
+       "id": "sub/x.h",
+       "in": 0,
+       "kind": "code",
+       "label": "x",
+       "out": 0,
+       "path": "sub/x.h",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:1:00": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:1:01": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:1:10": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:1:11": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:2:00": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:2:01": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:2:10": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:2:11": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:6:00": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:6:01": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:6:10": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:M.MD:6:11": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:1:00": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:1:01": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:1:10": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:1:11": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:2:00": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:2:01": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:2:10": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:2:11": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:6:00": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:6:01": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:6:10": {
+     "focus": "m.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 0,
+       "path": "m.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:m.md:6:11": {
+     "focus": "m.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 2,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:1:00": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:1:01": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:1:10": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:1:11": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:2:00": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:2:01": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:2:10": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:2:11": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:6:00": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:6:01": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:6:10": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/a.rs:6:11": {
+     "focus": "src/a.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:1:00": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:1:01": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:1:10": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:1:11": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:2:00": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:2:01": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:2:10": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:2:11": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:6:00": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:6:01": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:6:10": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/c.rs:6:11": {
+     "focus": "src/c.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:1:00": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:1:01": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:1:10": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:1:11": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:2:00": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:2:01": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:2:10": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:2:11": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:6:00": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:6:01": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:6:10": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:src/custom.rs:6:11": {
+     "focus": "src/custom.rs",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "tg:000000": {
+     "focus": null,
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "m.md",
+       "target": "?main"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "?main",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "main",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 1,
+       "path": "m.md",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 1
+      },
+      "orphans": 0,
+      "unresolved": [
+       "?main"
+      ]
+     },
+     "truncated": false
+    },
+    "tg:111111": {
+     "focus": null,
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "run.sh"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": false,
+       "source": "m.md",
+       "target": "src/lib.rs"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Thing.java",
+       "in": 0,
+       "kind": "code",
+       "label": "Thing",
+       "out": 0,
+       "path": "Thing.java",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "app.rb",
+       "in": 0,
+       "kind": "code",
+       "label": "app",
+       "out": 0,
+       "path": "app.rb",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "c.json",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "c.json",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "c.toml",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "c.toml",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "c.yaml",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "c.yaml",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "conf.xml",
+       "in": 0,
+       "kind": "code",
+       "label": "conf",
+       "out": 0,
+       "path": "conf.xml",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "d.json",
+       "in": 0,
+       "kind": "code",
+       "label": "d",
+       "out": 0,
+       "path": "d.json",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "d.yaml",
+       "in": 0,
+       "kind": "code",
+       "label": "d",
+       "out": 0,
+       "path": "d.yaml",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "helper.rb",
+       "in": 0,
+       "kind": "code",
+       "label": "helper",
+       "out": 0,
+       "path": "helper.rb",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "lib.sh",
+       "in": 0,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "lib.sh",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "lib2.sh",
+       "in": 0,
+       "kind": "code",
+       "label": "lib2",
+       "out": 0,
+       "path": "lib2.sh",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "m.md",
+       "in": 0,
+       "kind": "note",
+       "label": "m",
+       "out": 2,
+       "path": "m.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "main.c",
+       "in": 0,
+       "kind": "code",
+       "label": "main",
+       "out": 0,
+       "path": "main.c",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "main.cpp",
+       "in": 0,
+       "kind": "code",
+       "label": "main",
+       "out": 0,
+       "path": "main.cpp",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "main.go",
+       "in": 0,
+       "kind": "code",
+       "label": "main",
+       "out": 0,
+       "path": "main.go",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "main.java",
+       "in": 0,
+       "kind": "code",
+       "label": "main",
+       "out": 0,
+       "path": "main.java",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "other.rb",
+       "in": 0,
+       "kind": "code",
+       "label": "other",
+       "out": 0,
+       "path": "other.rb",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "other.sh",
+       "in": 0,
+       "kind": "code",
+       "label": "other",
+       "out": 0,
+       "path": "other.sh",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "q.sql",
+       "in": 0,
+       "kind": "code",
+       "label": "q",
+       "out": 0,
+       "path": "q.sql",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "run.sh",
+       "in": 1,
+       "kind": "code",
+       "label": "run",
+       "out": 0,
+       "path": "run.sh",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/a.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "a",
+       "out": 0,
+       "path": "src/a.rs",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "src/b",
+       "group": null,
+       "id": "src/b/mod.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "mod",
+       "out": 0,
+       "path": "src/b/mod.rs",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/c.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "c",
+       "out": 0,
+       "path": "src/c.rs",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/custom.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "custom",
+       "out": 0,
+       "path": "src/custom.rs",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/d.rs",
+       "in": 0,
+       "kind": "code",
+       "label": "d",
+       "out": 0,
+       "path": "src/d.rs",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/lib.rs",
+       "in": 1,
+       "kind": "code",
+       "label": "lib",
+       "out": 0,
+       "path": "src/lib.rs",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "sub",
+       "group": null,
+       "id": "sub/x.h",
+       "in": 0,
+       "kind": "code",
+       "label": "x",
+       "out": 0,
+       "path": "sub/x.h",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "third.sh",
+       "in": 0,
+       "kind": "code",
+       "label": "third",
+       "out": 0,
+       "path": "third.sh",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "util.h",
+       "in": 0,
+       "kind": "code",
+       "label": "util",
+       "out": 0,
+       "path": "util.h",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "util.hpp",
+       "in": 0,
+       "kind": "code",
+       "label": "util",
+       "out": 0,
+       "path": "util.hpp",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 28,
+      "counts": {
+       "attachment": 0,
+       "code": 29,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 27,
+      "unresolved": []
+     },
+     "truncated": false
+    }
+   },
+   "max_nodes": 3000,
+   "runs": [
+    {
+     "digest": "7762da7e09995641",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "7762da7e09995641",
+     "mode": "build",
+     "name": "tg:111110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:111101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:111100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "5292260cdd5af587",
+     "mode": "build",
+     "name": "tg:111011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "5292260cdd5af587",
+     "mode": "build",
+     "name": "tg:111010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:111001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:111000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "tg:110111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "tg:110110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:110101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:110100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "tg:110011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "tg:110010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:110001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:110000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "7762da7e09995641",
+     "mode": "build",
+     "name": "tg:101111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "7762da7e09995641",
+     "mode": "build",
+     "name": "tg:101110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:101101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:101100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "5292260cdd5af587",
+     "mode": "build",
+     "name": "tg:101011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "5292260cdd5af587",
+     "mode": "build",
+     "name": "tg:101010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:101001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:101000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "tg:100111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "tg:100110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:100101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:100100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "tg:100011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "tg:100010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:100001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:100000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "7762da7e09995641",
+     "mode": "build",
+     "name": "tg:011111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "7762da7e09995641",
+     "mode": "build",
+     "name": "tg:011110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:011100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "5292260cdd5af587",
+     "mode": "build",
+     "name": "tg:011011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "5292260cdd5af587",
+     "mode": "build",
+     "name": "tg:011010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:011001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:011000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "tg:010111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "tg:010110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:010101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:010100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "tg:010011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "tg:010010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:010001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:010000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "7762da7e09995641",
+     "mode": "build",
+     "name": "tg:001111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "7762da7e09995641",
+     "mode": "build",
+     "name": "tg:001110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:001101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:001100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "5292260cdd5af587",
+     "mode": "build",
+     "name": "tg:001011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "5292260cdd5af587",
+     "mode": "build",
+     "name": "tg:001010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:001001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:001000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "tg:000111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "tg:000110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:000101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:000100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "tg:000011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "tg:000010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:000001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f533dd287ed8afc5",
+     "mode": "build",
+     "name": "tg:000000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:1:ALPHA",
+     "options": {
+      "existing_only": false,
+      "query": "ALPHA",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:2:alpha beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:3:alpha OR beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:4:alpha OR",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:5:OR alpha",
+     "options": {
+      "existing_only": false,
+      "query": "OR alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:6:OR",
+     "options": {
+      "existing_only": false,
+      "query": "OR",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:7:alpha  OR  beta gamma OR delta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha  OR  beta gamma OR delta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "q:all:8:-alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:9:- alpha",
+     "options": {
+      "existing_only": false,
+      "query": "- alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:10:-",
+     "options": {
+      "existing_only": false,
+      "query": "-",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "q:all:11:--alpha",
+     "options": {
+      "existing_only": false,
+      "query": "--alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:12:alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha -beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "q:all:13:-alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha -beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:15:\"hello\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"hello\"",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:18:\"unclosed",
+     "options": {
+      "existing_only": false,
+      "query": "\"unclosed",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:21:/al.ha/",
+     "options": {
+      "existing_only": false,
+      "query": "/al.ha/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:24:/(/",
+     "options": {
+      "existing_only": false,
+      "query": "/(/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "7716e3be80143182",
+     "mode": "build",
+     "name": "q:all:27:/a/b/",
+     "options": {
+      "existing_only": false,
+      "query": "/a/b/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "7c24901ff4ce01bf",
+     "mode": "build",
+     "name": "q:all:30:PATH:Sub",
+     "options": {
+      "existing_only": false,
+      "query": "PATH:Sub",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:33:file:note",
+     "options": {
+      "existing_only": false,
+      "query": "file:note",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:36:file:/^n/",
+     "options": {
+      "existing_only": false,
+      "query": "file:/^n/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:39:tag:X",
+     "options": {
+      "existing_only": false,
+      "query": "tag:X",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:42:tag:a/b",
+     "options": {
+      "existing_only": false,
+      "query": "tag:a/b",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:45:tag:#",
+     "options": {
+      "existing_only": false,
+      "query": "tag:#",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:48:tag:x OR tag:y",
+     "options": {
+      "existing_only": false,
+      "query": "tag:x OR tag:y",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:51:content:hello",
+     "options": {
+      "existing_only": false,
+      "query": "content:hello",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:54:content:/h.llo/",
+     "options": {
+      "existing_only": false,
+      "query": "content:/h.llo/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:57:unknown:foo",
+     "options": {
+      "existing_only": false,
+      "query": "unknown:foo",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "7c24901ff4ce01bf",
+     "mode": "build",
+     "name": "q:all:60:path:sub OR file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "path:sub OR file:alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "b252c8e196e24890",
+     "mode": "build",
+     "name": "q:all:63:sub/",
+     "options": {
+      "existing_only": false,
+      "query": "sub/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:66:é",
+     "options": {
+      "existing_only": false,
+      "query": "é",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:69:x y z",
+     "options": {
+      "existing_only": false,
+      "query": "x y z",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:72:[[alpha]]",
+     "options": {
+      "existing_only": false,
+      "query": "[[alpha]]",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "6d9692062788905e",
+     "mode": "build",
+     "name": "q:all:75:-path:sub -file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-path:sub -file:alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:78:File:note",
+     "options": {
+      "existing_only": false,
+      "query": "File:note",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:81:a\\b",
+     "options": {
+      "existing_only": false,
+      "query": "a\\b",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:84:\"a\\\"b\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"a\\\"b\"",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:87:*",
+     "options": {
+      "existing_only": false,
+      "query": "*",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "q:all:90: ",
+     "options": {
+      "existing_only": false,
+      "query": " ",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "grp:all:True:0",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "alpha",
+       "beta"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b39caee5e7689813",
+     "mode": "build",
+     "name": "grp:all:True:1",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "tag:x",
+       "path:sub",
+       "-alpha"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "grp:all:True:2",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "",
+       "  ",
+       "alpha",
+       "content:hello"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "28ba49668fbfaff4",
+     "mode": "build",
+     "name": "grp:all:True:3",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "file:png",
+       "tag:y/z",
+       "a",
+       "b",
+       "c",
+       "d",
+       "e",
+       "f",
+       "g",
+       "h",
+       "i",
+       "j"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "grp:all:True:4",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "/[/",
+       "tag:#x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "c9dd1325366ab2b8",
+     "mode": "build",
+     "name": "grp:all:True:5",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "x",
+       "x",
+       "x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "grp:all:False:0",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "alpha",
+       "beta"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "eb39fb9818814202",
+     "mode": "build",
+     "name": "grp:all:False:1",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "tag:x",
+       "path:sub",
+       "-alpha"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "4c158f1cff8c9d41",
+     "mode": "build",
+     "name": "grp:all:False:2",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "",
+       "  ",
+       "alpha",
+       "content:hello"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "76c6b4fa1027c9c9",
+     "mode": "build",
+     "name": "grp:all:False:3",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "file:png",
+       "tag:y/z",
+       "a",
+       "b",
+       "c",
+       "d",
+       "e",
+       "f",
+       "g",
+       "h",
+       "i",
+       "j"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "2b341e6631d4f3a4",
+     "mode": "build",
+     "name": "grp:all:False:4",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "/[/",
+       "tag:#x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "c9dd1325366ab2b8",
+     "mode": "build",
+     "name": "grp:all:False:5",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "x",
+       "x",
+       "x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:1:ALPHA",
+     "options": {
+      "existing_only": false,
+      "query": "ALPHA",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:2:alpha beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:3:alpha OR beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:4:alpha OR",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:5:OR alpha",
+     "options": {
+      "existing_only": false,
+      "query": "OR alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:6:OR",
+     "options": {
+      "existing_only": false,
+      "query": "OR",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:7:alpha  OR  beta gamma OR delta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha  OR  beta gamma OR delta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "q:strict:8:-alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:9:- alpha",
+     "options": {
+      "existing_only": false,
+      "query": "- alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:10:-",
+     "options": {
+      "existing_only": false,
+      "query": "-",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "q:strict:11:--alpha",
+     "options": {
+      "existing_only": false,
+      "query": "--alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:12:alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha -beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "q:strict:13:-alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha -beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:15:\"hello\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"hello\"",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:18:\"unclosed",
+     "options": {
+      "existing_only": false,
+      "query": "\"unclosed",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:21:/al.ha/",
+     "options": {
+      "existing_only": false,
+      "query": "/al.ha/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:24:/(/",
+     "options": {
+      "existing_only": false,
+      "query": "/(/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:27:/a/b/",
+     "options": {
+      "existing_only": false,
+      "query": "/a/b/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:30:PATH:Sub",
+     "options": {
+      "existing_only": false,
+      "query": "PATH:Sub",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:33:file:note",
+     "options": {
+      "existing_only": false,
+      "query": "file:note",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:36:file:/^n/",
+     "options": {
+      "existing_only": false,
+      "query": "file:/^n/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:39:tag:X",
+     "options": {
+      "existing_only": false,
+      "query": "tag:X",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:42:tag:a/b",
+     "options": {
+      "existing_only": false,
+      "query": "tag:a/b",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:45:tag:#",
+     "options": {
+      "existing_only": false,
+      "query": "tag:#",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:48:tag:x OR tag:y",
+     "options": {
+      "existing_only": false,
+      "query": "tag:x OR tag:y",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:51:content:hello",
+     "options": {
+      "existing_only": false,
+      "query": "content:hello",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:54:content:/h.llo/",
+     "options": {
+      "existing_only": false,
+      "query": "content:/h.llo/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:57:unknown:foo",
+     "options": {
+      "existing_only": false,
+      "query": "unknown:foo",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:60:path:sub OR file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "path:sub OR file:alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:63:sub/",
+     "options": {
+      "existing_only": false,
+      "query": "sub/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:66:é",
+     "options": {
+      "existing_only": false,
+      "query": "é",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:69:x y z",
+     "options": {
+      "existing_only": false,
+      "query": "x y z",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:72:[[alpha]]",
+     "options": {
+      "existing_only": false,
+      "query": "[[alpha]]",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "q:strict:75:-path:sub -file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-path:sub -file:alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:78:File:note",
+     "options": {
+      "existing_only": false,
+      "query": "File:note",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:81:a\\b",
+     "options": {
+      "existing_only": false,
+      "query": "a\\b",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:84:\"a\\\"b\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"a\\\"b\"",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:87:*",
+     "options": {
+      "existing_only": false,
+      "query": "*",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "81963f91c8e0dcb0",
+     "mode": "build",
+     "name": "q:strict:90: ",
+     "options": {
+      "existing_only": false,
+      "query": " ",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "depth": 1,
+     "digest": "546652d86af71ff6",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:m.md:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 1,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:m.md:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 1,
+     "digest": "546652d86af71ff6",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:m.md:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 1,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:m.md:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 2,
+     "digest": "546652d86af71ff6",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:m.md:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 2,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:m.md:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 2,
+     "digest": "546652d86af71ff6",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:m.md:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 2,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:m.md:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 6,
+     "digest": "546652d86af71ff6",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:m.md:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 6,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:m.md:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 6,
+     "digest": "546652d86af71ff6",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:m.md:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 6,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:m.md:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 1,
+     "digest": "3901143e44436f06",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "3901143e44436f06",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "3901143e44436f06",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "3901143e44436f06",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "3901143e44436f06",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "3901143e44436f06",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "3901143e44436f06",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "3901143e44436f06",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "3901143e44436f06",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "3901143e44436f06",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "3901143e44436f06",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "3901143e44436f06",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/a.rs:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "fbd1a65b7cb88022",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/c.rs:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "af555e02f3c580b0",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "af555e02f3c580b0",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "af555e02f3c580b0",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "af555e02f3c580b0",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "af555e02f3c580b0",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "af555e02f3c580b0",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "af555e02f3c580b0",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "af555e02f3c580b0",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "af555e02f3c580b0",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "af555e02f3c580b0",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "af555e02f3c580b0",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "af555e02f3c580b0",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:src/custom.rs:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "546652d86af71ff6",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "546652d86af71ff6",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "546652d86af71ff6",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "546652d86af71ff6",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "546652d86af71ff6",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "546652d86af71ff6",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:M.MD:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "747bd6ac760358c5",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:m.md:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 1,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:m.md:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 1,
+     "digest": "747bd6ac760358c5",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:m.md:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 1,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:m.md:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 2,
+     "digest": "747bd6ac760358c5",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:m.md:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 2,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:m.md:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 2,
+     "digest": "747bd6ac760358c5",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:m.md:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 2,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:m.md:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 6,
+     "digest": "747bd6ac760358c5",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:m.md:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 6,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:m.md:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 6,
+     "digest": "747bd6ac760358c5",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:m.md:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 6,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:m.md:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "m.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/a.rs:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/a.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/c.rs:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/c.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:src/custom.rs:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "src/custom.rs"
+    },
+    {
+     "depth": 1,
+     "digest": "747bd6ac760358c5",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:M.MD:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:M.MD:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "747bd6ac760358c5",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:M.MD:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:M.MD:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "747bd6ac760358c5",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:M.MD:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:M.MD:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "747bd6ac760358c5",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:M.MD:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:M.MD:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "747bd6ac760358c5",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:M.MD:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "16434353851e1214",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:M.MD:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "747bd6ac760358c5",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:M.MD:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "M.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "16434353851e1214",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:M.MD:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "M.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:",
+     "options": {},
+     "prefix": ""
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:/",
+     "options": {},
+     "prefix": "/"
+    },
+    {
+     "digest": "7c24901ff4ce01bf",
+     "mode": "folder",
+     "name": "fold:dflt:sub",
+     "options": {},
+     "prefix": "sub"
+    },
+    {
+     "digest": "7c24901ff4ce01bf",
+     "mode": "folder",
+     "name": "fold:dflt:sub/",
+     "options": {},
+     "prefix": "sub/"
+    },
+    {
+     "digest": "7c24901ff4ce01bf",
+     "mode": "folder",
+     "name": "fold:dflt:/sub/",
+     "options": {},
+     "prefix": "/sub/"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:x",
+     "options": {},
+     "prefix": "x"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:y/z",
+     "options": {},
+     "prefix": "y/z"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:nonexistent",
+     "options": {},
+     "prefix": "nonexistent"
+    },
+    {
+     "digest": "47cb825032b92d88",
+     "mode": "folder",
+     "name": "fold:dflt:src",
+     "options": {},
+     "prefix": "src"
+    },
+    {
+     "digest": "325cbee376521c78",
+     "mode": "folder",
+     "name": "fold:dflt:src/b",
+     "options": {},
+     "prefix": "src/b"
+    },
+    {
+     "digest": "7c24901ff4ce01bf",
+     "mode": "folder",
+     "name": "fold:dflt:sub",
+     "options": {},
+     "prefix": "sub"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 0,
+   "runs": [
+    {
+     "digest": "b2b9d196eea31694",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b2b9d196eea31694",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:m.md:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:src/a.rs:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "src/a.rs"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 1,
+   "runs": [
+    {
+     "digest": "073ef747702e48ee",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "b1140e98cae4f981",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:m.md:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:src/a.rs:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "src/a.rs"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 3,
+   "runs": [
+    {
+     "digest": "b7e995bfe557a150",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "03eaa98f9ed08e05",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:m.md:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:src/a.rs:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "src/a.rs"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 8,
+   "runs": [
+    {
+     "digest": "61df3543e4c26e1e",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "40f990f1762291b5",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "cc7b6e42b227b1de",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:m.md:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "m.md"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:src/a.rs:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "src/a.rs"
+    }
+   ]
+  }
+ ],
+ "tree": {
+  "files": [
+   {
+    "path": "Thing.java",
+    "text": ""
+   },
+   {
+    "path": "app.rb",
+    "text": "require 'x'\nrequire_relative 'helper'\nrequire_relative './other'\n"
+   },
+   {
+    "path": "c.json",
+    "text": "{\"$ref\": \"./d.json\"}"
+   },
+   {
+    "path": "c.toml",
+    "text": "x = \"d.toml\"\n"
+   },
+   {
+    "path": "c.yaml",
+    "text": "include: d.yaml\n"
+   },
+   {
+    "path": "conf.xml",
+    "text": "<a href=\"d.xml\"/>"
+   },
+   {
+    "path": "d.json",
+    "text": "{}"
+   },
+   {
+    "path": "d.yaml",
+    "text": ""
+   },
+   {
+    "path": "helper.rb",
+    "text": ""
+   },
+   {
+    "path": "lib.sh",
+    "text": ""
+   },
+   {
+    "path": "lib2.sh",
+    "text": ""
+   },
+   {
+    "path": "m.md",
+    "text": "[[main]] [[run.sh]] [[lib.rs]]\n"
+   },
+   {
+    "path": "main.c",
+    "text": "#include \"util.h\"\n#include <stdio.h>\n#include \"sub/x.h\"\n"
+   },
+   {
+    "path": "main.cpp",
+    "text": "#include \"util.hpp\"\n"
+   },
+   {
+    "path": "main.go",
+    "text": "package main\nimport \"fmt\"\nimport \"./local\"\n"
+   },
+   {
+    "path": "main.java",
+    "text": "import java.util.List;\nimport pkg.Thing;\n"
+   },
+   {
+    "path": "other.rb",
+    "text": ""
+   },
+   {
+    "path": "other.sh",
+    "text": ""
+   },
+   {
+    "path": "q.sql",
+    "text": "select 1;\n"
+   },
+   {
+    "path": "run.sh",
+    "text": "source ./lib.sh\n. ./other.sh\nsource lib2.sh\nbash ./third.sh\n"
+   },
+   {
+    "path": "src/a.rs",
+    "text": "use crate::b;\n"
+   },
+   {
+    "path": "src/b/mod.rs",
+    "text": ""
+   },
+   {
+    "path": "src/c.rs",
+    "text": ""
+   },
+   {
+    "path": "src/custom.rs",
+    "text": ""
+   },
+   {
+    "path": "src/d.rs",
+    "text": ""
+   },
+   {
+    "path": "src/lib.rs",
+    "text": "mod a;\nmod b;\npub mod c;\nuse crate::a::thing;\nuse self::b::x;\nuse super::s;\nuse std::io;\nextern crate foo;\n#[path = \"custom.rs\"]\nmod d;\n"
+   },
+   {
+    "path": "sub/x.h",
+    "text": "#include \"../util.h\"\n"
+   },
+   {
+    "path": "third.sh",
+    "text": ""
+   },
+   {
+    "path": "util.h",
+    "text": ""
+   },
+   {
+    "path": "util.hpp",
+    "text": ""
+   }
+  ]
+ }
+}

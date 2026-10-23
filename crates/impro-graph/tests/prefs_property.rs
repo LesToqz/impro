@@ -2,6 +2,8 @@
 // `u64::is_multiple_of` needs Rust 1.90; the workspace minimum is 1.88.
 #![allow(clippy::manual_is_multiple_of)]
 
+mod common;
+
 use impro_graph::layout::Rng;
 use impro_graph::prefs::{normalize, normalize_value, GraphPrefs, LIMITS};
 use serde_json::{json, Map, Value};
@@ -96,4 +98,9 @@ fn normalisation_is_idempotent_bounded_and_closed() {
         assert_eq!(once.forces().repel, (-120.0 * once.repel_strength) as f32);
     }
     assert_eq!(normalize(&Value::Null), GraphPrefs::default());
+}
+
+#[test]
+fn hostile_preferences_match_the_frozen_reference() {
+    common::golden::check_prefs();
 }

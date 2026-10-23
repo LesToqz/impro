@@ -90,6 +90,12 @@ fn hex(b: u8) -> Option<u8> {
     }
 }
 
+/// Whitespace as the reference reads it: Unicode spaces plus the four ASCII
+/// separators `\x1c`–`\x1f`.
+pub fn is_space(c: char) -> bool {
+    c.is_whitespace() || ('\x1c'..='\x1f').contains(&c)
+}
+
 fn is_word(c: char) -> bool {
     c.is_alphanumeric() || c == '_'
 }
@@ -98,7 +104,12 @@ fn is_word(c: char) -> bool {
 /// protocol-relative references and in-page anchors. Empty targets count too.
 pub fn is_external(target: &str) -> bool {
     let t = target.trim();
-    if t.is_empty() || t.starts_with('#') || t.starts_with("//") {
+    t.is_empty() || t.starts_with('#') || has_scheme(t)
+}
+
+/// True when `t` starts with a URL scheme (`https:`, `mailto:`) or `//`.
+pub fn has_scheme(t: &str) -> bool {
+    if t.starts_with("//") {
         return true;
     }
     let mut chars = t.chars();
@@ -126,13 +137,36 @@ pub fn is_word_char(c: char) -> bool {
     is_word(c)
 }
 
+/// Byte index of the extension dot in a file name: the last dot that is not
+/// part of the leading run of dots (`.env` and `..x` have no extension).
+fn dot_of(name: &str) -> Option<usize> {
+    let i = name.rfind('.')?;
+    (!name[..i].bytes().all(|b| b == b'.')).then_some(i)
+}
+
 /// Lowercased extension (with the dot) of the last path component, or "".
 pub fn extension(path: &str) -> String {
     let name = path.rsplit('/').next().unwrap_or(path);
-    match name.rfind('.') {
-        Some(0) | None => String::new(),
+    match dot_of(name) {
+        None => String::new(),
         Some(i) => name[i..].to_lowercase(),
     }
+}
+
+/// Case-insensitive comparison key: the full Unicode case fold, so `ß` and
+/// `SS` agree. ASCII text takes the allocation-light path.
+pub fn casefold(s: &str) -> String {
+    if s.is_ascii() {
+        return s.to_ascii_lowercase();
+    }
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match super::fold::FOLD_EXCEPTIONS.binary_search_by(|(k, _)| k.cmp(&c)) {
+            Ok(i) => out.push_str(super::fold::FOLD_EXCEPTIONS[i].1),
+            Err(_) => out.extend(c.to_lowercase()),
+        }
+    }
+    out
 }
 
 /// Last path component.
@@ -151,8 +185,8 @@ pub fn dirname(path: &str) -> &str {
 /// File name without its last extension (a leading dot is not an extension).
 pub fn stem(path: &str) -> &str {
     let name = basename(path);
-    match name.rfind('.') {
-        Some(0) | None => name,
+    match dot_of(name) {
+        None => name,
         Some(i) => &name[..i],
     }
 }

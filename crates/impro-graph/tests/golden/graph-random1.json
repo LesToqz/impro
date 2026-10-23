@@ -1,0 +1,8372 @@
+{
+ "scenarios": [
+  {
+   "full": {
+    "fold:dflt:sub": {
+     "focus": null,
+     "links": [],
+     "nodes": [
+      {
+       "folder": "sub/deep",
+       "group": null,
+       "id": "sub/deep/é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 0,
+       "path": "sub/deep/é.css",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "sub",
+       "group": null,
+       "id": "sub/strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "sub/strasse.markdown",
+       "size_hint": 1,
+       "tags": [
+        "t1/x",
+        "t1"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 2,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 2,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "fold:dflt:sub/": {
+     "focus": null,
+     "links": [],
+     "nodes": [
+      {
+       "folder": "sub/deep",
+       "group": null,
+       "id": "sub/deep/é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 0,
+       "path": "sub/deep/é.css",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "sub",
+       "group": null,
+       "id": "sub/strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "sub/strasse.markdown",
+       "size_hint": 1,
+       "tags": [
+        "t1/x",
+        "t1"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 2,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 2,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "fold:dflt:sub/deep": {
+     "focus": null,
+     "links": [],
+     "nodes": [
+      {
+       "folder": "sub/deep",
+       "group": null,
+       "id": "sub/deep/é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 0,
+       "path": "sub/deep/é.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:1:00": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:1:01": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:1:10": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:1:11": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:2:00": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:2:01": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:2:10": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:2:11": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:6:00": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:6:01": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:6:10": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:STRASSE.JS:6:11": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:1:00": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:1:01": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:1:10": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:1:11": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:2:00": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:2:01": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:2:10": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:2:11": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:6:00": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:6:01": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:6:10": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Straße.js:6:11": {
+     "focus": "Straße.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:1:00": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:1:01": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:1:10": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:1:11": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:2:00": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:2:01": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:2:10": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:2:11": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:6:00": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:6:01": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:6:10": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a.b.css:6:11": {
+     "focus": "a.b.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:1:00": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:1:01": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:1:10": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:1:11": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:2:00": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:2:01": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:2:10": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:2:11": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:6:00": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:6:01": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:6:10": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/strasse.md:6:11": {
+     "focus": "a/strasse.md",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:1:00": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:1:01": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:1:10": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:1:11": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:2:00": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:2:01": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:2:10": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:2:11": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:6:00": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:6:01": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:6:10": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.ts:6:11": {
+     "focus": "alpha.ts",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:1:00": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:1:01": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:1:10": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:1:11": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:2:00": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:2:01": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:2:10": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:2:11": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:6:00": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:6:01": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:6:10": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:strasse.markdown:6:11": {
+     "focus": "strasse.markdown",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "tg:000000": {
+     "focus": null,
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "a/strasse.md",
+       "target": "?../sub/MAIN"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": false,
+       "self": false,
+       "source": "a/strasse.md",
+       "target": "?../sub/delta.md"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "a/strasse.md",
+       "target": "?alpha.md"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "a/strasse.md",
+       "target": "?main"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": false,
+       "self": false,
+       "source": "a/strasse.md",
+       "target": "?sub/index"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "strasse.markdown",
+       "target": "?alpha.md"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "sub/strasse.markdown",
+       "target": "?/straße"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "sub/strasse.markdown",
+       "target": "?MAIN"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "?../sub/MAIN",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "../sub/MAIN",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?../sub/delta.md",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "../sub/delta.md",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?/straße",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "/straße",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?MAIN",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "MAIN",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?alpha.md",
+       "in": 2,
+       "kind": "unresolved",
+       "label": "alpha.md",
+       "out": 0,
+       "path": "",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?main",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "main",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?sub/index",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "sub/index",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 5,
+       "path": "a/strasse.md",
+       "size_hint": 6,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 1,
+       "path": "strasse.markdown",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "sub",
+       "group": null,
+       "id": "sub/strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 2,
+       "path": "sub/strasse.markdown",
+       "size_hint": 3,
+       "tags": [
+        "t1/x",
+        "t1"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 2,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 3,
+       "tag": 0,
+       "unresolved": 7
+      },
+      "orphans": 0,
+      "unresolved": [
+       "?../sub/MAIN",
+       "?../sub/delta.md",
+       "?/straße",
+       "?MAIN",
+       "?alpha.md",
+       "?main",
+       "?sub/index"
+      ]
+     },
+     "truncated": false
+    },
+    "tg:111111": {
+     "focus": null,
+     "links": [
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "sub/strasse.markdown",
+       "target": "#t1"
+      },
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "sub/strasse.markdown",
+       "target": "#t1/x"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "#t1",
+       "in": 1,
+       "kind": "tag",
+       "label": "t1",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "t1"
+       ]
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "#t1/x",
+       "in": 1,
+       "kind": "tag",
+       "label": "t1/x",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "t1/x"
+       ]
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "Straße.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "Straße.js",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/strasse.py",
+       "in": 0,
+       "kind": "code",
+       "label": "strasse",
+       "out": 0,
+       "path": "Sub/strasse.py",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "a.b.css",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a.b.css",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/delta.css",
+       "in": 0,
+       "kind": "code",
+       "label": "delta",
+       "out": 0,
+       "path": "a/delta.css",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/strasse.md",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "a/strasse.md",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/util.js",
+       "in": 0,
+       "kind": "code",
+       "label": "util",
+       "out": 0,
+       "path": "a/util.js",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.ts",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/Straße.html",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "src/Straße.html",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/index.ts",
+       "in": 0,
+       "kind": "code",
+       "label": "index",
+       "out": 0,
+       "path": "src/index.ts",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "src",
+       "group": null,
+       "id": "src/util.css",
+       "in": 0,
+       "kind": "code",
+       "label": "util",
+       "out": 0,
+       "path": "src/util.css",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 0,
+       "path": "strasse.markdown",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "sub/deep",
+       "group": null,
+       "id": "sub/deep/é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 0,
+       "path": "sub/deep/é.css",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "sub",
+       "group": null,
+       "id": "sub/strasse.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "strasse",
+       "out": 2,
+       "path": "sub/strasse.markdown",
+       "size_hint": 3,
+       "tags": [
+        "t1/x",
+        "t1"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 13,
+      "counts": {
+       "attachment": 0,
+       "code": 10,
+       "note": 3,
+       "tag": 2,
+       "unresolved": 0
+      },
+      "orphans": 12,
+      "unresolved": []
+     },
+     "truncated": false
+    }
+   },
+   "max_nodes": 3000,
+   "runs": [
+    {
+     "digest": "a8b366a37fe4d2fc",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "a8b366a37fe4d2fc",
+     "mode": "build",
+     "name": "tg:111110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "14267c4204c06ff8",
+     "mode": "build",
+     "name": "tg:111101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "14267c4204c06ff8",
+     "mode": "build",
+     "name": "tg:111100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "d4159f43d67c6525",
+     "mode": "build",
+     "name": "tg:111011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "d4159f43d67c6525",
+     "mode": "build",
+     "name": "tg:111010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "d4159f43d67c6525",
+     "mode": "build",
+     "name": "tg:111001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "d4159f43d67c6525",
+     "mode": "build",
+     "name": "tg:111000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "62ae12deca427506",
+     "mode": "build",
+     "name": "tg:110111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "62ae12deca427506",
+     "mode": "build",
+     "name": "tg:110110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "b2e321b3b724c3d0",
+     "mode": "build",
+     "name": "tg:110101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b2e321b3b724c3d0",
+     "mode": "build",
+     "name": "tg:110100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "b2e321b3b724c3d0",
+     "mode": "build",
+     "name": "tg:110011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b2e321b3b724c3d0",
+     "mode": "build",
+     "name": "tg:110010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "b2e321b3b724c3d0",
+     "mode": "build",
+     "name": "tg:110001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b2e321b3b724c3d0",
+     "mode": "build",
+     "name": "tg:110000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "a8b366a37fe4d2fc",
+     "mode": "build",
+     "name": "tg:101111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "a8b366a37fe4d2fc",
+     "mode": "build",
+     "name": "tg:101110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "14267c4204c06ff8",
+     "mode": "build",
+     "name": "tg:101101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "14267c4204c06ff8",
+     "mode": "build",
+     "name": "tg:101100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "d4159f43d67c6525",
+     "mode": "build",
+     "name": "tg:101011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "d4159f43d67c6525",
+     "mode": "build",
+     "name": "tg:101010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "d4159f43d67c6525",
+     "mode": "build",
+     "name": "tg:101001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "d4159f43d67c6525",
+     "mode": "build",
+     "name": "tg:101000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "1d8fe4bfbecd65e4",
+     "mode": "build",
+     "name": "tg:100111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "1d8fe4bfbecd65e4",
+     "mode": "build",
+     "name": "tg:100110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "601626b58476f6d6",
+     "mode": "build",
+     "name": "tg:100101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "601626b58476f6d6",
+     "mode": "build",
+     "name": "tg:100100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "601626b58476f6d6",
+     "mode": "build",
+     "name": "tg:100011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "601626b58476f6d6",
+     "mode": "build",
+     "name": "tg:100010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "601626b58476f6d6",
+     "mode": "build",
+     "name": "tg:100001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "601626b58476f6d6",
+     "mode": "build",
+     "name": "tg:100000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "96ead85ed5991b6f",
+     "mode": "build",
+     "name": "tg:011111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "96ead85ed5991b6f",
+     "mode": "build",
+     "name": "tg:011110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "18a7af9f07c976ef",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "18a7af9f07c976ef",
+     "mode": "build",
+     "name": "tg:011100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:011011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:011010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:011001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:011000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "da85678d6f446148",
+     "mode": "build",
+     "name": "tg:010111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "da85678d6f446148",
+     "mode": "build",
+     "name": "tg:010110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "57e428365082735e",
+     "mode": "build",
+     "name": "tg:010101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "57e428365082735e",
+     "mode": "build",
+     "name": "tg:010100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "57e428365082735e",
+     "mode": "build",
+     "name": "tg:010011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "57e428365082735e",
+     "mode": "build",
+     "name": "tg:010010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "57e428365082735e",
+     "mode": "build",
+     "name": "tg:010001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "57e428365082735e",
+     "mode": "build",
+     "name": "tg:010000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "96ead85ed5991b6f",
+     "mode": "build",
+     "name": "tg:001111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "96ead85ed5991b6f",
+     "mode": "build",
+     "name": "tg:001110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "18a7af9f07c976ef",
+     "mode": "build",
+     "name": "tg:001101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "18a7af9f07c976ef",
+     "mode": "build",
+     "name": "tg:001100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:001011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:001010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:001001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "tg:001000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "594894b64afb8b7e",
+     "mode": "build",
+     "name": "tg:000111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "594894b64afb8b7e",
+     "mode": "build",
+     "name": "tg:000110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "a79d2bd4e2a52e6c",
+     "mode": "build",
+     "name": "tg:000101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "a79d2bd4e2a52e6c",
+     "mode": "build",
+     "name": "tg:000100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "a79d2bd4e2a52e6c",
+     "mode": "build",
+     "name": "tg:000011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "a79d2bd4e2a52e6c",
+     "mode": "build",
+     "name": "tg:000010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "a79d2bd4e2a52e6c",
+     "mode": "build",
+     "name": "tg:000001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "a79d2bd4e2a52e6c",
+     "mode": "build",
+     "name": "tg:000000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "0893934baab06dc9",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "0893934baab06dc9",
+     "mode": "build",
+     "name": "q:all:1:ALPHA",
+     "options": {
+      "existing_only": false,
+      "query": "ALPHA",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "148211dd97e9c3e3",
+     "mode": "build",
+     "name": "q:all:2:alpha beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "0893934baab06dc9",
+     "mode": "build",
+     "name": "q:all:3:alpha OR beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "0893934baab06dc9",
+     "mode": "build",
+     "name": "q:all:4:alpha OR",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "0893934baab06dc9",
+     "mode": "build",
+     "name": "q:all:5:OR alpha",
+     "options": {
+      "existing_only": false,
+      "query": "OR alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:6:OR",
+     "options": {
+      "existing_only": false,
+      "query": "OR",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "0893934baab06dc9",
+     "mode": "build",
+     "name": "q:all:7:alpha  OR  beta gamma OR delta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha  OR  beta gamma OR delta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "6aeb30ffa44f5dbd",
+     "mode": "build",
+     "name": "q:all:8:-alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:9:- alpha",
+     "options": {
+      "existing_only": false,
+      "query": "- alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:10:-",
+     "options": {
+      "existing_only": false,
+      "query": "-",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "62ae12deca427506",
+     "mode": "build",
+     "name": "q:all:11:--alpha",
+     "options": {
+      "existing_only": false,
+      "query": "--alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "9bb5b01cd6f44117",
+     "mode": "build",
+     "name": "q:all:12:alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha -beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "6aeb30ffa44f5dbd",
+     "mode": "build",
+     "name": "q:all:13:-alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha -beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:15:\"hello\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"hello\"",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:18:\"unclosed",
+     "options": {
+      "existing_only": false,
+      "query": "\"unclosed",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "0893934baab06dc9",
+     "mode": "build",
+     "name": "q:all:21:/al.ha/",
+     "options": {
+      "existing_only": false,
+      "query": "/al.ha/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:24:/(/",
+     "options": {
+      "existing_only": false,
+      "query": "/(/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "9c2f37c7de5fcbea",
+     "mode": "build",
+     "name": "q:all:27:/a/b/",
+     "options": {
+      "existing_only": false,
+      "query": "/a/b/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "562c6a49558a3481",
+     "mode": "build",
+     "name": "q:all:30:PATH:Sub",
+     "options": {
+      "existing_only": false,
+      "query": "PATH:Sub",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:33:file:note",
+     "options": {
+      "existing_only": false,
+      "query": "file:note",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:36:file:/^n/",
+     "options": {
+      "existing_only": false,
+      "query": "file:/^n/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:39:tag:X",
+     "options": {
+      "existing_only": false,
+      "query": "tag:X",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:42:tag:a/b",
+     "options": {
+      "existing_only": false,
+      "query": "tag:a/b",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:45:tag:#",
+     "options": {
+      "existing_only": false,
+      "query": "tag:#",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:48:tag:x OR tag:y",
+     "options": {
+      "existing_only": false,
+      "query": "tag:x OR tag:y",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:51:content:hello",
+     "options": {
+      "existing_only": false,
+      "query": "content:hello",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:54:content:/h.llo/",
+     "options": {
+      "existing_only": false,
+      "query": "content:/h.llo/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:57:unknown:foo",
+     "options": {
+      "existing_only": false,
+      "query": "unknown:foo",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "5c3137a06c294995",
+     "mode": "build",
+     "name": "q:all:60:path:sub OR file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "path:sub OR file:alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "9c2f37c7de5fcbea",
+     "mode": "build",
+     "name": "q:all:63:sub/",
+     "options": {
+      "existing_only": false,
+      "query": "sub/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "2b88b40d28822970",
+     "mode": "build",
+     "name": "q:all:66:é",
+     "options": {
+      "existing_only": false,
+      "query": "é",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:69:x y z",
+     "options": {
+      "existing_only": false,
+      "query": "x y z",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:72:[[alpha]]",
+     "options": {
+      "existing_only": false,
+      "query": "[[alpha]]",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "4ca672bf45c2108b",
+     "mode": "build",
+     "name": "q:all:75:-path:sub -file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-path:sub -file:alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:78:File:note",
+     "options": {
+      "existing_only": false,
+      "query": "File:note",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:81:a\\b",
+     "options": {
+      "existing_only": false,
+      "query": "a\\b",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:84:\"a\\\"b\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"a\\\"b\"",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:87:*",
+     "options": {
+      "existing_only": false,
+      "query": "*",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "62ae12deca427506",
+     "mode": "build",
+     "name": "q:all:90: ",
+     "options": {
+      "existing_only": false,
+      "query": " ",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "6b465e23319c683b",
+     "mode": "build",
+     "name": "grp:all:True:0",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "alpha",
+       "beta"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ddab4d8e535d3110",
+     "mode": "build",
+     "name": "grp:all:True:1",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "tag:x",
+       "path:sub",
+       "-alpha"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "969541f025f8c855",
+     "mode": "build",
+     "name": "grp:all:True:2",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "",
+       "  ",
+       "alpha",
+       "content:hello"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "46cb334913680323",
+     "mode": "build",
+     "name": "grp:all:True:3",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "file:png",
+       "tag:y/z",
+       "a",
+       "b",
+       "c",
+       "d",
+       "e",
+       "f",
+       "g",
+       "h",
+       "i",
+       "j"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "62ae12deca427506",
+     "mode": "build",
+     "name": "grp:all:True:4",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "/[/",
+       "tag:#x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "79763b8922254dea",
+     "mode": "build",
+     "name": "grp:all:True:5",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "x",
+       "x",
+       "x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "89abafaac560f09a",
+     "mode": "build",
+     "name": "grp:all:False:0",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "alpha",
+       "beta"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f9db75fbe2547a53",
+     "mode": "build",
+     "name": "grp:all:False:1",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "tag:x",
+       "path:sub",
+       "-alpha"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "21bd1f66697049e2",
+     "mode": "build",
+     "name": "grp:all:False:2",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "",
+       "  ",
+       "alpha",
+       "content:hello"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "9290dc4ff7e9abd7",
+     "mode": "build",
+     "name": "grp:all:False:3",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "file:png",
+       "tag:y/z",
+       "a",
+       "b",
+       "c",
+       "d",
+       "e",
+       "f",
+       "g",
+       "h",
+       "i",
+       "j"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "62ae12deca427506",
+     "mode": "build",
+     "name": "grp:all:False:4",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "/[/",
+       "tag:#x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "8716d5d930fb4887",
+     "mode": "build",
+     "name": "grp:all:False:5",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "x",
+       "x",
+       "x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "ecfc4e65c34a981c",
+     "mode": "build",
+     "name": "q:strict:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ecfc4e65c34a981c",
+     "mode": "build",
+     "name": "q:strict:1:ALPHA",
+     "options": {
+      "existing_only": false,
+      "query": "ALPHA",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:2:alpha beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ecfc4e65c34a981c",
+     "mode": "build",
+     "name": "q:strict:3:alpha OR beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ecfc4e65c34a981c",
+     "mode": "build",
+     "name": "q:strict:4:alpha OR",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ecfc4e65c34a981c",
+     "mode": "build",
+     "name": "q:strict:5:OR alpha",
+     "options": {
+      "existing_only": false,
+      "query": "OR alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:6:OR",
+     "options": {
+      "existing_only": false,
+      "query": "OR",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ecfc4e65c34a981c",
+     "mode": "build",
+     "name": "q:strict:7:alpha  OR  beta gamma OR delta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha  OR  beta gamma OR delta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "d7432c6b409d6cb1",
+     "mode": "build",
+     "name": "q:strict:8:-alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:9:- alpha",
+     "options": {
+      "existing_only": false,
+      "query": "- alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:10:-",
+     "options": {
+      "existing_only": false,
+      "query": "-",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b2e321b3b724c3d0",
+     "mode": "build",
+     "name": "q:strict:11:--alpha",
+     "options": {
+      "existing_only": false,
+      "query": "--alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ecfc4e65c34a981c",
+     "mode": "build",
+     "name": "q:strict:12:alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha -beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "d7432c6b409d6cb1",
+     "mode": "build",
+     "name": "q:strict:13:-alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha -beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:15:\"hello\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"hello\"",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:18:\"unclosed",
+     "options": {
+      "existing_only": false,
+      "query": "\"unclosed",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ecfc4e65c34a981c",
+     "mode": "build",
+     "name": "q:strict:21:/al.ha/",
+     "options": {
+      "existing_only": false,
+      "query": "/al.ha/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:24:/(/",
+     "options": {
+      "existing_only": false,
+      "query": "/(/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "bb731511e18f169a",
+     "mode": "build",
+     "name": "q:strict:27:/a/b/",
+     "options": {
+      "existing_only": false,
+      "query": "/a/b/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "58735a5aeea1ecdf",
+     "mode": "build",
+     "name": "q:strict:30:PATH:Sub",
+     "options": {
+      "existing_only": false,
+      "query": "PATH:Sub",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:33:file:note",
+     "options": {
+      "existing_only": false,
+      "query": "file:note",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:36:file:/^n/",
+     "options": {
+      "existing_only": false,
+      "query": "file:/^n/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:39:tag:X",
+     "options": {
+      "existing_only": false,
+      "query": "tag:X",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:42:tag:a/b",
+     "options": {
+      "existing_only": false,
+      "query": "tag:a/b",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:45:tag:#",
+     "options": {
+      "existing_only": false,
+      "query": "tag:#",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:48:tag:x OR tag:y",
+     "options": {
+      "existing_only": false,
+      "query": "tag:x OR tag:y",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:51:content:hello",
+     "options": {
+      "existing_only": false,
+      "query": "content:hello",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:54:content:/h.llo/",
+     "options": {
+      "existing_only": false,
+      "query": "content:/h.llo/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:57:unknown:foo",
+     "options": {
+      "existing_only": false,
+      "query": "unknown:foo",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "58735a5aeea1ecdf",
+     "mode": "build",
+     "name": "q:strict:60:path:sub OR file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "path:sub OR file:alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "bb731511e18f169a",
+     "mode": "build",
+     "name": "q:strict:63:sub/",
+     "options": {
+      "existing_only": false,
+      "query": "sub/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:66:é",
+     "options": {
+      "existing_only": false,
+      "query": "é",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:69:x y z",
+     "options": {
+      "existing_only": false,
+      "query": "x y z",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:72:[[alpha]]",
+     "options": {
+      "existing_only": false,
+      "query": "[[alpha]]",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ecfc4e65c34a981c",
+     "mode": "build",
+     "name": "q:strict:75:-path:sub -file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-path:sub -file:alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:78:File:note",
+     "options": {
+      "existing_only": false,
+      "query": "File:note",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:81:a\\b",
+     "options": {
+      "existing_only": false,
+      "query": "a\\b",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:84:\"a\\\"b\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"a\\\"b\"",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:87:*",
+     "options": {
+      "existing_only": false,
+      "query": "*",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b2e321b3b724c3d0",
+     "mode": "build",
+     "name": "q:strict:90: ",
+     "options": {
+      "existing_only": false,
+      "query": " ",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "depth": 1,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 1,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 1,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 1,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 2,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 2,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 2,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 2,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 6,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 6,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 6,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 6,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Straße.js:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 1,
+     "digest": "77712df37f2cc515",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 1,
+     "digest": "77712df37f2cc515",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 1,
+     "digest": "77712df37f2cc515",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 1,
+     "digest": "77712df37f2cc515",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 2,
+     "digest": "77712df37f2cc515",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 2,
+     "digest": "77712df37f2cc515",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 2,
+     "digest": "77712df37f2cc515",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 2,
+     "digest": "77712df37f2cc515",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 6,
+     "digest": "77712df37f2cc515",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 6,
+     "digest": "77712df37f2cc515",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 6,
+     "digest": "77712df37f2cc515",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 6,
+     "digest": "77712df37f2cc515",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a.b.css:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 1,
+     "digest": "503288dcf5cafc13",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 1,
+     "digest": "503288dcf5cafc13",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 1,
+     "digest": "503288dcf5cafc13",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 1,
+     "digest": "503288dcf5cafc13",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 2,
+     "digest": "503288dcf5cafc13",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 2,
+     "digest": "503288dcf5cafc13",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 2,
+     "digest": "503288dcf5cafc13",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 2,
+     "digest": "503288dcf5cafc13",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 6,
+     "digest": "503288dcf5cafc13",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 6,
+     "digest": "503288dcf5cafc13",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 6,
+     "digest": "503288dcf5cafc13",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 6,
+     "digest": "503288dcf5cafc13",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.ts:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 1,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 1,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 1,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 1,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 2,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 2,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 2,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 2,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 6,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 6,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 6,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 6,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:strasse.markdown:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 1,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "08cb9dfd1cc8306b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:STRASSE.JS:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 1,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 1,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 1,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 2,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 2,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 2,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 2,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 6,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 6,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 6,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 6,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/strasse.md:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Straße.js:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a.b.css:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a.b.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.ts:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.ts"
+    },
+    {
+     "depth": 1,
+     "digest": "6c213cc7eac0cdc2",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 1,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 1,
+     "digest": "6c213cc7eac0cdc2",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 1,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 2,
+     "digest": "38da12e2463f5011",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 2,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 2,
+     "digest": "6c213cc7eac0cdc2",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 2,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 6,
+     "digest": "027c96e7ebe4d85b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 6,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 6,
+     "digest": "6c213cc7eac0cdc2",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 6,
+     "digest": "2c78ccf50fd320f4",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:strasse.markdown:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "strasse.markdown"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:STRASSE.JS:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "STRASSE.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "164391866c073a4b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 1,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 1,
+     "digest": "164391866c073a4b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 1,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 2,
+     "digest": "f39502a39700f62b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 2,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 2,
+     "digest": "164391866c073a4b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 2,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 6,
+     "digest": "f39502a39700f62b",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 6,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 6,
+     "digest": "164391866c073a4b",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 6,
+     "digest": "5f4a09929d6c6c5d",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/strasse.md:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/strasse.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:",
+     "options": {},
+     "prefix": ""
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:/",
+     "options": {},
+     "prefix": "/"
+    },
+    {
+     "digest": "672fbba1359df325",
+     "mode": "folder",
+     "name": "fold:dflt:sub",
+     "options": {},
+     "prefix": "sub"
+    },
+    {
+     "digest": "672fbba1359df325",
+     "mode": "folder",
+     "name": "fold:dflt:sub/",
+     "options": {},
+     "prefix": "sub/"
+    },
+    {
+     "digest": "672fbba1359df325",
+     "mode": "folder",
+     "name": "fold:dflt:/sub/",
+     "options": {},
+     "prefix": "/sub/"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:x",
+     "options": {},
+     "prefix": "x"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:y/z",
+     "options": {},
+     "prefix": "y/z"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:nonexistent",
+     "options": {},
+     "prefix": "nonexistent"
+    },
+    {
+     "digest": "cebbfc899304a80a",
+     "mode": "folder",
+     "name": "fold:dflt:Sub",
+     "options": {},
+     "prefix": "Sub"
+    },
+    {
+     "digest": "99473007659f347a",
+     "mode": "folder",
+     "name": "fold:dflt:a",
+     "options": {},
+     "prefix": "a"
+    },
+    {
+     "digest": "c839b44051d8d304",
+     "mode": "folder",
+     "name": "fold:dflt:src",
+     "options": {},
+     "prefix": "src"
+    },
+    {
+     "digest": "672fbba1359df325",
+     "mode": "folder",
+     "name": "fold:dflt:sub",
+     "options": {},
+     "prefix": "sub"
+    },
+    {
+     "digest": "2b88b40d28822970",
+     "mode": "folder",
+     "name": "fold:dflt:sub/deep",
+     "options": {},
+     "prefix": "sub/deep"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 0,
+   "runs": [
+    {
+     "digest": "b2b9d196eea31694",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b2b9d196eea31694",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b2b9d196eea31694",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:Straße.js:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:a.b.css:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "a.b.css"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 1,
+   "runs": [
+    {
+     "digest": "09b1f6d346d79c6f",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "1e1520ea79dc48e3",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "1e1520ea79dc48e3",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:Straße.js:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:a.b.css:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "a.b.css"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 3,
+   "runs": [
+    {
+     "digest": "9c1d8a35cf07f2be",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "18a7af9f07c976ef",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "8ac5e2c9e5acae62",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:Straße.js:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:a.b.css:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "a.b.css"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 8,
+   "runs": [
+    {
+     "digest": "ead08deaeb248669",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "18a7af9f07c976ef",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "e063e9ee3e60108b",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:Straße.js:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "Straße.js"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:a.b.css:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "a.b.css"
+    }
+   ]
+  }
+ ],
+ "tree": {
+  "files": [
+   {
+    "path": "Straße.js",
+    "text": "require('lib')\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "Sub/a.b.png"
+   },
+   {
+    "path": "Sub/a.b.txt",
+    "text": "---\ntags: [t2, T1]\n---\n![[a.b.md]]\n"
+   },
+   {
+    "path": "Sub/strasse.py",
+    "text": "\n"
+   },
+   {
+    "path": "a/delta.css",
+    "text": ".a{background:url(/alpha.css)}\n@import 'img/a.png';\n@import 'sub/beta.css';\n@import '/alpha.css';\n"
+   },
+   {
+    "path": "a/strasse.md",
+    "text": "[[main]]\n![i](../sub/delta.md)\n![i](/main.png)\n![i](x.png)\n`[[main.png]]`\n[[alpha.md]]\n<../sub/MAIN>\n![i](sub/index)\n"
+   },
+   {
+    "path": "a/util.js",
+    "text": "import x from './gamma'\nrequire('./main.css')\nimport '../sub/alpha'\n"
+   },
+   {
+    "path": "a.b.css",
+    "text": ".a{background:url(alpha.css)}\n.a{background:url(x.png)}\n"
+   },
+   {
+    "path": "alpha.ts",
+    "text": "import x from 'lib'\nrequire('./util.js')\nimport x from './util.js'\nrequire('lib')\nimport './main.css'\n"
+   },
+   {
+    "path": "src/Straße.html",
+    "text": "<a href=\"alpha.css\">\n<img src=../main.js>\n<img src=../main.js>\n"
+   },
+   {
+    "path": "src/index.ts",
+    "text": "\n"
+   },
+   {
+    "path": "src/util.css",
+    "text": "@import 'x.png';\n@import '/alpha.css';\n"
+   },
+   {
+    "path": "strasse.markdown",
+    "text": "[[alpha.md]]\n"
+   },
+   {
+    "path": "sub/deep/é.css",
+    "text": ".a{background:url(x.png)}\n.a{background:url(alpha.css)}\n@import 'x.png';\n.a{background:url(sub/beta.css)}\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "sub/gamma.png"
+   },
+   {
+    "path": "sub/strasse.markdown",
+    "text": "---\ntags: [t1/x, t1]\n---\n[[MAIN]]\n[t](/straße)\n"
+   }
+  ]
+ }
+}

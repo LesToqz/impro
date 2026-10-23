@@ -1,0 +1,82 @@
+{
+ "digests": [
+  "89fb0e665ca37d51",
+  "3926829957fd7a05",
+  "eec8842650cccb9b",
+  "0c3d19a5ba80f67d",
+  "3b7a898afcadae74",
+  "2dae8cdac6f56bbf"
+ ],
+ "ops": [
+  {
+   "op": "delete",
+   "path": "b.md"
+  },
+  {
+   "op": "write",
+   "path": "b.md",
+   "text": "[[a]]\n"
+  },
+  {
+   "op": "delete",
+   "path": "dir"
+  },
+  {
+   "op": "delete",
+   "path": "img.png"
+  },
+  {
+   "op": "delete",
+   "path": "m.py"
+  }
+ ],
+ "options": {
+  "existing_only": false,
+  "show_attachments": true,
+  "show_tags": true
+ },
+ "tree": {
+  "files": [
+   {
+    "path": "a.md",
+    "text": "[[b]] #t1\n"
+   },
+   {
+    "path": "b.md",
+    "text": "[[c]] [[a]]\n"
+   },
+   {
+    "path": "c.md",
+    "text": ""
+   },
+   {
+    "path": "dir/d.md",
+    "text": "[[a]] [[e]]\n"
+   },
+   {
+    "path": "dir/sub/e.md",
+    "text": "---\naliases: [Eee]\n---\n[[b]]\n"
+   },
+   {
+    "path": "f.md",
+    "text": "[[Eee]] [[img.png]] ![[img.png]]\n"
+   },
+   {
+    "path": "g.md",
+    "text": "[[b]]\n"
+   },
+   {
+    "b64": "AA==",
+    "path": "img.png"
+   },
+   {
+    "path": "m.py",
+    "text": "import n\n"
+   },
+   {
+    "path": "n.py",
+    "text": ""
+   }
+  ]
+ }
+}

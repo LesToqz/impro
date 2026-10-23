@@ -1,0 +1,229 @@
+{
+ "digests": [
+  "84d17ed4c39911f4",
+  "84d17ed4c39911f4",
+  "84d17ed4c39911f4",
+  "fecd47b0f546fcb6",
+  "d8fba90042fd7ab4",
+  "118b5422f457d575",
+  "2363c40802082713",
+  "a8048f1fd722a496",
+  "a8048f1fd722a496",
+  "792bd1c569f8286d",
+  "792bd1c569f8286d",
+  "df303f96ae39e566",
+  "d354520b15e5a887",
+  "d354520b15e5a887",
+  "33ba72bdcc8fe491",
+  "9df667c08f150cfc",
+  "96a152e199e6d8be",
+  "5b52c9463ccaa0dc",
+  "698eedd0885756c2",
+  "875839bcc0203c3c",
+  "875839bcc0203c3c",
+  "609d02d5743366bf",
+  "4f9366d31ba177ff",
+  "4f9366d31ba177ff",
+  "015b6120dcfca11a",
+  "015b6120dcfca11a",
+  "31b6ca324b48ca18",
+  "623079353c0476af",
+  "623079353c0476af",
+  "623079353c0476af",
+  "623079353c0476af"
+ ],
+ "ops": [
+  {
+   "op": "set_text",
+   "path": "a/b/index.html",
+   "text": "[t](./strasse.md)\n[t](GAMMA)\n[[alpha]]\n[[../sub/index#h|alias]]\n![[UTIL]]\n[[sub/DELTA#h|alias]]\n"
+  },
+  {
+   "op": "delete",
+   "path": "alpha.txt"
+  },
+  {
+   "from": "src/é.html",
+   "op": "rename",
+   "to": "util.html"
+  },
+  {
+   "from": "alpha.md",
+   "op": "rename",
+   "to": "src/alpha.md"
+  },
+  {
+   "op": "delete",
+   "path": "util.html"
+  },
+  {
+   "op": "write",
+   "path": "Sub/gamma.md",
+   "text": "---\naliases: [gamma]\ntags: [proj/a/b, Proj]\n---\n[[sub/index.md#h|alias]]\n[[gamma]]\n#Proj\n"
+  },
+  {
+   "from": "gamma.js",
+   "op": "rename",
+   "to": "Sub/x.js"
+  },
+  {
+   "op": "write",
+   "path": "src/Straße.png",
+   "text": "---\ntags: [proj/a/b, T1]\n---\n![i](../sub/gamma)\n[[Straße]]\n[[beta.md]]\n[[Straße.png]]\n"
+  },
+  {
+   "op": "delete",
+   "path": "a/b/Straße.css"
+  },
+  {
+   "op": "delete",
+   "path": "src/Straße.png"
+  },
+  {
+   "from": "Sub/gamma.md",
+   "op": "rename",
+   "to": "a/b/é.md"
+  },
+  {
+   "op": "delete",
+   "path": "src/alpha.md"
+  },
+  {
+   "op": "write",
+   "path": "a/b/alpha.txt",
+   "text": "\n"
+  },
+  {
+   "from": "a/b/é.md",
+   "op": "rename",
+   "to": "delta.md"
+  },
+  {
+   "op": "delete",
+   "path": "sub/deep/alpha.js"
+  },
+  {
+   "from": "delta.md",
+   "op": "rename",
+   "to": "a/Straße.md"
+  },
+  {
+   "op": "delete",
+   "path": "Sub/x.js"
+  },
+  {
+   "from": "gamma.py",
+   "op": "rename",
+   "to": "other/a.b.py"
+  },
+  {
+   "from": "é.py",
+   "op": "rename",
+   "to": "other/strasse.md"
+  },
+  {
+   "op": "write",
+   "path": "strasse.txt",
+   "text": "[t](../a.b)\n[[BETA]]\n<sub/UTIL>\n[t](../sub/DELTA)\n[t](./X)\n#T1\n![i](/alpha)\n[t](gamma.png)\n"
+  },
+  {
+   "op": "delete",
+   "path": "other/a.b.py"
+  },
+  {
+   "op": "delete",
+   "path": "other/strasse.md"
+  },
+  {
+   "op": "set_text",
+   "path": "a/Straße.md",
+   "text": null
+  },
+  {
+   "op": "delete",
+   "path": "a/Straße.md"
+  },
+  {
+   "op": "set_text",
+   "path": "a/b/alpha.txt",
+   "text": null
+  },
+  {
+   "from": "src/util.markdown",
+   "op": "rename",
+   "to": "sub/deep/Straße.markdown"
+  },
+  {
+   "from": "Alpha.markdown",
+   "op": "rename",
+   "to": "src/strasse.markdown"
+  },
+  {
+   "op": "set_text",
+   "path": "src/strasse.markdown",
+   "text": null
+  },
+  {
+   "op": "delete",
+   "path": "a/b/alpha.txt"
+  },
+  {
+   "op": "set_text",
+   "path": "a/b/index.html",
+   "text": "[[../sub/index#h|alias]]\n[[a.b.md]]\n[[Gamma Ray.png]]\n![i](Gamma Ray.png)\n<sub/delta>\n"
+  }
+ ],
+ "options": {
+  "existing_only": false,
+  "show_attachments": true,
+  "show_tags": true
+ },
+ "tree": {
+  "files": [
+   {
+    "path": "Alpha.markdown",
+    "text": "[[gamma.png]]\n[[É]]\n![i](/x.png)\n![i](../sub/index.png)\n"
+   },
+   {
+    "path": "a/b/Straße.css",
+    "text": ".a{background:url(../main.css)}\n.a{background:url(sub/beta.css)}\n"
+   },
+   {
+    "path": "a/b/index.html",
+    "text": "<img src=#top>\n<script src='x.png'>\n<img src=sub/beta.html>\n<script src='https://x.y'>\n"
+   },
+   {
+    "path": "alpha.md",
+    "text": "`[[BETA]]`\n![[alpha.md]]\n"
+   },
+   {
+    "path": "alpha.txt",
+    "text": "\n"
+   },
+   {
+    "path": "gamma.js",
+    "text": "import x from '../sub/alpha'\nexport * from './alpha'\nrequire('..')\n"
+   },
+   {
+    "path": "gamma.py",
+    "text": "import gamma\nfrom .subgamma import alpha\n"
+   },
+   {
+    "path": "src/util.markdown",
+    "text": "[t](../sub/é.png)\n[t](./STRASSE)\n![[delta.png]]\n<./Straße>\n![i](../Straße)\n[[é]]\n[[gamma]]\n#T1\n"
+   },
+   {
+    "path": "src/é.html",
+    "text": "<script src='x.png'>\n<img src=/alpha.css>\n"
+   },
+   {
+    "path": "sub/deep/alpha.js",
+    "text": "import '..'\nrequire('./util.js')\nrequire('lib')\n"
+   },
+   {
+    "path": "é.py",
+    "text": "\n"
+   }
+  ]
+ }
+}

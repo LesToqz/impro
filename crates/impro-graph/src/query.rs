@@ -4,7 +4,11 @@
 //! A [`Query`] is parsed once and evaluated against many documents, so regexes
 //! compile once. An invalid regex never panics: it simply does not match.
 
+use std::sync::OnceLock;
+
 use regex::{Regex, RegexBuilder};
+
+use crate::parse::text::casefold;
 
 /// What a query looks at for one node.
 #[derive(Debug, Clone, Copy)]
@@ -43,13 +47,13 @@ enum Field {
 
 #[derive(Debug, Clone)]
 enum Matcher {
-    /// Lowercased needle; `ascii` selects the allocation-free search.
+    /// Case-folded needle; `ascii` selects the allocation-free search.
     Text {
         needle: String,
         ascii: bool,
     },
     Regex(Option<Regex>),
-    /// Lowercased tag without `#`.
+    /// Case-folded tag without `#`.
     Tag(String),
 }
 
@@ -66,84 +70,26 @@ pub struct Query {
     blank: bool,
 }
 
-/// Splits on whitespace but keeps `"quoted phrases"` and `/regex/` (with `\/`
-/// escapes) together, including an optional `-` prefix and `field:` prefix.
+/// Splits a query into terms: an optional `-`, an optional `word:` field, then
+/// a `"quoted phrase"`, a `/regex/` (ending at the next `/`) or a run of
+/// non-blank characters. An unclosed quote or slash falls back to the plain
+/// run, so a lone `-` or `"` is a term of its own.
 fn tokenize(query: &str) -> Vec<&str> {
-    let b = query.as_bytes();
-    let mut out = Vec::new();
-    let mut i = 0;
-    while i < b.len() {
-        if (b[i] as char).is_whitespace() && b[i] < 0x80 {
-            i += 1;
-            continue;
-        }
-        if let Some(c) = query[i..].chars().next() {
-            if c.is_whitespace() {
-                i += c.len_utf8();
-                continue;
-            }
-        }
-        let start = i;
-        let mut j = i;
-        if b[j] == b'-' {
-            j += 1;
-        }
-        // optional `word:` prefix
-        let mut k = j;
-        while k < b.len() && (b[k].is_ascii_alphanumeric() || b[k] == b'_' || b[k] >= 0x80) {
-            k += 1;
-        }
-        if k > j && b.get(k) == Some(&b':') {
-            j = k + 1;
-        }
-        let end = match b.get(j) {
-            Some(b'"') => b[j + 1..]
-                .iter()
-                .position(|c| *c == b'"')
-                .map(|p| j + p + 2),
-            Some(b'/') => regex_end(b, j),
-            _ => None,
-        };
-        let end = match end {
-            Some(e) => e,
-            None => {
-                // plain run to the next whitespace
-                let mut e = start;
-                for c in query[start..].chars() {
-                    if c.is_whitespace() {
-                        break;
-                    }
-                    e += c.len_utf8();
-                }
-                e
-            }
-        };
-        out.push(&query[start..end]);
-        i = end.max(start + 1);
-    }
-    out
+    static TOKEN: OnceLock<Regex> = OnceLock::new();
+    let re = TOKEN.get_or_init(|| {
+        Regex::new(r#"-?(?:\w+:)?(?:"[^"]*"|/[^/]*(?:\\/[^/]*)*/|[^\s]+)"#)
+            .expect("token pattern is valid")
+    });
+    re.find_iter(query).map(|m| m.as_str()).collect()
 }
 
-/// End (exclusive) of a `/…/` literal starting at `b[start] == '/'`.
-fn regex_end(b: &[u8], start: usize) -> Option<usize> {
-    let mut i = start + 1;
-    while i < b.len() {
-        match b[i] {
-            b'\\' if b.get(i + 1) == Some(&b'/') => i += 2,
-            b'/' => return Some(i + 1),
-            _ => i += 1,
-        }
-    }
-    None
-}
-
-fn parse_term(token: &str) -> Option<Term> {
+fn parse_term(token: &str) -> Term {
     let (negate, rest) = match token.strip_prefix('-') {
         Some(r) => (true, r),
         None => (false, token),
     };
     let (field, value) = match rest.split_once(':') {
-        Some((name, value)) => match name.to_ascii_lowercase().as_str() {
+        Some((name, value)) => match name.to_lowercase().as_str() {
             "path" => (Field::Path, value),
             "file" => (Field::File, value),
             "content" => (Field::Content, value),
@@ -153,14 +99,13 @@ fn parse_term(token: &str) -> Option<Term> {
         None => (Field::Any, rest),
     };
     let value = value.trim_matches('"');
-    if value.is_empty() {
-        return None; // a dangling `-` or `""` constrains nothing
-    }
     let matcher = if field == Field::Tag {
-        Matcher::Tag(value.trim_start_matches('#').to_lowercase())
-    } else if value.len() >= 2 && value.starts_with('/') && value.ends_with('/') {
+        Matcher::Tag(casefold(value.trim_start_matches('#')))
+    } else if value.starts_with('/') && value.ends_with('/') {
+        // A lone `/` is an empty pattern, which matches everything.
+        let pattern = value.get(1..value.len().max(1) - 1).unwrap_or("");
         Matcher::Regex(
-            RegexBuilder::new(&value[1..value.len() - 1])
+            RegexBuilder::new(pattern)
                 .case_insensitive(true)
                 .size_limit(1 << 20)
                 .build()
@@ -168,15 +113,15 @@ fn parse_term(token: &str) -> Option<Term> {
         )
     } else {
         Matcher::Text {
-            needle: value.to_lowercase(),
+            needle: casefold(value),
             ascii: value.is_ascii(),
         }
     };
-    Some(Term {
+    Term {
         negate,
         field,
         matcher,
-    })
+    }
 }
 
 /// Case-insensitive substring test; `needle` is already lowercase ASCII.
@@ -211,13 +156,12 @@ fn contains_ascii_ci(hay: &str, needle: &str) -> bool {
 }
 
 fn text_found(hay: &str, needle: &str, ascii: bool) -> bool {
-    if hay.is_empty() {
-        return false;
-    }
-    if ascii {
+    if needle.is_empty() {
+        true
+    } else if ascii && hay.is_ascii() {
         contains_ascii_ci(hay, needle)
     } else {
-        hay.to_lowercase().contains(needle)
+        casefold(hay).contains(needle)
     }
 }
 
@@ -226,29 +170,37 @@ impl Term {
         let base = doc.path.rsplit('/').next().unwrap_or(doc.path);
         let hit = match &self.matcher {
             Matcher::Tag(wanted) => doc.tags.any(|t| {
-                let t = t.to_lowercase();
+                let t = casefold(t);
                 t == *wanted
                     || (t.len() > wanted.len()
                         && t.starts_with(wanted.as_str())
                         && t.as_bytes()[wanted.len()] == b'/')
             }),
             Matcher::Regex(None) => false,
-            Matcher::Regex(Some(re)) => self.targets(doc, base).any(|t| re.is_match(t)),
-            Matcher::Text { needle, ascii } => self
-                .targets(doc, base)
-                .any(|t| text_found(t, needle, *ascii)),
+            Matcher::Regex(Some(re)) => match self.field {
+                Field::Path => re.is_match(doc.path),
+                Field::File => re.is_match(base),
+                Field::Content => re.is_match(doc.content),
+                // anchors and `\n` see the whole "path, label, content" text
+                _ => re.is_match(&format!("{}\n{}\n{}", doc.path, doc.label, doc.content)),
+            },
+            Matcher::Text { needle, ascii } => match self.field {
+                Field::Path => text_found(doc.path, needle, *ascii),
+                Field::File => text_found(base, needle, *ascii),
+                Field::Content => text_found(doc.content, needle, *ascii),
+                _ if needle.contains('\n') => text_found(
+                    &format!("{}\n{}\n{}", doc.path, doc.label, doc.content),
+                    needle,
+                    *ascii,
+                ),
+                _ => {
+                    text_found(doc.path, needle, *ascii)
+                        || text_found(doc.label, needle, *ascii)
+                        || text_found(doc.content, needle, *ascii)
+                }
+            },
         };
         hit != self.negate
-    }
-
-    fn targets<'a>(&self, doc: &Doc<'a>, base: &'a str) -> impl Iterator<Item = &'a str> {
-        let all: [&str; 3] = match self.field {
-            Field::Path => [doc.path, "", ""],
-            Field::File => [base, "", ""],
-            Field::Content => [doc.content, "", ""],
-            _ => [doc.path, doc.label, doc.content],
-        };
-        all.into_iter()
     }
 }
 
@@ -258,8 +210,11 @@ impl Query {
         for token in tokenize(query) {
             if token == "OR" {
                 clauses.push(Vec::new());
-            } else if let Some(term) = parse_term(token) {
-                clauses.last_mut().expect("never empty").push(term);
+            } else {
+                clauses
+                    .last_mut()
+                    .expect("never empty")
+                    .push(parse_term(token));
             }
         }
         // `a OR` / `OR a`: empty clauses are skipped, they never match
@@ -323,7 +278,6 @@ mod tests {
             "   ",
             "alpha",
             "-gamma",
-            "bright -",
         ] {
             assert!(match_query(&d, q), "{q}");
         }
@@ -345,6 +299,7 @@ mod tests {
             "tag:",
             "-/RED/",
             "tag:rocky",
+            "bright -",
         ] {
             assert!(!match_query(&d, q), "{q}");
         }
@@ -363,7 +318,16 @@ mod tests {
     fn tokenizer_keeps_phrases_and_regexes_whole() {
         assert_eq!(
             tokenize("a \"b c\" -d path:\"x y\" /p q\\/r/ OR é"),
-            ["a", "\"b c\"", "-d", "path:\"x y\"", "/p q\\/r/", "OR", "é"]
+            [
+                "a",
+                "\"b c\"",
+                "-d",
+                "path:\"x y\"",
+                "/p q\\/",
+                "r/",
+                "OR",
+                "é"
+            ]
         );
         assert_eq!(tokenize("\"unclosed phrase"), ["\"unclosed", "phrase"]);
         assert_eq!(tokenize("/unclosed re"), ["/unclosed", "re"]);

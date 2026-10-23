@@ -1,0 +1,9001 @@
+{
+ "scenarios": [
+  {
+   "full": {
+    "fold:dflt:sub": {
+     "focus": null,
+     "links": [],
+     "nodes": [
+      {
+       "folder": "sub/deep",
+       "group": null,
+       "id": "sub/deep/a.b.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "a.b",
+       "out": 0,
+       "path": "sub/deep/a.b.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "fold:dflt:sub/": {
+     "focus": null,
+     "links": [],
+     "nodes": [
+      {
+       "folder": "sub/deep",
+       "group": null,
+       "id": "sub/deep/a.b.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "a.b",
+       "out": 0,
+       "path": "sub/deep/a.b.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "fold:dflt:sub/deep": {
+     "focus": null,
+     "links": [],
+     "nodes": [
+      {
+       "folder": "sub/deep",
+       "group": null,
+       "id": "sub/deep/a.b.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "a.b",
+       "out": 0,
+       "path": "sub/deep/a.b.markdown",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:1:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:2:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:../outside.md:6:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:1:00": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:1:01": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:1:10": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:1:11": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:2:00": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:2:01": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:2:10": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:2:11": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:6:00": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:6:01": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:6:10": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:ALPHA.JS:6:11": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:1:00": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:1:01": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:1:10": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:1:11": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:2:00": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:2:01": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:2:10": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:2:11": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:6:00": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:6:01": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:6:10": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Alpha.js:6:11": {
+     "focus": "Alpha.js",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:1:00": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 1,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 3,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:1:01": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#Proj"
+      },
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#t2"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "#Proj",
+       "in": 1,
+       "kind": "tag",
+       "label": "Proj",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "Proj"
+       ]
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "#t2",
+       "in": 1,
+       "kind": "tag",
+       "label": "t2",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "t2"
+       ]
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 3,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 5,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 2,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:1:10": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 1,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 3,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:1:11": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#Proj"
+      },
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#t2"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "#Proj",
+       "in": 1,
+       "kind": "tag",
+       "label": "Proj",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "Proj"
+       ]
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "#t2",
+       "in": 1,
+       "kind": "tag",
+       "label": "t2",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "t2"
+       ]
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 3,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 5,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 2,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:2:00": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 1,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 3,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:2:01": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#Proj"
+      },
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#t2"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "#Proj",
+       "in": 1,
+       "kind": "tag",
+       "label": "Proj",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "Proj"
+       ]
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "#t2",
+       "in": 1,
+       "kind": "tag",
+       "label": "t2",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "t2"
+       ]
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 3,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 5,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 2,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:2:10": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 1,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 3,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:2:11": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#Proj"
+      },
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#t2"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "#Proj",
+       "in": 1,
+       "kind": "tag",
+       "label": "Proj",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "Proj"
+       ]
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "#t2",
+       "in": 1,
+       "kind": "tag",
+       "label": "t2",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "t2"
+       ]
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 3,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 5,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 2,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:6:00": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 1,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 3,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:6:01": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#Proj"
+      },
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#t2"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "#Proj",
+       "in": 1,
+       "kind": "tag",
+       "label": "Proj",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "Proj"
+       ]
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "#t2",
+       "in": 1,
+       "kind": "tag",
+       "label": "t2",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "t2"
+       ]
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 3,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 5,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 2,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:6:10": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 1,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 3,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:Sub/Gamma Ray.md:6:11": {
+     "focus": "Sub/Gamma Ray.md",
+     "links": [
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#Proj"
+      },
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#t2"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "#Proj",
+       "in": 1,
+       "kind": "tag",
+       "label": "Proj",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "Proj"
+       ]
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "#t2",
+       "in": 1,
+       "kind": "tag",
+       "label": "t2",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "t2"
+       ]
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 3,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 5,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 2,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:1:00": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:1:01": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:1:10": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:1:11": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:2:00": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:2:01": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:2:10": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:2:11": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:6:00": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:6:01": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:6:10": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:a/Straße.css:6:11": {
+     "focus": "a/Straße.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:1:00": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:1:01": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:1:10": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:1:11": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:2:00": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:2:01": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:2:10": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:2:11": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:6:00": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:6:01": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:6:10": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:alpha.MD:6:11": {
+     "focus": "alpha.MD",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 1,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:1:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:2:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:00": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:01": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:10": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:does/not/exist.md:6:11": {
+     "focus": null,
+     "links": [],
+     "nodes": [],
+     "stats": {
+      "ambiguous": [],
+      "components": 0,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:1:00": {
+     "focus": "é.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 0,
+       "path": "é.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:1:01": {
+     "focus": "é.css",
+     "links": [
+      {
+       "count": 1,
+       "kind": "import",
+       "resolved": true,
+       "self": false,
+       "source": "é.css",
+       "target": "x.png"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "x.png",
+       "in": 1,
+       "kind": "attachment",
+       "label": "x",
+       "out": 0,
+       "path": "x.png",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 1,
+       "path": "é.css",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 1,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:1:10": {
+     "focus": "é.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 0,
+       "path": "é.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:1:11": {
+     "focus": "é.css",
+     "links": [
+      {
+       "count": 1,
+       "kind": "import",
+       "resolved": true,
+       "self": false,
+       "source": "é.css",
+       "target": "x.png"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "x.png",
+       "in": 1,
+       "kind": "attachment",
+       "label": "x",
+       "out": 0,
+       "path": "x.png",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 1,
+       "path": "é.css",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 1,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:2:00": {
+     "focus": "é.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 0,
+       "path": "é.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:2:01": {
+     "focus": "é.css",
+     "links": [
+      {
+       "count": 1,
+       "kind": "import",
+       "resolved": true,
+       "self": false,
+       "source": "é.css",
+       "target": "x.png"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "x.png",
+       "in": 1,
+       "kind": "attachment",
+       "label": "x",
+       "out": 0,
+       "path": "x.png",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 1,
+       "path": "é.css",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 1,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:2:10": {
+     "focus": "é.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 0,
+       "path": "é.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:2:11": {
+     "focus": "é.css",
+     "links": [
+      {
+       "count": 1,
+       "kind": "import",
+       "resolved": true,
+       "self": false,
+       "source": "é.css",
+       "target": "x.png"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "x.png",
+       "in": 1,
+       "kind": "attachment",
+       "label": "x",
+       "out": 0,
+       "path": "x.png",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 1,
+       "path": "é.css",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 1,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:6:00": {
+     "focus": "é.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 0,
+       "path": "é.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:6:01": {
+     "focus": "é.css",
+     "links": [
+      {
+       "count": 1,
+       "kind": "import",
+       "resolved": true,
+       "self": false,
+       "source": "é.css",
+       "target": "x.png"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "x.png",
+       "in": 1,
+       "kind": "attachment",
+       "label": "x",
+       "out": 0,
+       "path": "x.png",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 1,
+       "path": "é.css",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 1,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:6:10": {
+     "focus": "é.css",
+     "links": [],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 0,
+       "path": "é.css",
+       "size_hint": 1,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 0,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 1,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "loc:dflt:é.css:6:11": {
+     "focus": "é.css",
+     "links": [
+      {
+       "count": 1,
+       "kind": "import",
+       "resolved": true,
+       "self": false,
+       "source": "é.css",
+       "target": "x.png"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "x.png",
+       "in": 1,
+       "kind": "attachment",
+       "label": "x",
+       "out": 0,
+       "path": "x.png",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 1,
+       "path": "é.css",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [],
+      "components": 1,
+      "counts": {
+       "attachment": 1,
+       "code": 1,
+       "note": 0,
+       "tag": 0,
+       "unresolved": 0
+      },
+      "orphans": 0,
+      "unresolved": []
+     },
+     "truncated": false
+    },
+    "tg:000000": {
+     "focus": null,
+     "links": [
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "?../sub/INDEX"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "?main.md"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": false,
+       "self": false,
+       "source": "a/b/Alpha.md",
+       "target": "?./util"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "a/b/Alpha.md",
+       "target": "?beta.md"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": true,
+       "source": "a/b/Alpha.md",
+       "target": "a/b/Alpha.md"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "a/x.markdown",
+       "target": "?util.md"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": false,
+       "self": false,
+       "source": "a/x.markdown",
+       "target": "?é.md"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": true,
+       "source": "a/x.markdown",
+       "target": "a/x.markdown"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": false,
+       "self": false,
+       "source": "other/alpha.markdown",
+       "target": "?util"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "?../sub/INDEX",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "../sub/INDEX",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?./util",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "./util",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?beta.md",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "beta.md",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?main.md",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "main.md",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?util",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "util",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?util.md",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "util.md",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "?é.md",
+       "in": 1,
+       "kind": "unresolved",
+       "label": "é.md",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 3,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 5,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      },
+      {
+       "folder": "a/b",
+       "group": null,
+       "id": "a/b/Alpha.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Alpha",
+       "out": 3,
+       "path": "a/b/Alpha.md",
+       "size_hint": 5,
+       "tags": []
+      },
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/x.markdown",
+       "in": 1,
+       "kind": "note",
+       "label": "x",
+       "out": 3,
+       "path": "a/x.markdown",
+       "size_hint": 5,
+       "tags": []
+      },
+      {
+       "folder": "other",
+       "group": null,
+       "id": "other/alpha.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 1,
+       "path": "other/alpha.markdown",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [
+       {
+        "candidates": [
+         "a/b/Alpha.md",
+         "alpha.MD",
+         "other/alpha.markdown"
+        ],
+        "resolved": "a/b/Alpha.md",
+        "source": "a/b/Alpha.md",
+        "target": "alpha"
+       }
+      ],
+      "components": 4,
+      "counts": {
+       "attachment": 0,
+       "code": 0,
+       "note": 4,
+       "tag": 0,
+       "unresolved": 7
+      },
+      "orphans": 0,
+      "unresolved": [
+       "?../sub/INDEX",
+       "?./util",
+       "?beta.md",
+       "?main.md",
+       "?util",
+       "?util.md",
+       "?é.md"
+      ]
+     },
+     "truncated": false
+    },
+    "tg:111111": {
+     "focus": null,
+     "links": [
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#Proj"
+      },
+      {
+       "count": 1,
+       "kind": "tag",
+       "resolved": true,
+       "self": false,
+       "source": "Sub/Gamma Ray.md",
+       "target": "#t2"
+      },
+      {
+       "count": 1,
+       "kind": "embed",
+       "resolved": true,
+       "self": true,
+       "source": "Sub/Gamma Ray.md",
+       "target": "Sub/Gamma Ray.md"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": true,
+       "source": "a/b/Alpha.md",
+       "target": "a/b/Alpha.md"
+      },
+      {
+       "count": 1,
+       "kind": "link",
+       "resolved": true,
+       "self": true,
+       "source": "a/x.markdown",
+       "target": "a/x.markdown"
+      },
+      {
+       "count": 1,
+       "kind": "import",
+       "resolved": true,
+       "self": false,
+       "source": "é.css",
+       "target": "x.png"
+      }
+     ],
+     "nodes": [
+      {
+       "folder": "",
+       "group": null,
+       "id": "#Proj",
+       "in": 1,
+       "kind": "tag",
+       "label": "Proj",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "Proj"
+       ]
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "#t2",
+       "in": 1,
+       "kind": "tag",
+       "label": "t2",
+       "out": 0,
+       "path": "",
+       "size_hint": 2,
+       "tags": [
+        "t2"
+       ]
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "Alpha.js",
+       "in": 0,
+       "kind": "code",
+       "label": "Alpha",
+       "out": 0,
+       "path": "Alpha.js",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/Gamma Ray.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Gamma Ray",
+       "out": 3,
+       "path": "Sub/Gamma Ray.md",
+       "size_hint": 5,
+       "tags": [
+        "t2",
+        "Proj"
+       ]
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/main.js",
+       "in": 0,
+       "kind": "code",
+       "label": "main",
+       "out": 0,
+       "path": "Sub/main.js",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "Sub",
+       "group": null,
+       "id": "Sub/util.py",
+       "in": 0,
+       "kind": "code",
+       "label": "util",
+       "out": 0,
+       "path": "Sub/util.py",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/Straße.css",
+       "in": 0,
+       "kind": "code",
+       "label": "Straße",
+       "out": 0,
+       "path": "a/Straße.css",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/a.b.html",
+       "in": 0,
+       "kind": "code",
+       "label": "a.b",
+       "out": 0,
+       "path": "a/a.b.html",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "a/b",
+       "group": null,
+       "id": "a/b/Alpha.md",
+       "in": 1,
+       "kind": "note",
+       "label": "Alpha",
+       "out": 1,
+       "path": "a/b/Alpha.md",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "a/b",
+       "group": null,
+       "id": "a/b/index.css",
+       "in": 0,
+       "kind": "code",
+       "label": "index",
+       "out": 0,
+       "path": "a/b/index.css",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "a",
+       "group": null,
+       "id": "a/x.markdown",
+       "in": 1,
+       "kind": "note",
+       "label": "x",
+       "out": 1,
+       "path": "a/x.markdown",
+       "size_hint": 3,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "alpha.MD",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "alpha.MD",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "other",
+       "group": null,
+       "id": "other/alpha.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "alpha",
+       "out": 0,
+       "path": "other/alpha.markdown",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "sub/deep",
+       "group": null,
+       "id": "sub/deep/a.b.markdown",
+       "in": 0,
+       "kind": "note",
+       "label": "a.b",
+       "out": 0,
+       "path": "sub/deep/a.b.markdown",
+       "size_hint": 1,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "x.png",
+       "in": 1,
+       "kind": "attachment",
+       "label": "x",
+       "out": 0,
+       "path": "x.png",
+       "size_hint": 2,
+       "tags": []
+      },
+      {
+       "folder": "",
+       "group": null,
+       "id": "é.css",
+       "in": 0,
+       "kind": "code",
+       "label": "é",
+       "out": 1,
+       "path": "é.css",
+       "size_hint": 2,
+       "tags": []
+      }
+     ],
+     "stats": {
+      "ambiguous": [
+       {
+        "candidates": [
+         "a/b/Alpha.md",
+         "alpha.MD",
+         "other/alpha.markdown"
+        ],
+        "resolved": "a/b/Alpha.md",
+        "source": "a/b/Alpha.md",
+        "target": "alpha"
+       }
+      ],
+      "components": 13,
+      "counts": {
+       "attachment": 1,
+       "code": 7,
+       "note": 6,
+       "tag": 2,
+       "unresolved": 0
+      },
+      "orphans": 9,
+      "unresolved": []
+     },
+     "truncated": false
+    }
+   },
+   "max_nodes": 3000,
+   "runs": [
+    {
+     "digest": "de1de8bd735c6230",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "de1de8bd735c6230",
+     "mode": "build",
+     "name": "tg:111110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f27e673b9084e7d5",
+     "mode": "build",
+     "name": "tg:111101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f27e673b9084e7d5",
+     "mode": "build",
+     "name": "tg:111100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "c7e9278c863ce72d",
+     "mode": "build",
+     "name": "tg:111011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "c7e9278c863ce72d",
+     "mode": "build",
+     "name": "tg:111010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "b272dd595e275866",
+     "mode": "build",
+     "name": "tg:111001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b272dd595e275866",
+     "mode": "build",
+     "name": "tg:111000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "c8d12f0f5a9f2f38",
+     "mode": "build",
+     "name": "tg:110111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "c8d12f0f5a9f2f38",
+     "mode": "build",
+     "name": "tg:110110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "82ac56af1b4208ed",
+     "mode": "build",
+     "name": "tg:110101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "82ac56af1b4208ed",
+     "mode": "build",
+     "name": "tg:110100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "881a3e84bbb6961c",
+     "mode": "build",
+     "name": "tg:110011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "881a3e84bbb6961c",
+     "mode": "build",
+     "name": "tg:110010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "12ac85f8988dae49",
+     "mode": "build",
+     "name": "tg:110001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "12ac85f8988dae49",
+     "mode": "build",
+     "name": "tg:110000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "95d8123207837a76",
+     "mode": "build",
+     "name": "tg:101111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "95d8123207837a76",
+     "mode": "build",
+     "name": "tg:101110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f27e673b9084e7d5",
+     "mode": "build",
+     "name": "tg:101101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f27e673b9084e7d5",
+     "mode": "build",
+     "name": "tg:101100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "b272dd595e275866",
+     "mode": "build",
+     "name": "tg:101011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b272dd595e275866",
+     "mode": "build",
+     "name": "tg:101010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "b272dd595e275866",
+     "mode": "build",
+     "name": "tg:101001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b272dd595e275866",
+     "mode": "build",
+     "name": "tg:101000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "d2775771ab776fe3",
+     "mode": "build",
+     "name": "tg:100111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "d2775771ab776fe3",
+     "mode": "build",
+     "name": "tg:100110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "6245ebbf5b98f089",
+     "mode": "build",
+     "name": "tg:100101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "6245ebbf5b98f089",
+     "mode": "build",
+     "name": "tg:100100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "dff711c87e7b7fb9",
+     "mode": "build",
+     "name": "tg:100011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "dff711c87e7b7fb9",
+     "mode": "build",
+     "name": "tg:100010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "dff711c87e7b7fb9",
+     "mode": "build",
+     "name": "tg:100001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "dff711c87e7b7fb9",
+     "mode": "build",
+     "name": "tg:100000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "d70d5f4392bd0ba4",
+     "mode": "build",
+     "name": "tg:011111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "d70d5f4392bd0ba4",
+     "mode": "build",
+     "name": "tg:011110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "5a0b921422b675f5",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "5a0b921422b675f5",
+     "mode": "build",
+     "name": "tg:011100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "c205d6b22ec1e395",
+     "mode": "build",
+     "name": "tg:011011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "c205d6b22ec1e395",
+     "mode": "build",
+     "name": "tg:011010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f9b52bb6ad92ae1a",
+     "mode": "build",
+     "name": "tg:011001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f9b52bb6ad92ae1a",
+     "mode": "build",
+     "name": "tg:011000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "e6571c929d48300a",
+     "mode": "build",
+     "name": "tg:010111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "e6571c929d48300a",
+     "mode": "build",
+     "name": "tg:010110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "b0326c20b48acf47",
+     "mode": "build",
+     "name": "tg:010101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b0326c20b48acf47",
+     "mode": "build",
+     "name": "tg:010100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "7d9bd46e806229f6",
+     "mode": "build",
+     "name": "tg:010011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "7d9bd46e806229f6",
+     "mode": "build",
+     "name": "tg:010010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "55632a40ac9b550b",
+     "mode": "build",
+     "name": "tg:010001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "55632a40ac9b550b",
+     "mode": "build",
+     "name": "tg:010000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "e3ad6b6ac975e726",
+     "mode": "build",
+     "name": "tg:001111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "e3ad6b6ac975e726",
+     "mode": "build",
+     "name": "tg:001110",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "5a0b921422b675f5",
+     "mode": "build",
+     "name": "tg:001101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "5a0b921422b675f5",
+     "mode": "build",
+     "name": "tg:001100",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f9b52bb6ad92ae1a",
+     "mode": "build",
+     "name": "tg:001011",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f9b52bb6ad92ae1a",
+     "mode": "build",
+     "name": "tg:001010",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "f9b52bb6ad92ae1a",
+     "mode": "build",
+     "name": "tg:001001",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "f9b52bb6ad92ae1a",
+     "mode": "build",
+     "name": "tg:001000",
+     "options": {
+      "existing_only": true,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "988716c0245926e1",
+     "mode": "build",
+     "name": "tg:000111",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "988716c0245926e1",
+     "mode": "build",
+     "name": "tg:000110",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "b3feb4db73369cc3",
+     "mode": "build",
+     "name": "tg:000101",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b3feb4db73369cc3",
+     "mode": "build",
+     "name": "tg:000100",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "e96ca21c63e0036b",
+     "mode": "build",
+     "name": "tg:000011",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "e96ca21c63e0036b",
+     "mode": "build",
+     "name": "tg:000010",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": true,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "e96ca21c63e0036b",
+     "mode": "build",
+     "name": "tg:000001",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "e96ca21c63e0036b",
+     "mode": "build",
+     "name": "tg:000000",
+     "options": {
+      "existing_only": false,
+      "show_attachments": false,
+      "show_code": false,
+      "show_orphans": false,
+      "show_tags": false,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "5afeb6a36ddac52d",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "5afeb6a36ddac52d",
+     "mode": "build",
+     "name": "q:all:1:ALPHA",
+     "options": {
+      "existing_only": false,
+      "query": "ALPHA",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "ee084da2372cfd13",
+     "mode": "build",
+     "name": "q:all:2:alpha beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "dfd58e13b01bfa18",
+     "mode": "build",
+     "name": "q:all:3:alpha OR beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "5afeb6a36ddac52d",
+     "mode": "build",
+     "name": "q:all:4:alpha OR",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "5afeb6a36ddac52d",
+     "mode": "build",
+     "name": "q:all:5:OR alpha",
+     "options": {
+      "existing_only": false,
+      "query": "OR alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:6:OR",
+     "options": {
+      "existing_only": false,
+      "query": "OR",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "58ea9a32921b5a4d",
+     "mode": "build",
+     "name": "q:all:7:alpha  OR  beta gamma OR delta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha  OR  beta gamma OR delta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "23a8ef013353f0b1",
+     "mode": "build",
+     "name": "q:all:8:-alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:9:- alpha",
+     "options": {
+      "existing_only": false,
+      "query": "- alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:10:-",
+     "options": {
+      "existing_only": false,
+      "query": "-",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "c8d12f0f5a9f2f38",
+     "mode": "build",
+     "name": "q:all:11:--alpha",
+     "options": {
+      "existing_only": false,
+      "query": "--alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "e9825b90fdc951f3",
+     "mode": "build",
+     "name": "q:all:12:alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha -beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "e1a9274cd0f2f143",
+     "mode": "build",
+     "name": "q:all:13:-alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha -beta",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:15:\"hello\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"hello\"",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:18:\"unclosed",
+     "options": {
+      "existing_only": false,
+      "query": "\"unclosed",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "5afeb6a36ddac52d",
+     "mode": "build",
+     "name": "q:all:21:/al.ha/",
+     "options": {
+      "existing_only": false,
+      "query": "/al.ha/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:24:/(/",
+     "options": {
+      "existing_only": false,
+      "query": "/(/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "8a299f070a1c01d4",
+     "mode": "build",
+     "name": "q:all:27:/a/b/",
+     "options": {
+      "existing_only": false,
+      "query": "/a/b/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "7116fc2f360c4cf2",
+     "mode": "build",
+     "name": "q:all:30:PATH:Sub",
+     "options": {
+      "existing_only": false,
+      "query": "PATH:Sub",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:33:file:note",
+     "options": {
+      "existing_only": false,
+      "query": "file:note",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:36:file:/^n/",
+     "options": {
+      "existing_only": false,
+      "query": "file:/^n/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:39:tag:X",
+     "options": {
+      "existing_only": false,
+      "query": "tag:X",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:42:tag:a/b",
+     "options": {
+      "existing_only": false,
+      "query": "tag:a/b",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:45:tag:#",
+     "options": {
+      "existing_only": false,
+      "query": "tag:#",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:48:tag:x OR tag:y",
+     "options": {
+      "existing_only": false,
+      "query": "tag:x OR tag:y",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:51:content:hello",
+     "options": {
+      "existing_only": false,
+      "query": "content:hello",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:54:content:/h.llo/",
+     "options": {
+      "existing_only": false,
+      "query": "content:/h.llo/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:57:unknown:foo",
+     "options": {
+      "existing_only": false,
+      "query": "unknown:foo",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "8af4c1c83ffb64f2",
+     "mode": "build",
+     "name": "q:all:60:path:sub OR file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "path:sub OR file:alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "a8bb6caec2122968",
+     "mode": "build",
+     "name": "q:all:63:sub/",
+     "options": {
+      "existing_only": false,
+      "query": "sub/",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "a95e4ef78711f1c8",
+     "mode": "build",
+     "name": "q:all:66:é",
+     "options": {
+      "existing_only": false,
+      "query": "é",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:69:x y z",
+     "options": {
+      "existing_only": false,
+      "query": "x y z",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "ee084da2372cfd13",
+     "mode": "build",
+     "name": "q:all:72:[[alpha]]",
+     "options": {
+      "existing_only": false,
+      "query": "[[alpha]]",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "60814ce580d35696",
+     "mode": "build",
+     "name": "q:all:75:-path:sub -file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-path:sub -file:alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:78:File:note",
+     "options": {
+      "existing_only": false,
+      "query": "File:note",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:81:a\\b",
+     "options": {
+      "existing_only": false,
+      "query": "a\\b",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:84:\"a\\\"b\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"a\\\"b\"",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:all:87:*",
+     "options": {
+      "existing_only": false,
+      "query": "*",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "c8d12f0f5a9f2f38",
+     "mode": "build",
+     "name": "q:all:90: ",
+     "options": {
+      "existing_only": false,
+      "query": " ",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "digest": "fbfdb5d512586033",
+     "mode": "build",
+     "name": "grp:all:True:0",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "alpha",
+       "beta"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "bc2c285d61138643",
+     "mode": "build",
+     "name": "grp:all:True:1",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "tag:x",
+       "path:sub",
+       "-alpha"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "5f10becc1d4f44b5",
+     "mode": "build",
+     "name": "grp:all:True:2",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "",
+       "  ",
+       "alpha",
+       "content:hello"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "2e227990c7d1c532",
+     "mode": "build",
+     "name": "grp:all:True:3",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "file:png",
+       "tag:y/z",
+       "a",
+       "b",
+       "c",
+       "d",
+       "e",
+       "f",
+       "g",
+       "h",
+       "i",
+       "j"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "c8d12f0f5a9f2f38",
+     "mode": "build",
+     "name": "grp:all:True:4",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "/[/",
+       "tag:#x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "73edfe8aa2313736",
+     "mode": "build",
+     "name": "grp:all:True:5",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "x",
+       "x",
+       "x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "a9481f03c36c8073",
+     "mode": "build",
+     "name": "grp:all:False:0",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "alpha",
+       "beta"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "5050de1dc4d7e538",
+     "mode": "build",
+     "name": "grp:all:False:1",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "tag:x",
+       "path:sub",
+       "-alpha"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "9ed2d99fd98cea10",
+     "mode": "build",
+     "name": "grp:all:False:2",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "",
+       "  ",
+       "alpha",
+       "content:hello"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "6ca8ac03b0bf5bc2",
+     "mode": "build",
+     "name": "grp:all:False:3",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "file:png",
+       "tag:y/z",
+       "a",
+       "b",
+       "c",
+       "d",
+       "e",
+       "f",
+       "g",
+       "h",
+       "i",
+       "j"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "c8d12f0f5a9f2f38",
+     "mode": "build",
+     "name": "grp:all:False:4",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "/[/",
+       "tag:#x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "2a39adc41b187450",
+     "mode": "build",
+     "name": "grp:all:False:5",
+     "options": {
+      "existing_only": false,
+      "groups": [
+       "x",
+       "x",
+       "x"
+      ],
+      "show_attachments": true,
+      "show_tags": true,
+      "strict_filters": false
+     }
+    },
+    {
+     "digest": "842a673e034df9ef",
+     "mode": "build",
+     "name": "q:strict:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "842a673e034df9ef",
+     "mode": "build",
+     "name": "q:strict:1:ALPHA",
+     "options": {
+      "existing_only": false,
+      "query": "ALPHA",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ee084da2372cfd13",
+     "mode": "build",
+     "name": "q:strict:2:alpha beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "842a673e034df9ef",
+     "mode": "build",
+     "name": "q:strict:3:alpha OR beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "842a673e034df9ef",
+     "mode": "build",
+     "name": "q:strict:4:alpha OR",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "842a673e034df9ef",
+     "mode": "build",
+     "name": "q:strict:5:OR alpha",
+     "options": {
+      "existing_only": false,
+      "query": "OR alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:6:OR",
+     "options": {
+      "existing_only": false,
+      "query": "OR",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "842a673e034df9ef",
+     "mode": "build",
+     "name": "q:strict:7:alpha  OR  beta gamma OR delta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha  OR  beta gamma OR delta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "604e85d44cd21271",
+     "mode": "build",
+     "name": "q:strict:8:-alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:9:- alpha",
+     "options": {
+      "existing_only": false,
+      "query": "- alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:10:-",
+     "options": {
+      "existing_only": false,
+      "query": "-",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "881a3e84bbb6961c",
+     "mode": "build",
+     "name": "q:strict:11:--alpha",
+     "options": {
+      "existing_only": false,
+      "query": "--alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "6025abf788663a9b",
+     "mode": "build",
+     "name": "q:strict:12:alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "alpha -beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "604e85d44cd21271",
+     "mode": "build",
+     "name": "q:strict:13:-alpha -beta",
+     "options": {
+      "existing_only": false,
+      "query": "-alpha -beta",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:15:\"hello\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"hello\"",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:18:\"unclosed",
+     "options": {
+      "existing_only": false,
+      "query": "\"unclosed",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "842a673e034df9ef",
+     "mode": "build",
+     "name": "q:strict:21:/al.ha/",
+     "options": {
+      "existing_only": false,
+      "query": "/al.ha/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:24:/(/",
+     "options": {
+      "existing_only": false,
+      "query": "/(/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "50e79007f859ba78",
+     "mode": "build",
+     "name": "q:strict:27:/a/b/",
+     "options": {
+      "existing_only": false,
+      "query": "/a/b/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "9709c554b9599d4e",
+     "mode": "build",
+     "name": "q:strict:30:PATH:Sub",
+     "options": {
+      "existing_only": false,
+      "query": "PATH:Sub",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:33:file:note",
+     "options": {
+      "existing_only": false,
+      "query": "file:note",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:36:file:/^n/",
+     "options": {
+      "existing_only": false,
+      "query": "file:/^n/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:39:tag:X",
+     "options": {
+      "existing_only": false,
+      "query": "tag:X",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:42:tag:a/b",
+     "options": {
+      "existing_only": false,
+      "query": "tag:a/b",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:45:tag:#",
+     "options": {
+      "existing_only": false,
+      "query": "tag:#",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:48:tag:x OR tag:y",
+     "options": {
+      "existing_only": false,
+      "query": "tag:x OR tag:y",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:51:content:hello",
+     "options": {
+      "existing_only": false,
+      "query": "content:hello",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:54:content:/h.llo/",
+     "options": {
+      "existing_only": false,
+      "query": "content:/h.llo/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:57:unknown:foo",
+     "options": {
+      "existing_only": false,
+      "query": "unknown:foo",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "842a673e034df9ef",
+     "mode": "build",
+     "name": "q:strict:60:path:sub OR file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "path:sub OR file:alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "9709c554b9599d4e",
+     "mode": "build",
+     "name": "q:strict:63:sub/",
+     "options": {
+      "existing_only": false,
+      "query": "sub/",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "604e85d44cd21271",
+     "mode": "build",
+     "name": "q:strict:66:é",
+     "options": {
+      "existing_only": false,
+      "query": "é",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:69:x y z",
+     "options": {
+      "existing_only": false,
+      "query": "x y z",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "ee084da2372cfd13",
+     "mode": "build",
+     "name": "q:strict:72:[[alpha]]",
+     "options": {
+      "existing_only": false,
+      "query": "[[alpha]]",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "a95e4ef78711f1c8",
+     "mode": "build",
+     "name": "q:strict:75:-path:sub -file:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "-path:sub -file:alpha",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:78:File:note",
+     "options": {
+      "existing_only": false,
+      "query": "File:note",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:81:a\\b",
+     "options": {
+      "existing_only": false,
+      "query": "a\\b",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:84:\"a\\\"b\"",
+     "options": {
+      "existing_only": false,
+      "query": "\"a\\\"b\"",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "build",
+     "name": "q:strict:87:*",
+     "options": {
+      "existing_only": false,
+      "query": "*",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "881a3e84bbb6961c",
+     "mode": "build",
+     "name": "q:strict:90: ",
+     "options": {
+      "existing_only": false,
+      "query": " ",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "depth": 1,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 1,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 1,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 1,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 2,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 2,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 2,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 2,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 6,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 6,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 6,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 6,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Alpha.js:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 1,
+     "digest": "b86994de8931fbee",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "b86994de8931fbee",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "b86994de8931fbee",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "b86994de8931fbee",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "b86994de8931fbee",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "b86994de8931fbee",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "b86994de8931fbee",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "b86994de8931fbee",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "b86994de8931fbee",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "b86994de8931fbee",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "b86994de8931fbee",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "b86994de8931fbee",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:alpha.MD:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "1ad61d345c4e31b2",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:é.css:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 1,
+     "digest": "ee103097405fe4e3",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:é.css:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 1,
+     "digest": "1ad61d345c4e31b2",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:é.css:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 1,
+     "digest": "ee103097405fe4e3",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:é.css:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 2,
+     "digest": "1ad61d345c4e31b2",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:é.css:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 2,
+     "digest": "ee103097405fe4e3",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:é.css:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 2,
+     "digest": "1ad61d345c4e31b2",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:é.css:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 2,
+     "digest": "ee103097405fe4e3",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:é.css:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 6,
+     "digest": "1ad61d345c4e31b2",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:é.css:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 6,
+     "digest": "ee103097405fe4e3",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:é.css:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 6,
+     "digest": "1ad61d345c4e31b2",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:é.css:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 6,
+     "digest": "ee103097405fe4e3",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:é.css:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 1,
+     "digest": "d9804f97fbb14a76",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 1,
+     "digest": "7f55e142f59e75be",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 1,
+     "digest": "d9804f97fbb14a76",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 1,
+     "digest": "7f55e142f59e75be",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 2,
+     "digest": "d9804f97fbb14a76",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 2,
+     "digest": "7f55e142f59e75be",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 2,
+     "digest": "d9804f97fbb14a76",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 2,
+     "digest": "7f55e142f59e75be",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 6,
+     "digest": "d9804f97fbb14a76",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 6,
+     "digest": "7f55e142f59e75be",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 6,
+     "digest": "d9804f97fbb14a76",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 6,
+     "digest": "7f55e142f59e75be",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:Sub/Gamma Ray.md:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 1,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "1b2eb36e2d08b115",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:ALPHA.JS:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 1,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 1,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 1,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 2,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 2,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 2,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 2,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 6,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 6,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 6,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 6,
+     "digest": "6f3fcb6609ac152c",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:a/Straße.css:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:does/not/exist.md:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:11",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:10",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:01",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:1:00",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:11",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:10",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:01",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:2:00",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:11",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:10",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:01",
+     "options": {},
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:dflt:../outside.md:6:00",
+     "options": {},
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Alpha.js:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:alpha.MD:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "alpha.MD"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:é.css:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:é.css:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:é.css:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:é.css:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:é.css:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:é.css:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:é.css:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:é.css:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:é.css:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:é.css:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:é.css:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "é.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:é.css:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "é.css"
+    },
+    {
+     "depth": 1,
+     "digest": "d22fb0116e3b20e2",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 1,
+     "digest": "7f55e142f59e75be",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 1,
+     "digest": "d22fb0116e3b20e2",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 1,
+     "digest": "7f55e142f59e75be",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 2,
+     "digest": "d22fb0116e3b20e2",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 2,
+     "digest": "7f55e142f59e75be",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 2,
+     "digest": "d22fb0116e3b20e2",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 2,
+     "digest": "7f55e142f59e75be",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 6,
+     "digest": "d22fb0116e3b20e2",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 6,
+     "digest": "7f55e142f59e75be",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 6,
+     "digest": "d22fb0116e3b20e2",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 6,
+     "digest": "7f55e142f59e75be",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:Sub/Gamma Ray.md:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "Sub/Gamma Ray.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:ALPHA.JS:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "ALPHA.JS"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:a/Straße.css:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "a/Straße.css"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:does/not/exist.md:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "does/not/exist.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 1,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:1:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 2,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:2:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:11",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:10",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:01",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": true,
+     "path": "../outside.md"
+    },
+    {
+     "depth": 6,
+     "digest": "cb78b2cfde2b4533",
+     "incoming": false,
+     "mode": "local",
+     "name": "loc:strict:../outside.md:6:00",
+     "options": {
+      "existing_only": false,
+      "query": "alpha OR a",
+      "show_attachments": true,
+      "show_orphans": false,
+      "show_tags": true,
+      "strict_filters": true
+     },
+     "outgoing": false,
+     "path": "../outside.md"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:",
+     "options": {},
+     "prefix": ""
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:/",
+     "options": {},
+     "prefix": "/"
+    },
+    {
+     "digest": "b4ccab38e225023c",
+     "mode": "folder",
+     "name": "fold:dflt:sub",
+     "options": {},
+     "prefix": "sub"
+    },
+    {
+     "digest": "b4ccab38e225023c",
+     "mode": "folder",
+     "name": "fold:dflt:sub/",
+     "options": {},
+     "prefix": "sub/"
+    },
+    {
+     "digest": "b4ccab38e225023c",
+     "mode": "folder",
+     "name": "fold:dflt:/sub/",
+     "options": {},
+     "prefix": "/sub/"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:x",
+     "options": {},
+     "prefix": "x"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:y/z",
+     "options": {},
+     "prefix": "y/z"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:nonexistent",
+     "options": {},
+     "prefix": "nonexistent"
+    },
+    {
+     "digest": "08cad4390af62a2f",
+     "mode": "folder",
+     "name": "fold:dflt:Sub",
+     "options": {},
+     "prefix": "Sub"
+    },
+    {
+     "digest": "b79baa348160da4b",
+     "mode": "folder",
+     "name": "fold:dflt:a",
+     "options": {},
+     "prefix": "a"
+    },
+    {
+     "digest": "7624a8b87ddf54dc",
+     "mode": "folder",
+     "name": "fold:dflt:a/b",
+     "options": {},
+     "prefix": "a/b"
+    },
+    {
+     "digest": "d673d0fe7957bc84",
+     "mode": "folder",
+     "name": "fold:dflt:other",
+     "options": {},
+     "prefix": "other"
+    },
+    {
+     "digest": "cb78b2cfde2b4533",
+     "mode": "folder",
+     "name": "fold:dflt:src",
+     "options": {},
+     "prefix": "src"
+    },
+    {
+     "digest": "b4ccab38e225023c",
+     "mode": "folder",
+     "name": "fold:dflt:sub/deep",
+     "options": {},
+     "prefix": "sub/deep"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 0,
+   "runs": [
+    {
+     "digest": "b2b9d196eea31694",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b2b9d196eea31694",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "b2b9d196eea31694",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:Alpha.js:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:alpha.MD:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "alpha.MD"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 1,
+   "runs": [
+    {
+     "digest": "c9885a2f50a20ad7",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "c9885a2f50a20ad7",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "c9885a2f50a20ad7",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:Alpha.js:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:alpha.MD:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "alpha.MD"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 3,
+   "runs": [
+    {
+     "digest": "3ee7a2e682ed628f",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "3ee7a2e682ed628f",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "fb1c0a69742a7877",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:Alpha.js:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:alpha.MD:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "alpha.MD"
+    }
+   ]
+  },
+  {
+   "full": {},
+   "max_nodes": 8,
+   "runs": [
+    {
+     "digest": "1290cfb9b0671aea",
+     "mode": "build",
+     "name": "tg:111111",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": true,
+      "show_orphans": true,
+      "show_tags": true,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "5a0b921422b675f5",
+     "mode": "build",
+     "name": "tg:011101",
+     "options": {
+      "existing_only": true,
+      "show_attachments": true,
+      "show_code": false,
+      "show_orphans": true,
+      "show_tags": false,
+      "strict_filters": true
+     }
+    },
+    {
+     "digest": "3f201147cbca12ef",
+     "mode": "build",
+     "name": "q:all:0:alpha",
+     "options": {
+      "existing_only": false,
+      "query": "alpha",
+      "show_attachments": true,
+      "show_tags": true
+     }
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:Alpha.js:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "Alpha.js"
+    },
+    {
+     "depth": 3,
+     "digest": "b2b9d196eea31694",
+     "incoming": true,
+     "mode": "local",
+     "name": "loc:all:alpha.MD:3:11",
+     "options": {
+      "existing_only": false,
+      "show_attachments": true,
+      "show_tags": true
+     },
+     "outgoing": true,
+     "path": "alpha.MD"
+    }
+   ]
+  }
+ ],
+ "tree": {
+  "files": [
+   {
+    "path": "Alpha.js",
+    "text": "\n"
+   },
+   {
+    "path": "Alpha.txt",
+    "text": "---\ntags: [Proj, t1]\n---\n[[Alpha.png]]\n<BETA>\n#Proj\n[[alpha.md]]\n[t](sub/alpha)\n"
+   },
+   {
+    "path": "Gamma Ray.txt",
+    "text": "---\n---\n[[Alpha.md]]\n"
+   },
+   {
+    "path": "Sub/Gamma Ray.md",
+    "text": "#t2\n[[../sub/INDEX#h|alias]]\n<ALPHA>\n![[Gamma Ray.md]]\n#Proj\n[[main.md]]\n"
+   },
+   {
+    "path": "Sub/main.js",
+    "text": "require('..')\n"
+   },
+   {
+    "path": "Sub/util.py",
+    "text": "import alpha as m\n"
+   },
+   {
+    "path": "a/Straße.css",
+    "text": "@import '/alpha.css';\n.a{background:url(alpha.css)}\n"
+   },
+   {
+    "path": "a/a.b.html",
+    "text": "<a href=\"sub/beta.html\">\n<script src='https://x.y'>\n"
+   },
+   {
+    "path": "a/b/Alpha.md",
+    "text": "![i](./util)\n[[alpha]]\n[[beta.md]]\n"
+   },
+   {
+    "path": "a/b/delta.txt",
+    "text": "---\naliases: [a.b]\ntags: [proj/a, proj/a/b]\n---\n[t](./main.png)\n[t](/É)\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "a/b/gamma.png"
+   },
+   {
+    "path": "a/b/index.css",
+    "text": ".a{background:url(alpha.css)}\n@import 'img/a.png';\n.a{background:url(../main.css)}\n.a{background:url(../main.css)}\n"
+   },
+   {
+    "path": "a/x.markdown",
+    "text": "![[é.md]]\n[[util.md]]\n[[X]]\n[[index.png]]\n"
+   },
+   {
+    "path": "alpha.MD",
+    "text": "---\naliases: [main]\n---\n"
+   },
+   {
+    "path": "other/alpha.markdown",
+    "text": "[[util]]\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "other/delta.png"
+   },
+   {
+    "path": "other/delta.txt",
+    "text": "[[é]]\n![[é]]\n"
+   },
+   {
+    "path": "src/Straße.txt",
+    "text": "---\naliases: [delta]\ntags: [t2, t1/x]\n---\n[[beta]]\n#Proj\n[t](./strasse.md)\n[[a.b]]\n![i](/STRASSE)\n"
+   },
+   {
+    "path": "sub/deep/a.b.markdown",
+    "text": "`[[delta.png]]`\n"
+   },
+   {
+    "path": "sub/deep/main.txt",
+    "text": "[t](util)\n![i](sub/Gamma Ray.png)\n[[Straße.md]]\n![[main.md]]\n[[../GAMMA#h|alias]]\n<../sub/x>\n[t](beta.png)\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "x.png"
+   },
+   {
+    "path": "é.css",
+    "text": ".a{background:url(../main.css)}\n@import 'x.png';\n@import 'img/a.png';\n.a{background:url(alpha.css)}\n"
+   }
+  ]
+ }
+}

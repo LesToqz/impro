@@ -1,0 +1,104 @@
+{
+ "digests": [
+  "89fb0e665ca37d51",
+  "1fd7016afe7f747e",
+  "ba4a135665d0b898",
+  "391e2a7ac9cc8039",
+  "e179d513f0d6b723",
+  "000681136e629773",
+  "5e4fe8ea64351bab",
+  "4640c8aace485a73",
+  "659989fc67290d6a"
+ ],
+ "ops": [
+  {
+   "from": "b.md",
+   "op": "rename",
+   "to": "bb.md"
+  },
+  {
+   "from": "dir",
+   "op": "rename",
+   "to": "moved/dir"
+  },
+  {
+   "from": "moved/dir/sub/e.md",
+   "op": "rename",
+   "to": "e2.md"
+  },
+  {
+   "from": "f.md",
+   "op": "rename",
+   "to": "F.md"
+  },
+  {
+   "from": "img.png",
+   "op": "rename",
+   "to": "sub/img.png"
+  },
+  {
+   "from": "n.py",
+   "op": "rename",
+   "to": "pkg/n.py"
+  },
+  {
+   "from": "a.md",
+   "op": "rename",
+   "to": ".git/a.md"
+  },
+  {
+   "from": "g.md",
+   "op": "rename",
+   "to": "g.txt"
+  }
+ ],
+ "options": {
+  "existing_only": false,
+  "show_attachments": true,
+  "show_tags": true
+ },
+ "tree": {
+  "files": [
+   {
+    "path": "a.md",
+    "text": "[[b]] #t1\n"
+   },
+   {
+    "path": "b.md",
+    "text": "[[c]] [[a]]\n"
+   },
+   {
+    "path": "c.md",
+    "text": ""
+   },
+   {
+    "path": "dir/d.md",
+    "text": "[[a]] [[e]]\n"
+   },
+   {
+    "path": "dir/sub/e.md",
+    "text": "---\naliases: [Eee]\n---\n[[b]]\n"
+   },
+   {
+    "path": "f.md",
+    "text": "[[Eee]] [[img.png]] ![[img.png]]\n"
+   },
+   {
+    "path": "g.md",
+    "text": "[[b]]\n"
+   },
+   {
+    "b64": "AA==",
+    "path": "img.png"
+   },
+   {
+    "path": "m.py",
+    "text": "import n\n"
+   },
+   {
+    "path": "n.py",
+    "text": ""
+   }
+  ]
+ }
+}

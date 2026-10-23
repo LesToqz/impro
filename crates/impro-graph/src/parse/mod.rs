@@ -4,6 +4,7 @@
 //! are character offsets and lines are one-based.
 
 pub mod code;
+mod fold;
 pub mod frontmatter;
 pub mod links;
 pub mod mask;

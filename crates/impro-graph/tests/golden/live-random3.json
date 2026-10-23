@@ -1,0 +1,270 @@
+{
+ "digests": [
+  "c8d12f0f5a9f2f38",
+  "c8d12f0f5a9f2f38",
+  "b0f4bc278ca5c87d",
+  "20f595cee4887520",
+  "78b1ec1d6ea05078",
+  "5ed2d3109bd8acb8",
+  "ed0cbae2b6ec2a33",
+  "ed0cbae2b6ec2a33",
+  "ed0cbae2b6ec2a33",
+  "aef5af75956e841b",
+  "4f2bc72d58b9c96e",
+  "2d03f8a3ca8bfe6f",
+  "211243a463c9f8fb",
+  "211243a463c9f8fb",
+  "4d008ba30b253fb8",
+  "0db8f2b75a848fdc",
+  "0db8f2b75a848fdc",
+  "1dca3d01c4fb1dce",
+  "1efb4427da75947a",
+  "0685387cad3661ac",
+  "373ff42f8ddad394",
+  "ea80aa760d594fea",
+  "ea80aa760d594fea",
+  "e6bf7b045dead3e3",
+  "e6bf7b045dead3e3",
+  "e6bf7b045dead3e3",
+  "50081a230070fb21",
+  "569e1f8364c9bf43",
+  "463e64c9578c659f",
+  "463e64c9578c659f"
+ ],
+ "ops": [
+  {
+   "op": "set_text",
+   "path": "Gamma Ray.txt",
+   "text": null
+  },
+  {
+   "op": "write",
+   "path": "a/main.md",
+   "text": "[[../index.png#h|alias]]\n[[Alpha.md]]\n#t2\n"
+  },
+  {
+   "from": "alpha.MD",
+   "op": "rename",
+   "to": "Straße.md"
+  },
+  {
+   "op": "write",
+   "path": "src/Straße.md",
+   "text": "[[GAMMA]]\n[t](sub/alpha)\n#proj/a/b\n[[delta.md]]\n#Proj\n#t1\n</x.md>\n![i](../alpha.png)\n"
+  },
+  {
+   "op": "delete",
+   "path": "Sub/Gamma Ray.md"
+  },
+  {
+   "from": "x.png",
+   "op": "rename",
+   "to": "strasse.png"
+  },
+  {
+   "from": "sub/deep/main.txt",
+   "op": "rename",
+   "to": "strasse.txt"
+  },
+  {
+   "from": "a/b/gamma.png",
+   "op": "rename",
+   "to": "beta.png"
+  },
+  {
+   "from": "a/x.markdown",
+   "op": "rename",
+   "to": "Sub/x.markdown"
+  },
+  {
+   "op": "write",
+   "path": "delta.js",
+   "text": "import 'lib'\n"
+  },
+  {
+   "op": "delete",
+   "path": "Straße.md"
+  },
+  {
+   "op": "delete",
+   "path": "é.css"
+  },
+  {
+   "op": "set_text",
+   "path": "strasse.txt",
+   "text": "[[a.b]]\n[[../sub/strasse#h|alias]]\n[[beta]]\n[t](/gamma%20ray)\n#Proj\n"
+  },
+  {
+   "op": "set_text",
+   "path": "delta.js",
+   "text": "import x from './alpha'\nrequire('..')\nexport * from '../beta'\nimport x from './sub'\nimport '..'\n"
+  },
+  {
+   "op": "write",
+   "path": "sub/deep/index.png",
+   "text": "---\naliases: [beta]\n---\n#t1\n![i](sub/é)\n[t](../STRASSE)\n[[ALPHA]]\n#proj/a\n[[./delta#h|alias]]\n![i](sub/alpha.md)\n[t](../sub/beta.png)\n"
+  },
+  {
+   "op": "set_text",
+   "path": "src/Straße.md",
+   "text": null
+  },
+  {
+   "from": "other/delta.txt",
+   "op": "rename",
+   "to": "Straße.md"
+  },
+  {
+   "from": "sub/deep/a.b.markdown",
+   "op": "rename",
+   "to": "a/Straße.markdown"
+  },
+  {
+   "from": "Alpha.js",
+   "op": "rename",
+   "to": "a.b.js"
+  },
+  {
+   "from": "a.b.js",
+   "op": "rename",
+   "to": "sub/deep/é.js"
+  },
+  {
+   "op": "write",
+   "path": "a/b/é.css",
+   "text": "@import 'alpha.css';\n.a{background:url(../main.css)}\n@import '../main.css';\n.a{background:url(/alpha.css)}\n"
+  },
+  {
+   "op": "delete",
+   "path": "beta.png"
+  },
+  {
+   "op": "delete",
+   "path": "a/main.md"
+  },
+  {
+   "op": "delete",
+   "path": "Gamma Ray.txt"
+  },
+  {
+   "op": "set_text",
+   "path": "other/delta.png",
+   "text": "[t](sub/a.b)\n[t](sub/main)\n[[GAMMA RAY]]\n![i](./gamma.png)\n#proj/a\n[[Straße.png]]\n![[beta]]\n![[strasse.md]]\n"
+  },
+  {
+   "op": "delete",
+   "path": "src/Straße.md"
+  },
+  {
+   "op": "set_text",
+   "path": "other/alpha.markdown",
+   "text": "[[util.png]]\n[[Straße]]\n`[[gamma ray]]`\n[[./straße#h|alias]]\n[[../delta.md#h|alias]]\n<./x>\n![i](sub/main)\n"
+  },
+  {
+   "op": "write",
+   "path": "strasse.js",
+   "text": "import '.'\nimport '.'\n"
+  },
+  {
+   "op": "delete",
+   "path": "src/Straße.txt"
+  }
+ ],
+ "options": {
+  "existing_only": false,
+  "show_attachments": true,
+  "show_tags": true
+ },
+ "tree": {
+  "files": [
+   {
+    "path": "Alpha.js",
+    "text": "\n"
+   },
+   {
+    "path": "Alpha.txt",
+    "text": "---\ntags: [Proj, t1]\n---\n[[Alpha.png]]\n<BETA>\n#Proj\n[[alpha.md]]\n[t](sub/alpha)\n"
+   },
+   {
+    "path": "Gamma Ray.txt",
+    "text": "---\n---\n[[Alpha.md]]\n"
+   },
+   {
+    "path": "Sub/Gamma Ray.md",
+    "text": "#t2\n[[../sub/INDEX#h|alias]]\n<ALPHA>\n![[Gamma Ray.md]]\n#Proj\n[[main.md]]\n"
+   },
+   {
+    "path": "Sub/main.js",
+    "text": "require('..')\n"
+   },
+   {
+    "path": "Sub/util.py",
+    "text": "import alpha as m\n"
+   },
+   {
+    "path": "a/Straße.css",
+    "text": "@import '/alpha.css';\n.a{background:url(alpha.css)}\n"
+   },
+   {
+    "path": "a/a.b.html",
+    "text": "<a href=\"sub/beta.html\">\n<script src='https://x.y'>\n"
+   },
+   {
+    "path": "a/b/Alpha.md",
+    "text": "![i](./util)\n[[alpha]]\n[[beta.md]]\n"
+   },
+   {
+    "path": "a/b/delta.txt",
+    "text": "---\naliases: [a.b]\ntags: [proj/a, proj/a/b]\n---\n[t](./main.png)\n[t](/É)\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "a/b/gamma.png"
+   },
+   {
+    "path": "a/b/index.css",
+    "text": ".a{background:url(alpha.css)}\n@import 'img/a.png';\n.a{background:url(../main.css)}\n.a{background:url(../main.css)}\n"
+   },
+   {
+    "path": "a/x.markdown",
+    "text": "![[é.md]]\n[[util.md]]\n[[X]]\n[[index.png]]\n"
+   },
+   {
+    "path": "alpha.MD",
+    "text": "---\naliases: [main]\n---\n"
+   },
+   {
+    "path": "other/alpha.markdown",
+    "text": "[[util]]\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "other/delta.png"
+   },
+   {
+    "path": "other/delta.txt",
+    "text": "[[é]]\n![[é]]\n"
+   },
+   {
+    "path": "src/Straße.txt",
+    "text": "---\naliases: [delta]\ntags: [t2, t1/x]\n---\n[[beta]]\n#Proj\n[t](./strasse.md)\n[[a.b]]\n![i](/STRASSE)\n"
+   },
+   {
+    "path": "sub/deep/a.b.markdown",
+    "text": "`[[delta.png]]`\n"
+   },
+   {
+    "path": "sub/deep/main.txt",
+    "text": "[t](util)\n![i](sub/Gamma Ray.png)\n[[Straße.md]]\n![[main.md]]\n[[../GAMMA#h|alias]]\n<../sub/x>\n[t](beta.png)\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "x.png"
+   },
+   {
+    "path": "é.css",
+    "text": ".a{background:url(../main.css)}\n@import 'x.png';\n@import 'img/a.png';\n.a{background:url(alpha.css)}\n"
+   }
+  ]
+ }
+}

@@ -1,0 +1,12 @@
+[
+ {
+  "id": "K1",
+  "scope": "text",
+  "class": "text.code.python-syntax-error"
+ },
+ {
+  "id": "K2",
+  "scope": "text",
+  "class": "text.links.autolink-without-dot"
+ }
+]

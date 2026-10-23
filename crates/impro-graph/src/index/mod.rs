@@ -298,14 +298,15 @@ impl ProjectIndex {
         }
     }
 
-    /// Case-folded path table: when two paths fold together the smaller wins.
+    /// Case-folded path table: when two paths fold together the later one in scan
+    /// order (the greater path) wins.
     fn fold_insert(&mut self, id: FileId, path: &str) {
         let key: Box<str> = lower(path).into();
         match self.lookup.by_path.get(&key).copied() {
             Some(other) if other != id => {
                 let theirs = self.get(other).map(|f| f.path.clone());
                 let replace = match theirs {
-                    Some(t) => *t > *path,
+                    Some(t) => *t < *path,
                     None => true,
                 };
                 if replace {
@@ -356,7 +357,7 @@ impl ProjectIndex {
                 .filter(|o| *o != id)
                 .filter_map(|o| self.get(o).map(|f| (o, f.path.clone())))
                 .filter(|(_, p)| lower(p) == folded)
-                .min_by(|a, b| a.1.cmp(&b.1));
+                .max_by(|a, b| a.1.cmp(&b.1));
             if let Some((o, _)) = rival {
                 self.lookup.by_path.insert(folded.into(), o);
             }

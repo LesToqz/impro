@@ -1,11 +1,9 @@
-//! Import extraction for source files. Each language gets a small scanner that
-//! understands comments and string literals; none of them need a full parser.
+//! Import extraction for source files. Python gets a small tokenizer that
+//! understands comments and string literals; the other families are read with
+//! patterns, like the reference does.
 
-mod clike;
-mod js;
 mod python;
-mod rust;
-mod shell;
+mod script;
 mod style;
 
 use super::text::extension;
@@ -15,22 +13,12 @@ use super::text::extension;
 pub enum CodeKind {
     /// Dotted module path, possibly with leading dots for relative imports.
     Python,
-    /// JavaScript, TypeScript, Vue, Svelte: relative specifiers only.
+    /// JavaScript, TypeScript, Vue: relative specifiers only.
     Script,
-    /// CSS/Sass `@import`, `@use`, `url()`.
+    /// CSS/Sass `@import` and `url()`.
     Style,
     /// HTML `src`/`href` attributes.
     Html,
-    /// `mod name;`
-    RustMod,
-    /// `use crate::a::b;` (segments joined with `::`).
-    RustUse,
-    /// `source file` / `. file`
-    Shell,
-    /// `#include "file"`
-    Include,
-    /// `require_relative 'file'`
-    Ruby,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -44,26 +32,25 @@ pub struct CodeRef {
 /// Extensions (lowercase, with dot) for which imports are understood.
 pub fn supported_extensions() -> &'static [&'static str] {
     &[
-        ".py", ".pyi", ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts", ".vue",
-        ".svelte", ".css", ".scss", ".sass", ".html", ".htm", ".rs", ".sh", ".bash", ".c", ".h",
-        ".cc", ".cpp", ".hpp", ".rb",
+        ".py", ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".vue", ".css", ".scss", ".sass",
+        ".html", ".htm",
     ]
+}
+
+/// True for a specifier that can name a project file: not blank, not a URL
+/// with a scheme, not protocol-relative and not an in-page anchor.
+pub(crate) fn local_spec(spec: &str) -> bool {
+    !spec.trim().is_empty() && !super::text::is_external(spec)
 }
 
 /// Imports of the source file at `path` (extension decides the language).
 pub fn extract_imports(path: &str, text: &str) -> Vec<CodeRef> {
     let ext = extension(path);
     match ext.as_str() {
-        ".py" | ".pyi" => python::imports(text),
-        ".js" | ".jsx" | ".ts" | ".tsx" | ".mjs" | ".cjs" | ".mts" | ".cts" | ".vue"
-        | ".svelte" => js::imports(text),
-        ".css" => style::css_imports(text, false),
-        ".scss" | ".sass" => style::css_imports(text, true),
+        ".py" => python::imports(text),
+        ".js" | ".jsx" | ".ts" | ".tsx" | ".mjs" | ".cjs" | ".vue" => script::imports(text),
+        ".css" | ".scss" | ".sass" => style::css_imports(text),
         ".html" | ".htm" => style::html_refs(text),
-        ".rs" => rust::imports(text),
-        ".sh" | ".bash" => shell::imports(text),
-        ".c" | ".h" | ".cc" | ".cpp" | ".hpp" => clike::includes(text),
-        ".rb" => clike::require_relative(text),
         _ => Vec::new(),
     }
 }
@@ -83,7 +70,10 @@ mod tests {
     fn unsupported_files_have_no_imports() {
         assert!(extract_imports("a.md", "[[Note]]").is_empty());
         assert!(extract_imports("a.json", "{\"import\": \"x\"}").is_empty());
-        assert_eq!(specs("a.RS", "mod x;"), ["x"]);
+        assert!(extract_imports("a.rs", "mod x;").is_empty());
+        assert!(extract_imports("a.sh", "source x").is_empty());
+        assert!(extract_imports("a.pyi", "import x").is_empty());
+        assert_eq!(specs("a.PY", "import x"), ["x"]);
     }
 
     #[test]
@@ -91,15 +81,10 @@ mod tests {
         for ext in supported_extensions() {
             // every advertised extension must dispatch to some scanner
             let probe = match *ext {
-                ".py" | ".pyi" => "import zz",
-                ".js" | ".jsx" | ".ts" | ".tsx" | ".mjs" | ".cjs" | ".mts" | ".cts" | ".vue"
-                | ".svelte" => "import \"./zz\"",
+                ".py" => "import zz",
+                ".js" | ".jsx" | ".ts" | ".tsx" | ".mjs" | ".cjs" | ".vue" => "import \"./zz\"",
                 ".css" | ".scss" | ".sass" => "@import \"zz\";",
-                ".html" | ".htm" => "<img src=zz>",
-                ".rs" => "mod zz;",
-                ".sh" | ".bash" => "source zz",
-                ".rb" => "require_relative 'zz'",
-                _ => "#include \"zz\"",
+                _ => "<img src=zz>",
             };
             assert!(
                 !extract_imports(&format!("f{ext}"), probe).is_empty(),

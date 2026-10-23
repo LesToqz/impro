@@ -1,0 +1,122 @@
+{
+ "digests": [
+  "89fb0e665ca37d51",
+  "648bdb5da1a0d394",
+  "cdd2a28c11bb8624",
+  "49bb994363ecc5b5",
+  "89fb0e665ca37d51",
+  "d393e712ae244955",
+  "89fb0e665ca37d51",
+  "89fb0e665ca37d51",
+  "89fb0e665ca37d51",
+  "89fb0e665ca37d51",
+  "89fb0e665ca37d51",
+  "89fb0e665ca37d51"
+ ],
+ "ops": [
+  {
+   "op": "set_text",
+   "path": "a.md",
+   "text": "[[g]] #buf"
+  },
+  {
+   "op": "set_text",
+   "path": "unsaved.md",
+   "text": "[[a]] #fresh"
+  },
+  {
+   "op": "set_text",
+   "path": "a.md",
+   "text": null
+  },
+  {
+   "op": "set_text",
+   "path": "unsaved.md",
+   "text": null
+  },
+  {
+   "op": "set_text",
+   "path": "c.md",
+   "text": "[[b]]"
+  },
+  {
+   "op": "write",
+   "path": "c.md",
+   "text": "disk wins?\n"
+  },
+  {
+   "op": "set_text",
+   "path": "c.md",
+   "text": null
+  },
+  {
+   "op": "set_text",
+   "path": "img.png",
+   "text": "[[a]]"
+  },
+  {
+   "op": "set_text",
+   "path": "img.png",
+   "text": null
+  },
+  {
+   "op": "set_text",
+   "path": ".git/x.md",
+   "text": "[[a]]"
+  },
+  {
+   "op": "set_text",
+   "path": "../out.md",
+   "text": "[[a]]"
+  }
+ ],
+ "options": {
+  "existing_only": false,
+  "show_attachments": true,
+  "show_tags": true
+ },
+ "tree": {
+  "files": [
+   {
+    "path": "a.md",
+    "text": "[[b]] #t1\n"
+   },
+   {
+    "path": "b.md",
+    "text": "[[c]] [[a]]\n"
+   },
+   {
+    "path": "c.md",
+    "text": ""
+   },
+   {
+    "path": "dir/d.md",
+    "text": "[[a]] [[e]]\n"
+   },
+   {
+    "path": "dir/sub/e.md",
+    "text": "---\naliases: [Eee]\n---\n[[b]]\n"
+   },
+   {
+    "path": "f.md",
+    "text": "[[Eee]] [[img.png]] ![[img.png]]\n"
+   },
+   {
+    "path": "g.md",
+    "text": "[[b]]\n"
+   },
+   {
+    "b64": "AA==",
+    "path": "img.png"
+   },
+   {
+    "path": "m.py",
+    "text": "import n\n"
+   },
+   {
+    "path": "n.py",
+    "text": ""
+   }
+  ]
+ }
+}

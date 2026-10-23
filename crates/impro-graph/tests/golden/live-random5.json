@@ -1,0 +1,287 @@
+{
+ "digests": [
+  "8bc64b869e486e7f",
+  "8bc64b869e486e7f",
+  "c89c7f20c2179ced",
+  "134b8e96017f4d67",
+  "134b8e96017f4d67",
+  "134b8e96017f4d67",
+  "d39c495ce4433896",
+  "c4c78bd8d6f62300",
+  "c4c78bd8d6f62300",
+  "c4c78bd8d6f62300",
+  "c4c78bd8d6f62300",
+  "dc952052f9da5f93",
+  "aac1637ef8e3fd6c",
+  "028861d8b357c39c",
+  "5c01c754a376e229",
+  "5c01c754a376e229",
+  "0caa5bb802d48ece",
+  "0caa5bb802d48ece",
+  "0caa5bb802d48ece",
+  "0caa5bb802d48ece",
+  "eaee53072c955431",
+  "eaee53072c955431",
+  "09c095228616951d",
+  "eb3b0f928d6a496d",
+  "eb3b0f928d6a496d",
+  "eb3b0f928d6a496d",
+  "eb3b0f928d6a496d",
+  "fbe335545c973aa4",
+  "e03b785e77c04341",
+  "e03b785e77c04341",
+  "eb5346fa5e58c776"
+ ],
+ "ops": [
+  {
+   "op": "set_text",
+   "path": "main.txt",
+   "text": "![[alpha.png]]\n[[../sub/É#h|alias]]\n#t1/x\n![i](../X)\n[[delta.md]]\n[[sub/X#h|alias]]\n"
+  },
+  {
+   "from": "src/delta.js",
+   "op": "rename",
+   "to": "sub/deep/main.js"
+  },
+  {
+   "op": "write",
+   "path": "a/b/beta.js",
+   "text": "require('.')\n"
+  },
+  {
+   "op": "write",
+   "path": "Sub/é.png",
+   "text": "---\naliases: [x]\n---\n[[é]]\n"
+  },
+  {
+   "op": "set_text",
+   "path": "sub/deep/Straße.ts",
+   "text": "![[strasse]]\n[[main.md]]\n[[é]]\n![[gamma]]\n#proj/a\n"
+  },
+  {
+   "from": "src/Alpha.markdown",
+   "op": "rename",
+   "to": "delta.markdown"
+  },
+  {
+   "from": "a/b/beta.js",
+   "op": "rename",
+   "to": "util.js"
+  },
+  {
+   "op": "set_text",
+   "path": "é.png",
+   "text": "[[Straße.md]]\n[[../sub/BETA#h|alias]]\n[[main.md]]\n[t](../sub/BETA)\n"
+  },
+  {
+   "op": "set_text",
+   "path": "é.txt",
+   "text": null
+  },
+  {
+   "from": "é.png",
+   "op": "rename",
+   "to": "a/b/main.png"
+  },
+  {
+   "op": "write",
+   "path": "other/strasse.js",
+   "text": "export * from '../beta'\n"
+  },
+  {
+   "op": "write",
+   "path": "sub/index.css",
+   "text": ".a{background:url(sub/beta.css)}\n@import 'sub/beta.css';\n.a{background:url(alpha.css)}\n"
+  },
+  {
+   "op": "write",
+   "path": "src/x.css",
+   "text": ".a{background:url(img/a.png)}\n.a{background:url(x.png)}\n.a{background:url(sub/beta.css)}\n.a{background:url(img/a.png)}\n"
+  },
+  {
+   "from": "strasse.py",
+   "op": "rename",
+   "to": "src/util.py"
+  },
+  {
+   "op": "set_text",
+   "path": "src/util.py",
+   "text": "import index as m\nfrom a.b import *\nfrom . import alpha\nfrom ..a.b import *\n"
+  },
+  {
+   "op": "write",
+   "path": "src/delta.md",
+   "text": "[[Gamma Ray.png]]\n"
+  },
+  {
+   "op": "set_text",
+   "path": "delta.html",
+   "text": null
+  },
+  {
+   "op": "write",
+   "path": "Alpha.png",
+   "text": "</a.b.png>\n#proj/a/b\n[[util.png]]\n[[alpha.png]]\n[[a.b.png]]\n![i](../sub/index)\n[t](./alpha.md)\n#t2\n"
+  },
+  {
+   "op": "set_text",
+   "path": "other/strasse.js",
+   "text": "require('./sub/index')\nimport x from '.'\nimport x from './sub'\nrequire('./util.js')\n"
+  },
+  {
+   "from": "a.b.ts",
+   "op": "rename",
+   "to": "src/index.ts"
+  },
+  {
+   "op": "set_text",
+   "path": "src/util.py",
+   "text": "import sub.deep.alpha\n"
+  },
+  {
+   "op": "write",
+   "path": "Straße.py",
+   "text": "import index as m\nfrom ...alpha import x\nfrom ...a.b import *\nimport gamma as m\n"
+  },
+  {
+   "op": "write",
+   "path": "sub/deep/Gamma Ray.md",
+   "text": "[t](../é)\n![i](Gamma Ray.md)\n"
+  },
+  {
+   "op": "set_text",
+   "path": "sub/index.css",
+   "text": null
+  },
+  {
+   "op": "set_text",
+   "path": "src/strasse.ts",
+   "text": null
+  },
+  {
+   "op": "set_text",
+   "path": "Sub/Straße.js",
+   "text": "import './util.js'\nimport './main.css'\nimport x from './gamma'\n"
+  },
+  {
+   "op": "delete",
+   "path": "Alpha.MD"
+  },
+  {
+   "from": "other/strasse.js",
+   "op": "rename",
+   "to": "other/delta.md"
+  },
+  {
+   "op": "set_text",
+   "path": "a/delta.html",
+   "text": "---\naliases: [delta, index]\ntags: [t2, proj/a/b]\n---\n[[beta.md]]\n![i](../sub/index.md)\n[t](./A.B)\n"
+  },
+  {
+   "from": "sub/deep/Straße.ts",
+   "op": "rename",
+   "to": "main.ts"
+  }
+ ],
+ "options": {
+  "existing_only": false,
+  "show_attachments": true,
+  "show_tags": true
+ },
+ "tree": {
+  "files": [
+   {
+    "path": "Alpha.MD",
+    "text": "---\naliases: [index, é]\ntags: [t1, proj/a/b]\n---\n"
+   },
+   {
+    "path": "Sub/Straße.js",
+    "text": "export * from '..'\nimport x from './sub'\nrequire('./Alpha')\nexport * from '../sub/alpha'\nrequire('./main.css')\n"
+   },
+   {
+    "path": "Sub/alpha.MD",
+    "text": "---\n---\n![i](sub/index)\n![[Gamma Ray.md]]\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "Sub/é.png"
+   },
+   {
+    "path": "a/b/alpha.html",
+    "text": "<a href=\"alpha.css\">\n"
+   },
+   {
+    "path": "a/b/delta.css",
+    "text": "\n"
+   },
+   {
+    "path": "a/b/strasse.markdown",
+    "text": "[[/é#h|alias]]\n`[[gamma ray]]`\n![i](./É)\n[t](index.png)\n"
+   },
+   {
+    "path": "a/delta.html",
+    "text": "<img src=https://x.y>\n<script src='alpha.css'>\n"
+   },
+   {
+    "path": "a/delta.ts",
+    "text": "export * from './sub/index'\n"
+   },
+   {
+    "path": "a.b.ts",
+    "text": "require('../beta')\nexport * from '..'\nexport * from './sub'\n"
+   },
+   {
+    "path": "delta.html",
+    "text": "<script src='sub/beta.html'>\n<img src=https://x.y>\n<a href=\"alpha.css\">\n<img src=x.png>\n"
+   },
+   {
+    "path": "main.txt",
+    "text": "---\naliases: [gamma]\n---\n[t](INDEX)\n[[beta]]\n"
+   },
+   {
+    "path": "other/Gamma Ray.html",
+    "text": "<script src='/alpha.css'>\n"
+   },
+   {
+    "path": "other/beta.css",
+    "text": ".a{background:url(sub/beta.css)}\n@import '../main.css';\n.a{background:url(alpha.css)}\n.a{background:url(../main.css)}\n"
+   },
+   {
+    "path": "src/Alpha.markdown",
+    "text": "![[UTIL]]\n[[gamma.md]]\n[[a.b.md]]\n[[strasse]]\n[[util.md]]\n[[alpha]]\n"
+   },
+   {
+    "path": "src/delta.js",
+    "text": "export * from 'lib'\nexport * from '..'\n"
+   },
+   {
+    "path": "src/strasse.ts",
+    "text": "import x from './Alpha'\n"
+   },
+   {
+    "path": "strasse.py",
+    "text": "import sub.util\n"
+   },
+   {
+    "path": "sub/beta.ts",
+    "text": "import './alpha'\nexport * from './main.css'\nimport x from './util.js'\nrequire('./gamma')\n"
+   },
+   {
+    "path": "sub/deep/Straße.ts",
+    "text": "import '../sub/alpha'\n"
+   },
+   {
+    "path": "x.py",
+    "text": "from ..util import alpha\nimport alpha as m\n"
+   },
+   {
+    "b64": "AAE=",
+    "path": "é.png"
+   },
+   {
+    "path": "é.txt",
+    "text": "![[DELTA]]\n![[STRASSE]]\n[[alpha]]\n`[[alpha.png]]`\n"
+   }
+  ]
+ }
+}
