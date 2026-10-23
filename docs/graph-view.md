@@ -11,7 +11,9 @@ GTK DrawingArea and GTK controls. It creates no WebKit view or web process.
 A new graph includes notes, source files, missing references and unlinked files.
 Tag nodes and referenced assets are opt-in to avoid crowding a code project.
 Direction markers start enabled because import and reference direction matters.
-The controls panel starts open, with the scope section expanded; other sections
+The controls sit 12 px from the top and right edges of the graph pane; the
+closed strip is a column of three 26 px buttons (icon centres 32 px from the
+right edge, 34 px apart) and takes no room of the hidden panel. The controls panel starts open, with the scope section expanded; other sections
 start collapsed. Search starts empty, colour rules start empty, zoom starts at
 1, and reduced motion starts disabled (the host accessibility preference can
 override it). Incoming and outgoing traversal both start enabled. The saved engine preference starts at two hops, showing immediate dependencies
@@ -146,8 +148,13 @@ reuse nearby cached alpha masks during motion, then refresh at the exact final
 font size. A bounded warm-up finishes visible masks before frame callbacks stop,
 so settled labels do not depend on the preceding zoom path. Nominal font sizes
 and wrapping stay continuous. Offscreen primitives are culled. Zoom-based label/arrow detail and dense
-label decluttering limit work, preserving focus/hover labels. A per-frame label
-render budget bounds cache misses. Connection surfaces are reused when geometry
+label decluttering limit work, preserving focus/hover labels. The declutter
+cells travel with the world, so moving the camera never changes which of two
+overlapping labels is drawn, and moving frames show the same labels as the
+settled one (only bitmaps still missing are filled in over the next frames). A
+per-frame label render budget bounds cache misses. Moving frames never reuse
+connection coverage from another camera: markers and connections always come
+from the same camera. Connection surfaces are reused when geometry
 and style are unchanged and invalidated when positions, camera or appearance
 change. Settled redraw timings therefore differ from moving-scene costs.
 

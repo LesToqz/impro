@@ -18,11 +18,19 @@ const LABEL_SIZE_TOLERANCE: f64 = 0.1;
 /// Bitmaps that may be re-rendered in one frame; stale ones are scaled instead.
 const LABEL_RENDER_BUDGET: u32 = 120;
 const LABEL_PAD: i32 = 2;
-/// Labels drawn while the scene moves: the largest markers on screen.
-const MOTION_LABELS: usize = 96;
 /// While moving, markers are drawn only on connections whose visible shaft is
 /// at least this many marker lengths (dense scenes draw none).
 const MOTION_ARROW_SHAFTS: f32 = 1.5;
+/// Visible nodes per logical pixel from which a scene counts as dense.
+const DENSE_NODES: f64 = 0.0008;
+/// Declutter cells in logical pixels, anchored to the world (they travel with
+/// the camera) so a pan never changes which of two labels wins.
+const CELL_W: f64 = 48.0;
+const CELL_H: f64 = 20.0;
+/// Room around the pane that still takes part in the declutter.
+const CELL_MARGIN_X: f64 = 336.0;
+const CELL_MARGIN_TOP: f64 = 80.0;
+const CELL_MARGIN_BOTTOM: f64 = 240.0;
 /// The cache is dropped when it grows past this many labels.
 const LABEL_CACHE_LIMIT: usize = 6000;
 
@@ -75,6 +83,23 @@ pub struct DrawStats {
     pub phase_ms: [f64; 5],
     /// Connections: preparation, rasterising, compositing (milliseconds).
     pub line_ms: [f64; 3],
+}
+
+/// One label as painted, in logical pixels (tests).
+#[derive(Clone, Debug, PartialEq)]
+pub struct LabelDrawn {
+    pub node: usize,
+    /// Top-left corner of the drawn bitmap.
+    pub x: f64,
+    pub y: f64,
+    /// Drawn size.
+    pub w: f64,
+    pub h: f64,
+    pub alpha: f64,
+    /// Font size in device pixels the bitmap was rendered at.
+    pub bitmap_px: f64,
+    /// The bitmap was stretched to another size than it was rendered at.
+    pub stretched: bool,
 }
 
 /// Per-frame switches.
@@ -293,9 +318,12 @@ pub struct Painter {
     keys: Vec<u64>,
     segments: Vec<[f32; 4]>,
     shapes: Vec<[(f32, f32); 4]>,
-    dense: bool,
+    /// Whether the scene counts as dense; it flips with hysteresis, so a
+    /// fresh painter must start from the same value to draw the same frame.
+    pub(super) dense: bool,
     label_cells: Vec<bool>,
-    label_order: Vec<usize>,
+    label_grid: (usize, usize),
+    label_origin: (f64, f64),
     connections: Option<cairo::ImageSurface>,
     connections_key: Option<u64>,
     connection_stats: DrawStats,
@@ -311,6 +339,10 @@ pub struct Painter {
     group_clock: u64,
     back: Option<cairo::ImageSurface>,
     back_size: (i32, i32),
+    /// Tests: keep a copy of every frame as it stood before its labels.
+    pub capture: bool,
+    pub(super) unlabelled: Option<cairo::ImageSurface>,
+    pub(super) label_log: Vec<LabelDrawn>,
     pub labels: LabelCache,
     pub stats: DrawStats,
 }
@@ -368,7 +400,8 @@ impl Painter {
             shapes: Vec::new(),
             dense: false,
             label_cells: Vec::new(),
-            label_order: Vec::new(),
+            label_grid: (0, 0),
+            label_origin: (0.0, 0.0),
             connections: None,
             connections_key: None,
             connection_stats: DrawStats::default(),
@@ -379,6 +412,9 @@ impl Painter {
             group_clock: 0,
             back: None,
             back_size: (0, 0),
+            capture: false,
+            unlabelled: None,
+            label_log: Vec::new(),
             labels: LabelCache::new(),
             stats: DrawStats::default(),
         }
@@ -414,6 +450,7 @@ impl Painter {
         opts: PaintOptions,
     ) -> Option<&cairo::ImageSurface> {
         self.stats = DrawStats::default();
+        self.label_log.clear();
         self.labels.pending = false;
         let dev = opts.scale.max(1.0);
         let (pw, ph) = (
@@ -452,8 +489,15 @@ impl Painter {
                 .count();
             // Below this density keep the original rendering, including fit
             // views whose direction markers have already faded away.
-            self.dense = visible as f64 / (w * h).max(1.0) > 0.0008
-                && arrow_opacity(scene.cam.cam.zoom) > 0.0;
+            // A Schmitt trigger: the density of the nodes in view changes with
+            // every pan, and a flip would re-declutter every label at once.
+            let density = visible as f64 / (w * h).max(1.0);
+            let limit = if self.dense {
+                DENSE_NODES * 0.9
+            } else {
+                DENSE_NODES * 1.1
+            };
+            self.dense = density > limit && arrow_opacity(scene.cam.cam.zoom) > 0.0;
             let cacheable = !scene.needs_frames() && !self.motion;
             let key = cacheable.then(|| self.connection_key(scene, pw, ph, dev));
             let reuse = cacheable && self.connections_key == key;
@@ -511,6 +555,17 @@ impl Painter {
                 self.nodes(&mut canvas, scene, dev as f32);
                 lap(3, &mut self.stats);
             }
+        }
+        if self.capture {
+            self.unlabelled = cairo::ImageSurface::create(cairo::Format::ARgb32, pw, ph)
+                .ok()
+                .inspect(|copy| {
+                    if let Ok(cr) = cairo::Context::new(copy) {
+                        cr.set_operator(cairo::Operator::Source);
+                        let _ = cr.set_source_surface(&back, 0.0, 0.0);
+                        let _ = cr.paint();
+                    }
+                });
         }
         if !scene.is_empty() {
             if let Ok(cr) = cairo::Context::new(&back) {
@@ -660,7 +715,10 @@ impl Painter {
                 .palette
                 .line
                 .mix(scene.palette.line_highlight, qm / 10.0);
-            let cache_key = (j - i >= GROUP_CACHE_MIN).then(|| geometry ^ member.rotate_left(17));
+            // Moving frames never keep coverage: their key would hold no
+            // geometry and a later frame would replay another camera's lines.
+            let cache_key =
+                (keep && j - i >= GROUP_CACHE_MIN).then(|| geometry ^ member.rotate_left(17));
             if let Some(hit) = cache_key.and_then(|k| self.group_take(k)) {
                 self.stats.group_hits += 1;
                 hit.mask.paint(cr, c.rgb(), qa / LINE_LEVELS);
@@ -983,20 +1041,20 @@ impl Painter {
 
     fn draw_labels(&mut self, cr: &cairo::Context, scene: &Scene, w: f64, h: f64, dev: f64) {
         self.labels.begin_frame(dev);
-        self.label_cells.resize(
-            (w / 48.0).ceil() as usize * (h / 20.0).ceil() as usize,
-            false,
-        );
-        self.label_cells.fill(false);
+        let cols = ((w + 2.0 * CELL_MARGIN_X) / CELL_W).ceil() as usize + 1;
+        let rows = ((h + CELL_MARGIN_TOP + CELL_MARGIN_BOTTOM) / CELL_H).ceil() as usize + 1;
+        self.label_grid = (cols, rows);
+        self.label_cells.clear();
+        self.label_cells.resize(cols * rows, false);
+        let cam = scene.cam.cam;
+        self.label_origin = (cam.pan_x.rem_euclid(CELL_W), cam.pan_y.rem_euclid(CELL_H));
         let hl = scene.highlight().filter(|h| *h < scene.len());
-        if label_opacity(scene.cam.cam.zoom, scene.disp.label_detail) > 0.001 {
-            if self.motion {
-                self.motion_labels(cr, scene, w, h, dev, hl);
-            } else {
-                for i in 0..scene.len() {
-                    if hl != Some(i) {
-                        self.label(cr, scene, i, w, h, dev, false);
-                    }
+        if label_opacity(cam.zoom, scene.disp.label_detail) > 0.001 {
+            // Moving or settled, the same labels win in the same order: only
+            // their bitmaps may still be missing.
+            for i in 0..scene.len() {
+                if hl != Some(i) {
+                    self.label(cr, scene, i, w, h, dev, false);
                 }
             }
         }
@@ -1005,35 +1063,25 @@ impl Painter {
         }
     }
 
-    /// The largest markers on screen get a label while the scene moves.
-    fn motion_labels(
-        &mut self,
-        cr: &cairo::Context,
-        scene: &Scene,
-        w: f64,
-        h: f64,
-        dev: f64,
-        hl: Option<usize>,
-    ) {
-        let (wd, hd) = ((w + 300.0) * dev, (h + 200.0) * dev);
-        let radius = scene.layout.radius();
-        let mut shown = std::mem::take(&mut self.label_order);
-        shown.clear();
-        shown.extend((0..scene.len()).filter(|&i| {
-            hl != Some(i)
-                && (-300.0 * dev..=wd).contains(&(self.sx[i] as f64))
-                && (-20.0 * dev..=hd).contains(&(self.sy[i] as f64))
-        }));
-        let by_size = |a: &usize, b: &usize| radius[*b].total_cmp(&radius[*a]);
-        if shown.len() > MOTION_LABELS {
-            shown.select_nth_unstable_by(MOTION_LABELS, by_size);
-            shown.truncate(MOTION_LABELS);
+    /// Marks the declutter cells a label covers; false if one is taken.
+    fn claim_cells(&mut self, x: f64, y: f64, lw: f64, lh: f64) -> bool {
+        let (cols, rows) = self.label_grid;
+        let (ox, oy) = self.label_origin;
+        let col = |v: f64| ((v - ox + CELL_MARGIN_X) / CELL_W).floor().max(0.0) as usize;
+        let row = |v: f64| ((v - oy + CELL_MARGIN_TOP) / CELL_H).floor().max(0.0) as usize;
+        let end_col = |v: f64| ((v - ox + CELL_MARGIN_X) / CELL_W).ceil().max(0.0) as usize;
+        let end_row = |v: f64| ((v - oy + CELL_MARGIN_TOP) / CELL_H).ceil().max(0.0) as usize;
+        let (x0, x1) = (col(x), end_col(x + lw).min(cols));
+        let (y0, y1) = (row(y), end_row(y + lh).min(rows));
+        if (y0..y1).any(|cy| (x0..x1).any(|cx| self.label_cells[cy * cols + cx])) {
+            return false;
         }
-        shown.sort_unstable_by(by_size);
-        for &i in &shown {
-            self.label(cr, scene, i, w, h, dev, false);
+        for cy in y0..y1 {
+            for cx in x0..x1 {
+                self.label_cells[cy * cols + cx] = true;
+            }
         }
-        self.label_order = shown;
+        true
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1080,26 +1128,11 @@ impl Painter {
         let lw = width * k;
         let ly = sy + (world as f64 + 5.0) * rs + drop;
         let (x, y) = (sx - lw / 2.0, ly - LABEL_PAD as f64 * k);
-        if x + lw < 0.0 || x > w || y + height * k < 0.0 || y > h {
+        if self.dense && !hovered && !self.claim_cells(x, y, lw, height * k) {
             return;
         }
-        if self.dense && !hovered {
-            let cols = (w / 48.0).ceil() as usize;
-            let rows = (h / 20.0).ceil() as usize;
-            let x0 = (x.max(0.0) / 48.0) as usize;
-            let x1 = ((x + lw).max(0.0) / 48.0).ceil() as usize;
-            let y0 = (y.max(0.0) / 20.0) as usize;
-            let y1 = ((y + height * k).max(0.0) / 20.0).ceil() as usize;
-            if (y0..y1.min(rows))
-                .any(|cy| (x0..x1.min(cols)).any(|cx| self.label_cells[cy * cols + cx]))
-            {
-                return;
-            }
-            for cy in y0..y1.min(rows) {
-                for cx in x0..x1.min(cols) {
-                    self.label_cells[cy * cols + cx] = true;
-                }
-            }
+        if x + lw < 0.0 || x > w || y + height * k < 0.0 || y > h {
+            return;
         }
         let _ = cr.save();
         let c = scene.palette.text;
@@ -1108,6 +1141,18 @@ impl Painter {
             cr.translate((x * dev).round() / dev, (y * dev).round() / dev);
         } else {
             cr.translate(x, y);
+        }
+        if self.capture {
+            self.label_log.push(LabelDrawn {
+                node: i,
+                x,
+                y,
+                w: lw,
+                h: height * k,
+                alpha,
+                bitmap_px: px,
+                stretched: (k - 1.0 / dev).abs() >= 1e-3,
+            });
         }
         cr.scale(k, k);
         let _ = cr.mask_surface(&surface, 0.0, 0.0);
@@ -1138,6 +1183,49 @@ mod tests {
         let mut png = Vec::new();
         surface.write_to_png(&mut png).expect("PNG");
         png
+    }
+
+    /// A chain whose single connection group is large enough to be cached.
+    fn chain_scene() -> Scene {
+        let mut scene = Scene::new();
+        scene.set_size(240.0, 180.0);
+        let pairs: Vec<(u32, u32)> = (0..299).map(|i| (i, i + 1)).collect();
+        scene.apply(Built::global(Graph::from_pairs(300, &pairs)));
+        while scene.advance(1.0 / 60.0) {}
+        let bounds = scene.layout.bounds().expect("bounds");
+        let mut fit = crate::geometry::Camera::default();
+        fit.fit(bounds, 240.0, 180.0, 10.0);
+        scene.cam.cam = fit;
+        scene.cam.target_zoom = fit.zoom;
+        scene
+    }
+
+    #[test]
+    fn moving_frames_never_replay_connections_of_another_camera() {
+        let mut scene = chain_scene();
+        let mut painter = Painter::new();
+        painter.motion = true;
+        let first = pixels(&mut painter, &scene, 1.0);
+        let mut fresh = Painter::new();
+        fresh.motion = true;
+        assert!(first == pixels(&mut fresh, &scene, 1.0));
+        for step in 1..6 {
+            scene.cam.cam.pan_x += 9.0 * step as f64;
+            scene.cam.cam.zoom *= 0.93;
+            let moved = pixels(&mut painter, &scene, 1.0);
+            let mut fresh = Painter::new();
+            fresh.motion = true;
+            assert!(
+                moved == pixels(&mut fresh, &scene, 1.0),
+                "step {step}: a moving frame differs from a fresh redraw"
+            );
+        }
+        // the settled frame after the motion is exact as well
+        painter.motion = false;
+        assert_eq!(
+            pixels(&mut painter, &scene, 1.0),
+            pixels(&mut Painter::new(), &scene, 1.0)
+        );
     }
 
     #[test]

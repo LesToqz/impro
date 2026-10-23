@@ -76,6 +76,9 @@ pub fn draw(cr: &cairo::Context, icon: Icon, size: f64) {
             let _ = cr.stroke();
         }
         Icon::Wand => {
+            // the drawing's ink spans 2.5..22.8 by 1.5..21.5: shifted so its
+            // centre sits on the grid centre like the other icons
+            cr.translate(-0.65, 0.5);
             cr.move_to(3.5, 20.5);
             cr.line_to(15.5, 8.5);
             let _ = cr.stroke();

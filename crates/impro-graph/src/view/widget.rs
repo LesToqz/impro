@@ -116,11 +116,16 @@ pub struct FrameStats {
     pub frames: u64,
     /// Smoothed draw time in milliseconds.
     pub draw_ms: f64,
+    /// Draw time of the latest frame in milliseconds.
+    pub last_draw_ms: f64,
     /// Smoothed tick (simulation + easing) time in milliseconds.
     pub tick_ms: f64,
     /// True while a frame callback is attached.
     pub animating: bool,
 }
+
+/// A test hook called after every painted frame.
+pub(super) type ProbeFn = Rc<dyn Fn(&Inner)>;
 
 pub(super) struct Inner {
     pub root_box: gtk::Box,
@@ -166,6 +171,8 @@ pub(super) struct Inner {
     pub handlers: Handlers,
     pub closed: Cell<bool>,
     pub stats: Cell<FrameStats>,
+    /// Tests: called after every painted frame.
+    pub probe: RefCell<Option<ProbeFn>>,
     pub me: RefCell<Weak<Inner>>,
 }
 
