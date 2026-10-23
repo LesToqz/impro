@@ -3,9 +3,9 @@
 impro is a Rust 2021 workspace on one GTK3 gtk-rs **0.18** stack. Shared
 versions live in the root `Cargo.toml`; `webkit2gtk` is 2.0. Local `impro-vte`
 wraps libvte-2.91 without introducing a second GLib/GTK ABI; its nested
-`impro-vte-sys` package supplies the FFI. The workspace declares Rust 1.80 as
-its minimum; the current lockfile selects `plist`/`time` releases declaring Rust
-1.88, so use a current stable toolchain for this dependency set. Cargo jobs are limited to three; run one Cargo operation at a time.
+`impro-vte-sys` package supplies the FFI. The workspace requires Rust 1.88 or
+newer, matching the minimum required by the locked `plist`, `time` and `time-core`
+releases. Cargo jobs are limited to three; run one Cargo operation at a time.
 
 ## Crates and dependency direction
 
