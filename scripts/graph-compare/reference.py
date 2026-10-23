@@ -69,10 +69,10 @@ def main():
     import re
     handler = re.search(r"register_script_message_handler\(['\"]([^'\"]+)", source).group(1)
     graph._manager.connect('script-message-received::'+handler, message)
-    graph._manager.add_script(graphmod.WebKit2.UserScript.new(
+    graph._manager.add_script(graph._webkit.UserScript.new(
         "window.auditLoadingStatus=document.querySelector('#status')?.textContent;",
-        graphmod.WebKit2.UserContentInjectedFrames.TOP_FRAME,
-        graphmod.WebKit2.UserScriptInjectionTime.END, None, None))
+        graph._webkit.UserContentInjectedFrames.TOP_FRAME,
+        graph._webkit.UserScriptInjectionTime.END, None, None))
     initial_started = time.monotonic()
     window.show_all()
     window.move(0, 0)

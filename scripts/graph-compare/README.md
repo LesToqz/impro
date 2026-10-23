@@ -95,8 +95,8 @@ Connection scenes filter to the isolated source pair and focus it before zooming
 Connection FWHM uses quarter-pixel samples across that pair,
 with a 1 px tolerance for raster coverage. Label ink bounds, visibility and
 peak text-role contrast are sampled around a focused orphan; font coverage is
-allowed a 0.15 alpha tolerance. These are raster measurements, not nominal font
-or arrow telemetry. Pixel identity and equal force-layout coordinates are not
+allowed a 0.15 alpha tolerance. These raster rows remain separate from the phase-B nominal font
+and arrow paint telemetry. Pixel identity and equal force-layout coordinates are not
 expected between the independent renderers. Exact row tolerances appear in
 `BEHAVIOURS.md` and the JSON table.
 
@@ -113,3 +113,21 @@ readiness polling loop. The reference includes its descendant page processes. Th
 short interval, timer granularity and other machine load limit precision. Hidden
 frame counts, rather than aggregate CPU, establish that an unmapped view does
 not advance the graph animation.
+
+The phase-B probe also reports read-only nominal label metrics and bitmap sizes,
+connection paint width/colour/alpha, painted arrow geometry/opacity, cursor names
+and camera velocity. The reference observes Canvas2D paint calls in memory;
+its source files and rendering algorithms are unchanged. Controlled frame
+scenarios isolate zoom easing, velocity filtering and decay from event-dispatch
+delays. `status-loading` captures the document-end status before data delivery.
+
+Run the generated layout sweep with the same prerequisites and isolation:
+
+```sh
+bash scripts/graph-compare/run.sh --layout-sweep --out .ceo/layout-sweep
+```
+
+It compares hub/spokes, a chain, isolated clusters and 3000 files, with a fresh
+process repeat of each implementation. `layout-results.json` records settle
+time, spacing, cluster-centroid separation and maximum repeat displacement.
+The large fixture skips the quadratic nearest-neighbour diagnostic.

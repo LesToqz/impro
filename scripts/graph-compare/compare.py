@@ -32,11 +32,20 @@ def main():
     parser.add_argument('--impro-bin', type=Path, default=REPO/'target/release/examples/graph_probe')
     parser.add_argument('--skip-repeat', action='store_true', help='omit the fresh-start repeat probes')
     parser.add_argument('--reuse', action='store_true', help='compare existing measurements only')
+    parser.add_argument('--layout-sweep', action='store_true', help='compare generated layout fixtures and fresh-start repeats')
     args = parser.parse_args()
     out = args.out.resolve()
     if args.reference is not None and out.is_relative_to(args.reference.resolve()):
         raise RuntimeError('output must not be inside the read-only reference tree')
     out.mkdir(parents=True, exist_ok=True)
+    if args.layout_sweep:
+        if args.reference is None or not args.reference.is_dir() or not args.impro_bin.is_file():
+            raise RuntimeError('layout sweep needs the reference and a built native probe')
+        sweep_spec = importlib.util.spec_from_file_location('layout_sweep', HERE/'layout_sweep.py')
+        sweep = importlib.util.module_from_spec(sweep_spec)
+        sweep_spec.loader.exec_module(sweep)
+        sweep.run(args, drive)
+        return
     if not args.reuse:
         if args.reference is None or not args.reference.is_dir():
             raise RuntimeError('set IMPRO_REFERENCE_DIR to the read-only reference tree')
