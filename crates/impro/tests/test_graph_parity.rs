@@ -238,7 +238,7 @@ fn graph_settings_process() {
             assert_eq!(disk()["graph"]["showArrow"], json!(true));
             poll(|| disk()["graph"]["showArrow"] == false);
             let display_delay_ms = display_start.elapsed().as_millis();
-            assert!(display_delay_ms >= 230 && display_delay_ms < 2_000);
+            assert!((230..2_000).contains(&display_delay_ms));
             // Adding the tag reheats physics for several seconds. Saving a
             // completed zoom must use the camera clock, independently of that.
             assert!(t::info(&view).simulating);

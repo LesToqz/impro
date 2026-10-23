@@ -143,7 +143,8 @@ fn snapshot(view: &GraphView) -> Value {
         "local_rows":[view.panel().row_visible("localDepth"),view.panel().row_visible("localIncoming"),
             view.panel().row_visible("localOutgoing"),view.panel().row_visible("showOrphans")],
         "background":background,"text_color":text_color,"accent":t::accent_hex(view),
-        "mapped":view.is_mapped(),"frames":view.frame_stats().frames})
+        "mapped":view.is_mapped(),"frames":view.frame_stats().frames,
+        "backend":view.canvas().display().type_().name(),"device_scale":view.canvas().scale_factor()})
 }
 
 fn replay_label(widget: &gtk::Widget) -> Option<String> {
