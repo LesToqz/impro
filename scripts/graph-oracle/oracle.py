@@ -52,6 +52,30 @@ def skip_markup_links():
     GD.extract_links = extract
 
 
+def keep_large_attachments():
+    """Model a deliberate difference: an attachment over the size cap stays resolvable."""
+    original = GD.GraphIndex._read
+
+    def read(self, rel):
+        found = original(self, rel)
+        if found is not None:
+            return found
+        absolute = os.path.join(self.root, rel)
+        ext = os.path.splitext(rel)[1].lower()
+        if (ext in GD.SEMANTICS['note_extensions'] or ext in GD.SEMANTICS['code_extensions']
+                or os.path.islink(absolute) or os.path.realpath(absolute) != absolute
+                or rel in self._overrides):
+            return None
+        try:
+            if not os.path.isfile(absolute) or os.path.getsize(absolute) <= GD.MAX_FILE_SIZE:
+                return None
+            info = os.stat(absolute)
+        except OSError:
+            return None
+        return GD._File(rel, 'attachment', '', [], [], [], float(min(info.st_ctime, info.st_mtime)))
+    GD.GraphIndex._read = read
+
+
 def make_options(spec):
     spec = spec or {}
     keys = ('query', 'show_tags', 'show_attachments', 'existing_only',
@@ -85,6 +109,7 @@ def dump_graph(graph, focus=None):
 def run_graph(request):
     if request.get('skip_markup', True):
         skip_markup_links()
+        keep_large_attachments()
     index = GD.GraphIndex(request['root'], max_nodes=request.get('max_nodes', 3000))
     index.scan()
     for path, text in request.get('overrides', {}).items():
@@ -201,6 +226,7 @@ def apply_op(index, root, op):
 def run_live(request):
     if request.get('skip_markup', True):
         skip_markup_links()
+        keep_large_attachments()
     root = os.path.abspath(request['root'])
     index = GD.GraphIndex(root, max_nodes=request.get('max_nodes', 3000))
     index.scan()
