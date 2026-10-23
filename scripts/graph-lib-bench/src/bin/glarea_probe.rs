@@ -8,7 +8,8 @@
 //! Env: `PROBE_MODE=gl|blit|cairo|current` (default `gl`; `blit` repaints one
 //! pre-rendered surface, `cairo` renders candidate B every frame, `current`
 //! the real Painter), `PROBE_FRAMES`, `PROBE_SIZE=WxH`, `PROBE_FINISH=1`
-//! (glFinish inside the GL handler), `PROBE_LABELS=1`.
+//! (glFinish inside the GL handler), `PROBE_LABELS=1`, `PROBE_MOTION=1`
+//! (moving level of detail of the real Painter).
 
 use std::cell::RefCell;
 use std::ffi::c_void;
@@ -199,6 +200,7 @@ fn main() {
                         scene.set_size(lw as f64, lh as f64);
                         scene.cam.cam = Camera { pan_x: cam.x, pan_y: cam.y, zoom: cam.zoom };
                         scene.cam.target_zoom = cam.zoom;
+                        painter.motion = std::env::var_os("PROBE_MOTION").is_some();
                         painter.paint(cr, scene, lw as f64, lh as f64, PaintOptions { hide_labels: false, scale: scale as f64 });
                     }
                 }

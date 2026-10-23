@@ -44,6 +44,12 @@ for phase in "$@"; do
       run d-hw-labels    $BIN/d_gl --labels --readback
       run d-hw-packed    $BIN/d_gl --fixture packed --readback --res $SUBSET
       run d-hw-dense     $BIN/d_gl --fixture dense --readback --res $SUBSET ;;
+    d-sync) # draw cost with a forced 1-pixel readback (proves the GPU really finished)
+      export T=60
+      run d-hw-sync      $BIN/d_gl --sync1px
+      run d-hw-sync-labels $BIN/d_gl --sync1px --labels --res $SUBSET
+      run d-hw-sync-dense $BIN/d_gl --sync1px --fixture dense --res $SUBSET
+      run d-hw-nofinish  $BIN/d_gl --nofinish --res $SUBSET ;;
     d-sw) # forced software rasteriser
       export LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe T=400
       run d-sw           $BIN/d_gl
@@ -55,7 +61,8 @@ for phase in "$@"; do
       run femtovg-hw     $BIN/d_femtovg --labels --res 1920x1080@1,3840x2160@1,3840x2160@2 ;;
     wgpu)
       export T=60
-      run wgpu           $BIN/e_wgpu --res 1920x1080@1,3840x2160@1,3840x2160@2 ;;
+      run wgpu           $BIN/e_wgpu --res 1920x1080@1,3840x2160@1,3840x2160@2
+      run wgpu-gl        $BIN/e_wgpu --backend gl --res 1920x1080@1,3840x2160@1,3840x2160@2 ;;
     layout)
       run layout-app     $BIN/f_layout app
       run layout-dense   $BIN/f_layout dense ;;
@@ -75,6 +82,13 @@ for phase in "$@"; do
         PROBE_MODE=$mode PROBE_SIZE=1600x900 run probe-wl-$mode \
           dbus-run-session -- bash "$WL" $BIN/glarea_probe
       done ;;
+    gui-wl2) # more on-screen variants on the private compositor
+      unset WAYLAND_DISPLAY DISPLAY; export T=150
+      WL="$(git rev-parse --show-toplevel)/.ceo/scratch/run-wl.sh"
+      PROBE_MODE=gl PROBE_SIZE=1600x900 PROBE_FINISH=1 run probe-wl-gl-finish dbus-run-session -- bash "$WL" $BIN/glarea_probe
+      PROBE_MODE=gl PROBE_SIZE=1600x900 PROBE_LABELS=1 PROBE_FINISH=1 run probe-wl-gl-labels dbus-run-session -- bash "$WL" $BIN/glarea_probe
+      PROBE_MODE=cairo PROBE_SIZE=1600x900 PROBE_LABELS=1 run probe-wl-cairo-labels dbus-run-session -- bash "$WL" $BIN/glarea_probe
+      PROBE_MODE=current PROBE_SIZE=1600x900 PROBE_MOTION=1 run probe-wl-current-motion dbus-run-session -- bash "$WL" $BIN/glarea_probe ;;
     *) echo "unknown phase $phase" >&2; exit 2 ;;
   esac
 done

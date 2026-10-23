@@ -235,7 +235,7 @@ where
         type Path<'a> = Box<dyn Fn(usize, f64, f64) -> Cam + 'a>;
         let paths: [(&str, Path<'_>); 3] = [
             ("pan", Box::new(pan_cam)),
-            ("pan-fit", Box::new(|k, w, h| pan_fit_cam(fx, k, w, h))),
+            ("pan-fit", Box::new(|k: usize, w: f64, h: f64| pan_fit_cam(fx, k, w, h))),
             ("zoom-out", Box::new(zoom_cam)),
         ];
         for (name, path) in paths {

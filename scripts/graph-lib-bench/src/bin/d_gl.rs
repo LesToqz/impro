@@ -1,7 +1,7 @@
 //! Candidate D: raw OpenGL (glow) on a surfaceless EGL context, drawing the
 //! instanced scene of `glscene` into an offscreen renderbuffer. Flags:
 //! `--readback` (glReadPixels into a cairo surface after drawing),
-//! `--nofinish` (time submission only), `--gl 3.3` (context version).
+//! `--nofinish` (time submission only), `--sync1px` (read one pixel back per frame to force completion), `--gl 3.3` (context version).
 
 use glow::HasContext;
 use graph_lib_bench::egl::{self, Egl};
@@ -14,6 +14,7 @@ struct Gl {
     scene: GlScene,
     fbo: glow::Framebuffer,
     finish: bool,
+    sync1px: bool,
     readback: Option<cairo::ImageSurface>,
     dw: i32,
     dh: i32,
@@ -39,6 +40,10 @@ impl Renderer for Gl {
                     );
                 }
                 surface.mark_dirty();
+            } else if self.sync1px {
+                // reading one pixel back cannot return before the GPU finished the frame
+                let mut px = [0u8; 4];
+                gl.read_pixels(0, 0, 1, 1, glow::RGBA, glow::UNSIGNED_BYTE, glow::PixelPackData::Slice(Some(&mut px)));
             } else if self.finish {
                 gl.finish();
             }
@@ -92,6 +97,7 @@ fn main() {
             scene,
             fbo,
             finish: !o.has("--nofinish"),
+            sync1px: o.has("--sync1px"),
             readback,
             dw,
             dh,
