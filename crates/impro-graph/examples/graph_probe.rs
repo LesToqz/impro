@@ -105,13 +105,38 @@ fn snapshot(view: &GraphView) -> Value {
         .unwrap_or_else(|| "#e4edf5".to_string());
     let (status, visible) = view.status_text();
     json!({"state":state(view),"nodes":nodes,"prefs":view.prefs().to_value(),
-        "panel_open":view.panel_open(),"sections":sections,"sliders":sliders,
+        "panel_open":view.panel_open(),"chip_visible":view.panel().chip_visible(),
+        "panel_width":view.panel().root.allocated_width(),
+        "search":[view.panel().search_entry().accessible().and_then(|a|a.property::<Option<String>>("accessible-name")),
+            view.panel().search_entry().placeholder_text().map(|s|s.to_string())],
+        "cursor_set":view.canvas().window().and_then(|w|w.cursor()).is_some(),"sections":sections,"sliders":sliders,
         "labels":control_labels,"toggles":toggles,"status":if visible {status} else {String::new()},
         "notice":view.notice_text().unwrap_or_default(),"graph_type":view.graph_type().as_str(),
         "local_rows":[view.panel().row_visible("localDepth"),view.panel().row_visible("localIncoming"),
             view.panel().row_visible("localOutgoing"),view.panel().row_visible("showOrphans")],
         "background":background,"text_color":text_color,"accent":t::accent_hex(view),
         "mapped":view.is_mapped(),"frames":view.frame_stats().frames})
+}
+
+fn type_button(widget: &gtk::Widget) -> Option<gtk::Button> {
+    if let Some(button) = widget.downcast_ref::<gtk::Button>() {
+        if button.tooltip_text().as_deref() == Some("Select graph type") && button.is_mapped() {
+            return Some(button.clone());
+        }
+    }
+    widget
+        .downcast_ref::<gtk::Container>()
+        .and_then(|c| c.children().iter().find_map(type_button))
+}
+fn type_menu(widget: &gtk::Widget) -> Option<gtk::Menu> {
+    if let Some(menu) = widget.downcast_ref::<gtk::Menu>() {
+        if activatable_labels(menu).iter().any(|s| s == "Global graph") {
+            return Some(menu.clone());
+        }
+    }
+    widget
+        .downcast_ref::<gtk::Container>()
+        .and_then(|c| c.children().iter().find_map(type_menu))
 }
 
 fn text<'a>(v: &'a Value, k: &str) -> &'a str {
@@ -250,6 +275,18 @@ fn run() -> Result<(), Box<dyn Error>> {
     });
     let e = events.clone();
     view.connect_create_note(move |name| e.borrow_mut().push(json!({"type":"create","name":name})));
+    let e = events.clone();
+    let r = root.clone();
+    view.connect_reveal(move |p| {
+        e.borrow_mut()
+            .push(json!({"type":"reveal","id":p.strip_prefix(&r).unwrap_or(p).to_string_lossy()}))
+    });
+    let e = events.clone();
+    let r = root.clone();
+    view.connect_copy_path(move |p| {
+        e.borrow_mut()
+            .push(json!({"type":"copy","id":p.strip_prefix(&r).unwrap_or(p).to_string_lossy()}))
+    });
     let errors = Rc::new(RefCell::new(Vec::<String>::new()));
     let e = errors.clone();
     view.connect_error(move |s| e.borrow_mut().push(s.to_string()));
@@ -354,6 +391,21 @@ fn run() -> Result<(), Box<dyn Error>> {
                 }
                 t::key(&view, gdk::keys::constants::Escape, true);
             }
+            "menu-actions" => {
+                for index in 0..5 {
+                    t::open_context_menu(&view, text(&action, "id"));
+                    let menu = t::context_menu(&view).ok_or("file menu did not open")?;
+                    let item = menu
+                        .children()
+                        .into_iter()
+                        .filter_map(|w| w.downcast::<gtk::MenuItem>().ok())
+                        .filter(|w| w.is_sensitive() && !w.is::<gtk::SeparatorMenuItem>())
+                        .nth(index)
+                        .ok_or("file menu item missing")?;
+                    item.activate();
+                }
+                t::pump(100);
+            }
             "drag" => {
                 let (x, y) = point(&view, text(&action, "id"))?;
                 t::press(&view, x, y, 1, none);
@@ -403,6 +455,12 @@ fn run() -> Result<(), Box<dyn Error>> {
                     flag(&action, "ctrl"),
                 );
                 extra["immediate"] = state(&view);
+                t::pump(40);
+                extra["at40"] = state(&view);
+                settle(&view)?;
+            }
+            "camera-reset" => {
+                view.reset_camera();
                 settle(&view)?;
             }
             "key" => {
@@ -459,6 +517,18 @@ fn run() -> Result<(), Box<dyn Error>> {
                 view.set_graph_type(GraphType::Note);
                 wait_update(&updates, update_start)?;
                 settle(&view)?;
+            }
+            "type-menu" => {
+                if let Some(button) = type_button(view.panel().root.upcast_ref()) {
+                    button.clicked();
+                    t::pump(100);
+                    let menu = gtk::Window::list_toplevels().iter().find_map(type_menu);
+                    extra["menu"] = json!(menu.as_ref().map(activatable_labels));
+                    if let Some(menu) = menu {
+                        menu.popdown();
+                    }
+                    view.panel().close_popovers();
+                }
             }
             "group-add" => {
                 view.panel().add_rule_button().clicked();
@@ -529,6 +599,7 @@ fn run() -> Result<(), Box<dyn Error>> {
                 settle(&view)?;
             }
             "hidden" => {
+                t::wheel(&view, 200.0, 150.0, -120.0, false);
                 window.hide();
                 t::pump(100);
                 extra["at0"] = state(&view);
@@ -541,7 +612,12 @@ fn run() -> Result<(), Box<dyn Error>> {
             "idle" => {
                 let cpu = ticks()?;
                 let start = Instant::now();
-                t::pump(2000);
+                let idle_loop = glib::MainLoop::new(None, false);
+                let stop = idle_loop.clone();
+                glib::timeout_add_local_once(std::time::Duration::from_millis(2000), move || {
+                    stop.quit()
+                });
+                idle_loop.run();
                 extra["cpu_ticks"] = json!(ticks()? - cpu);
                 extra["wall_ms"] = json!(start.elapsed().as_secs_f64() * 1000.0);
             }
@@ -576,6 +652,18 @@ fn run() -> Result<(), Box<dyn Error>> {
         }
         if !name.is_empty() {
             let mut s = snapshot(&view);
+            if name == "default" {
+                let mut times = serde_json::Map::new();
+                for name in ["hub/Hub.md", ".impro/Notes/First.md"] {
+                    let created = fs::metadata(root.join(name))
+                        .ok()
+                        .and_then(|m| m.created().ok())
+                        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                        .map(|t| t.as_secs_f64());
+                    times.insert(name.to_string(), json!(created));
+                }
+                extra["filesystem_created"] = json!(times);
+            }
             if matches!(op, "save" | "rename" | "delete" | "buffer") {
                 extra["deliveries"] = json!(*deliveries.borrow());
             }

@@ -109,7 +109,7 @@ def centre_samples(out,side,scene,s):
     return result
 
 
-def line_width(out,side,scene,s):
+def line_width(out,side,scene,s,colour=False):
     img=picture(out,side,scene)
     bg=hexrgb(s['background'])
     # Isolated known directed source pair; reject clipping and control overlays.
@@ -120,12 +120,17 @@ def line_width(out,side,scene,s):
         raise ValueError('source-pair midpoint is outside the captured canvas')
     if s['panel_open'] and x>img.width-255 and y<420:
         raise ValueError('source-pair midpoint is covered by controls')
+    if any(math.dist((x,y),v['screen'][:2]) < v['screen'][2]+4 for v in s['nodes'].values()):
+        raise ValueError('Connection sample is contaminated by a nearby marker at this zoom.')
     length=math.dist(a[:2],b[:2]);nx,ny=-(b[1]-a[1])/length,(b[0]-a[0])/length
     values=[]
     for j in range(-20,21):
         color=img.getpixel((round(x+nx*j/4),round(y+ny*j/4)))
         values.append(math.dist(color,bg))
     peak=max(values)
+    if colour:
+        j=values.index(peak)-20
+        return list(img.getpixel((round(x+nx*j/4),round(y+ny*j/4))))
     if peak<5:
         raise ValueError('no connection contrast at sampled midpoint')
     # FWHM, 0.25px sampling; allow raster coverage and subpixel orientation tolerance.
@@ -213,6 +218,8 @@ def compare(reference, impro, out):
         add(identifier,description,'default',lambda *_:None,reason=reason,source=source)
     add('initial-defaults','Default visibility, force, display, local and camera preferences','default',lambda s,_:s['prefs'],source='panel')
     add('initial-graph','Default visible IDs and undirected line count','default',lambda s,_:[sorted(s['nodes']),s['state']['lines']],source='data',severity=1)
+    add('search-label','Search field accessible label and placeholder','default',lambda s,_:s['search'],source='panel')
+    add('panel-width','Open controls width','default',lambda s,_:s['panel_width'],tol=1,unit='1 logical px',source='panel')
     add('initial-panel','Controls open by default','default',lambda s,_:s['panel_open'],source='panel')
     add('sections','Section order and default collapsed states','default',lambda s,_:s['sections'],source='panel')
     for key in ('localDepth','textFadeMultiplier','nodeSizeMultiplier','lineSizeMultiplier','centerStrength','repelStrength','linkStrength','linkDistance'):
@@ -234,6 +241,8 @@ def compare(reference, impro, out):
             lambda s,_:radii(s),tol=.01,unit='0.01 world unit after dividing by sqrt(zoom)',source='draw')
         add('line-width-'+zoom,'Screenshot connection width at zoom '+zoom,'zoom-'+zoom,
             lambda s,side,n='zoom-'+zoom:line_width(out,side,n,s),tol=.75,unit='0.75 px FWHM; excludes clipped/covered midpoint',source='draw')
+        add('line-colour-'+zoom,'Screenshot connection RGB at zoom '+zoom,'zoom-'+zoom,
+            lambda s,side,n='zoom-'+zoom:line_width(out,side,n,s,True),tol=12,unit='12/255 per channel; raster coverage allowance',source='draw')
         add('label-'+zoom,'Screenshot label visibility and ink extent at zoom '+zoom,'label-'+zoom,
             lambda s,side,n='label-'+zoom:label_pixels(out,side,n,s),tol=3,unit='3 px ink bounding box; visibility exact',source='draw')
     for detail in ('-1','2'):
@@ -247,29 +256,35 @@ def compare(reference, impro, out):
     missing('label-font-size','Nominal label font size and wrapping width',
             'Ink bounds and visibility are measured separately; the native label cache exposes neither effective font size nor wrap width. Request label paint telemetry.','draw')
     add('hover-dim','Hover leaves unrelated markers at 28 percent opacity','hover',lambda s,_:[node(s,k)['alpha'] for k in ('orphan.md','src/main.py','hub/spoke-0.md','hub/Hub.md')],tol=.01,unit='0.01 opacity',source='draw',severity=2)
-    missing('cursor','Pointer and grabbing cursors','Reference CSS cursor is captured; native GDK cursor has no portable name getter through the allowed helpers. Request a cursor-name QA helper.','input')
+    add('cursor','Hover installs a pointer cursor','hover',lambda s,side:s['cursor']=='pointer' if side=='reference' else s['cursor_set'],source='input')
+    missing('hover-edges','Hover dims unrelated connections to 28 percent','Native node opacity is exposed and measured; connection opacity is private and the source-pair midpoint is not guaranteed visible after camera focus. Request line paint telemetry.','draw')
+    missing('cursor-shape','Exact grabbing and pointer cursor names','Reference CSS cursor is captured; native GDK cursor has no portable name getter through the allowed helpers. Request a cursor-name QA helper.','input')
     for scene in ('click','ctrl-click','middle-click','slop-6','slop-7','tag-click','missing-click','tag-right','missing-right','key-enter'):
         add('events-'+scene,'Emitted graph actions: '+scene,scene,lambda s,_:s['events'],source='input',severity=1)
+    add('menu-actions','Each file menu item emits its matching host action','menu-actions',lambda s,_:s['events'],source='input')
     add('file-menu','Right-click file menu items and order','file-menu',lambda s,_:s['extra']['menu'],source='panel')
     add('drag-held','Node drag is pinned to pointer and layout stays warm','drag',lambda s,_:[s['extra']['held']['state']['dragging'],s['extra']['held']['state']['simulating'],round(s['extra']['held']['state']['alpha'],2)],tol=.03,unit='0.03 layout alpha; flags exact',source='input')
+    add('drag-follow','Held marker stays at the requested pointer displacement during simulation','drag',lambda s,_:[round((a-b)*s['extra']['held']['state']['zoom'],3) for a,b in zip(node(s['extra']['held'],'hub/Hub.md')['world'],node(s['before'],'hub/Hub.md')['world'])],tol=1,unit='1 screen px',source='input')
     add('drag-release','Releasing a drag emits no open action and settles','drag',lambda s,_:[s['events'],s['state']['dragging'],s['state']['simulating']],source='input')
     add('pan-distance','Background drag follows 80 by 32 screen pixels','pan',lambda s,_:pan_delta(s,s['extra']['held']),tol=.1,unit='0.1 px',source='camera')
     add('pan-inertia','Inertia travel after the scripted 8-move fling','pan',lambda s,_:[round(a-b,2) for a,b in zip(s['state']['pan'],s['extra']['held']['pan'])],tol=8,unit='8 px scheduling allowance',source='camera',severity=2)
     add('pan-stop','Pressing the background stops inertia immediately','stop-on-press',lambda s,_:round(math.dist(s['extra']['pressed']['pan'],s['extra']['later']['pan']),3),tol=.05,unit='0.05 px',source='camera')
-    missing('pan-decay','Frame-independent pan velocity decay coefficient','Travel is measured; the native testing API exposes no velocity or timestamped motion input, so exact decay cannot be separated from its synthetic timestamp fallback.','camera')
+    missing('pan-decay','Frame-independent pan velocity decay coefficient','Travel is measured; the native testing API exposes no velocity or controlled frame advance, so exact decay cannot be separated from frame scheduling.','camera')
     for scene in ('wheel-in','wheel-out','ctrl-wheel','wheel-max','wheel-min'):
         add('zoom-'+scene,'Wheel target factor or limit: '+scene,scene,lambda s,_:round(s['state']['zoom']/s['before']['state']['zoom'],7),tol=1e-6,unit='1e-6 zoom ratio',source='camera')
     for scene in ('wheel-in','wheel-out'):
         add('anchor-'+scene,'Distance the pointer anchor moves: '+scene,scene,lambda s,_:anchor_error(s),tol=.1,unit='0.1 px',source='camera',severity=2)
+    add('reduced-motion','Live reduced-motion preference reaches the zoom target within 40 ms','reduced-wheel',lambda s,_:abs(s['extra']['at40']['zoom']-s['extra']['at40']['target_zoom'])<1e-6,source='camera')
     missing('zoom-ease','Per-frame wheel zoom easing','Native immediate state is synchronous; the page round trip can paint before introspection. A controlled frame/time hook is required for matched ease samples.','camera')
     for key in ('ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','-'):
         add('keyboard-'+key,'Held 200 ms key movement: '+key,'key-'+key,
             lambda s,_:pan_delta(s) if key.startswith('Arrow') else round(s['state']['zoom']/s['before']['state']['zoom'],4),tol=20 if key.startswith('Arrow') else .12,
             unit='20 px pan or 0.12 zoom ratio scheduling allowance',source='camera')
-    missing('keyboard-shift','Shift accelerates arrow and zoom keys','Existing native key helper sends no modifier state and resets the Shift flag on the following arrow press; its shift trace is retained but cannot establish real-key parity. Request a modifier-aware helper.','input')
+    add('keyboard-shift','Shift arrow travel relative to the unmodified arrow','key-shift',lambda s,side:round(pan_delta(s)[0]/pan_delta((rs if side=='reference' else is_)['key-ArrowLeft'])[0],3),tol=.35,unit='0.35 travel ratio; 200 ms held keys',source='input')
     for scene in ('key-escape','key-escape-again'):
         add(scene,'Escape closes controls, then clears hover: '+scene,scene,lambda s,_:[s['panel_open'],s['state']['hover']],source='input')
-    missing('fit-reset','Fit and reset camera commands','The reference graph page and widget have no fit/reset command; host command-palette routing is outside this widget harness. Native public methods alone are insufficient for a paired observation.','camera')
+    add('camera-reset','Reset camera recentres, restores zoom one and keeps the graph','camera-reset',lambda s,_:[s['state']['zoom'],s['state']['pan'],s['state']['nodes']],tol=.1,unit='0.1 logical px; zoom exact',source='camera')
+    missing('fit-camera','Fit camera command','No reference fit-camera entry point exists in the graph widget or window. The native method is an extra feature without a paired oracle command.','camera')
     add('layout-settle','Fresh layout wall time to settle','default',lambda _,side:round((reference if side=='reference' else impro)['initial_settle_ms']),tol=1500,unit='1500 ms scheduling allowance',source='flow')
     add('layout-spacing','Settled median nearest-neighbour spacing','default',lambda s,_:spacing(s),tol=20,unit='20 world units; independent layouts',source='draw')
     add('layout-clusters','Isolated-cluster to hub centroid separation','default',lambda s,_:cluster(s),tol=80,unit='80 world units; independent layouts',source='draw')
@@ -278,7 +293,12 @@ def compare(reference, impro, out):
     add('local','Local depth two, both directions, visible IDs and rows','local',lambda s,_:[sorted(s['nodes']),s['local_rows'],s['prefs']['localDepth']],source='data',severity=2)
     add('local-outgoing','Outgoing-only traversal IDs','local-outgoing',lambda s,_:sorted(s['nodes']),source='data')
     add('note-mode','Note graph visible IDs','note',lambda s,_:sorted(s['nodes']),source='data')
-    missing('type-menu','Global / Local / Note graph menu labels and chip','Mode changes are measured through public APIs; native panel exposes neither type menu nor chip button handles. Request a type-menu inspection helper.','panel')
+    def menu_value(s,_):
+        if s['extra'].get('menu') is None:
+            raise ValueError('Native popup not exposed in GTK toplevel traversal; request a type-menu inspection helper.')
+        return s['extra']['menu']
+    add('type-menu','Global / Local / Note graph menu labels and order','type-menu',menu_value,source='panel')
+    add('closed-chip','Closing the controls exposes the three-button chip','key-escape',lambda s,_:s['chip_visible'],source='panel')
     for scene in ('group-add','group-remove'):
         add(scene,'Colour rule count and generated colour: '+scene,scene,lambda s,_:s['prefs']['colorGroups'],source='panel')
     add('group-colour','First matching colour rule colours file markers','group-colour',lambda s,_:[node(s,'hub/Hub.md')['color'],node(s,'tag')['color']],source='draw')
@@ -286,6 +306,8 @@ def compare(reference, impro, out):
     for scene in ('replay','replay-reduced'):
         add(scene,'Replay visible IDs at 250 ms and 1000 ms: '+scene,scene,
             lambda s,_:[sorted(s['extra'][t]['nodes']) for t in ('at250','at1000')],source='flow',severity=2)
+    for scene in ('replay','replay-reduced'):
+        add('duration-'+scene,'Replay reveal plus final cooling wall time: '+scene,scene,lambda s,_:round(s['elapsed_ms']),tol=1500,unit='1500 ms scheduling allowance',source='flow')
     missing('replay-speed','Exact chronological replay order and reveal rate','Coarse replay snapshots are measured; creation timestamps and asynchronous timer dispatch prevent an exact items/second comparison without reveal-event telemetry.','flow')
     add('status-ready','Status is hidden after a nonempty graph arrives','default',lambda s,_:s['status'],source='flow')
     add('status-empty','Empty-filter status text and zero nodes','empty',lambda s,_:[s['status'],s['state']['nodes']],source='flow',severity=2)
@@ -296,7 +318,7 @@ def compare(reference, impro, out):
         add('live-'+scene,'Live '+scene+' updates visible IDs',scene,lambda s,_:sorted(s['nodes']),source='data',severity=2)
         add('retention-'+scene,'Survivor world-coordinate displacement at update delivery: '+scene,scene,
             lambda s,side:retention(s,side),tol=.05,unit='0.05 world unit at delivery',source='flow',severity=2)
-    add('new-placement','New file distance from its surviving hub neighbour at delivery','save',lambda s,side:placement(s,side),tol=15,unit='15 world units; independent seeded placement',source='flow')
+    add('new-placement','New file distance from its surviving hub neighbour at delivery','save',lambda s,side:placement(s,side),tol=34,unit='34 world units; independent seeds within a 24-unit jitter square',source='flow')
     add('buffer-200','Unsaved-buffer visible IDs after 200 ms','buffer',lambda s,_:sorted(s['extra']['at200']['nodes']),source='flow',severity=2)
     add('buffer-600','Unsaved-buffer visible IDs after 600 ms','buffer',lambda s,_:sorted(s['extra']['at600']['nodes']),source='data')
     missing('buffer-host-debounce','Application edit-to-graph 400 ms debounce','Direct reference set_text runs immediately; the editor-to-widget debounce lives in the full window. The measured widget-level 200/600 ms rows must not be treated as application-level timing.','flow')
@@ -308,7 +330,24 @@ def compare(reference, impro, out):
     add('persistence','Persisted blob restores search, panel, zoom and all graph preferences','persist',lambda s,_:s['extra']['restored'],tol=1e-8,unit='1e-8 numeric; strings/flags exact',source='panel')
     missing('persistence-restart','Persistence through a full application process restart','The paired drivers reconstruct widgets from their captured stores; a full editor/settings-process restart is outside the widget harness.','flow')
     missing('persistence-delay','Exact preference write debounce and zoom-save time','Saved payloads are measured; real disk writes and host settings debounce are replaced by isolated stores to avoid touching user configuration.','flow')
+    add('pan-visible','Count of on-screen markers after the background drag','pan',lambda s,_:sum(0<=v['screen'][0]<s['state']['size'][0] and 0<=v['screen'][1]<s['state']['size'][1] for v in s['nodes'].values()),tol=8,unit='8 markers; independently placed scenes',source='blank',severity=1)
     add('click-visible','Graph remains nonempty and mapped after pointer/keyboard actions','key-escape-again',lambda s,_:[s['mapped'],s['state']['nodes']>0],source='blank',severity=1)
+    for row in rows:
+        if row['id']=='buffer-200':
+            row.update(source='crates/impro-graph/src/view/flow.rs:301',severity=4,
+                       fix='Compare the full editor forwarding path before changing debounce; keep the 400 ms policy until a window trace establishes a user-visible difference.')
+        if row['id']=='anchor-wheel-out':
+            row.update(source='crates/impro-graph/src/view/input.rs:209',
+                       fix='Use the canvas centre as the anchor when the wheel reduces zoom.')
+        if row['id']=='layout-clusters':
+            row.update(source='crates/impro-graph/src/view/scene.rs:269',
+                       fix='Tune cluster spacing against the measured separation range while preserving deterministic placement.')
+        if row['id'] in ('replay','replay-reduced'):
+            row.update(source='crates/impro-graph/src/view/timelapse.rs:25',owner='T2',
+                       fix='Align the index timestamp fallback with the reference before sorting replay chronology.')
+        if row['id'] in ('pan-distance','pan-inertia','pan-visible'):
+            row.update(source='crates/impro-graph/src/view/scene.rs:724',owner='T1',severity=1,
+                       fix='Pass the background-press state into camera advancement so drag velocity is not integrated as released inertia.')
     # Screenshot centre comparisons must compare only the shared unoccluded kind samples.
     for row in rows:
         if row['id'].startswith('pixels-') and row['verdict']!='unmeasurable':
@@ -329,3 +368,77 @@ def compare(reference, impro, out):
     counts={v:sum(r['verdict']==v for r in rows) for v in ('same','different','unmeasurable')}
     print('Counts:',json.dumps(counts))
     (out/'counts.json').write_text(json.dumps(counts,indent=2)+'\n')
+    write_review_docs(rows,out,counts)
+
+
+def write_review_docs(rows,out,counts):
+    """Emit review-ready documentation under the artifact directory only."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    stamp=datetime.now(ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d %H:%M IST')
+    register=['<!-- audit-register -->','',f'Measured {stamp}.',
+              '',f"{len(rows)} rows: {counts['same']} same, {counts['different']} different, "
+              f"{counts['unmeasurable']} unmeasurable.",'',
+              '| ID | Observable behaviour | Scenario | Verdict | Tolerance or coverage reason |',
+              '| --- | --- | --- | --- | --- |']
+    for r in rows:
+        detail=r.get('reason',r['tolerance']).replace('|','\\|').replace('\n',' ')
+        register.append(f"| {r['id']} | {r['behaviour']} | {r['scenario']} | {r['verdict']} | {detail} |")
+    (out/'behaviour-register.md').write_text('\n'.join(register)+'\n')
+    differences=sorted((r for r in rows if r['verdict']=='different'),key=lambda r:(r['severity'],r['id']))
+    doc=['# Graph audit divergences','',f'Audit completed {stamp}.',
+         '',f"{len(rows)} observable rows: {counts['same']} same, {counts['different']} different, "
+         f"{counts['unmeasurable']} unmeasurable. Every measured difference is listed below. "
+         'Rows sharing a scenario can describe the same root cause. Missing telemetry is a coverage gap, not parity.',
+         '', 'Reproduce with `bash scripts/graph-compare/run.sh` after setting the reference and Cairo-bridge '
+         'environment variables described in README. The runner owns Xvfb, D-Bus, the shared lock and memory scope. '
+         'Divergences do not produce a failing exit status.',
+         '', 'Full values and tolerances: `.ceo/graph-compare/comparison.json`. Each driver writes '
+         '`.ceo/graph-compare/{reference,impro}/measurements.json`; the JSON key is `steps.<scenario>`. '
+         'PNG evidence is included only where captured. The reference checkout is read only.', '']
+    for number,r in enumerate(differences,1):
+        doc.extend([f"## {number}. {r['behaviour']}",'',
+                    f"Owner: **{r['owner']}**. Scenario: `{r['scenario']}`. Row: `{r['id']}`.",'',
+                    'Reference: `'+json.dumps(r['reference'],ensure_ascii=False,separators=(',',':'))+'`.',
+                    '', 'impro: `'+json.dumps(r['impro'],ensure_ascii=False,separators=(',',':'))+'`.',
+                    '',f"Tolerance: {r['tolerance']}.",'',
+                    f"Suspected location: `{r['source']}`. Proposed fix: {r['fix']}",'',
+                    f"Evidence: run the command above; inspect `steps.{r['scenario']}` in both measurement files "
+                    f"and row `{r['id']}` in `.ceo/graph-compare/comparison.json`."])
+        pngs=[f'`.ceo/graph-compare/{side}/{r["scenario"]}.png`' for side in ('reference','impro')
+              if (out/side/(r['scenario']+'.png')).exists()]
+        if pngs:
+            doc.extend(['','Frames: '+', '.join(pngs)+'.'])
+        if r['id'] in ('replay','replay-reduced'):
+            doc.extend(['','Read-only source inspection explains the likely data cause: on this Linux filesystem the '
+                        'reference uses the minimum of change/modified timestamps when its runtime does not expose birth time; '
+                        'the native index prefers the filesystem creation timestamp. The fixture has equal old modified times, '
+                        'so the reference breaks ties by ID while impro starts with the first-created hub. '
+                        'The initial snapshot records reference node chronology and native filesystem birth-time evidence. '
+                        'Inspect `crates/impro-graph/src/index/scan.rs:163` together with the view sorting site.'])
+        if r['id']=='buffer-200':
+            doc.extend(['','This is a widget-boundary diagnostic. The reference receives direct `set_text` calls; '
+                        'the native widget itself debounces buffer updates. The reference application can debounce '
+                        'before calling its widget. This row does not establish an application-level delay defect.'])
+        doc.append('')
+    doc.extend(['## Blank, crash and deadline observations','',
+                'The frame-paced background drag is the blank-canvas candidate: start from a settled graph at zoom 1, '
+                'press empty canvas at (2,2), send eight pointer moves by (10,4) px with a 16 ms main-loop interval, '
+                'then release at (82,34). Compare the held pan and the visible marker count. The native probe uses '
+                'GTK-dispatched GDK events with monotonic timestamps. The matching reference receives DOM pointer events. '
+                'The controls remain present; this does not reproduce disappearance of the entire dock body.',
+                '', 'No process crash or full-widget disappearance was observed in the completed scripted run. '
+                'An initial exploratory run reached replay and hit an overly short 12-second harness settle deadline; '
+                'the completed run allows 30 seconds for reveal plus cooling. The original deadline log is '
+                '`.ceo/graph-compare-initial/impro-driver.log`. This was not evidence of a product hang.',
+                '', '## Remaining measurements and Phase B requests','',
+                'The complete unmeasurable register is in BEHAVIOURS.md and the JSON table. Needed view helpers are '
+                'read-only line/arrow/label paint telemetry, effective nominal font size/wrap/alpha, cursor names, '
+                'camera velocity and controlled frame stepping. A graph-type popup helper is needed only if GTK '
+                'toplevel traversal cannot expose it. No hook was added inside the production view.',
+                '', 'Full-window work is still needed for actual editor tab/dock routing, the editor-to-graph 400 ms '
+                'debounce boundary, persisted settings through a fresh application process, and write timing. '
+                'The transient loading state was not captured before data delivery. Wayland and the user desktop were '
+                'not accessed. Exact arrow opacity and font-wrap metrics remain unmeasured; raster bounds and sampled '
+                'connection widths/colours are included where unobscured.'])
+    (out/'divergences.md').write_text('\n'.join(doc)+'\n')

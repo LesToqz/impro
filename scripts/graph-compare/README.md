@@ -59,7 +59,9 @@ The reference package, page API and bridge handler are discovered at runtime.
 The real GTK graph host loads its unchanged page; synthetic DOM pointer, wheel
 and keyboard events reach its normal listeners. The native driver uses the
 public graph host API, GTK widget APIs and existing `view::testing` helpers.
-Pointer helpers reach the normal native handlers, but bypass GDK event routing.
+Node pointer helpers reach the normal native handlers, but bypass GDK event routing.
+Background drags use GTK-dispatched GDK events with monotonic timestamps; Shift
+keys also carry modifiers through GTK event dispatch.
 The reference page bridge events and native host signals are normalized to
 `open`, `search` and `create` records. The reference's raw new-tab flag is measured
 before its host consumes it. Editor tab/dock wiring is outside this harness.
@@ -97,8 +99,9 @@ Reference unsaved-buffer calls reach the widget immediately; application editor
 forwarding is a separate debounce layer, so the widget-level timing difference
 must be investigated in the host before proposing a user-facing change.
 
-CPU evidence counts `/proc` user+system ticks during two seconds of settled
-main-loop pumping. The reference includes its descendant page processes. The
+CPU evidence counts `/proc` user+system ticks during two seconds of a blocking GLib
+main loop with a single completion timeout. The idle sample does not use the
+readiness polling loop. The reference includes its descendant page processes. The
 short interval, timer granularity and other machine load limit precision. Hidden
 frame counts, rather than aggregate CPU, establish that an unmapped view does
 not advance the graph animation.

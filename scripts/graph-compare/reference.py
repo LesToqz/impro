@@ -54,6 +54,12 @@ def main():
         m = json.loads(result.get_js_value().to_json(0))
         if m.get('type') == 'open':
             events.append(dict(type='open', id=m['id'], mode='new-tab' if m.get('newTab') else 'current'))
+        elif m.get('type') == 'context':
+            action=m.get('action')
+            if action in ('open-new-tab','open-right'):
+                events.append(dict(type='open',id=m['id'],mode='new-tab' if action=='open-new-tab' else 'right-pane'))
+            else:
+                events.append(dict(type='copy' if action=='copy-path' else action,id=m['id']))
         elif m.get('type') == 'search':
             events.append(dict(type='search', query=m['query']))
         elif m.get('type') == 'create':
@@ -133,7 +139,7 @@ def main():
           return {nodes:Object.fromEntries(d.ids().map(id=>[id,{world:d.worldPos(id),screen:d.screenPos(id),alpha:d.nodeAlpha(id),color:d.nodeColor(id)}])),
             prefs:d.settings(),panel_open:d.panelOpen(),
             sections:Array.from(document.querySelectorAll('.sec')).map(e=>[e.querySelector('.sec-head>span:not(.chev)').textContent,e.classList.contains('is-collapsed')]),
-            sliders:ranges,labels:Array.from(document.querySelectorAll('#controls .name')).map(e=>e.firstElementChild ? e.firstElementChild.textContent : e.textContent),
+            sliders:ranges,chip_visible:getComputedStyle(q('.gc-chip')).display!=='none',panel_width:q('.gc-panel').getBoundingClientRect().width,search:[q('.search input').getAttribute('aria-label'),q('.search input').placeholder],labels:Array.from(document.querySelectorAll('#controls .name')).map(e=>e.firstElementChild ? e.firstElementChild.textContent : e.textContent),
             status:visible(q('#status')) && !q('#status').classList.contains('is-hidden')?q('#status').textContent:'', notice:visible(q('#notice'))?q('#notice').textContent:'',
             graph_type:d.graphType().type,local_rows:['Neighbourhood hops','Referenced by','References to','Unlinked files'].map(t=>visible(row(t))),
             background:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
@@ -222,6 +228,11 @@ def main():
             js("(()=>{const c=document.querySelector('#graph'),r=c.getBoundingClientRect();c.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,clientX:r.left+"+str(x)+",clientY:r.top+"+str(y)+"}));return true})()")
             extra['menu'] = js("Array.from(document.querySelectorAll('#menu .item')).map(e=>e.textContent)")
             key('Escape',True)
+        elif op == 'menu-actions':
+            for index in range(5):
+                x,y=point(action['id'])
+                js("(()=>{const c=document.querySelector('#graph'),r=c.getBoundingClientRect();c.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,clientX:r.left+"+str(x)+",clientY:r.top+"+str(y)+"}));document.querySelectorAll('#menu .item')["+str(index)+"].click();return true})()")
+            pump(100)
         elif op == 'drag':
             x,y = point(action['id'])
             pointer('pointerdown',x,y)
@@ -255,6 +266,13 @@ def main():
         elif op == 'wheel':
             js("(()=>{const c=document.querySelector('#graph'),r=c.getBoundingClientRect();c.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,clientX:r.left+200,clientY:r.top+150,deltaY:"+str(action['delta'])+",ctrlKey:"+str(action['ctrl']).lower()+"}));return true})()")
             extra['immediate'] = state()
+            pump(40)
+            extra['at40'] = state()
+            settle()
+        elif op == 'camera-reset':
+            graph.post('setData',dict(nodes=[],links=[]))
+            graph.post('setSettings',dict(scale=1))
+            graph.post('setData',graph.last_data)
             settle()
         elif op == 'key':
             key(action['key'],True,action.get('shift',False))
@@ -286,6 +304,11 @@ def main():
             graph.set_graph_type('note')
             pump(250)
             settle()
+        elif op == 'type-menu':
+            click_button('.gc-head [aria-haspopup]')
+            extra['menu']=js("Array.from(document.querySelectorAll('#typemenu .item')).map(e=>e.textContent.trim())")
+            # The type menu handles Escape in its own listener.
+            js("(()=>{document.querySelector('#typemenu').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));return true})()")
         elif op == 'group-add':
             click_button('.groups-new')
             pump(250)
@@ -336,6 +359,7 @@ def main():
             pump(250)
             settle()
         elif op == 'hidden':
+            js("(()=>{document.querySelector('#graph').dispatchEvent(new WheelEvent('wheel',{deltaY:-120,clientX:200,clientY:150,bubbles:true}));return true})()")
             window.hide()
             pump(100)
             extra['at0'] = state()
@@ -366,7 +390,12 @@ def main():
                 return total
             cpu=ticks()
             start=time.monotonic()
-            pump(2000)
+            idle_loop=GLib.MainLoop()
+            def end_idle():
+                idle_loop.quit()
+                return GLib.SOURCE_REMOVE
+            GLib.timeout_add(2000,end_idle)
+            idle_loop.run()
             extra.update(cpu_ticks=ticks()-cpu,wall_ms=(time.monotonic()-start)*1000)
         elif op == 'cap':
             graph.set_root(str(args.root.with_name('cap-fixture')))
@@ -377,7 +406,8 @@ def main():
             pump(250)
             settle()
         elif op == 'persist':
-            prefs(dict(close=True, search='path:hub'))
+            click_button('[data-tip="Hide graph controls"]')
+            js("(()=>{const e=document.querySelector('.search input');e.value='path:hub';e.dispatchEvent(new Event('input',{bubbles:true}));return true})()")
             js('(()=>{auditAPI._debug.flush();return true})()')
             pump(800)
             extra['saved'] = saved[-1] if saved else None
@@ -390,6 +420,8 @@ def main():
             raise ValueError('unknown operation '+op)
         if name:
             s=snapshot()
+            if name=='default':
+                extra['chronology']={n['id']:n.get('ctime') for n in graph.last_data['nodes']}
             if op in ('save','rename','delete','buffer'):
                 extra['deliveries']=js('auditDeliveries.splice(0)')
             s.update(before=before,extra=extra,events=events[event_start:],elapsed_ms=(time.monotonic()-started)*1000)
