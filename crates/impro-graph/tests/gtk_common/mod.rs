@@ -22,7 +22,9 @@ pub fn run(f: impl FnOnce() + Send + 'static) {
     let worker = GTK.get_or_init(|| {
         let (tx, rx) = mpsc::channel::<Job>();
         std::thread::spawn(move || {
-            std::env::set_var("GDK_BACKEND", "x11");
+            // IMPRO_TEST_BACKEND=wayland runs against a private compositor
+            let backend = std::env::var("IMPRO_TEST_BACKEND").unwrap_or_else(|_| "x11".into());
+            std::env::set_var("GDK_BACKEND", backend);
             std::env::remove_var("IMPRO_REDUCE_MOTION");
             gtk::init().expect("an X display (run under xvfb-run)");
             impro_ui::init();

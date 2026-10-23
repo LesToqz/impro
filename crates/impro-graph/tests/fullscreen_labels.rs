@@ -110,6 +110,9 @@ fn flickers(frames: &[Frame], size: (f64, f64)) -> Vec<String> {
 fn big() -> Fixture {
     let (w, h) = logical(1920, 1080);
     let f = Fixture::big((w, h));
+    // a compositor may still be sizing the window; the camera follows it
+    t::pump(600);
+    assert!(t::settle(&f.view, 20_000), "never settled");
     t::capture_frames(&f.view, true);
     f
 }
