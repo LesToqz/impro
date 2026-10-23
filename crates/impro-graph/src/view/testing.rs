@@ -144,6 +144,33 @@ pub fn advance_frame(view: &GraphView, seconds: f64) -> bool {
     active
 }
 
+/// The actual reveal plan, sampled without running the clock or changing data.
+pub fn replay_plan(view: &GraphView) -> (usize, f64, Vec<(usize, Vec<String>)>) {
+    let scene = view.inner.scene.borrow();
+    let graph = &scene.graph;
+    let plan = super::timelapse::Plan::new(graph, view.prefs().show_orphans);
+    let mut seen = std::collections::BTreeSet::new();
+    let mut reveals = Vec::new();
+    for item in 1..=plan.total() {
+        let subset = plan.subset(graph, item);
+        let mut new: Vec<_> = subset
+            .nodes
+            .iter()
+            .map(|n| n.id.to_string())
+            .filter(|id| seen.insert(id.clone()))
+            .collect();
+        new.sort();
+        if !new.is_empty() {
+            reveals.push((item, new))
+        }
+    }
+    (
+        plan.total(),
+        crate::geometry::timeline_speed(plan.total()),
+        reveals,
+    )
+}
+
 /// Ids of the shown nodes, sorted.
 pub fn node_ids(view: &GraphView) -> Vec<String> {
     view.inner

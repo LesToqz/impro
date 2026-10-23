@@ -130,7 +130,8 @@ This anchor rule also applies to control-wheel gestures. Hover leaves unrelated
 items at 28% opacity. A click allows six pixels of movement. Local marker
 weight is `12/(layer+1)`, keeping even the outer hop visible. Timeline reveal
 uses chronological file order when timestamps exist, at `clamp(items/12,8,72)`
-items per second. Reduced motion skips visual easing.
+items per second, with reveal progress sampled at 30 Hz independently of the
+display refresh rate. Reduced motion skips visual easing.
 
 The host supplies theme roles. A standalone native view falls back to impro slate
 background (#17212b), pale text (#e4edf5), blue accent (#63b3ed), green tags,

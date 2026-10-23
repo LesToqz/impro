@@ -396,6 +396,16 @@ def main():
             pump(250)
             settle()
         elif op == 'replay':
+            extra['plan'] = js("""(()=>{
+              const plan=GraphCore.timelapse("""+json.dumps(graph.last_data)+","+json.dumps(graph._settings['showOrphans'])+"""),
+                seen=new Set(), reveals=[];
+              for(let item=1;item<=plan.total;item++) {
+                const fresh=plan.subset(item).nodes.map(n=>String(n.id)).filter(id=>!seen.has(id));
+                fresh.forEach(id=>seen.add(id));
+                if(fresh.length) reveals.push([item,fresh.sort()]);
+              }
+              return {total:plan.total,rate:GraphCore.timelapseSpeed(plan.total),reveals};
+            })()""")
             click_button('[data-tip="Replay project history"]')
             pump(250)
             extra['at250'] = snapshot()

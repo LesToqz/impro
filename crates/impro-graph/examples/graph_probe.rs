@@ -626,6 +626,8 @@ fn run() -> Result<(), Box<dyn Error>> {
                 settle(&view)?;
             }
             "replay" => {
+                let (total, rate, reveals) = t::replay_plan(&view);
+                extra["plan"] = json!({"total":total,"rate":rate,"reveals":reveals});
                 view.replay_history();
                 t::pump(250);
                 extra["at250"] = snapshot(&view);

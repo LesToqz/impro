@@ -363,7 +363,7 @@ def compare(reference, impro, out):
             lambda s,_:[sorted(s['extra'][t]['nodes']) for t in ('at250','at1000')],source='flow',severity=2)
     for scene in ('replay','replay-reduced'):
         add('duration-'+scene,'Replay reveal plus final cooling wall time: '+scene,scene,lambda s,_:round(s['elapsed_ms']),tol=1500,unit='1500 ms scheduling allowance',source='flow')
-    missing('replay-speed','Exact chronological replay order and reveal rate','Coarse replay snapshots are measured; creation timestamps and asynchronous timer dispatch prevent an exact items/second comparison without reveal-event telemetry.','flow')
+    add('replay-speed','Actual reveal-plan chronology, item boundaries and reveal rate','replay',lambda s,_:s['extra']['plan'],tol=1e-8,unit='item indices and IDs exact; rate 1e-8 items/s',source='flow')
     add('status-ready','Status is hidden after a nonempty graph arrives','default',lambda s,_:s['status'],source='flow')
     add('status-empty','Empty-filter status text and zero nodes','empty',lambda s,_:[s['status'],s['state']['nodes']],source='flow',severity=2)
     add('status-local','No-active-file local status and zero nodes','local-empty',lambda s,_:[s['status'],s['state']['nodes']],source='flow',severity=2)

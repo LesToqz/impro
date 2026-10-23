@@ -15,7 +15,7 @@ use super::scene::{Built, Style};
 use super::timelapse::Plan;
 use super::widget::{Event, FrameStats, GraphSummary, Inner, OpenMode, Replay};
 use crate::filter::GraphOptions;
-use crate::geometry::{timeline_speed, Camera};
+use crate::geometry::Camera;
 use crate::index::{kind_of, FileKind, SKIP_DIRS};
 use crate::prefs::{self, GraphPrefs};
 
@@ -506,8 +506,7 @@ impl Inner {
             let Some(r) = guard.as_mut() else {
                 return false;
             };
-            let speed = timeline_speed(r.plan.total());
-            let n = 1 + (speed * r.started.elapsed().as_secs_f64()).floor() as usize;
+            let n = r.plan.progress(r.started.elapsed().as_secs_f64());
             if n == r.shown {
                 return true;
             }
