@@ -3,7 +3,7 @@
 use super::frontmatter::{Frontmatter, PropValue};
 use super::links::scan;
 use super::mask::mask;
-use super::text::is_tag_char;
+use super::text::{is_space, is_tag_char};
 
 fn valid_tag(tag: &str) -> bool {
     !tag.is_empty()
@@ -33,37 +33,47 @@ pub fn frontmatter_tags(fm: &Frontmatter) -> Vec<String> {
     out
 }
 
-/// Blanks every `://` or `mailto:` URL so `#fragment`s inside stay untouched.
+/// Blanks every `scheme://…` and `mailto:…` URL (up to the next blank) so a
+/// `#fragment` inside stays untouched. A prefix with nothing after it is no URL.
 fn blank_urls(buf: &mut [u8]) {
-    let n = buf.len();
+    let Ok(text) = std::str::from_utf8(buf) else {
+        return;
+    };
+    let b = text.as_bytes();
+    let mut ranges: Vec<(usize, usize)> = Vec::new();
     let mut i = 0;
-    while i < n {
-        let hit = if buf[i] == b':' && buf[i + 1..].starts_with(b"//") && i > 0 {
+    while i < b.len() {
+        let hit = if b[i] == b':' && b[i + 1..].starts_with(b"//") && i > 0 {
             // scheme letters directly before the colon
             let mut s = i;
-            while s > 0 && buf[s - 1].is_ascii_alphabetic() {
+            while s > 0 && b[s - 1].is_ascii_alphabetic() {
                 s -= 1;
             }
-            (s < i).then_some(s)
-        } else if buf[i..].len() >= 7 && buf[i..i + 7].eq_ignore_ascii_case(b"mailto:") {
-            Some(i)
+            (s < i).then_some((s, i + 3))
+        } else if b[i..].len() >= 7 && b[i..i + 7].eq_ignore_ascii_case(b"mailto:") {
+            Some((i, i + 7))
         } else {
             None
         };
-        match hit {
-            Some(s) => {
-                let mut e = i + 1;
-                while e < n && !buf[e].is_ascii_whitespace() {
-                    e += 1;
+        i = match hit {
+            Some((start, prefix_end)) => {
+                let len: usize = text[prefix_end..]
+                    .chars()
+                    .take_while(|c| !is_space(*c))
+                    .map(char::len_utf8)
+                    .sum();
+                if len > 0 {
+                    ranges.push((start, prefix_end + len));
+                    prefix_end + len
+                } else {
+                    i + 1
                 }
-                // non-ASCII bytes are part of the URL run; blank them whole
-                for b in &mut buf[s..e] {
-                    *b = b' ';
-                }
-                i = e;
             }
-            None => i += 1,
-        }
+            None => i + 1,
+        };
+    }
+    for (start, end) in ranges {
+        buf[start..end].fill(b' ');
     }
 }
 

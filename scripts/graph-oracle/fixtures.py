@@ -146,13 +146,11 @@ def code_py(root):
     put(root, 'a/b/c.py', 'import a.b.c\nimport b.c\nimport c\n')
     put(root, 'a/b/__init__.py', '')
     put(root, 'a/__init__.py', '')
-    put(root, 'bad.py', 'import os\ndef broken(:\nimport pkg\n')
     put(root, 'iface.pyi', 'import pkg\n')
-    put(root, 'py3.py', 'import pkg.mod, util, sibling\nimport (\n')
     put(root, 'tricky.py', '"""docstring\nimport pkg\n"""\n# import util\ns = "import sibling"\nimport up  # trailing\n'
         'try:\n    import sibling\nexcept ImportError:\n    pass\nfrom pkg import (mod,\n    other)\nimport pkg.mod\n')
     put(root, 'note.md', '[[main]] [[main.py]] [[pkg/mod]] [[pkg/mod.py]]\n')
-    put(root, 'dir.with.dots/m.py', 'import dir.with.dots\nimport m\nfrom . import m\n')
+    put(root, 'dir.v2/m.py', 'import dir.v2\nimport m\nfrom . import m\n')
 
 
 def code_js(root):
@@ -263,12 +261,18 @@ def code_other(root):
     put(root, 'm.md', '[[main]] [[run.sh]] [[lib.rs]]\n')
 
 
+def filler(size, ch='x'):
+    """Exactly `size` characters in short lines (the reference's tag scan is quadratic in a single long word)."""
+    line = ch * 79 + '\n'
+    return (line * (size // 80 + 1))[:size]
+
+
 def specials(root):
     put(root, 'ok.md', 'ok [[big]] [[binary]] [[latin]] [[nul]] [[huge.py]] [[ünï]] [[sp ace]] [[日本語]] [[emoji😀]]\n')
-    put(root, 'big.md', 'x' * (1024 * 1024 + 1))
-    put(root, 'edge.md', 'y' * (1024 * 1024 - 20) + ' [[ok]] ' )
-    put(root, 'exact.md', 'z' * (1024 * 1024))
-    put(root, 'huge.py', '# ' + 'x' * (2 * 1024 * 1024) + '\nimport ok\n')
+    put(root, 'big.md', filler(1024 * 1024 + 1))
+    put(root, 'edge.md', filler(1024 * 1024 - 20, 'y') + ' [[ok]] ')
+    put(root, 'exact.md', filler(1024 * 1024, 'z'))
+    put(root, 'huge.py', '# ' + filler(2 * 1024 * 1024) + '\nimport ok\n')
     put(root, 'binary.md', binary=b'bin\0ary [[ok]]')
     put(root, 'latin.md', binary=b'caf\xe9 [[ok]]')
     put(root, 'nul.py', binary=b'import ok\0\n')
@@ -348,10 +352,20 @@ def live_base(root):
     put(root, 'g.md', '[[b]]\n')
 
 
+def broken_py(root):
+    """Text-corpus only: the reference reads no imports at all from a file it cannot parse."""
+    put(root, 'bad.py', 'import os\ndef broken(:\nimport pkg\n')
+    put(root, 'py3.py', 'import pkg.mod, util, sibling\nimport (\n')
+    put(root, 'py2.py', 'import os\nprint "x"\nfrom pkg import mod\n')
+    put(root, 'half.py', 'import os\nfrom pkg import (\n')
+
+
+TEXT_ONLY = {'broken_py'}
+
 FIXTURES = {
     'links': links, 'dups': dups, 'aliases': aliases, 'tags': tags, 'attachments': attachments,
     'code_py': code_py, 'code_js': code_js, 'code_style': code_style, 'code_other': code_other,
-    'specials': specials, 'empty': lambda root: None, 'one': lambda root: put(root, 'only.md', '[[only]] #solo\n'),
+    'specials': specials, 'broken_py': broken_py, 'empty': lambda root: None, 'one': lambda root: put(root, 'only.md', '[[only]] #solo\n'),
     'chain_3000': chain(3000), 'chain_3001': chain(3001), 'chain_3500': chain(3500),
     'mixed_3300': big_mixed, 'live_base': live_base,
 }

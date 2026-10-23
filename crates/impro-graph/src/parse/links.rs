@@ -293,7 +293,7 @@ pub fn extract_links(text: &str) -> Vec<Link> {
                     } else {
                         LinkKind::Wiki
                     };
-                    (t, a, kind, false)
+                    (t, a, kind, true)
                 }
                 LinkSyntax::Markdown => {
                     if raw.autolink && !raw.inner.contains('.') {

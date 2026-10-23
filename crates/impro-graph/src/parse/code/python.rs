@@ -241,17 +241,15 @@ pub fn imports(text: &str) -> Vec<CodeRef> {
                     match cur {
                         Some((Tok::Star, _)) => cur = lx.next(),
                         Some((Tok::Name(n), _)) if n != "as" => {
-                            // `from pkg import mod` may name a submodule
-                            let spec = if module.is_empty() {
-                                format!("{base}{n}")
-                            } else {
-                                format!("{base}.{n}")
-                            };
-                            out.push(CodeRef {
-                                spec,
-                                kind: CodeKind::Python,
-                                line,
-                            });
+                            // `from . import mod` names the module itself; with a
+                            // module path only that path is the reference
+                            if module.is_empty() {
+                                out.push(CodeRef {
+                                    spec: format!("{base}{n}"),
+                                    kind: CodeKind::Python,
+                                    line,
+                                });
+                            }
                             cur = lx.next();
                             if let Some((Tok::Name("as"), _)) = cur {
                                 lx.next();
@@ -289,7 +287,7 @@ mod tests {
             "import a.b, c as d\nfrom a.b import c\nfrom . import x\nfrom ..m import y\n# import nope\ns=\"import nope\"",
         );
         let names: Vec<_> = refs.iter().map(|r| r.0.as_str()).collect();
-        assert_eq!(names, ["a.b", "c", "a.b", "a.b.c", ".x", "..m", "..m.y"]);
+        assert_eq!(names, ["a.b", "c", "a.b", ".x", "..m"]);
         assert_eq!(refs[0].1, 1);
         assert_eq!(refs.last().unwrap().1, 4);
     }
@@ -305,7 +303,7 @@ mod tests {
     fn nested_statements_and_one_liners() {
         let text = "def f():\n    import inner\n    if x: import one_liner\ntry:\n    from pkg import (a,\n        b as c)\nexcept ImportError:\n    pass\n";
         let names: Vec<_> = specs(text).into_iter().map(|r| r.0).collect();
-        assert_eq!(names, ["inner", "one_liner", "pkg", "pkg.a", "pkg.b"]);
+        assert_eq!(names, ["inner", "one_liner", "pkg"]);
     }
 
     #[test]
@@ -325,7 +323,7 @@ mod tests {
         let r = specs(text);
         assert_eq!(r[0], ("a".to_string(), 1));
         assert_eq!(r[1], ("b".to_string(), 2));
-        assert_eq!(r[2], ("b.c".to_string(), 2));
+        assert_eq!(r.len(), 2);
     }
 
     #[test]

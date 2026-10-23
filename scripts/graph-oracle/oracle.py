@@ -14,6 +14,7 @@ Request modes (see ``cases.py`` for builders):
   edits the tree, tells the index and the graph is dumped after it.
 * ``prefs``  - ``{"mode": "prefs", "values": [...]}``
 """
+import ast
 import importlib
 import json
 import os
@@ -54,7 +55,8 @@ def make_options(spec):
 def dump_graph(graph, focus=None):
     nodes = [{'id': n.id, 'label': n.label, 'kind': n.kind, 'path': n.path,
               'folder': n.folder, 'tags': list(n.tags), 'in': n.in_degree,
-              'out': n.out_degree, 'size_hint': n.size_hint, 'group': n.group}
+              'out': n.out_degree, 'size_hint': n.size_hint, 'group': n.group,
+              'ctime': n.ctime}
              for n in graph.nodes]
     links = [{'source': e.source, 'target': e.target, 'kind': e.kind,
               'resolved': e.resolved, 'count': e.count, 'self': e.self}
@@ -95,6 +97,24 @@ def run_graph(request):
     return {'runs': out}
 
 
+def is_markup(text, link):
+    """`<br>`-style autolinks: the engine does not take markup tags for references."""
+    if link.syntax != 'md' or text[link.start:link.start + 1] != '<':
+        return False
+    inner = text[link.start + 1:text.find('>', link.start)]
+    return '.' not in inner
+
+
+def code_class(kind):
+    if kind == 'python':
+        return kind
+    if kind in ('css', 'scss', 'sass'):
+        return 'style'
+    if kind in ('html', 'htm'):
+        return 'html'
+    return 'script'
+
+
 def run_text(request):
     out = []
     for item in request['snippets']:
@@ -102,12 +122,19 @@ def run_text(request):
         props, end = LP.parse_frontmatter(text)
         links = [{'target': l.target, 'kind': l.kind, 'alias': l.alias,
                   'heading': l.heading, 'block': l.block, 'line': l.line,
-                  'start': l.start, 'syntax': l.syntax}
+                  'start': l.start, 'syntax': l.syntax, 'markup': is_markup(text, l)}
                  for l in LP.extract_links(text)]
-        code = [{'spec': c.spec, 'kind': c.kind, 'line': c.line}
+        code = [{'spec': c.spec, 'kind': code_class(c.kind), 'line': c.line}
                 for c in LP.extract_code_links(path, text)]
+        broken = False
+        if path.lower().endswith('.py'):
+            try:
+                ast.parse(text)
+            except (SyntaxError, ValueError):
+                broken = True
         out.append({'name': item['name'], 'props': props, 'body_start': end,
-                    'links': links, 'tags': LP.extract_tags(text), 'code': code})
+                    'links': links, 'tags': LP.extract_tags(text), 'code': code,
+                    'py_syntax_error': broken})
     return {'snippets': out}
 
 
@@ -119,7 +146,7 @@ def apply_op(index, root, op):
         os.makedirs(os.path.dirname(absolute(op['path'])), exist_ok=True)
         with open(absolute(op['path']), 'w', encoding='utf-8') as stream:
             stream.write(op['text'])
-        index.update_path(op['path'])
+        index.set_text(op['path'], None)  # saved: the buffer gives way to the file
     elif kind == 'set_text':
         index.set_text(op['path'], op['text'])
     elif kind == 'delete':

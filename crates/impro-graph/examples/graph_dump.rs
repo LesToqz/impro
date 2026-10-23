@@ -60,7 +60,7 @@ fn dump_graph(index: &ProjectIndex, g: &Graph, focus: Option<&str>) -> Value {
                 "id": &*n.id, "label": n.label(), "kind": n.kind.as_str(),
                 "path": n.path(), "folder": n.folder(), "tags": tags,
                 "in": n.in_degree, "out": n.out_degree, "size_hint": n.size_hint(),
-                "group": n.group,
+                "group": n.group, "ctime": n.ctime,
             })
         })
         .collect();
@@ -149,7 +149,6 @@ fn code_class(kind: CodeKind) -> String {
         CodeKind::Script => "script".into(),
         CodeKind::Style => "style".into(),
         CodeKind::Html => "html".into(),
-        other => format!("{other:?}").to_lowercase(),
     }
 }
 

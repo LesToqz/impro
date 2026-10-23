@@ -38,7 +38,7 @@ def run_side(side, request, dump, workdir):
     return json.loads(done.stdout)
 
 
-def diff_graph(a, b):
+def diff_graph(a, b, times=True):
     """Differences between oracle graph ``a`` and engine graph ``b`` as (class, detail)."""
     out = []
     an = {n['id']: n for n in a['nodes']}
@@ -53,6 +53,9 @@ def diff_graph(a, b):
     for key in sorted(an.keys() & bn.keys()):
         an[key]['out'], an[key]['in'] = outs[key], ins[key]
         an[key]['size_hint'] = 1 + an[key]['in'] + an[key]['out']
+        x, y = an[key]['ctime'], bn[key]['ctime']
+        if times and ((x is None) != (y is None) or (x is not None and abs(x - y) > 1e-3)):
+            out.append(('node.ctime', f'{key}: oracle={x!r} impro={y!r}'))
         for f in NODE_FIELDS:
             if an[key][f] != bn[key][f]:
                 out.append((f'node.{f}', f'{key}: oracle={an[key][f]!r} impro={bn[key][f]!r}'))
@@ -93,20 +96,48 @@ def strict_equal(x, y):
     return type(x) is type(y) and x == y
 
 
+def first_diff(x, y):
+    """Shortest description of how two lists of records differ."""
+    for i in range(max(len(x), len(y))):
+        p, q = (x[i] if i < len(x) else None), (y[i] if i < len(y) else None)
+        if p != q:
+            return f'[{i}] oracle={p!r} impro={q!r} (lens {len(x)}/{len(y)})'
+    return ''
+
+
+def norm_link(link):
+    """Link record without the oracle-only flag; the unused display alias compares up to blank runs."""
+    link = {k: v for k, v in link.items() if k != 'markup'}
+    if link['alias']:
+        link['alias'] = ' '.join(link['alias'].split(' '))
+        while '  ' in link['alias']:
+            link['alias'] = link['alias'].replace('  ', ' ')
+    return link
+
+
 def diff_text(a, b):
     out = []
     for sa, sb in zip(a['snippets'], b['snippets']):
         name = sa['name']
+        if not name.lower().endswith(('.md', '.markdown')) and not name.startswith('fuzzmd/'):
+            # only notes carry links, tags and properties; other files only imports
+            if sa['code'] != sb['code']:
+                klass = 'text.code.python-syntax-error' if sa.get('py_syntax_error') else 'text.code'
+                out.append((klass, f'{name}: {first_diff(sa["code"], sb["code"])}'))
+            continue
         if not strict_equal(sa['props'], sb['props']):
             out.append(('text.props', f'{name}: oracle={sa["props"]!r} impro={sb["props"]!r}'))
         if sa['body_start'] != sb['body_start']:
             out.append(('text.body_start', f'{name}: oracle={sa["body_start"]} impro={sb["body_start"]}'))
-        if sa['links'] != sb['links']:
-            out.append(('text.links', f'{name}: oracle={sa["links"]!r} impro={sb["links"]!r}'))
+        markup = [l for l in sa['links'] if l.get('markup')]
+        if markup:
+            out.append(('text.links.autolink-without-dot', f'{name}: {len(markup)} tag-like <…> links'))
+        want = [norm_link(l) for l in sa['links'] if not l.get('markup')]
+        got = [norm_link(l) for l in sb['links']]
+        if want != got:
+            out.append(('text.links', f'{name}: {first_diff(want, got)}'))
         if sa['tags'] != sb['tags']:
             out.append(('text.tags', f'{name}: oracle={sa["tags"]!r} impro={sb["tags"]!r}'))
-        if sa['code'] != sb['code']:
-            out.append(('text.code', f'{name}: oracle={sa["code"]!r} impro={sb["code"]!r}'))
     return out
 
 
@@ -157,6 +188,8 @@ def main():
     ap.add_argument('--fuzz', type=int, default=4000)
     ap.add_argument('--limit', type=int, default=3)
     ap.add_argument('--real', action='append', default=[], help='real tree to compare (local only)')
+    ap.add_argument('--corpus', action='append', default=[], help='extra directory of files for the text comparison (local only)')
+    ap.add_argument('--corpus-limit', type=int, default=3000)
     ap.add_argument('--keep', action='store_true')
     args = ap.parse_args()
     parts = set(args.parts.split(','))
@@ -165,7 +198,7 @@ def main():
     tmp = Path(tempfile.mkdtemp(prefix='graph-oracle-'))
     work = tmp / 'work'
     work.mkdir()
-    roots = {}
+    roots, graph_roots = {}, {}
     try:
         for name, build in fixtures.FIXTURES.items():
             if not fnmatch.fnmatchcase(name, args.only):
@@ -174,14 +207,17 @@ def main():
             root.mkdir(parents=True)
             build(root)
             roots[name] = root
+            if name in fixtures.TEXT_ONLY:
+                continue
+            graph_roots[name] = root
         if 'graph' in parts:
-            for name, root in roots.items():
+            for name, root in graph_roots.items():
                 big = name.startswith(('chain', 'mixed'))
                 request = cases.graph_request(root, rich=not big, focus_count=3 if big else 5,
                                               depths=(1, 2, 6) if big else range(1, 7))
                 compare_graph(report, name, request, args.dump, work)
         if 'caps' in parts:
-            for name, root in roots.items():
+            for name, root in graph_roots.items():
                 if name.startswith(('chain', 'mixed', 'live')):
                     continue
                 for request, label in cases.cap_requests(root):
@@ -198,10 +234,10 @@ def main():
                     answers.append(run_side(side, dict(request, root=str(copy)), args.dump, work))
                 for step, (x, y) in enumerate(zip(answers[0]['steps'], answers[1]['steps'])):
                     report.checked += 1
-                    for klass, detail in diff_graph(x['result'], y['result']):
+                    for klass, detail in diff_graph(x['result'], y['result'], times=False):
                         report.add(f'live:{label}', f'step {step} {json.dumps(x["op"])}', klass, detail)
         if 'text' in parts:
-            request = cases.text_request(list(roots.items()), fuzz=args.fuzz)
+            request = cases.text_request(list(roots.items()) + [('corpus' + str(i), d) for i, d in enumerate(args.corpus)], fuzz=args.fuzz, limit=args.corpus_limit)
             a, b = (run_side(s, request, args.dump, work) for s in ('oracle', 'impro'))
             report.checked += len(request['snippets'])
             for klass, detail in diff_text(a, b):

@@ -6,7 +6,7 @@ use crate::parse::{
     self,
     code::CodeKind,
     links::{LinkKind, LinkSyntax},
-    text::{basename, dirname, extension, stem},
+    text::{basename, casefold, dirname, extension, percent_decode, stem},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
@@ -52,15 +52,13 @@ pub enum RefMode {
     Wiki,
     /// Relative path: source folder, then project root.
     Markdown,
+    /// Dotted module path of a Python file.
     Python,
+    /// Relative specifier of a script file; extensions and directory indexes
+    /// are probed.
     Script,
-    Style,
-    Html,
-    RustMod,
-    RustUse,
-    Shell,
-    Include,
-    Ruby,
+    /// Path relative to the source folder, taken as written (stylesheets, HTML).
+    Plain,
 }
 
 /// Edge kinds, ordered like their names so sorted output is stable.
@@ -103,7 +101,7 @@ pub struct Resolved {
 pub struct FileEntry {
     pub path: Arc<str>,
     pub kind: FileKind,
-    /// Empty for attachments.
+    /// Empty for binary attachments.
     pub text: Box<str>,
     pub tags: Vec<Box<str>>,
     pub aliases: Vec<Box<str>>,
@@ -140,13 +138,7 @@ fn code_mode(kind: CodeKind) -> RefMode {
     match kind {
         CodeKind::Python => RefMode::Python,
         CodeKind::Script => RefMode::Script,
-        CodeKind::Style => RefMode::Style,
-        CodeKind::Html => RefMode::Html,
-        CodeKind::RustMod => RefMode::RustMod,
-        CodeKind::RustUse => RefMode::RustUse,
-        CodeKind::Shell => RefMode::Shell,
-        CodeKind::Include => RefMode::Include,
-        CodeKind::Ruby => RefMode::Ruby,
+        CodeKind::Style | CodeKind::Html => RefMode::Plain,
     }
 }
 
@@ -211,60 +203,41 @@ pub fn parse_entry(path: Arc<str>, text: String, ctime: Option<f64>) -> FileEntr
                 .collect();
             entry.text = text.into_boxed_str();
         }
-        FileKind::Attachment => {}
+        FileKind::Attachment => entry.text = text.into_boxed_str(),
     }
     entry.resolved = vec![Resolved::default(); entry.refs.len()];
     entry
 }
 
 /// Keys that identify a file to the watcher table (see `ProjectIndex`):
-/// lowercase base name, name without extension, directory name for
+/// folded base name, name without extension, directory name for
 /// `index`-style files, and aliases.
 pub fn file_keys(entry: &FileEntry, out: &mut Vec<String>) {
     let name = basename(&entry.path);
-    let lower = name.to_lowercase();
-    let s = stem(&entry.path).to_lowercase();
-    if matches!(s.as_str(), "index" | "__init__" | "mod" | "_index") {
+    let lower = casefold(name);
+    let s = casefold(stem(&entry.path));
+    if matches!(s.as_str(), "index" | "__init__") {
         let dir = dirname(&entry.path);
         if !dir.is_empty() {
-            out.push(basename(dir).to_lowercase());
+            out.push(casefold(basename(dir)));
         }
-    }
-    let trimmed = s.trim_start_matches('_');
-    if trimmed != s && !trimmed.is_empty() {
-        out.push(trimmed.to_string());
     }
     out.push(s);
     out.push(lower);
-    out.extend(entry.aliases.iter().map(|a| a.to_lowercase()));
+    out.extend(entry.aliases.iter().map(|a| casefold(a)));
 }
 
-/// Keys of a reference; `None` means "could be anything" (wildcard).
+/// Keys of a reference; `false` means "could be anything" (wildcard).
 pub fn ref_keys(r: &Ref, out: &mut Vec<String>) -> bool {
-    let target = r.target.split(['#', '?', '^']).next().unwrap_or("");
+    let decoded = percent_decode(&r.target);
+    let target = decoded.split(['#', '?', '^']).next().unwrap_or("");
     match r.mode {
         RefMode::Python => {
             let last = target.rsplit('.').next().unwrap_or("");
             if last.is_empty() {
                 return false;
             }
-            out.push(last.to_lowercase());
-            true
-        }
-        RefMode::RustUse => {
-            for seg in target.split("::") {
-                if !matches!(seg, "crate" | "self" | "super" | "") {
-                    out.push(seg.to_lowercase());
-                }
-            }
-            // crate-root fallbacks
-            out.push("lib".into());
-            out.push("main".into());
-            out.push("mod".into());
-            true
-        }
-        RefMode::RustMod => {
-            out.push(target.to_lowercase());
+            out.push(casefold(last));
             true
         }
         _ => {
@@ -276,7 +249,7 @@ pub fn ref_keys(r: &Ref, out: &mut Vec<String>) -> bool {
             if comp.is_empty() || comp == "." || comp == ".." {
                 return false;
             }
-            let lower = comp.to_lowercase();
+            let lower = casefold(comp);
             if let Some(i) = lower.rfind('.') {
                 if i > 0 {
                     out.push(lower[..i].to_string());
@@ -329,12 +302,13 @@ mod tests {
     }
 
     #[test]
-    fn code_has_no_tags_and_attachments_no_text() {
+    fn code_has_no_tags_and_attachments_keep_text_only() {
         let c = entry("a.py", "import b\n# #tag");
         assert!(c.tags.is_empty());
         assert_eq!(c.refs[0].edge, EdgeKind::Import);
-        let a = entry("p.png", "ignored");
-        assert!(a.refs.is_empty() && a.text.is_empty());
+        let a = entry("p.txt", "[[links]] #tag");
+        assert!(a.refs.is_empty() && a.tags.is_empty());
+        assert_eq!(&*a.text, "[[links]] #tag");
     }
 
     #[test]
@@ -353,8 +327,8 @@ mod tests {
         file_keys(&entry("web/sub/index.js", ""), &mut keys);
         assert!(keys.contains(&"sub".to_string()));
         keys.clear();
-        file_keys(&entry("s/_part.scss", ""), &mut keys);
-        assert!(keys.contains(&"part".to_string()));
+        file_keys(&entry("Straße.md", ""), &mut keys);
+        assert!(keys.contains(&"strasse".to_string()));
         let r = Ref {
             target: "../Note.md#h".into(),
             mode: RefMode::Markdown,

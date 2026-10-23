@@ -132,8 +132,8 @@ fn doc_of<'a>(index: &'a ProjectIndex, d: &'a Draft) -> Doc<'a> {
     }
 }
 
-/// Builds the global graph. `keep` is exempt from search and the node cap
-/// (the focus of a local graph).
+/// Builds the global graph. `keep` is exempt from a strict search (the focus
+/// of a local graph); the node cap applies to it like to any other node.
 pub fn build_with_focus(index: &ProjectIndex, opts: &GraphOptions, keep: Option<FileId>) -> Graph {
     let mut drafts: Vec<Draft> = Vec::new();
     let mut node_of_file = vec![NONE; index.slots()];
@@ -318,21 +318,18 @@ pub fn build_with_focus(index: &ProjectIndex, opts: &GraphOptions, keep: Option<
         }
     }
 
-    // cap: keep the most connected nodes
+    // cap: keep the most connected nodes; every edge kind between two nodes
+    // counts, a self reference twice
     let total_alive = alive.iter().filter(|a| **a).count();
     let truncated = total_alive > opts.max_nodes;
     if truncated {
         let mut degree = vec![0u32; drafts.len()];
-        let mut last = (NONE, NONE);
         for e in edges
             .iter()
             .filter(|e| alive[e.src as usize] && alive[e.dst as usize])
         {
-            if last != (e.src, e.dst) {
-                degree[e.src as usize] += 1;
-                degree[e.dst as usize] += 1;
-                last = (e.src, e.dst);
-            }
+            degree[e.src as usize] += 1;
+            degree[e.dst as usize] += 1;
         }
         let mut order: Vec<usize> = (0..drafts.len()).filter(|i| alive[*i]).collect();
         order.sort_unstable_by(|a, b| {
@@ -340,13 +337,6 @@ pub fn build_with_focus(index: &ProjectIndex, opts: &GraphOptions, keep: Option<
                 .cmp(&degree[*a])
                 .then_with(|| drafts[*a].id.cmp(&drafts[*b].id))
         });
-        if let Some(k) = keep_node {
-            if let Some(pos) = order.iter().position(|i| *i == k as usize) {
-                if pos >= opts.max_nodes && opts.max_nodes > 0 {
-                    order.swap(pos, opts.max_nodes - 1);
-                }
-            }
-        }
         let survivors: std::collections::HashSet<usize> =
             order.into_iter().take(opts.max_nodes).collect();
         for (i, a) in alive.iter_mut().enumerate() {
@@ -500,8 +490,9 @@ pub fn layers_from(
     layer
 }
 
-/// The focus file and everything within `depth` hops. The focus survives the
-/// search filter and the node cap.
+/// The focus file and everything within `depth` hops. The focus survives a
+/// strict search filter; like every node it can fall to the node cap, which
+/// leaves an empty graph.
 pub fn local(
     index: &ProjectIndex,
     focus: &Path,
@@ -512,14 +503,21 @@ pub fn local(
 ) -> LocalGraph {
     let focus_id = index
         .rel_path(focus)
-        .and_then(|rel| index.id_of(&rel).or_else(|| index.id_of_folded(&rel)));
+        .and_then(|rel| index.id_of_folded(&rel).or_else(|| index.id_of(&rel)));
     let full = build_with_focus(index, opts, focus_id);
     let focus_idx = focus_id
         .and_then(|id| index.get(id))
         .and_then(|f| full.index_of(&f.path));
     let focus_idx = match focus_idx {
         Some(i) => i,
-        None => return LocalGraph::default(),
+        None => {
+            // no focus in the graph: nothing to show, but the cap still counts
+            let none = vec![false; full.nodes.len()];
+            return LocalGraph {
+                graph: full.subgraph(&none),
+                ..LocalGraph::default()
+            };
+        }
     };
     let layers = layers_from(&full, focus_idx, depth, incoming, outgoing);
     let keep: Vec<bool> = layers.iter().map(|l| *l != u8::MAX).collect();

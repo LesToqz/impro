@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use super::entry::{FileEntry, FileId, RefMode, Resolved, NOTE_EXTENSIONS};
-use crate::parse::text::{basename, dirname, extension, is_external, stem};
+use crate::parse::text::{dirname, extension, has_scheme, percent_decode};
 
 /// Case-folded lookup tables, maintained incrementally by the index.
 #[derive(Default, Debug)]
@@ -52,8 +52,26 @@ fn join_norm(out: &mut String, base: &str, rel: &str) -> bool {
     true
 }
 
-const SCRIPT_EXTENSIONS: [&str; 10] = [
-    ".ts", ".tsx", ".js", ".jsx", ".mjs", ".json", ".css", ".vue", ".cjs", ".svelte",
+/// Suffixes tried after a script specifier: the path itself, then each known
+/// extension, then a directory index with each extension.
+const SCRIPT_PROBES: [&str; 17] = [
+    "",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".json",
+    ".css",
+    ".vue",
+    "/index.ts",
+    "/index.tsx",
+    "/index.js",
+    "/index.jsx",
+    "/index.mjs",
+    "/index.json",
+    "/index.css",
+    "/index.vue",
 ];
 
 pub struct Resolver<'a> {
@@ -66,52 +84,44 @@ impl<'a> Resolver<'a> {
         self.files[id.index()].as_ref().map_or("", |f| &f.path)
     }
 
-    /// Exact (case-insensitive) project path; `joined` is already normalised.
-    fn exact(&self, joined: &str) -> Option<FileId> {
-        if joined.is_empty() {
+    /// The file at `base/rel` + `suffix`, matched case-insensitively. The
+    /// suffix is appended before dots are resolved, so `..` + `.ts` names a
+    /// file called `...ts`; paths leaving the project or absolute ones match
+    /// nothing.
+    fn probe(&self, scratch: &mut String, base: &str, rel: &str, suffix: &str) -> Option<FileId> {
+        let mut raw = String::with_capacity(base.len() + rel.len() + suffix.len() + 1);
+        if rel.starts_with('/') || base.is_empty() {
+            raw.push_str(rel);
+        } else {
+            raw.push_str(base);
+            raw.push('/');
+            raw.push_str(rel);
+        }
+        raw.push_str(suffix);
+        if !join_norm(scratch, "", &raw) || scratch.is_empty() {
             return None;
         }
-        self.lookup.by_path.get(lower(joined).as_str()).copied()
+        self.lookup.by_path.get(lower(scratch).as_str()).copied()
     }
 
-    fn exact_join(&self, scratch: &mut String, base: &str, rel: &str) -> Option<FileId> {
-        if !join_norm(scratch, base, rel) {
-            return None;
-        }
-        self.exact(scratch)
-    }
-
-    /// First probe `base + suffix` that exists.
-    fn with_suffixes(
+    fn probe_any(
         &self,
         scratch: &mut String,
         base: &str,
         rel: &str,
         suffixes: &[&str],
     ) -> Option<FileId> {
-        if !join_norm(scratch, base, rel) {
-            return None;
-        }
-        let len = scratch.len();
-        for s in suffixes {
-            scratch.truncate(len);
-            scratch.push_str(s);
-            if let Some(id) = self.exact(scratch) {
-                return Some(id);
-            }
-        }
-        None
+        suffixes
+            .iter()
+            .find_map(|s| self.probe(scratch, base, rel, s))
     }
 
-    /// Resolves `target` written in `source`; also reports how many files
-    /// matched a bare wiki name (0 when another strategy applied).
+    /// Resolves `target` written in `source`; also reports whether a bare
+    /// wiki name matched several files.
     pub fn resolve(&self, source: &str, target: &str, mode: RefMode) -> Resolved {
-        let target = target.split(['#', '^', '?']).next().unwrap_or("");
-        let web = matches!(
-            mode,
-            RefMode::Wiki | RefMode::Markdown | RefMode::Html | RefMode::Style
-        );
-        if target.is_empty() || (web && is_external(target)) {
+        let decoded = percent_decode(target);
+        let target = decoded.split(['#', '^', '?']).next().unwrap_or("");
+        if target.is_empty() || has_scheme(target) {
             return Resolved::default();
         }
         let mut scratch = String::new();
@@ -125,22 +135,14 @@ impl<'a> Resolver<'a> {
             }
             RefMode::Markdown => self.markdown(folder, target, &mut scratch),
             RefMode::Python => self.python(folder, target, &mut scratch),
-            RefMode::Script => self.script(folder, target, &mut scratch),
-            RefMode::Style => self.style(source, folder, target, &mut scratch),
-            RefMode::Html => self.html_target(folder, target, &mut scratch),
-            RefMode::RustMod => self.rust_mod(source, target, &mut scratch),
-            RefMode::RustUse => self.rust_use(source, target, &mut scratch),
-            RefMode::Shell | RefMode::Include => self
-                .exact_join(&mut scratch, folder, target)
-                .or_else(|| self.exact_join(&mut scratch, "", target)),
-            RefMode::Ruby => {
-                let sfx: &[&str] = if extension(target).is_empty() {
-                    &[".rb", ""]
+            RefMode::Script => {
+                if target.starts_with('.') {
+                    self.probe_any(&mut scratch, folder, target, &SCRIPT_PROBES)
                 } else {
-                    &[""]
-                };
-                self.with_suffixes(&mut scratch, folder, target, sfx)
+                    None
+                }
             }
+            RefMode::Plain => self.probe(&mut scratch, folder, target, ""),
         };
         Resolved { dest, ambiguous }
     }
@@ -182,17 +184,15 @@ impl<'a> Resolver<'a> {
 
     fn wiki(&self, folder: &str, target: &str, scratch: &mut String) -> (Option<FileId>, bool) {
         if target.contains('/') {
-            let suffixes: &[&str] = if extension(target).is_empty() {
-                &[".md", ".markdown"]
+            let suffix = if extension(target).is_empty() {
+                ".md"
             } else {
-                &[""]
+                ""
             };
-            for base in ["", folder] {
-                if let Some(id) = self.with_suffixes(scratch, base, target, suffixes) {
-                    return (Some(id), false);
-                }
-            }
-            return (None, false);
+            let found = ["", folder]
+                .into_iter()
+                .find_map(|base| self.probe(scratch, base, target, suffix));
+            return (found, false);
         }
         let found = self.wiki_candidates(folder, target);
         (found.first().copied(), found.len() > 1)
@@ -200,229 +200,29 @@ impl<'a> Resolver<'a> {
 
     fn markdown(&self, folder: &str, target: &str, scratch: &mut String) -> Option<FileId> {
         let rel = target.trim_start_matches('/');
-        self.exact_join(scratch, folder, rel)
-            .or_else(|| self.exact_join(scratch, "", rel))
+        self.probe(scratch, folder, rel, "")
+            .or_else(|| self.probe(scratch, "", rel, ""))
     }
 
-    fn html_target(&self, folder: &str, target: &str, scratch: &mut String) -> Option<FileId> {
-        match target.strip_prefix('/') {
-            Some(rest) => self.exact_join(scratch, "", rest),
-            None => self.exact_join(scratch, folder, target),
-        }
-    }
-
+    /// `pkg.mod` / `.sibling` / `..up.mod`: leading dots climb from the source
+    /// folder; absolute names try the project root, the source folder, then `src`.
     fn python(&self, folder: &str, spec: &str, scratch: &mut String) -> Option<FileId> {
         let level = spec.len() - spec.trim_start_matches('.').len();
         let module = spec[level..].replace('.', "/");
-        if module.is_empty() {
-            return None;
-        }
-        let try_base = |this: &Self, base: &str, scratch: &mut String| {
-            this.with_suffixes(scratch, base, &module, &[".py", "/__init__.py", ".pyi"])
-        };
+        let suffixes = [".py", "/__init__.py"];
         if level > 0 {
             let mut base = folder.to_string();
             for _ in 1..level {
-                let mut up = String::new();
-                if !join_norm(&mut up, &base, "..") {
-                    return None;
+                if !base.is_empty() {
+                    base.push('/');
                 }
-                base = up;
+                base.push_str("..");
             }
-            return try_base(self, &base, scratch);
+            return self.probe_any(scratch, &base, &module, &suffixes);
         }
         ["", folder, "src"]
             .into_iter()
-            .find_map(|b| try_base(self, b, scratch))
-    }
-
-    fn script(&self, folder: &str, spec: &str, scratch: &mut String) -> Option<FileId> {
-        if !spec.starts_with('.') {
-            return None;
-        }
-        if let Some(id) = self.exact_join(scratch, folder, spec) {
-            return Some(id);
-        }
-        // ESM style `./x.js` that is really `x.ts`
-        for (from, to) in [
-            (".js", ".ts"),
-            (".jsx", ".tsx"),
-            (".mjs", ".mts"),
-            (".cjs", ".cts"),
-        ] {
-            if let Some(stem) = spec.strip_suffix(from) {
-                let swapped = format!("{stem}{to}");
-                if let Some(id) = self.exact_join(scratch, folder, &swapped) {
-                    return Some(id);
-                }
-                if from == ".js" {
-                    let tsx = format!("{stem}.tsx");
-                    if let Some(id) = self.exact_join(scratch, folder, &tsx) {
-                        return Some(id);
-                    }
-                }
-            }
-        }
-        if let Some(id) = self.with_suffixes(scratch, folder, spec, &SCRIPT_EXTENSIONS) {
-            return Some(id);
-        }
-        let dir_index: Vec<String> = SCRIPT_EXTENSIONS
-            .iter()
-            .map(|e| format!("/index{e}"))
-            .collect();
-        let refs: Vec<&str> = dir_index.iter().map(String::as_str).collect();
-        self.with_suffixes(scratch, folder, spec, &refs)
-    }
-
-    fn style(
-        &self,
-        source: &str,
-        folder: &str,
-        spec: &str,
-        scratch: &mut String,
-    ) -> Option<FileId> {
-        let (base_dir, rel) = match spec.strip_prefix('/') {
-            Some(r) => ("", r),
-            None => (folder, spec),
-        };
-        if let Some(id) = self.exact_join(scratch, base_dir, rel) {
-            return Some(id);
-        }
-        let sass = matches!(extension(source).as_str(), ".scss" | ".sass");
-        if !sass {
-            return None;
-        }
-        // Sass: optional extension, `_partial` names and directory indexes
-        let mut full = String::new();
-        if !join_norm(&mut full, base_dir, rel) {
-            return None;
-        }
-        let (dir, name) = match full.rsplit_once('/') {
-            Some((d, n)) => (d.to_string(), n.to_string()),
-            None => (String::new(), full.clone()),
-        };
-        let has_ext = !extension(&name).is_empty();
-        let exts: &[&str] = if has_ext {
-            &[""]
-        } else {
-            &[".scss", ".sass", ".css"]
-        };
-        for e in exts {
-            let candidates = [format!("{name}{e}"), format!("_{name}{e}")];
-            for c in candidates {
-                if let Some(id) = self.exact_join(scratch, &dir, &c) {
-                    return Some(id);
-                }
-            }
-        }
-        for idx in ["_index.scss", "index.scss", "_index.sass", "index.sass"] {
-            let rel = format!("{name}/{idx}");
-            if let Some(id) = self.exact_join(scratch, &dir, &rel) {
-                return Some(id);
-            }
-        }
-        None
-    }
-
-    /// Directory in which `mod x;` declarations of `source` live.
-    fn module_dir(source: &str) -> String {
-        let dir = dirname(source);
-        match stem(source) {
-            "mod" | "lib" | "main" => dir.to_string(),
-            s => {
-                if dir.is_empty() {
-                    s.to_string()
-                } else {
-                    format!("{dir}/{s}")
-                }
-            }
-        }
-    }
-
-    fn rust_module_file(&self, scratch: &mut String, dir: &str, name: &str) -> Option<FileId> {
-        let a = format!("{name}.rs");
-        let b = format!("{name}/mod.rs");
-        let rel_a = a.as_str();
-        let rel_b = b.as_str();
-        self.exact_join(scratch, dir, rel_a)
-            .or_else(|| self.exact_join(scratch, dir, rel_b))
-    }
-
-    fn rust_mod(&self, source: &str, name: &str, scratch: &mut String) -> Option<FileId> {
-        let dir = Self::module_dir(source);
-        self.rust_module_file(scratch, &dir, name)
-    }
-
-    /// Directory of the crate root: the nearest `src` ancestor, preferring one
-    /// that holds `lib.rs` or `main.rs`.
-    fn crate_root(&self, source: &str, scratch: &mut String) -> Option<String> {
-        let mut dir = dirname(source);
-        let mut first_src = None;
-        loop {
-            if basename(dir) == "src" {
-                first_src.get_or_insert_with(|| dir.to_string());
-                if ["lib.rs", "main.rs"]
-                    .iter()
-                    .any(|f| self.exact_join(scratch, dir, f).is_some())
-                {
-                    return Some(dir.to_string());
-                }
-            }
-            if dir.is_empty() {
-                break;
-            }
-            dir = dirname(dir);
-        }
-        first_src
-    }
-
-    fn rust_dir_file(&self, scratch: &mut String, dir: &str) -> Option<FileId> {
-        for f in ["mod.rs", "lib.rs", "main.rs"] {
-            if let Some(id) = self.exact_join(scratch, dir, f) {
-                return Some(id);
-            }
-        }
-        let name = format!("{}.rs", basename(dir));
-        self.exact_join(scratch, dirname(dir), &name)
-    }
-
-    fn rust_use(&self, source: &str, spec: &str, scratch: &mut String) -> Option<FileId> {
-        let mut segs: Vec<&str> = spec.split("::").filter(|s| !s.is_empty()).collect();
-        if segs.is_empty() {
-            return None;
-        }
-        let head = segs.remove(0);
-        let mut dir = match head {
-            "crate" => self.crate_root(source, scratch)?,
-            "self" => Self::module_dir(source),
-            "super" => {
-                let mut d = Self::module_dir(source);
-                d = dirname(&d).to_string();
-                while segs.first() == Some(&"super") {
-                    segs.remove(0);
-                    d = dirname(&d).to_string();
-                }
-                d
-            }
-            _ => return None,
-        };
-        let base_dir = dir.clone();
-        let mut best = None;
-        for seg in &segs {
-            match self.rust_module_file(scratch, &dir, seg) {
-                Some(id) => {
-                    best = Some(id);
-                    dir = if dir.is_empty() {
-                        seg.to_string()
-                    } else {
-                        format!("{dir}/{seg}")
-                    };
-                }
-                None => break,
-            }
-        }
-        let found = best.or_else(|| self.rust_dir_file(scratch, &base_dir));
-        found.filter(|id| self.path_of(*id) != source)
+            .find_map(|b| self.probe_any(scratch, b, &module, &suffixes))
     }
 }
 
@@ -430,6 +230,7 @@ impl<'a> Resolver<'a> {
 mod tests {
     use super::*;
     use crate::index::entry::parse_entry;
+    use crate::parse::text::basename;
     use std::sync::Arc;
 
     struct Fixture {
@@ -518,6 +319,8 @@ mod tests {
         assert_eq!(f.r("a/Source.md", "Note.md", m), Some("a/Note.md"));
         assert_eq!(f.r("z/Source.md", "Note.md", m), Some("Note.md"));
         assert_eq!(f.r("z/Source.md", "/Note.md", m), Some("Note.md"));
+        // a wiki path without extension only tries `.md`
+        assert_eq!(f.r("z/Source.md", "a/other", w), None);
     }
 
     #[test]
@@ -558,6 +361,7 @@ mod tests {
             ("src/module/__init__.py", ""),
             ("pkg/sibling.py", ""),
             ("outer.py", ""),
+            ("pkg/stub.pyi", ""),
         ]);
         let p = RefMode::Python;
         assert_eq!(f.r("pkg/main.py", "root", p), Some("root.py"));
@@ -570,6 +374,7 @@ mod tests {
         assert_eq!(f.r("pkg/main.py", ".sibling", p), Some("pkg/sibling.py"));
         assert_eq!(f.r("pkg/main.py", "..outer", p), Some("outer.py"));
         assert_eq!(f.r("pkg/main.py", "external", p), None);
+        assert_eq!(f.r("pkg/main.py", ".stub", p), None);
         assert_eq!(f.r("main.py", "....x", p), None);
     }
 
@@ -586,112 +391,42 @@ mod tests {
             ("A.md", ""),
             ("web/s/_part.scss", ""),
             ("web/s/main.scss", ""),
-            ("web/s/theme/_index.scss", ""),
+            ("index.js", ""),
         ]);
+        let s = RefMode::Script;
+        assert_eq!(f.r("web/main.ts", "./mod", s), Some("web/mod.ts"));
+        assert_eq!(f.r("web/main.ts", "./sub", s), Some("web/sub/index.js"));
+        assert_eq!(f.r("web/main.ts", "./style.css", s), Some("web/style.css"));
+        assert_eq!(f.r("web/main.ts", "external", s), None);
+        assert_eq!(f.r("web/main.ts", "/web/mod", s), None);
+        // `.js` is not rewritten to `.ts`
+        assert_eq!(f.r("web/main.ts", "./util.js", s), None);
+        assert_eq!(f.r("sub.js", ".", s), Some("index.js"));
         assert_eq!(
-            f.r("web/main.ts", "./mod", RefMode::Script),
-            Some("web/mod.ts")
-        );
-        assert_eq!(
-            f.r("web/main.ts", "./sub", RefMode::Script),
-            Some("web/sub/index.js")
-        );
-        assert_eq!(
-            f.r("web/main.ts", "./style.css", RefMode::Script),
-            Some("web/style.css")
-        );
-        assert_eq!(
-            f.r("web/main.ts", "./util.js", RefMode::Script),
-            Some("web/util.ts")
-        );
-        assert_eq!(f.r("web/main.ts", "external", RefMode::Script), None);
-        assert_eq!(
-            f.r("web/style.css", "other.css", RefMode::Style),
+            f.r("web/style.css", "other.css", RefMode::Plain),
             Some("web/other.css")
         );
         assert_eq!(
-            f.r("web/style.css", "img.png", RefMode::Style),
+            f.r("web/style.css", "img.png", RefMode::Plain),
             Some("web/img.png")
         );
+        // Sass partials and extensionless names are not searched
+        assert_eq!(f.r("web/s/main.scss", "part", RefMode::Plain), None);
         assert_eq!(
-            f.r("web/s/main.scss", "part", RefMode::Style),
-            Some("web/s/_part.scss")
+            f.r("web/page.html", "../A.md", RefMode::Plain),
+            Some("A.md")
         );
-        assert_eq!(
-            f.r("web/s/main.scss", "theme", RefMode::Style),
-            Some("web/s/theme/_index.scss")
-        );
-        assert_eq!(f.r("web/page.html", "../A.md", RefMode::Html), Some("A.md"));
-        assert_eq!(f.r("web/page.html", "/A.md", RefMode::Html), Some("A.md"));
+        assert_eq!(f.r("web/page.html", "/A.md", RefMode::Plain), None);
     }
 
     #[test]
-    fn rust_module_paths() {
-        let f = fixture(&[
-            ("crates/x/src/lib.rs", ""),
-            ("crates/x/src/a.rs", ""),
-            ("crates/x/src/a/b.rs", ""),
-            ("crates/x/src/c/mod.rs", ""),
-            ("crates/x/src/c/d.rs", ""),
-        ]);
-        let m = RefMode::RustMod;
-        let u = RefMode::RustUse;
+    fn targets_are_decoded_and_cut_at_anchors() {
+        let f = fixture(&[("a b.md", ""), ("c.md", "")]);
         assert_eq!(
-            f.r("crates/x/src/lib.rs", "a", m),
-            Some("crates/x/src/a.rs")
+            f.r("x.md", "a%20b.md#top", RefMode::Markdown),
+            Some("a b.md")
         );
-        assert_eq!(
-            f.r("crates/x/src/lib.rs", "c", m),
-            Some("crates/x/src/c/mod.rs")
-        );
-        assert_eq!(
-            f.r("crates/x/src/a.rs", "b", m),
-            Some("crates/x/src/a/b.rs")
-        );
-        assert_eq!(
-            f.r("crates/x/src/c/mod.rs", "d", m),
-            Some("crates/x/src/c/d.rs")
-        );
-        assert_eq!(
-            f.r("crates/x/src/c/d.rs", "crate::a::b::Thing", u),
-            Some("crates/x/src/a/b.rs")
-        );
-        assert_eq!(
-            f.r("crates/x/src/c/d.rs", "super::Item", u),
-            Some("crates/x/src/c/mod.rs")
-        );
-        assert_eq!(
-            f.r("crates/x/src/c/d.rs", "crate::Item", u),
-            Some("crates/x/src/lib.rs")
-        );
-        assert_eq!(
-            f.r("crates/x/src/a.rs", "self::b", u),
-            Some("crates/x/src/a/b.rs")
-        );
-        assert_eq!(f.r("crates/x/src/lib.rs", "crate::Item", u), None);
-        assert_eq!(f.r("crates/x/src/a.rs", "std::io", u), None);
-    }
-
-    #[test]
-    fn shell_include_ruby() {
-        let f = fixture(&[
-            ("bin/run.sh", ""),
-            ("bin/lib.sh", ""),
-            ("conf/env.sh", ""),
-            ("c/a.c", ""),
-            ("c/a.h", ""),
-            ("rb/x.rb", ""),
-            ("rb/y.rb", ""),
-        ]);
-        assert_eq!(
-            f.r("bin/run.sh", "./lib.sh", RefMode::Shell),
-            Some("bin/lib.sh")
-        );
-        assert_eq!(
-            f.r("bin/run.sh", "conf/env.sh", RefMode::Shell),
-            Some("conf/env.sh")
-        );
-        assert_eq!(f.r("c/a.c", "a.h", RefMode::Include), Some("c/a.h"));
-        assert_eq!(f.r("rb/x.rb", "y", RefMode::Ruby), Some("rb/y.rb"));
+        assert_eq!(f.r("x.md", "c.md?x=1", RefMode::Markdown), Some("c.md"));
+        assert_eq!(f.r("x.md", "c%23h", RefMode::Wiki), Some("c.md"));
     }
 }

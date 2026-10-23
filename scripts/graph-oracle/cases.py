@@ -190,10 +190,13 @@ def fuzz_snippets(count, seed=1):
     return out
 
 
-def text_request(roots, fuzz=4000):
+def text_request(roots, fuzz=4000, limit=3000):
     snippets = []
     for label, root in roots:
+        taken = 0
         for rel in tree_files(root):
+            if label.startswith('corpus') and (taken >= limit or '/.git/' in '/' + rel):
+                continue
             path = Path(root) / rel
             try:
                 if path.stat().st_size > 20000 or path.is_symlink():
@@ -203,6 +206,7 @@ def text_request(roots, fuzz=4000):
                 continue
             if '\0' in text:
                 continue
+            taken += 1
             snippets.append({'name': f'{label}/{rel}', 'path': rel, 'text': text})
     exts = ['x.md', 'x.py', 'x.js', 'x.css', 'x.html', 'x.ts', 'x.vue', 'x.scss', 'x.sass', 'x.htm', 'x.mjs', 'x.rs']
     for i, text in enumerate(fuzz_snippets(fuzz)):

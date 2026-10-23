@@ -90,6 +90,12 @@ fn hex(b: u8) -> Option<u8> {
     }
 }
 
+/// Whitespace as the reference reads it: Unicode spaces plus the four ASCII
+/// separators `\x1c`–`\x1f`.
+pub fn is_space(c: char) -> bool {
+    c.is_whitespace() || ('\x1c'..='\x1f').contains(&c)
+}
+
 fn is_word(c: char) -> bool {
     c.is_alphanumeric() || c == '_'
 }
@@ -98,7 +104,12 @@ fn is_word(c: char) -> bool {
 /// protocol-relative references and in-page anchors. Empty targets count too.
 pub fn is_external(target: &str) -> bool {
     let t = target.trim();
-    if t.is_empty() || t.starts_with('#') || t.starts_with("//") {
+    t.is_empty() || t.starts_with('#') || has_scheme(t)
+}
+
+/// True when `t` starts with a URL scheme (`https:`, `mailto:`) or `//`.
+pub fn has_scheme(t: &str) -> bool {
+    if t.starts_with("//") {
         return true;
     }
     let mut chars = t.chars();
