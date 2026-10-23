@@ -121,7 +121,8 @@ def main():
         # Font role delivered live by the host theme bridge.
         current_theme.clear()
         current_theme.update(graphmod.graph_colors(th.ui, th.ui['accent']),
-                             accent=th.ui['accent'], font_ui='DejaVu Sans')
+                             accent=th.ui['accent'], font_ui='DejaVu Sans',
+                             dark=themes._luminance(th.ui['bg'])<.3)
         invoke('setTheme',current_theme)
         settle()
     def snapshot():

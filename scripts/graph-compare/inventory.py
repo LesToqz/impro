@@ -366,8 +366,11 @@ def compare(reference, impro, out):
             row.update(source='crates/impro-graph/src/view/flow.rs:952',severity=4,
                        fix='Retain the lower native idle work and repeat a longer sample before attributing remaining page-process CPU activity.')
         if row['id']=='closed-chip':
-            row.update(source='crates/impro-graph/src/view/panel.rs:854',owner='T1',severity=1,
-                       fix='Ensure closing controls reveals the chip even when no child-revealed notification is emitted after a motion-preference transition.')
+            row.update(source='crates/impro-graph/src/view/panel.rs:538',owner='T1',severity=1,
+                       fix='Explicitly show the guarded chip and its children when closing controls; show_all honours no-show-all and leaves the strip hidden.')
+        if row['id']=='label-alpha-0.7':
+            row.update(source='crates/impro-graph/src/view/draw.rs:164',
+                       fix='Measure nominal label alpha separately from font-mask coverage before adjusting native label fade.')
         if row['id']=='label-1':
             row.update(source='crates/impro-graph/src/view/draw.rs:164',
                        fix='Check Pango font sizing and label bitmap insets against the measured orphan ink bounds at zoom one.')
@@ -447,6 +450,10 @@ def write_review_docs(rows,out,counts):
               if (out/side/(r['scenario']+'.png')).exists()]
         if pngs:
             doc.extend(['','Frames: '+', '.join(pngs)+'.'])
+        if r['id']=='closed-chip':
+            doc.extend(['','An isolated GTK probe confirms the visibility mechanism: a box guarded by `no-show-all` stays hidden after `show_all`, and becomes visible after explicit `show`. The native chip has that guard at `panel.rs:538`, while both close paths call only `show_all` at lines 701 and 869. Probe output: `.ceo/graph-compare/gtk-visibility.txt`. The runtime graph frames independently show the missing strip.'])
+        if r['id'].startswith(('label-1','label-alpha-')):
+            doc.extend(['','This is a raster observation, not a nominal font/alpha mismatch proven by state telemetry. Font-mask coverage, cached bitmap scaling and glyph padding can affect these samples. Request the paint telemetry listed below before adjusting style constants.'])
         if r['id'] in ('replay','replay-reduced'):
             doc.extend(['','Read-only source inspection explains the likely data cause: on this Linux filesystem the '
                         'reference uses the minimum of change/modified timestamps when its runtime does not expose birth time; '
