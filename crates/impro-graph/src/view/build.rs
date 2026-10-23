@@ -198,8 +198,11 @@ fn wire(inner: &Rc<Inner>, rx: glib::Receiver<Event>) {
         });
     }
     on!(connect_button_press_event, |i, e| {
-        let (x, y) = e.position();
-        i.on_press(x, y, e.button(), e.state(), e.time());
+        // double and triple presses repeat a press already delivered
+        if e.event_type() == gdk::EventType::ButtonPress {
+            let (x, y) = e.position();
+            i.on_press(x, y, e.button(), e.state(), e.time());
+        }
         glib::Propagation::Stop
     });
     on!(connect_button_release_event, |i, e| {
@@ -209,8 +212,12 @@ fn wire(inner: &Rc<Inner>, rx: glib::Receiver<Event>) {
     });
     on!(connect_motion_notify_event, |i, e| {
         let (x, y) = e.position();
-        i.on_motion(x, y, e.time());
+        i.on_motion_event(x, y, e.time(), e.state());
         glib::Propagation::Stop
+    });
+    on!(connect_grab_broken_event, |i, _e| {
+        i.abandon_press();
+        glib::Propagation::Proceed
     });
     on!(connect_leave_notify_event, |i, e| {
         i.on_leave(e.mode());

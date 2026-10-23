@@ -613,6 +613,32 @@ impl Scene {
             || self.eased_pending()
     }
 
+    /// Which of the [`Scene::needs_frames`] conditions hold (diagnostics).
+    pub fn frame_reasons(&self) -> Vec<&'static str> {
+        let d = &self.disp;
+        let st = &self.style;
+        [
+            ("simulating", self.simulating()),
+            ("keys", self.cam.keys.any()),
+            ("velocity", self.cam.vx != 0.0 || self.cam.vy != 0.0),
+            ("palette", self.pal_t < 1.0),
+            ("ghosts", !self.ghosts.is_empty()),
+            ("tracking", self.cam.is_tracking()),
+            ("zoom", self.cam.cam.zoom != self.cam.target_zoom),
+            ("node size", (d.node - st.node_size).abs() >= 1e-3),
+            ("line width", (d.line - st.line_width).abs() >= 1e-3),
+            (
+                "label detail",
+                (d.label_detail - st.label_detail).abs() >= 1e-3,
+            ),
+            ("near", self.near_stale),
+            ("elements", self.elements_dirty),
+        ]
+        .into_iter()
+        .filter_map(|(name, on)| on.then_some(name))
+        .collect()
+    }
+
     /// Geometry changes between frames: the layout runs (a dragged node
     /// keeps it hot), the camera moves, or markers and lines ease in size.
     /// Appearance-only easing (hover fades, theme blends) does not count.

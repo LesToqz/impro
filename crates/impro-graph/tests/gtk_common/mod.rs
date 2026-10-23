@@ -213,3 +213,71 @@ pub fn saved(f: &Fixture) -> Vec<Value> {
 pub fn none() -> gdk::ModifierType {
     gdk::ModifierType::empty()
 }
+
+/// Delivers a pointer event to the canvas through GTK's normal dispatch, as
+/// the windowing system would: `kind` is a button press/release or a motion,
+/// `state` the modifier and button mask the event carries.
+pub fn send_pointer(
+    view: &GraphView,
+    kind: gdk::EventType,
+    (x, y): (f64, f64),
+    button: u32,
+    state: gdk::ModifierType,
+    time: u32,
+) {
+    use glib::translate::*;
+    let canvas = view.canvas();
+    let win = canvas.window().expect("realized canvas");
+    let (_, ox, oy) = win.origin();
+    let mut event = gdk::Event::new(kind);
+    // SAFETY: `event` owns a zeroed GdkEvent of the union member written here.
+    unsafe {
+        let raw: *mut gdk::ffi::GdkEvent = event.to_glib_none_mut().0;
+        if kind == gdk::EventType::MotionNotify {
+            let m = &mut (*raw).motion;
+            m.window = win.to_glib_full();
+            m.send_event = 1;
+            m.time = time;
+            m.x = x;
+            m.y = y;
+            m.x_root = x + ox as f64;
+            m.y_root = y + oy as f64;
+            m.state = state.into_glib();
+        } else {
+            let b = &mut (*raw).button;
+            b.window = win.to_glib_full();
+            b.send_event = 1;
+            b.time = time;
+            b.x = x;
+            b.y = y;
+            b.x_root = x + ox as f64;
+            b.y_root = y + oy as f64;
+            b.button = button;
+            b.state = state.into_glib();
+        }
+    }
+    let seat = canvas.display().default_seat().expect("seat");
+    event.set_device(seat.pointer().as_ref());
+    gtk::main_do_event(&mut event);
+}
+
+/// A canvas point at least `margin` pixels from every marker.
+pub fn empty_spot(f: &Fixture, margin: f64) -> (f64, f64) {
+    let (w, h) = t::info(&f.view).size;
+    let ids = f.ids();
+    let mut y = 4.0;
+    while y < h {
+        let mut x = 4.0;
+        while x < w {
+            if ids.iter().all(|id| {
+                let (sx, sy, r) = f.screen(id);
+                (sx - x).hypot(sy - y) > r + margin
+            }) {
+                return (x, y);
+            }
+            x += 16.0;
+        }
+        y += 16.0;
+    }
+    panic!("no empty spot on the canvas");
+}

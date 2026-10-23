@@ -51,6 +51,9 @@ pub struct CameraState {
     track: Option<Track>,
     /// Smoothed time between pointer moves of the current drag, in ms.
     drag_interval: f64,
+    /// A pan drag holds the camera: while it lasts the velocity is a filtered
+    /// move per pointer event (not per millisecond) and must not coast.
+    dragging: bool,
 }
 
 impl Default for CameraState {
@@ -64,6 +67,7 @@ impl Default for CameraState {
             keys: Keys::default(),
             track: None,
             drag_interval: 16.0,
+            dragging: false,
         }
     }
 }
@@ -83,6 +87,60 @@ impl CameraState {
         self.vx = 0.0;
         self.vy = 0.0;
         self.track = None;
+    }
+
+    /// True when every number of the camera state is finite.
+    pub fn is_finite(&self) -> bool {
+        [
+            self.cam.pan_x,
+            self.cam.pan_y,
+            self.cam.zoom,
+            self.target_zoom,
+            self.anchor.0,
+            self.anchor.1,
+            self.vx,
+            self.vy,
+            self.drag_interval,
+        ]
+        .iter()
+        .all(|v| v.is_finite())
+    }
+
+    /// Brings a non-finite camera back: a broken zoom eases from 1, a broken
+    /// pan recentres on a `w × h` view, and motion stops. Returns true if
+    /// anything had to be repaired. Nothing can be drawn from a non-finite
+    /// camera, so one bad value must not blank the view for good.
+    pub fn sanitize(&mut self, w: f64, h: f64) -> bool {
+        if self.is_finite() {
+            return false;
+        }
+        let (w, h) = (
+            if w.is_finite() { w } else { 0.0 },
+            if h.is_finite() { h } else { 0.0 },
+        );
+        if !self.cam.zoom.is_finite() || self.cam.zoom <= 0.0 {
+            self.cam.zoom = 1.0;
+        }
+        self.cam.zoom = clamp_zoom(self.cam.zoom);
+        self.target_zoom = if self.target_zoom.is_finite() {
+            clamp_zoom(self.target_zoom)
+        } else {
+            self.cam.zoom
+        };
+        if !(self.cam.pan_x.is_finite() && self.cam.pan_y.is_finite()) {
+            self.cam.pan_x = w / 2.0;
+            self.cam.pan_y = h / 2.0;
+        }
+        if !(self.anchor.0.is_finite() && self.anchor.1.is_finite()) {
+            self.anchor = (w / 2.0, h / 2.0);
+        }
+        if !self.drag_interval.is_finite() {
+            self.drag_interval = 16.0;
+        }
+        self.vx = 0.0;
+        self.vy = 0.0;
+        self.track = None;
+        true
     }
 
     /// Jumps to a zoom (no easing), keeping the view centre fixed.
@@ -148,10 +206,19 @@ impl CameraState {
         self.vx = 0.0;
         self.vy = 0.0;
         self.drag_interval = 16.0;
+        self.dragging = true;
+    }
+
+    /// True between [`CameraState::begin_pan`] and [`CameraState::end_pan`].
+    pub fn is_dragging(&self) -> bool {
+        self.dragging
     }
 
     /// Moves the pan to `(px, py)` during a drag; `elapsed_ms` since the last move.
     pub fn drag_pan(&mut self, px: f64, py: f64, elapsed_ms: f64) {
+        if !(px.is_finite() && py.is_finite()) {
+            return;
+        }
         let (dx, dy) = (px - self.cam.pan_x, py - self.cam.pan_y);
         self.vx = self.vx * (1.0 - PAN_FILTER) + dx * PAN_FILTER;
         self.vy = self.vy * (1.0 - PAN_FILTER) + dy * PAN_FILTER;
@@ -162,18 +229,24 @@ impl CameraState {
 
     /// The drag ends `idle_ms` after the last move: fling unless idle.
     pub fn end_pan(&mut self, idle_ms: f64, reduce_motion: bool) {
-        if reduce_motion || idle_ms > FLING_WINDOW_MS {
-            self.vx = 0.0;
-            self.vy = 0.0;
-        } else {
+        self.dragging = false;
+        let fling = !reduce_motion
+            && idle_ms <= FLING_WINDOW_MS
+            && self.vx.is_finite()
+            && self.vy.is_finite();
+        if fling {
             self.vx /= self.drag_interval;
             self.vy /= self.drag_interval;
+        } else {
+            self.vx = 0.0;
+            self.vy = 0.0;
         }
     }
 
     /// Advances by `dt` seconds. `node` supplies the world position of the
     /// tracked node, `hot` tells whether the layout still moves, `panning`
-    /// whether the pointer holds the canvas. Returns true while moving.
+    /// whether the pointer holds the canvas (a pan drag in progress counts
+    /// too). Returns true while moving.
     pub fn step(
         &mut self,
         dt: f64,
@@ -183,7 +256,8 @@ impl CameraState {
         panning: bool,
         node: impl Fn(usize) -> Option<(f32, f32)>,
     ) -> bool {
-        let mut moved = false;
+        let mut moved = self.sanitize(size.0, size.1);
+        let panning = panning || self.dragging;
         let keys = self.keys;
         let zk = (keys.zoom_in as i32 - keys.zoom_out as i32) as f64;
         if zk != 0.0 {
@@ -263,7 +337,7 @@ impl CameraState {
                 moved = true;
             }
         }
-        moved
+        self.sanitize(size.0, size.1) || moved
     }
 }
 
@@ -347,6 +421,45 @@ mod tests {
         c.drag_pan(450.0, 300.0, 16.0);
         c.end_pan(10.0, true);
         assert_eq!((c.vx, c.vy), (0.0, 0.0));
+    }
+
+    #[test]
+    fn a_held_drag_does_not_coast_and_the_release_flings_a_short_way() {
+        // During a drag the filtered velocity is in pixels per pointer move;
+        // it becomes a per-millisecond fling only at the release.
+        let mut c = CameraState::centred(SIZE.0, SIZE.1);
+        c.begin_pan();
+        for i in 1..=6 {
+            c.drag_pan(400.0 + 20.0 * i as f64, 300.0, 16.0);
+        }
+        let held = (c.cam.pan_x, c.cam.pan_y);
+        for _ in 0..30 {
+            c.step(1.0 / 60.0, false, SIZE, false, false, |_| None);
+        }
+        assert_eq!((c.cam.pan_x, c.cam.pan_y), held);
+        c.end_pan(5.0, false);
+        assert!(c.vx > 0.0);
+        run(&mut c, 2000);
+        let flung = c.cam.pan_x - held.0;
+        assert!(flung > 0.0 && flung < 300.0, "fling of {flung} px");
+        assert_eq!(c.cam.pan_y, held.1);
+    }
+
+    #[test]
+    fn a_non_finite_camera_recovers_instead_of_hiding_everything() {
+        let mut c = CameraState::centred(SIZE.0, SIZE.1);
+        c.cam.pan_x = f64::NAN;
+        c.vy = f64::INFINITY;
+        c.target_zoom = f64::NAN;
+        c.step(1.0 / 60.0, false, SIZE, false, false, |_| None);
+        assert!(c.is_finite());
+        assert_eq!((c.cam.pan_x, c.cam.pan_y), (SIZE.0 / 2.0, SIZE.1 / 2.0));
+        assert_eq!((c.vx, c.vy), (0.0, 0.0));
+        let mut c = CameraState::centred(SIZE.0, SIZE.1);
+        c.cam.zoom = f64::INFINITY;
+        c.step(1.0 / 60.0, false, SIZE, false, false, |_| None);
+        assert!(c.is_finite());
+        assert!(c.cam.zoom >= crate::geometry::MIN_ZOOM && c.cam.zoom <= crate::geometry::MAX_ZOOM);
     }
 
     #[test]
