@@ -16,7 +16,7 @@ pub const CLICK_SLOP: f32 = 6.0;
 pub const EASE_K: f64 = 0.16;
 pub const ZOOM_EASE_K: f64 = 0.18;
 /// Pan velocity filter: share of new input per frame, and retention per frame.
-pub const PAN_FILTER: f64 = 0.25;
+pub const PAN_FILTER: f64 = 0.2;
 pub const PAN_DECAY: f64 = 0.86;
 /// Longest elapsed time one easing step may account for.
 pub const MAX_FRAME_SECONDS: f64 = 0.05;
@@ -53,7 +53,8 @@ pub fn arrow_opacity(zoom: f64) -> f64 {
     clamp((zoom - 0.18) / 0.62, 0.0, 1.0)
 }
 
-/// Direction marker length and height in pixels: `6·sqrt(width multiplier)`.
+/// Direction marker base dimension in pixels: `6·sqrt(width multiplier)`.
+/// The painter uses this as notch depth; tip-to-back length is four thirds of it.
 pub fn arrow_length(line_multiplier: f64) -> f64 {
     6.0 * line_multiplier.max(0.0).sqrt()
 }

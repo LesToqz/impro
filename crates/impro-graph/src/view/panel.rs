@@ -698,7 +698,7 @@ impl Panel {
             .connect_child_revealed_notify(move |r| {
                 if !r.is_child_revealed() && !p.parts.open.get() {
                     r.hide();
-                    p.parts.chip.show_all();
+                    Self::set_row_visible(&p.parts.chip, true);
                 }
             });
     }
@@ -866,7 +866,7 @@ impl Panel {
             p.panel_revealer.set_reveal_child(false);
             if !p.animated.get() || !p.panel_revealer.is_mapped() {
                 p.panel_revealer.hide();
-                p.chip.show_all();
+                Self::set_row_visible(&p.chip, true);
             }
         }
     }

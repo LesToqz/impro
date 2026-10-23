@@ -48,6 +48,34 @@ fn the_canvas_is_labelled_and_reports_a_status_before_data_arrives() {
 }
 
 #[test]
+fn reopening_at_a_saved_zoom_extreme_keeps_markers_and_controls_visible() {
+    run(|| {
+        for zoom in [0.04, 6.0] {
+            let f = Fixture::with(
+                &[("a.md", "[[b]]\n"), ("b.md", "[[a]]\n")],
+                json!({"scale":zoom,"close":true,"linkDistance":480,"centerStrength":0,"repelStrength":24}),
+            );
+            assert!(
+                t::nodes_on_screen(&f.view) > 0,
+                "saved zoom {zoom}: {:?}",
+                t::info(&f.view)
+            );
+            assert!(f.view.panel().chip_visible());
+            if zoom == 0.04 {
+                assert_eq!(
+                    t::info(&f.view).zoom,
+                    zoom,
+                    "a visible saved zoom is retained"
+                );
+                f.view.rebuild();
+                f.wait_ready();
+                assert_eq!(t::info(&f.view).zoom, zoom, "rebuild retains zoom");
+            }
+        }
+    });
+}
+
+#[test]
 fn the_first_frame_is_the_status_text_and_costs_almost_nothing() {
     run(|| {
         let project = tempfile::tempdir().expect("dir");
@@ -120,6 +148,37 @@ fn a_settled_graph_runs_no_frames_and_a_hidden_one_pauses() {
         );
         f.settle();
         assert!(!f.view.frame_stats().animating);
+    });
+}
+
+#[test]
+fn visible_label_warmup_finishes_exactly_and_leaves_no_frame_callback() {
+    run(|| {
+        let project = tempfile::tempdir().expect("dir");
+        for i in 0..360 {
+            write(project.path(), &format!("file-{i:03}.md"), "unlinked\n");
+        }
+        let f = Fixture::in_dir(
+            project,
+            json!({"textFadeMultiplier":-1,"reduceMotion":true,"close":true}),
+            true,
+        );
+        f.view.fit_camera();
+        assert!(t::wait_frames(&f.view, 2, 2_000));
+        assert!(t::settle(&f.view, 5_000));
+        for id in f.ids() {
+            let paint = t::label_paint(&f.view, &id).expect("label");
+            let px = paint
+                .bitmap_font_size
+                .unwrap_or_else(|| panic!("missing mask: {id}"));
+            let expected = paint.screen_font_size * f.view.canvas().scale_factor() as f64;
+            assert!((px - expected).abs() < 1e-9, "stale label: {id}");
+        }
+        assert!(!f.view.frame_stats().animating);
+        t::pump(100);
+        let frames = f.view.frame_stats().frames;
+        t::pump(200);
+        assert_eq!(f.view.frame_stats().frames, frames, "warm-up must stop");
     });
 }
 
@@ -245,6 +304,37 @@ fn flush_writes_pending_changes_immediately() {
             f.store.saves().last().expect("saved")["showCode"],
             json!(false)
         );
+    });
+}
+
+#[test]
+fn option_changes_save_at_the_options_boundary_before_display_preferences() {
+    run(|| {
+        let f = Fixture::new();
+        f.view.panel().switch("showTags").unwrap().toggle();
+        t::pump(40);
+        assert!(f.store.saves().is_empty());
+        assert!(
+            t::wait_for(120, || f
+                .store
+                .saves()
+                .last()
+                .is_some_and(|value| value["showTags"] == true)),
+            "options must save at 80 ms"
+        );
+        let saved = f.store.saves().len();
+        f.view.panel().switch("showArrow").unwrap().toggle();
+        t::pump(120);
+        assert_eq!(
+            f.store.saves().len(),
+            saved,
+            "display changes retain the 250 ms debounce"
+        );
+        assert!(t::wait_for(500, || f
+            .store
+            .saves()
+            .last()
+            .is_some_and(|value| value["showArrow"] == false)));
     });
 }
 

@@ -69,6 +69,10 @@ def main():
     import re
     handler = re.search(r"register_script_message_handler\(['\"]([^'\"]+)", source).group(1)
     graph._manager.connect('script-message-received::'+handler, message)
+    graph._manager.add_script(graph._webkit.UserScript.new(
+        "window.auditLoadingStatus=document.querySelector('#status')?.textContent;",
+        graph._webkit.UserContentInjectedFrames.TOP_FRAME,
+        graph._webkit.UserScriptInjectionTime.END, None, None))
     initial_started = time.monotonic()
     window.show_all()
     window.move(0, 0)
@@ -102,6 +106,8 @@ def main():
     poll(lambda: graph._ready and graph.last_data is not None)
     api = "Object.values(window).find(v=>v && typeof v.stats==='function' && v._debug)"
     js('window.auditAPI='+api+'; true')
+    loading_status = js('window.auditLoadingStatus || null')
+    js((Path(__file__).with_name('paint.js')).read_text())
     def invoke(command, value=None):
         return js('(()=>{auditAPI['+json.dumps(command)+']('+json.dumps(value)+');return true})()')
     def state():
@@ -148,19 +154,56 @@ def main():
             accent:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
             font:getComputedStyle(document.documentElement).getPropertyValue('--font').trim(),
             toggles:Object.fromEntries(Array.from(document.querySelectorAll('[role=switch]')).map(e=>[e.getAttribute('aria-label'),e.getAttribute('aria-checked')==='true'])),
-            cursor:getComputedStyle(q('#graph')).cursor};
+            cursor:getComputedStyle(q('#graph')).cursor,paint:{...window.auditPaint,wrap_width:GraphCore.C.labelWrap}};
         })()""")
         result['text_color'] = current_theme.get('text','#e4edf5')
         result['state'] = state()
         result['mapped'] = graph.get_mapped()
+        result['paint'] = paint_metrics(result)
         return result
+
+    def paint_metrics(snapshot):
+        raw = snapshot['paint']
+        nodes = snapshot['nodes']
+        zoom = snapshot['state']['zoom']
+        def nearest(x, y):
+            return min(nodes, key=lambda key: (nodes[key]['screen'][0]-x)**2 +
+                       (nodes[key]['screen'][1]-y)**2) if nodes else None
+        def color(css):
+            if css.startswith('#'):
+                return css[:7], 1.0
+            values = [float(v) for v in re.findall(r'[\d.]+', css)]
+            return '#'+''.join(f'{round(v):02x}' for v in values[:3]), values[3] if len(values)>3 else 1.0
+        labels = {}
+        wrap = raw['wrap_width']
+        for p in raw['labels']:
+            key = nearest(p['x']+p['width']/2, p['y']-12)
+            screen_font = p['bitmap_font_size'] * p['width']/p['bitmap_size'][0]
+            labels[key] = dict(font_size=screen_font/(1 if snapshot['state']['hover']==key and zoom<1 else zoom**.5), screen_font_size=screen_font,
+                               wrap_width=wrap, alpha=p['alpha'],
+                               bitmap_font_size=p['bitmap_font_size'], bitmap_size=p['bitmap_size'])
+        lines, arrows = [], []
+        for p in raw['lines']:
+            rgb, alpha = color(p['color'])
+            for start, end in zip(p['path'][::2], p['path'][1::2]):
+                if start[0]=='M' and end[0]=='L':
+                    lines.append(dict(endpoints=[nearest(*start[1:]),nearest(*end[1:])],
+                                      width=p['width'],color=rgb,alpha=alpha))
+        for p in raw['arrows']:
+            _, alpha = color(p['color'])
+            for i in range(0,len(p['path']),4):
+                vertices=[v[1:] for v in p['path'][i:i+4]]
+                if len(vertices)==4:
+                    arrows.append(dict(vertices=vertices,alpha=alpha))
+        return dict(labels=labels, lines=lines, arrows=arrows)
     def point(node):
         p = js('auditAPI._debug.screenPos('+json.dumps(node)+')')
         if p is None:
             raise RuntimeError('missing marker '+node)
         return p[:2]
-    def pointer(kind, x, y, button=1, ctrl=False):
-        return js("(()=>{const c=document.querySelector('#graph'),r=c.getBoundingClientRect();c.dispatchEvent(new PointerEvent("+json.dumps(kind)+",{bubbles:true,pointerId:1,button:"+str(button-1)+",clientX:r.left+"+str(x)+",clientY:r.top+"+str(y)+",ctrlKey:"+str(ctrl).lower()+"}));return true})()")
+    def pointer(kind, x, y, button=1, ctrl=False, timestamp=None):
+        stamp = '' if timestamp is None else "Object.defineProperty(e,'timeStamp',{value:"+str(timestamp)+"});"
+        return js("(()=>{const c=document.querySelector('#graph'),r=c.getBoundingClientRect();const e=new PointerEvent("+json.dumps(kind)+",{bubbles:true,pointerId:1,button:"+str(button-1)+",clientX:r.left+"+str(x)+",clientY:r.top+"+str(y)+",ctrlKey:"+str(ctrl).lower()+"});"+stamp+"c.dispatchEvent(e);return true})()")
     def key(k, down, shift=False):
         target = "document.querySelector('#graph')" if down else 'window'
         return js('(()=>{'+target+'.dispatchEvent(new KeyboardEvent('+json.dumps('keydown' if down else 'keyup')+',{key:'+json.dumps(k)+',shiftKey:'+str(shift).lower()+',bubbles:true}));return true})()')
@@ -245,12 +288,12 @@ def main():
             settle()
         elif op == 'pan':
             pointer('pointerleave',-1000,-1000)
-            pointer('pointerdown',2,2)
+            pointer('pointerdown',2,2,timestamp=1000)
             for i in range(1,9):
-                pointer('pointermove',2+10*i,2+4*i)
+                pointer('pointermove',2+10*i,2+4*i,timestamp=1000+16*i)
                 pump(16)
             extra['held'] = state()
-            pointer('pointerup',82,34)
+            pointer('pointerup',82,34,timestamp=1144)
             pump(120)
             extra['after120'] = state()
             settle()
@@ -264,6 +307,32 @@ def main():
             pump(200)
             extra['later'] = state()
             pointer('pointerup',2,2)
+            settle()
+        elif op == 'controlled-motion':
+            js('auditFrames.hold(); true')
+            pointer('pointerleave',-1000,-1000)
+            pointer('pointerdown',2,2,timestamp=1000)
+            for i in range(1,9):
+                pointer('pointermove',2+10*i,2+4*i,timestamp=1000+16*i)
+                js(f'auditFrames.step({1000+i*1000/60})')
+            extra['grabbing_cursor'] = js("getComputedStyle(document.querySelector('#graph')).cursor")
+            pointer('pointerup',82,34,timestamp=1144)
+            pans = [state()['pan']]
+            for i in (9,10):
+                js(f'auditFrames.step({1000+i*1000/60})')
+                pans.append(state()['pan'])
+            extra['pan_decay'] = (pans[2][0]-pans[1][0])/(pans[1][0]-pans[0][0])
+            extra['fling_velocity'] = [(b-a)/(1000/60) for a,b in zip(pans[0],pans[1])]
+            js('auditFrames.release(); true')
+            settle()
+            js('auditFrames.hold(); true')
+            pointer('pointerleave',-1000,-1000)
+            before_zoom = state()['zoom']
+            js("(()=>{document.querySelector('#graph').dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,clientX:200,clientY:150,deltaY:-120}));return true})()")
+            js('auditFrames.step(1000)')
+            after = state()
+            extra['zoom_ease'] = (after['zoom']-before_zoom)/(after['target_zoom']-before_zoom)
+            js('auditFrames.release(); true')
             settle()
         elif op == 'wheel':
             js("(()=>{const c=document.querySelector('#graph'),r=c.getBoundingClientRect();c.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,clientX:r.left+200,clientY:r.top+150,deltaY:"+str(action['delta'])+",ctrlKey:"+str(action['ctrl']).lower()+"}));return true})()")
@@ -327,6 +396,16 @@ def main():
             pump(250)
             settle()
         elif op == 'replay':
+            extra['plan'] = js("""(()=>{
+              const plan=GraphCore.timelapse("""+json.dumps(graph.last_data)+","+json.dumps(graph._settings['showOrphans'])+"""),
+                seen=new Set(), reveals=[];
+              for(let item=1;item<=plan.total;item++) {
+                const fresh=plan.subset(item).nodes.map(n=>String(n.id)).filter(id=>!seen.has(id));
+                fresh.forEach(id=>seen.add(id));
+                if(fresh.length) reveals.push([item,fresh.sort()]);
+              }
+              return {total:plan.total,rate:GraphCore.timelapseSpeed(plan.total),reveals};
+            })()""")
             click_button('[data-tip="Replay project history"]')
             pump(250)
             extra['at250'] = snapshot()
@@ -435,7 +514,8 @@ def main():
             if action.get('png'):
                 capture(name)
             steps[name]=s
-            (args.out/'measurements.json').write_text(json.dumps(dict(steps=steps,errors=errors,initial_settle_ms=initial_settle_ms),indent=2))
+            (args.out/'measurements.json').write_text(json.dumps(dict(steps=steps,errors=errors,
+                initial_settle_ms=initial_settle_ms,loading_status=loading_status),indent=2))
     graph.shutdown()
     window.destroy()
 

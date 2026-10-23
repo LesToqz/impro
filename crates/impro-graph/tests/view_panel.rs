@@ -393,6 +393,51 @@ fn section_and_panel_state_are_persisted() {
 }
 
 #[test]
+fn closed_controls_remain_available_after_restore_buttons_escape_and_resize() {
+    run(|| {
+        for close in [true, false] {
+            let f = Fixture::with(&sample_files(), json!({"close": close}));
+            let p = f.view.panel();
+            fn settings(widget: &gtk::Widget) -> Option<gtk::Button> {
+                if let Some(button) = widget.downcast_ref::<gtk::Button>() {
+                    if button.tooltip_text().as_deref() == Some("Adjust project graph") {
+                        return Some(button.clone());
+                    }
+                }
+                widget
+                    .downcast_ref::<gtk::Container>()
+                    .and_then(|c| c.children().iter().find_map(settings))
+            }
+            let settings = settings(p.root.upcast_ref()).expect("settings button");
+            let check = |open: bool| {
+                assert_eq!(f.view.panel_open(), open);
+                assert!(t::wait_for(2_000, || p.chip_visible() != open));
+                if !open {
+                    assert!(settings.is_mapped(), "settings chip must be usable");
+                }
+            };
+            check(!close);
+            settings.clicked();
+            check(true);
+            p.close_button().clicked();
+            check(false);
+            f.window.resize(500, 350);
+            assert!(t::wait_frames(&f.view, 3, 2_000));
+            check(false);
+            settings.clicked();
+            check(true);
+            t::key(&f.view, gdk::keys::constants::Escape, true);
+            check(false);
+            f.view.set_reduce_motion(true);
+            settings.clicked();
+            check(true);
+            p.close_button().clicked();
+            check(false);
+        }
+    });
+}
+
+#[test]
 fn saved_state_restores_into_the_panel() {
     run(|| {
         let blob = json!({

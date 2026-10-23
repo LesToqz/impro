@@ -75,8 +75,9 @@ Default ignored directories are `.git`, `.hg`, `.svn`, `__pycache__`,
 Notes (`.md` and `.markdown`) contribute wikilinks, aliases, heading/block
 targets, embeds, relative Markdown links, inline and frontmatter tags. Heading
 and block references connect to the containing file. Source parsers recognize
-Python imports, JavaScript/TypeScript imports and requires, Rust modules/uses,
-CSS imports/URLs, HTML references, shell sources and supported include forms.
+Python imports (`.py`), JavaScript/TypeScript imports, exports-from and requires
+(`.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.cjs`, `.vue`), CSS imports/URLs
+(`.css`, `.scss`, `.sass`), and HTML source/link references (`.html`, `.htm`).
 Fenced code and inline-code masking keep Markdown examples out of the link index.
 
 Notes use Markdown references and tags; source files contribute imports. Assets
@@ -106,7 +107,9 @@ hiding nearby files. Screen radius multiplies this by the square root of zoom,
 so markers shrink more slowly than spacing when zooming out. Label opacity is
 `clamp((zoom - 0.12)/0.7 - detail*0.25, 0, 1)`. Connection width stays constant
 in screen pixels. Direction opacity is `clamp((zoom - 0.18)/0.62, 0, 1)`;
-marker length is `6*sqrt(width multiplier)` pixels. Label font size is
+dart length is `8*sqrt(width multiplier)` pixels, half-width is
+`4*sqrt(width multiplier)`, and notch depth is `6*sqrt(width multiplier)`.
+Label font size is
 `12 + radius*0.2`, with a 224-unit wrap width and 12-unit hover offset.
 
 Simulation runs at 60 ticks/second. Cooling reaches 0.002 after 240 ticks from
@@ -118,14 +121,17 @@ per file (5184 square units); files next to surviving neighbours use at most
 24 units of jitter on either axis. Existing positions survive updates.
 
 Alpha/colour easing approaches by 16% per 60 Hz frame, zoom by 18%. Pan velocity
-filters with 25% new input and retains 86% per frame. Frame-independent easing
+filters with 20% new input and retains 86% per frame. Frame-independent easing
 caps elapsed time at 50 ms. Wheel zoom is `exp(-pixelDelta/480)`, with line and
 page input converted to 24 and 640 pixels; small control-wheel deltas double.
-Zoom keeps the world point under the pointer fixed. Hover leaves unrelated
+Wheel zoom toward a target below the current displayed zoom keeps the canvas
+centre fixed; otherwise it keeps the world point under the pointer fixed.
+This anchor rule also applies to control-wheel gestures. Hover leaves unrelated
 items at 28% opacity. A click allows six pixels of movement. Local marker
 weight is `12/(layer+1)`, keeping even the outer hop visible. Timeline reveal
 uses chronological file order when timestamps exist, at `clamp(items/12,8,72)`
-items per second. Reduced motion skips visual easing.
+items per second, with reveal progress sampled at 30 Hz independently of the
+display refresh rate. Reduced motion skips visual easing.
 
 The host supplies theme roles. A standalone native view falls back to impro slate
 background (#17212b), pale text (#e4edf5), blue accent (#63b3ed), green tags,
@@ -136,8 +142,10 @@ colours precede rule colours, then kind colours, then ordinary file colour.
 
 The view paints software-rasterised markers, anti-aliased connections and arrows
 into premultiplied ARGB32 surfaces, then composites them with Cairo. Pango labels
-use cached alpha-mask surfaces; size tolerance lets nearby zoom levels reuse a
-bitmap. Offscreen primitives are culled. Zoom-based label/arrow detail and dense
+reuse nearby cached alpha masks during motion, then refresh at the exact final
+font size. A bounded warm-up finishes visible masks before frame callbacks stop,
+so settled labels do not depend on the preceding zoom path. Nominal font sizes
+and wrapping stay continuous. Offscreen primitives are culled. Zoom-based label/arrow detail and dense
 label decluttering limit work, preserving focus/hover labels. A per-frame label
 render budget bounds cache misses. Connection surfaces are reused when geometry
 and style are unchanged and invalidated when positions, camera or appearance
@@ -181,9 +189,17 @@ Saved files, editor buffer changes (debounced 400 ms), explorer operations and O
 Folder feed the index. Deltas preserve positions of surviving nodes. Hidden views
 defer work until mapped. The active file is highlighted; themes, accent, fonts and
 Reduce motion update in place. Preferences include zoom, panel and section states,
-filters, forces, groups and traversal; saves debounce for 250 ms, normalize values,
-and merge through core's atomic settings store. Camera pan and the layout itself
+filters, forces, groups and traversal. Filter/search/group/traversal changes save
+at the 80 ms options boundary (explicit submissions save immediately); other
+preferences debounce for 250 ms. Completed zoom changes wait 500 ms before that
+250 ms settings debounce. Saves normalize values and merge through core's atomic
+settings store. Camera pan and the layout itself
 are not a persisted editor session.
+
+Saved zoom is restored within the supported bounds and survives graph rebuilds.
+After the initial nonempty layout settles, a restored zoom that leaves every
+marker off-screen is replaced by a fit of the graph. Visible saved zooms stay
+unchanged. Pointer or camera-key input cancels this one-time startup recovery.
 
 Replay reveals files in creation-time order, using stable index order for missing
 timestamps, then each file's outgoing references. It is a visualization of indexed

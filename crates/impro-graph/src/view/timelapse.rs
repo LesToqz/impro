@@ -50,6 +50,16 @@ impl Plan {
         self.total
     }
 
+    /// Number of items due at this elapsed playback time.
+    pub fn progress(&self, elapsed: f64) -> usize {
+        // Reveal is sampled at 30 Hz even on a faster display. Quantising the
+        // playback time keeps item boundaries independent of display refresh.
+        let sampled = (elapsed.max(0.0) * 30.0).floor() / 30.0;
+        1usize.saturating_add(
+            (crate::geometry::timeline_speed(self.total) * sampled).floor() as usize,
+        )
+    }
+
     /// The graph after the first `progress` items.
     pub fn subset(&self, graph: &Graph, progress: usize) -> Graph {
         let n = self.order.len();
@@ -121,6 +131,17 @@ mod tests {
         );
         assert_eq!(Plan::new(&g, true).total(), 6);
         assert_eq!(Plan::new(&g, false).total(), 3);
+    }
+
+    #[test]
+    fn replay_reveal_clock_polls_at_thirty_hz() {
+        let g = graph(&[Some(1.0), Some(2.0)], &[(0, 1)]);
+        let plan = Plan::new(&g, true);
+        assert_eq!(plan.progress(0.0), 1);
+        assert_eq!(plan.progress(0.250), 2);
+        assert_eq!(plan.progress(0.255), 2);
+        assert_eq!(plan.progress(0.270), 3);
+        assert_eq!(plan.progress(1.0), 9);
     }
 
     #[test]

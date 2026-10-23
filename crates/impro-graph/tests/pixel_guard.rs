@@ -77,6 +77,7 @@ fn cameras(scene: &Scene) -> [(&'static str, Camera); 3] {
 
 /// Hashes of the settled picture at each camera, recorded from the renderer
 /// before the moving level of detail existed.
+// Exact settled masks preserve the original picture after every zoom path.
 const SETTLED: [(&str, u64); 3] = [
     ("fit", 6855316917292932711),
     ("zoom 1", 10625964012002035238),
@@ -176,4 +177,51 @@ fn kept_group_coverage_paints_exactly_what_a_fresh_painter_does() {
         }
     }
     assert!(hits > 0, "easing frames reuse kept groups");
+}
+
+#[test]
+fn settled_label_pixels_do_not_depend_on_the_previous_zoom() {
+    let mut scene = Scene::new();
+    scene.set_size(W, H);
+    scene.apply(Built::global(Graph::from_pairs(1, &[])));
+    while scene.advance(1.0 / 60.0) {}
+    let mut painter = Painter::new();
+    for zoom in [0.96, 0.8, 1.05, 2.0] {
+        scene.cam.set_zoom_now(zoom, W, H);
+        warm_hash(&mut painter, &scene);
+        scene.cam.set_zoom_now(1.0, W, H);
+        let from_history = warm_hash(&mut painter, &scene);
+        let fresh = warm_hash(&mut Painter::new(), &scene);
+        assert_eq!(from_history, fresh, "settled after zoom {zoom}");
+    }
+}
+
+#[test]
+fn a_bounded_label_warmup_finishes_and_stops_requesting_frames() {
+    let mut scene = Scene::new();
+    scene.set_size(W, H);
+    scene.apply(Built::global(Graph::from_pairs(360, &[])));
+    for i in 0..360 {
+        scene.layout.pin(
+            i,
+            (i % 24) as f32 * 30.0 - 360.0,
+            (i / 24) as f32 * 40.0 - 280.0,
+        );
+    }
+    while scene.advance(1.0 / 60.0) {}
+    let mut painter = Painter::new();
+    hash(&mut painter, &scene);
+    assert!(painter.stats.labels > 0 && painter.stats.labels < 360);
+    assert!(painter.needs_frames());
+    for _ in 0..5 {
+        hash(&mut painter, &scene);
+        if !painter.needs_frames() {
+            break;
+        }
+    }
+    assert_eq!(painter.stats.labels, 360);
+    assert!(!painter.needs_frames());
+    let finished = hash(&mut painter, &scene);
+    assert_eq!(finished, warm_hash(&mut Painter::new(), &scene));
+    assert!(!painter.needs_frames());
 }

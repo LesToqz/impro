@@ -13,7 +13,7 @@ const LINE_LEVELS: f32 = 40.0;
 const NODE_LEVELS: f32 = 50.0;
 /// Labels smaller than this many pixels are not drawn.
 const MIN_LABEL_PX: f64 = 3.0;
-/// Cached label bitmaps within this relative size of the wanted one are reused.
+/// During motion nearby masks may be reused until the exact settled frame.
 const LABEL_SIZE_TOLERANCE: f64 = 0.1;
 /// Bitmaps that may be re-rendered in one frame; stale ones are scaled instead.
 const LABEL_RENDER_BUDGET: u32 = 120;
@@ -63,6 +63,8 @@ pub struct DrawStats {
     pub arrows: usize,
     pub labels: usize,
     pub label_renders: usize,
+    /// Visible masks still waiting for the per-frame render budget.
+    pub labels_pending: bool,
     /// The connection surface was reused without rasterising its geometry.
     pub connections_reused: bool,
     /// Connection and marker groups repainted from kept coverage.
@@ -111,6 +113,7 @@ pub struct LabelCache {
     family: String,
     scale: f64,
     renders_this_frame: u32,
+    pending: bool,
 }
 
 impl LabelCache {
@@ -135,6 +138,7 @@ impl LabelCache {
             family: "sans".to_string(),
             scale: 1.0,
             renders_this_frame: 0,
+            pending: false,
         }
     }
 
@@ -150,6 +154,12 @@ impl LabelCache {
         self.entries.clear();
     }
 
+    pub(super) fn metrics(&self, text: &str) -> Option<(f64, f64, f64)> {
+        self.entries
+            .get(text)
+            .map(|label| (label.px, label.width, label.height))
+    }
+
     /// Sets the font family; bitmaps made with another family are dropped.
     pub fn set_family(&mut self, family: &str) {
         if self.family != family {
@@ -160,6 +170,7 @@ impl LabelCache {
 
     fn begin_frame(&mut self, scale: f64) {
         self.renders_this_frame = 0;
+        self.pending = false;
         if (self.scale - scale).abs() > 1e-9 {
             self.scale = scale;
             self.entries.clear();
@@ -205,8 +216,10 @@ impl LabelCache {
         text: &str,
         px: f64,
         font_world: f64,
+        exact: bool,
     ) -> Option<(cairo::ImageSurface, f64, f64, f64)> {
         let stale = match self.entries.get(text) {
+            Some(l) if exact => l.px != px,
             Some(l) => (px / l.px - 1.0).abs() > LABEL_SIZE_TOLERANCE,
             None => true,
         };
@@ -223,6 +236,8 @@ impl LabelCache {
                 if let Some(label) = self.render(text, px, wrap) {
                     self.entries.insert(text.into(), label);
                 }
+            } else {
+                self.pending = true;
             }
         }
         self.entries
@@ -244,6 +259,30 @@ fn unreachable_surface() -> cairo::ImageSurface {
 
 fn unreachable_context() -> cairo::Context {
     cairo::Context::new(unreachable_surface()).expect("context")
+}
+
+/// Nominal metrics used by both the painter and its read-only diagnostics.
+pub(super) fn label_metrics(scene: &Scene, i: usize) -> super::testing::LabelPaint {
+    let zoom = scene.cam.cam.zoom;
+    let hovered = scene.highlight() == Some(i);
+    let font_size = label_font_size(scene.layout.radius()[i]) as f64;
+    super::testing::LabelPaint {
+        font_size,
+        screen_font_size: if hovered && zoom < 1.0 {
+            font_size
+        } else {
+            font_size * zoom.sqrt()
+        },
+        wrap_width: LABEL_WRAP as f64,
+        alpha: scene.palette.text.a as f64
+            * if hovered {
+                1.0
+            } else {
+                label_opacity(zoom, scene.disp.label_detail) * scene.alpha[i] as f64
+            },
+        bitmap_font_size: None,
+        bitmap_size: None,
+    }
 }
 
 /// Reusable drawing state: scratch arrays, the back buffer and the label cache.
@@ -283,6 +322,42 @@ impl Default for Painter {
 }
 
 impl Painter {
+    /// True while visible label masks need another bounded warm-up frame.
+    pub fn needs_frames(&self) -> bool {
+        self.stats.labels_pending
+    }
+    pub(super) fn arrow_paint(&self, scene: &Scene, dev: f32) -> Vec<super::testing::ArrowPaint> {
+        let (w, h) = scene.size;
+        let Some(dims) = self.arrow_dims(
+            scene,
+            (w * dev as f64) as usize,
+            (h * dev as f64) as usize,
+            dev,
+        ) else {
+            return Vec::new();
+        };
+        // Screen arrays belong to the last painted graph and may be older
+        // than an asynchronous data delivery.
+        if self.sx.len() != scene.len() {
+            return Vec::new();
+        }
+        scene
+            .arrows
+            .iter()
+            .enumerate()
+            .filter_map(|(k, &(a, b))| {
+                let (alpha, vertices) = self.arrow_shape(scene, k, &dims, dev)?;
+                Some(super::testing::ArrowPaint {
+                    endpoints: [
+                        scene.graph.nodes[a as usize].id.to_string(),
+                        scene.graph.nodes[b as usize].id.to_string(),
+                    ],
+                    alpha: (alpha * LINE_LEVELS).round() / LINE_LEVELS,
+                    vertices: vertices.map(|(x, y)| (x / dev, y / dev)),
+                })
+            })
+            .collect()
+    }
     pub fn new() -> Painter {
         Painter {
             sx: Vec::new(),
@@ -339,6 +414,7 @@ impl Painter {
         opts: PaintOptions,
     ) -> Option<&cairo::ImageSurface> {
         self.stats = DrawStats::default();
+        self.labels.pending = false;
         let dev = opts.scale.max(1.0);
         let (pw, ph) = (
             (w * dev).ceil().max(1.0) as i32,
@@ -447,6 +523,7 @@ impl Painter {
             }
         }
         lap(4, &mut self.stats);
+        self.stats.labels_pending = self.labels.pending;
         self.back = Some(back);
         self.back.as_ref()
     }
@@ -971,14 +1048,9 @@ impl Painter {
         hovered: bool,
     ) {
         let cam = scene.cam.cam;
-        let (s, rs) = (cam.zoom, cam.zoom.sqrt());
-        let text_a = scene.palette.text.a as f64;
-        let fade = label_opacity(s, scene.disp.label_detail);
-        let alpha = if hovered {
-            text_a
-        } else {
-            fade * scene.alpha[i] as f64 * text_a
-        };
+        let rs = cam.zoom.sqrt();
+        let metrics = label_metrics(scene, i);
+        let alpha = metrics.alpha;
         if alpha <= 0.001 {
             return;
         }
@@ -991,15 +1063,16 @@ impl Painter {
             return;
         }
         let world = scene.layout.radius()[i];
-        let font = label_font_size(world) as f64;
-        let on_screen = if hovered && s < 1.0 { font } else { font * rs };
+        let font = metrics.font_size;
+        let on_screen = metrics.screen_font_size;
         if on_screen < MIN_LABEL_PX {
             return;
         }
         let drop = scene.drop[i] as f64;
         let text = scene.graph.nodes[i].label();
         let renders = self.labels.renders_this_frame;
-        let Some((surface, px, width, height)) = self.labels.get(text, on_screen * dev, font)
+        let Some((surface, px, width, height)) =
+            self.labels.get(text, on_screen * dev, font, !self.motion)
         else {
             return;
         };

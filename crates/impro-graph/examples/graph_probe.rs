@@ -31,7 +31,7 @@ fn state(view: &GraphView) -> Value {
     json!({"zoom":s.zoom,"target_zoom":s.target_zoom,"pan":[s.pan.0,s.pan.1],
         "size":[s.size.0,s.size.1],"nodes":s.nodes,"lines":s.lines,
         "hover":s.hover,"dragging":s.dragging,"simulating":s.simulating,
-        "alpha":s.alpha,"frames":view.frame_stats().frames,"ticks":s.ticks,"running":t::needs_frames(view)})
+        "alpha":s.alpha,"velocity":s.camera_velocity,"frames":view.frame_stats().frames,"ticks":s.ticks,"running":t::needs_frames(view)})
 }
 
 fn labels(widget: &gtk::Widget, found: &mut Vec<String>) {
@@ -104,6 +104,28 @@ fn snapshot(view: &GraphView) -> Value {
         })
         .unwrap_or_else(|| "#e4edf5".to_string());
     let (status, visible) = view.status_text();
+    let label_paint: BTreeMap<_, _> = t::node_ids(view)
+        .into_iter()
+        .filter_map(|id| {
+            t::label_paint(view, &id).map(|p| {
+                (
+                    id,
+                    json!({"font_size":p.font_size,
+            "screen_font_size":p.screen_font_size,"wrap_width":p.wrap_width,"alpha":p.alpha,
+            "bitmap_font_size":p.bitmap_font_size,"bitmap_size":p.bitmap_size}),
+                )
+            })
+        })
+        .collect();
+    let line_paint: Vec<_> = t::line_paint(view).into_iter().map(|p| json!({
+        "endpoints":p.endpoints,"width":p.width,"color":p.color,"alpha":p.alpha,"emphasis":p.emphasis})).collect();
+    let arrow_paint: Vec<_> = t::arrow_paint(view)
+        .into_iter()
+        .map(|p| {
+            json!({
+        "endpoints":p.endpoints,"vertices":p.vertices,"alpha":p.alpha})
+        })
+        .collect();
     json!({"state":state(view),"nodes":nodes,"prefs":view.prefs().to_value(),
         "panel_open":view.panel_open(),"chip_visible":view.panel().chip_visible(),
         "panel_width":view.panel().root.allocated_width(),
@@ -113,13 +135,16 @@ fn snapshot(view: &GraphView) -> Value {
             "replay":replay_label(view.panel().root.upcast_ref())},
         "search":[view.panel().search_entry().accessible().and_then(|a|a.property::<Option<String>>("accessible-name")),
             view.panel().search_entry().placeholder_text().map(|s|s.to_string())],
-        "cursor_set":view.canvas().window().and_then(|w|w.cursor()).is_some(),"sections":sections,"sliders":sliders,
+        "cursor_set":view.canvas().window().and_then(|w|w.cursor()).is_some(),"cursor":t::cursor_name(view),
+        "paint":{"labels":label_paint,"lines":line_paint,"arrows":arrow_paint},
+        "sections":sections,"sliders":sliders,
         "labels":control_labels,"toggles":toggles,"status":if visible {status} else {String::new()},
         "notice":view.notice_text().unwrap_or_default(),"graph_type":view.graph_type().as_str(),
         "local_rows":[view.panel().row_visible("localDepth"),view.panel().row_visible("localIncoming"),
             view.panel().row_visible("localOutgoing"),view.panel().row_visible("showOrphans")],
         "background":background,"text_color":text_color,"accent":t::accent_hex(view),
-        "mapped":view.is_mapped(),"frames":view.frame_stats().frames})
+        "mapped":view.is_mapped(),"frames":view.frame_stats().frames,
+        "backend":view.canvas().display().type_().name(),"device_scale":view.canvas().scale_factor()})
 }
 
 fn replay_label(widget: &gtk::Widget) -> Option<String> {
@@ -185,10 +210,27 @@ fn pointer_event(
     y: f64,
     button: u32,
 ) -> Result<(), Box<dyn Error>> {
+    pointer_event_at(
+        view,
+        kind,
+        x,
+        y,
+        button,
+        (glib::monotonic_time() / 1000) as u32,
+    )
+}
+
+fn pointer_event_at(
+    view: &GraphView,
+    kind: gdk::EventType,
+    x: f64,
+    y: f64,
+    button: u32,
+    timestamp: u32,
+) -> Result<(), Box<dyn Error>> {
     use glib::translate::*;
     let window = view.canvas().window().ok_or("canvas has no GDK window")?;
     let mut event = gdk::Event::new(kind);
-    let timestamp = (glib::monotonic_time() / 1000) as u32;
     // SAFETY: Event::new allocated the matching GDK union member. GDK owns the
     // transferred window reference until the event is freed after dispatch.
     unsafe {
@@ -275,6 +317,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             scan: true,
         },
     );
+    let loading_status = view.status_text();
     let theme = impro_core::themes::get_theme(Some("impro-dark"));
     let _ = impro_ui::apply_style(Some(theme));
     view.set_theme(&theme.ui, &theme.ui["accent"]);
@@ -434,19 +477,20 @@ fn run() -> Result<(), Box<dyn Error>> {
             }
             "pan" => {
                 t::leave(&view);
-                pointer_event(&view, gdk::EventType::ButtonPress, 2.0, 2.0, 1)?;
+                pointer_event_at(&view, gdk::EventType::ButtonPress, 2.0, 2.0, 1, 1000)?;
                 for i in 1..=8 {
-                    pointer_event(
+                    pointer_event_at(
                         &view,
                         gdk::EventType::MotionNotify,
                         2.0 + 10.0 * f64::from(i),
                         2.0 + 4.0 * f64::from(i),
                         1,
+                        1000 + 16 * i,
                     )?;
                     t::pump(16);
                 }
                 extra["held"] = state(&view);
-                pointer_event(&view, gdk::EventType::ButtonRelease, 82.0, 34.0, 1)?;
+                pointer_event_at(&view, gdk::EventType::ButtonRelease, 82.0, 34.0, 1, 1144)?;
                 t::pump(120);
                 extra["after120"] = state(&view);
                 settle(&view)?;
@@ -461,6 +505,32 @@ fn run() -> Result<(), Box<dyn Error>> {
                 t::pump(200);
                 extra["later"] = state(&view);
                 pointer_event(&view, gdk::EventType::ButtonRelease, 2.0, 2.0, 1)?;
+                settle(&view)?;
+            }
+            "controlled-motion" => {
+                t::leave(&view);
+                t::press_at(&view, 2.0, 2.0, 1, none, 1000);
+                for i in 1..=8 {
+                    t::motion_at(
+                        &view,
+                        2.0 + 10.0 * f64::from(i),
+                        2.0 + 4.0 * f64::from(i),
+                        1000 + 16 * i,
+                    );
+                    t::advance_frame(&view, 1.0 / 60.0);
+                }
+                extra["grabbing_cursor"] = json!(t::cursor_name(&view));
+                t::release_at(&view, 82.0, 34.0, 1, none, 1144);
+                extra["fling_velocity"] = json!(t::info(&view).camera_velocity);
+                let before = t::info(&view).camera_velocity.0;
+                t::advance_frame(&view, 1.0 / 60.0);
+                extra["pan_decay"] = json!(t::info(&view).camera_velocity.0 / before);
+                settle(&view)?;
+                let before = t::info(&view).zoom;
+                t::wheel(&view, 200.0, 150.0, -120.0, false);
+                t::advance_frame(&view, 1.0 / 60.0);
+                let after = t::info(&view);
+                extra["zoom_ease"] = json!((after.zoom - before) / (after.target_zoom - before));
                 settle(&view)?;
             }
             "wheel" => {
@@ -575,6 +645,8 @@ fn run() -> Result<(), Box<dyn Error>> {
                 settle(&view)?;
             }
             "replay" => {
+                let plan = t::replay_plan(&view);
+                extra["plan"] = json!({"total":plan.total,"rate":plan.rate,"reveals":plan.reveals});
                 view.replay_history();
                 t::pump(250);
                 extra["at250"] = snapshot(&view);
@@ -705,7 +777,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             fs::write(
                 out.join("measurements.json"),
                 serde_json::to_vec_pretty(&json!({"steps":steps,
-                "errors":*errors.borrow(),"initial_settle_ms":initial_settle_ms}))?,
+                "errors":*errors.borrow(),"initial_settle_ms":initial_settle_ms,"loading_status":loading_status.0}))?,
             )?;
         }
     }

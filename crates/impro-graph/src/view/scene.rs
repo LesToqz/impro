@@ -136,6 +136,8 @@ pub struct Scene {
     pub size: (f64, f64),
     acc: f64,
     pub has_data: bool,
+    /// Check a restored camera once the first nonempty layout settles.
+    pub(super) restore_camera: bool,
 }
 
 /// Colour of one node: highlight and focus first, then colour rules (files
@@ -215,6 +217,7 @@ impl Scene {
             size: (0.0, 0.0),
             acc: TICK,
             has_data: false,
+            restore_camera: false,
         }
     }
 
@@ -602,7 +605,8 @@ impl Scene {
 
     /// True while the scene needs frames: layout cooling, camera, easing.
     pub fn needs_frames(&self) -> bool {
-        self.simulating()
+        (self.restore_camera && !self.is_empty() && self.size.0 > 0.0 && self.size.1 > 0.0)
+            || self.simulating()
             || self.cam.keys.any()
             || self.cam.vx != 0.0
             || self.cam.vy != 0.0
@@ -759,7 +763,36 @@ impl Scene {
         active |= self.step_display(dt);
         active |= self.step_elements(dt);
         active |= !self.ghosts.is_empty();
+        active |= self.recover_restored_camera();
         active
+    }
+
+    fn recover_restored_camera(&mut self) -> bool {
+        let (w, h) = self.size;
+        if !self.restore_camera
+            || self.is_empty()
+            || self.simulating()
+            || self.cam.cam.zoom != self.cam.target_zoom
+            || w <= 0.0
+            || h <= 0.0
+        {
+            return false;
+        }
+        self.restore_camera = false;
+        if (0..self.len()).any(|i| {
+            let (x, y, _) = self.screen(i);
+            x >= 0.0 && x <= w && y >= 0.0 && y <= h
+        }) {
+            return false;
+        }
+        if let Some(bounds) = self.layout.bounds() {
+            self.cam.cam.fit(bounds, w, h, 40.0);
+            self.cam.target_zoom = self.cam.cam.zoom;
+            self.cam.vx = 0.0;
+            self.cam.vy = 0.0;
+            return true;
+        }
+        false
     }
 
     fn step_palette(&mut self, dt: f64) -> bool {

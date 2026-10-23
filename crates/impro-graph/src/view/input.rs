@@ -44,6 +44,7 @@ impl Inner {
         self.panel.close_popovers();
         self.canvas.grab_focus();
         self.pointer.set(Some((x, y)));
+        self.scene.borrow_mut().restore_camera = false;
         if button == 3 {
             if let Some((i, _)) = self.node_at(x, y) {
                 self.context_for(i, x, y);
@@ -271,7 +272,11 @@ impl Inner {
         if px == 0.0 {
             return;
         }
-        self.scene.borrow_mut().cam.wheel(x, y, px);
+        {
+            let mut scene = self.scene.borrow_mut();
+            scene.restore_camera = false;
+            scene.cam.wheel(x, y, px);
+        }
         self.kick();
     }
 
@@ -316,6 +321,7 @@ impl Inner {
                 handled = false;
             }
             if handled && down {
+                scene.restore_camera = false;
                 scene.cam.stop_tracking();
             }
         }
@@ -351,23 +357,25 @@ impl Inner {
 
     /// Pointer cursor over markers, a closed hand while dragging.
     pub(super) fn update_cursor(&self) {
-        let name = {
-            let scene = self.scene.borrow();
-            let grabbing = scene.is_dragging()
-                || matches!(self.press.borrow().as_ref(), Some(Press::Pan { .. }));
-            if grabbing {
-                "grabbing"
-            } else if scene.hover.is_some() {
-                "pointer"
-            } else {
-                "default"
-            }
-        };
+        let name = self.cursor_name();
         if let Some(window) = self.canvas.window() {
             let cursor = (name != "default")
                 .then(|| gdk::Cursor::from_name(&window.display(), name))
                 .flatten();
             window.set_cursor(cursor.as_ref());
+        }
+    }
+
+    pub(super) fn cursor_name(&self) -> &'static str {
+        let scene = self.scene.borrow();
+        let grabbing =
+            scene.is_dragging() || matches!(self.press.borrow().as_ref(), Some(Press::Pan { .. }));
+        if grabbing {
+            "grabbing"
+        } else if scene.hover.is_some() {
+            "pointer"
+        } else {
+            "default"
         }
     }
 

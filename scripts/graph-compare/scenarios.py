@@ -91,6 +91,7 @@ def actions():
     add('prefs', reduceMotion=False)
     add('pan', 'pan', png=True)
     add('stop', 'stop-on-press')
+    add('controlled-motion', 'controlled-motion')
     for name, delta, ctrl in [('wheel-in',-120,False),('wheel-out',120,False),('ctrl-wheel',-8,True),('wheel-max',-1e6,False),('wheel-min',1e6,False)]:
         add('wheel', name, delta=delta, ctrl=ctrl)
     add('prefs', scale=1, reduceMotion=True)

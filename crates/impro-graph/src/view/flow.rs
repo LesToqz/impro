@@ -15,7 +15,7 @@ use super::scene::{Built, Style};
 use super::timelapse::Plan;
 use super::widget::{Event, FrameStats, GraphSummary, Inner, OpenMode, Replay};
 use crate::filter::GraphOptions;
-use crate::geometry::{timeline_speed, Camera};
+use crate::geometry::Camera;
 use crate::index::{kind_of, FileKind, SKIP_DIRS};
 use crate::prefs::{self, GraphPrefs};
 
@@ -506,8 +506,7 @@ impl Inner {
             let Some(r) = guard.as_mut() else {
                 return false;
             };
-            let speed = timeline_speed(r.plan.total());
-            let n = 1 + (speed * r.started.elapsed().as_secs_f64()).floor() as usize;
+            let n = r.plan.progress(r.started.elapsed().as_secs_f64());
             if n == r.shown {
                 return true;
             }
@@ -746,6 +745,10 @@ impl Inner {
                 Change::Open(_) | Change::Replay | Change::GraphType(_) => {}
             }
         }
+        let save_delay = match &change {
+            Change::Reset | Change::RuleColor(..) => OPTIONS_DELAY_MS,
+            _ => rebuild.unwrap_or(SAVE_DELAY_MS),
+        };
         match change {
             Change::Open(open) => {
                 self.set_panel_open(open, true);
@@ -777,7 +780,7 @@ impl Inner {
             self.stop_replay();
             self.schedule_build(delay);
         }
-        self.schedule_save();
+        self.schedule_save_after(save_delay);
     }
 
     pub(super) fn set_panel_open(self: &Rc<Self>, open: bool, user: bool) {
@@ -836,15 +839,22 @@ impl Inner {
     // ---- persistence ------------------------------------------------------------------
 
     pub(super) fn schedule_save(self: &Rc<Self>) {
+        self.schedule_save_after(SAVE_DELAY_MS);
+    }
+
+    fn schedule_save_after(self: &Rc<Self>, delay_ms: u32) {
         cancel(&self.save_timer);
+        if delay_ms == 0 {
+            self.save_now();
+            return;
+        }
         let weak = self.weak();
-        let id =
-            glib::timeout_add_local_once(Duration::from_millis(SAVE_DELAY_MS as u64), move || {
-                if let Some(inner) = weak.upgrade() {
-                    inner.save_timer.borrow_mut().take();
-                    inner.save_now();
-                }
-            });
+        let id = glib::timeout_add_local_once(Duration::from_millis(delay_ms as u64), move || {
+            if let Some(inner) = weak.upgrade() {
+                inner.save_timer.borrow_mut().take();
+                inner.save_now();
+            }
+        });
         *self.save_timer.borrow_mut() = Some(id);
     }
 
@@ -921,6 +931,7 @@ impl Inner {
                     scale,
                 },
             );
+            stalled |= painter.needs_frames();
         }
         let ms = t0.elapsed().as_secs_f64() * 1e3;
         let mut s = self.stats.get();
@@ -943,7 +954,9 @@ impl Inner {
         if self.closed.get() || self.tick.borrow().is_some() || !self.canvas.is_mapped() {
             return;
         }
-        let needs = self.replay.borrow().is_some() || self.scene.borrow().needs_frames();
+        let needs = self.replay.borrow().is_some()
+            || self.scene.borrow().needs_frames()
+            || self.painter.borrow().needs_frames();
         if !needs {
             self.canvas.queue_draw();
             return;
@@ -991,8 +1004,9 @@ impl Inner {
                     scene.update_hover(x, y);
                 }
             }
+            let previous_zoom = scene.cam.cam.zoom;
             let active = scene.advance(dt);
-            let moved = (scene.cam.target_zoom - self.prefs.borrow().scale).abs() > 1e-6;
+            let moved = previous_zoom != scene.cam.cam.zoom;
             (active, moved)
         };
         if zoom_moved {
@@ -1000,7 +1014,7 @@ impl Inner {
         }
         self.update_cursor();
         self.canvas.queue_draw();
-        let busy = active || replaying;
+        let busy = active || replaying || self.painter.borrow().needs_frames();
         let ms = t0.elapsed().as_secs_f64() * 1e3;
         let mut s: FrameStats = self.stats.get();
         s.tick_ms = if s.tick_ms == 0.0 {

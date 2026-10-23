@@ -54,6 +54,7 @@ pub struct CameraState {
     /// A pan drag holds the camera: while it lasts the velocity is a filtered
     /// move per pointer event (not per millisecond) and must not coast.
     dragging: bool,
+    size: (f64, f64),
 }
 
 impl Default for CameraState {
@@ -68,6 +69,7 @@ impl Default for CameraState {
             track: None,
             drag_interval: 16.0,
             dragging: false,
+            size: (0.0, 0.0),
         }
     }
 }
@@ -81,6 +83,7 @@ impl CameraState {
     }
 
     pub fn reset(&mut self, w: f64, h: f64) {
+        self.size = (w, h);
         self.cam.reset(w, h);
         self.target_zoom = 1.0;
         self.anchor = (w / 2.0, h / 2.0);
@@ -145,6 +148,7 @@ impl CameraState {
 
     /// Jumps to a zoom (no easing), keeping the view centre fixed.
     pub fn set_zoom_now(&mut self, zoom: f64, w: f64, h: f64) {
+        self.size = (w, h);
         let z = clamp_zoom(zoom);
         self.cam.pan_x = zoom_about(self.cam.pan_x, self.cam.zoom, z, w / 2.0);
         self.cam.pan_y = zoom_about(self.cam.pan_y, self.cam.zoom, z, h / 2.0);
@@ -154,12 +158,14 @@ impl CameraState {
 
     /// Eases toward a zoom about the view centre.
     pub fn set_zoom_target(&mut self, zoom: f64, w: f64, h: f64) {
+        self.size = (w, h);
         self.target_zoom = clamp_zoom(zoom);
         self.anchor = (w / 2.0, h / 2.0);
     }
 
     /// Keeps the view centre when the widget is resized.
     pub fn resized(&mut self, old: (f64, f64), new: (f64, f64)) {
+        self.size = new;
         if old.0 > 0.0 && old.1 > 0.0 {
             self.cam.pan_x += (new.0 - old.0) / 2.0;
             self.cam.pan_y += (new.1 - old.1) / 2.0;
@@ -169,11 +175,16 @@ impl CameraState {
         }
     }
 
-    /// A wheel movement of `pixels` (positive zooms out) about `(x, y)`.
+    /// A wheel movement of `pixels` (positive zooms out). A target below the
+    /// displayed zoom uses the view centre; otherwise `(x, y)` stays fixed.
     pub fn wheel(&mut self, x: f64, y: f64, pixels: f64) {
         self.track = None;
         self.target_zoom = clamp_zoom(self.target_zoom * crate::geometry::wheel_factor(pixels));
-        self.anchor = (x, y);
+        self.anchor = if self.target_zoom < self.cam.zoom {
+            (self.size.0 / 2.0, self.size.1 / 2.0)
+        } else {
+            (x, y)
+        };
     }
 
     /// Eases to `zoom` about the pointer (used by pinch gestures and tests).
@@ -256,6 +267,7 @@ impl CameraState {
         panning: bool,
         node: impl Fn(usize) -> Option<(f32, f32)>,
     ) -> bool {
+        self.size = size;
         let mut moved = self.sanitize(size.0, size.1);
         let panning = panning || self.dragging;
         let keys = self.keys;
@@ -374,6 +386,32 @@ mod tests {
             }
         }
         assert_eq!(c.cam.zoom, c.target_zoom);
+    }
+
+    #[test]
+    fn wheel_out_uses_the_centre_including_reversals_during_easing() {
+        let mut c = CameraState::centred(SIZE.0, SIZE.1);
+        c.wheel(150.0, 100.0, 120.0);
+        assert_eq!(c.anchor, (400.0, 300.0));
+        // A small inward gesture still leaves the target below the current
+        // displayed zoom, so the centre remains the anchor.
+        c.wheel(150.0, 100.0, -16.0);
+        assert_eq!(c.anchor, (400.0, 300.0));
+        c.reset(SIZE.0, SIZE.1);
+        c.wheel(150.0, 100.0, -120.0);
+        c.wheel(150.0, 100.0, 16.0);
+        assert_eq!(c.anchor, (150.0, 100.0));
+    }
+
+    #[test]
+    fn drag_velocity_weights_each_pointer_move_by_twenty_percent() {
+        let mut c = CameraState::centred(SIZE.0, SIZE.1);
+        c.begin_pan();
+        c.drag_pan(410.0, 304.0, 16.0);
+        assert_eq!((c.vx, c.vy), (2.0, 0.8));
+        c.drag_pan(420.0, 308.0, 16.0);
+        assert!((c.vx - 3.6).abs() < 1e-9);
+        assert!((c.vy - 1.44).abs() < 1e-9);
     }
 
     #[test]
