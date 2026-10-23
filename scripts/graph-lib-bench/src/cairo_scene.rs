@@ -3,8 +3,8 @@
 //! per colour), Pango labels via a cached bitmap per string used as a mask.
 
 use cairo::{Antialias, Context, Format, ImageSurface};
-use crate::fixture::{self, Fixture, BG, EDGE_COLOR, NODE_COLORS};
-use crate::harness::{header, sweep, Cam, LabelDraw, Opts, Renderer};
+use crate::fixture::{Fixture, BG, EDGE_COLOR, NODE_COLORS};
+use crate::harness::{Cam, LabelDraw, Renderer};
 use crate::labels::LabelCache;
 
 pub struct Plain {
