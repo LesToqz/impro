@@ -467,7 +467,29 @@ pub struct FrameCheck {
     pub noise: usize,
 }
 
+/// What one frame put on screen, independent of how it was rasterised: the
+/// assertions on it (markers, labels, controls, camera) hold for any renderer
+/// that can report the same facts.
+#[derive(Clone, Debug)]
+pub struct FrameFacts {
+    pub info: SceneInfo,
+    /// Screen centre and radius of every marker, logical pixels.
+    pub markers: Vec<(f64, f64, f64)>,
+    /// Every label drawn (needs [`capture_frames`]), logical pixels.
+    pub labels: Vec<(String, super::draw::LabelDrawn)>,
+    pub controls: ControlsGeometry,
+}
+
 impl FrameShot<'_> {
+    pub fn facts(&self) -> FrameFacts {
+        FrameFacts {
+            info: self.info(),
+            markers: self.markers(),
+            labels: self.labels(),
+            controls: controls_of(self.inner),
+        }
+    }
+
     pub fn info(&self) -> SceneInfo {
         scene_info(self.inner)
     }
@@ -666,10 +688,14 @@ fn rect_in(widget: &impl IsA<gtk::Widget>, parent: &gtk::Widget) -> Option<Rect>
 
 /// Allocations of the controls strip, the panel and their buttons.
 pub fn controls_geometry(view: &GraphView) -> ControlsGeometry {
-    let root: gtk::Widget = view.inner.root_box.clone().upcast();
-    let panel = &view.inner.panel;
+    controls_of(&view.inner)
+}
+
+fn controls_of(inner: &super::widget::Inner) -> ControlsGeometry {
+    let root: gtk::Widget = inner.root_box.clone().upcast();
+    let panel = &inner.panel;
     let mut g = ControlsGeometry {
-        pane: rect_in(&view.inner.root_box, &root),
+        pane: rect_in(&inner.root_box, &root),
         controls: rect_in(panel.controls_root(), &root),
         revealer_shown: panel.revealer_shown(),
         ..ControlsGeometry::default()
