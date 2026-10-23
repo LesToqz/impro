@@ -30,6 +30,7 @@ def main():
     parser.add_argument('--reference', type=Path, default=os.getenv('IMPRO_REFERENCE_DIR'))
     parser.add_argument('--out', type=Path, default=REPO/'.ceo/graph-compare')
     parser.add_argument('--impro-bin', type=Path, default=REPO/'target/release/examples/graph_probe')
+    parser.add_argument('--skip-repeat', action='store_true', help='omit the fresh-start repeat probes')
     parser.add_argument('--reuse', action='store_true', help='compare existing measurements only')
     args = parser.parse_args()
     out = args.out.resolve()
@@ -39,6 +40,8 @@ def main():
             raise RuntimeError('set IMPRO_REFERENCE_DIR to the read-only reference tree')
         if not args.impro_bin.is_file():
             raise RuntimeError('build cargo build --release -p impro-graph --examples first')
+        if out.is_relative_to(args.reference.resolve()):
+            raise RuntimeError('output must not be inside the read-only reference tree')
         action_file = out/'actions.json'
         action_file.write_text(json.dumps(scenarios.actions(), indent=2))
         env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', GDK_BACKEND='x11',
@@ -47,12 +50,25 @@ def main():
         env.pop('WAYLAND_DISPLAY', None)
         env.pop('IMPRO_REDUCE_MOTION', None)
         root = out/'fixture'
+        cap=root.with_name('cap-fixture')
+        cap.mkdir(exist_ok=True)
+        for i in range(3005):
+            (cap/f'file-{i:04}.md').write_text('A file without links\n')
         scenarios.fixture(root)
         drive(['/usr/bin/python3','-I','-B',str(HERE/'reference.py'),
                '--reference',str(args.reference.resolve()),'--root',str(root),
                '--actions',str(action_file),'--out',str(out/'reference')],out/'reference',env)
         scenarios.fixture(root)
         drive([str(args.impro_bin.resolve()),str(root),str(action_file),str(out/'impro')],out/'impro',env)
+        if not args.skip_repeat:
+            repeat=out/'repeat-actions.json'
+            repeat.write_text(json.dumps([dict(op='capture',name='default',png=True)]))
+            scenarios.fixture(root)
+            drive(['/usr/bin/python3','-I','-B',str(HERE/'reference.py'),
+                   '--reference',str(args.reference.resolve()),'--root',str(root),
+                   '--actions',str(repeat),'--out',str(out/'reference-repeat')],out/'reference-repeat',env)
+            scenarios.fixture(root)
+            drive([str(args.impro_bin.resolve()),str(root),str(repeat),str(out/'impro-repeat')],out/'impro-repeat',env)
     reference = json.loads((out/'reference/measurements.json').read_text())
     impro = json.loads((out/'impro/measurements.json').read_text())
     # Detailed measurement rows are provided by the inventory module.

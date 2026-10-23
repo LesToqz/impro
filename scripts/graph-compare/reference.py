@@ -63,6 +63,7 @@ def main():
     import re
     handler = re.search(r"register_script_message_handler\(['\"]([^'\"]+)", source).group(1)
     graph._manager.connect('script-message-received::'+handler, message)
+    initial_started = time.monotonic()
     window.show_all()
     window.move(0, 0)
     context = GLib.MainContext.default()
@@ -101,18 +102,21 @@ def main():
         return js("(()=>{const s=auditAPI.stats();return {zoom:s.scale,target_zoom:s.targetScale,pan:s.pan,size:[s.width,s.height],nodes:s.nodes,lines:s.links,hover:s.hover,dragging:document.querySelector('#graph').classList.contains('is-grabbing'),simulating:s.simRunning,alpha:s.alpha,running:s.running,frames:s.frames}})()")
     def settle():
         pump(120)
-        poll(lambda: not state()['running'], 15)
+        poll(lambda: not state()['running'], 30)
         pump(60)
     def prefs(values):
         graph.set_settings(dict(graph._settings, **values))
         pump(220)
         settle()
+    current_theme={}
     def theme(name):
         th = themes.get_theme(themes.DEFAULT_THEME_ID.rsplit('-', 1)[0]+'-'+name)
         graph.set_theme(th.ui, th.ui['accent'])
         # Font role delivered live by the host theme bridge.
-        invoke('setTheme', dict(graphmod.graph_colors(th.ui, th.ui['accent']),
-                               accent=th.ui['accent'], font='DejaVu Sans'))
+        current_theme.clear()
+        current_theme.update(graphmod.graph_colors(th.ui, th.ui['accent']),
+                             accent=th.ui['accent'], font_ui='DejaVu Sans')
+        invoke('setTheme',current_theme)
         settle()
     def snapshot():
         result = js("""(()=>{
@@ -123,18 +127,22 @@ def main():
           }
           const keys=['localDepth','textFadeMultiplier','nodeSizeMultiplier','lineSizeMultiplier','centerStrength','repelStrength','linkStrength','linkDistance'];
           const ranges={}; Object.values(sliders).forEach((v,i)=>ranges[keys[i]]=v);
-          const visible=e=>e && !e.hidden && e.style.display!=='none';
+          const visible=e=>e && !e.hidden && !e.classList.contains('is-hidden') && e.style.display!=='none';
           const rows=Array.from(document.querySelectorAll('#controls .row'));
           const row=label=>rows.find(e=>e.querySelector('.name')?.textContent.startsWith(label));
           return {nodes:Object.fromEntries(d.ids().map(id=>[id,{world:d.worldPos(id),screen:d.screenPos(id),alpha:d.nodeAlpha(id),color:d.nodeColor(id)}])),
             prefs:d.settings(),panel_open:d.panelOpen(),
             sections:Array.from(document.querySelectorAll('.sec')).map(e=>[e.querySelector('.sec-head>span:not(.chev)').textContent,e.classList.contains('is-collapsed')]),
             sliders:ranges,labels:Array.from(document.querySelectorAll('#controls .name')).map(e=>e.firstElementChild ? e.firstElementChild.textContent : e.textContent),
-            status:visible(q('#status'))?q('#status').textContent:'', notice:visible(q('#notice'))?q('#notice').textContent:'',
+            status:visible(q('#status')) && !q('#status').classList.contains('is-hidden')?q('#status').textContent:'', notice:visible(q('#notice'))?q('#notice').textContent:'',
             graph_type:d.graphType().type,local_rows:['Neighbourhood hops','Referenced by','References to','Unlinked files'].map(t=>visible(row(t))),
-            background:getComputedStyle(document.body).backgroundColor,
+            background:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+            accent:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+            font:getComputedStyle(document.documentElement).getPropertyValue('--font').trim(),
+            toggles:Object.fromEntries(Array.from(document.querySelectorAll('[role=switch]')).map(e=>[e.getAttribute('aria-label'),e.getAttribute('aria-checked')==='true'])),
             cursor:getComputedStyle(q('#graph')).cursor};
         })()""")
+        result['text_color'] = current_theme.get('text','#e4edf5')
         result['state'] = state()
         result['mapped'] = graph.get_mapped()
         return result
@@ -157,16 +165,19 @@ def main():
         if pixbuf is None:
             raise RuntimeError('capture failed')
         pixbuf.savev(str(args.out/(name+'.png')), 'png', [], [])
+    js('''(()=>{const original=auditAPI.setData;window.auditDeliveries=[];auditAPI.setData=function(data){
+      const d=auditAPI._debug,positions=()=>Object.fromEntries(d.ids().map(id=>[id,d.worldPos(id)]));
+      const before=positions();original(data);auditDeliveries.push({before,after:positions()});};return true})()''')
     theme('dark')
-    start = time.monotonic()
     settle()
-    initial_settle_ms = (time.monotonic()-start)*1000
+    initial_settle_ms = (time.monotonic()-initial_started)*1000
     steps = {}
     args.out.mkdir(parents=True, exist_ok=True)
     for action in json.loads(args.actions.read_text()):
         op, name = action['op'], action.get('name', '')
         print('audit', op, name, file=sys.stderr, flush=True)
         before, event_start = snapshot(), len(events)
+        js('(()=>{auditDeliveries.length=0;return true})()')
         started, extra = time.monotonic(), {}
         if op == 'capture':
             pass
@@ -174,6 +185,18 @@ def main():
             prefs({k:v for k,v in action.items() if k not in ('op','name')})
         elif op == 'theme':
             theme(action['theme'])
+        elif op == 'focus':
+            invoke('focus', action['id'])
+            settle()
+        elif op == 'accent':
+            th=themes.get_theme(themes.DEFAULT_THEME_ID)
+            current_theme.update(graphmod.graph_colors(th.ui,action['color']),accent=action['color'])
+            invoke('setTheme',current_theme)
+            settle()
+        elif op == 'font':
+            current_theme['font_ui']=action['family']
+            invoke('setTheme',current_theme)
+            settle()
         elif op == 'active':
             graph.set_active_file(str(args.root/action['id']) if action['id'] else None)
             settle()
@@ -345,9 +368,16 @@ def main():
             start=time.monotonic()
             pump(2000)
             extra.update(cpu_ticks=ticks()-cpu,wall_ms=(time.monotonic()-start)*1000)
+        elif op == 'cap':
+            graph.set_root(str(args.root.with_name('cap-fixture')))
+            pump(500)
+            settle()
+        elif op == 'root-restore':
+            graph.set_root(str(args.root))
+            pump(250)
+            settle()
         elif op == 'persist':
             prefs(dict(close=True, search='path:hub'))
-            invoke('_debug') if False else None
             js('(()=>{auditAPI._debug.flush();return true})()')
             pump(800)
             extra['saved'] = saved[-1] if saved else None
@@ -360,6 +390,8 @@ def main():
             raise ValueError('unknown operation '+op)
         if name:
             s=snapshot()
+            if op in ('save','rename','delete','buffer'):
+                extra['deliveries']=js('auditDeliveries.splice(0)')
             s.update(before=before,extra=extra,events=events[event_start:],elapsed_ms=(time.monotonic()-started)*1000)
             if action.get('png'):
                 capture(name)

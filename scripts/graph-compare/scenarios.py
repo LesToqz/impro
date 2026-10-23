@@ -21,7 +21,7 @@ def fixture(root):
     files.update({f'hub/spoke-{i}.md': '[[Hub]] #topic\n' for i in range(14)})
     files.update({f'chain/chain-{i}.md': f'[[chain-{i+1}]]\n' if i < 7 else 'end\n' for i in range(8)})
     files.update({f'cluster/cluster-{i}.md': f'[[cluster-{(i+1)%5}]]\n' for i in range(5)})
-    # 37 text files and one valid image; stable mtimes, actual birth times remain OS supplied.
+    # 36 text files and one valid image; stable mtimes, actual birth times remain OS supplied.
     for name, content in files.items():
         target = root/name
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -45,11 +45,25 @@ def actions():
     add('theme', theme='dark')
     add('active', id='hub/Hub.md')
     add('capture', 'active', png=True)
+    add('accent', 'accent', color='#dd6677')
+    add('theme', theme='dark')
     add('active', id=None)
     for z in (0.1, 0.25, 0.7, 1.0, 2.0):
         add('prefs', scale=z)
         add('capture', f'zoom-{z:g}', png=True)
     add('prefs', scale=1.0)
+    add('prefs', close=True)
+    add('focus', id='orphan.md')
+    add('capture', 'font-before', png=True)
+    add('font', 'font', family='DejaVu Serif', png=True)
+    add('font', family='DejaVu Sans')
+    for z in (0.1, 0.25, 0.7, 1.0, 2.0):
+        add('prefs', scale=z)
+        add('capture', f'label-{z:g}', png=True)
+    for detail in (-1, 2):
+        add('prefs', scale=0.7, textFadeMultiplier=detail)
+        add('capture', f'detail-{detail}', png=True)
+    add('prefs', scale=1.0, textFadeMultiplier=0.2, close=False)
     add('hover', id='hub/Hub.md')
     add('capture', 'hover', png=True)
     add('leave')
@@ -107,5 +121,7 @@ def actions():
     add('hidden', 'hidden')
     add('capture', 'shown', png=True)
     add('idle', 'idle')
+    add('cap', 'cap')
+    add('root-restore')
     add('persist', 'persist')
     return a

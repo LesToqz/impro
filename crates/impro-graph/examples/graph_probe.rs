@@ -31,7 +31,7 @@ fn state(view: &GraphView) -> Value {
     json!({"zoom":s.zoom,"target_zoom":s.target_zoom,"pan":[s.pan.0,s.pan.1],
         "size":[s.size.0,s.size.1],"nodes":s.nodes,"lines":s.lines,
         "hover":s.hover,"dragging":s.dragging,"simulating":s.simulating,
-        "alpha":s.alpha,"ticks":s.ticks,"running":t::needs_frames(view)})
+        "alpha":s.alpha,"frames":view.frame_stats().frames,"ticks":s.ticks,"running":t::needs_frames(view)})
 }
 
 fn labels(widget: &gtk::Widget, found: &mut Vec<String>) {
@@ -48,6 +48,20 @@ fn labels(widget: &gtk::Widget, found: &mut Vec<String>) {
 }
 
 fn snapshot(view: &GraphView) -> Value {
+    let toggle_labels = [
+        ("localIncoming", "Referenced by"),
+        ("localOutgoing", "References to"),
+        ("showTags", "Tag markers"),
+        ("showAttachments", "Referenced assets"),
+        ("hideUnresolved", "Hide missing targets"),
+        ("showOrphans", "Unlinked files"),
+        ("showCode", "Source and imports"),
+        ("showArrow", "Reference direction"),
+    ];
+    let toggles: BTreeMap<_, _> = toggle_labels
+        .iter()
+        .filter_map(|(key, label)| view.panel().switch(key).map(|s| (*label, s.is_active())))
+        .collect();
     let nodes: BTreeMap<String, Value> = t::node_ids(view)
         .into_iter()
         .map(|id| {
@@ -80,14 +94,23 @@ fn snapshot(view: &GraphView) -> Value {
         .collect();
     let mut control_labels = Vec::new();
     labels(view.panel().root.upcast_ref(), &mut control_labels);
+    let background = t::background_hex(view);
+    let text_color = ["dark", "light", "midnight", "ember"]
+        .iter()
+        .find_map(|id| {
+            let name = format!("impro-{id}");
+            let theme = impro_core::themes::get_theme(Some(&name));
+            (theme.ui["bg"] == background).then(|| theme.ui["foreground"].clone())
+        })
+        .unwrap_or_else(|| "#e4edf5".to_string());
     let (status, visible) = view.status_text();
     json!({"state":state(view),"nodes":nodes,"prefs":view.prefs().to_value(),
         "panel_open":view.panel_open(),"sections":sections,"sliders":sliders,
-        "labels":control_labels,"status":if visible {status} else {String::new()},
+        "labels":control_labels,"toggles":toggles,"status":if visible {status} else {String::new()},
         "notice":view.notice_text().unwrap_or_default(),"graph_type":view.graph_type().as_str(),
         "local_rows":[view.panel().row_visible("localDepth"),view.panel().row_visible("localIncoming"),
             view.panel().row_visible("localOutgoing"),view.panel().row_visible("showOrphans")],
-        "background":t::background_hex(view),"accent":t::accent_hex(view),
+        "background":background,"text_color":text_color,"accent":t::accent_hex(view),
         "mapped":view.is_mapped(),"frames":view.frame_stats().frames})
 }
 
@@ -101,8 +124,8 @@ fn flag(v: &Value, k: &str) -> bool {
     v[k].as_bool().unwrap_or(false)
 }
 fn settle(view: &GraphView) -> Result<(), Box<dyn Error>> {
-    if !t::settle(view, 12_000) {
-        return Err("graph did not settle within 12 seconds".into());
+    if !t::settle(view, 30_000) {
+        return Err("graph did not settle within 30 seconds".into());
     }
     t::pump(60);
     Ok(())
@@ -111,6 +134,68 @@ fn point(view: &GraphView, id: &str) -> Result<(f64, f64), Box<dyn Error>> {
     let (x, y, _) = t::node_screen(view, id).ok_or_else(|| format!("missing marker {id}"))?;
     Ok((x, y))
 }
+/// Send a normal GTK canvas event with a real monotonic event timestamp.
+/// The zero-time pointer QA helpers cannot measure motion velocity.
+fn pointer_event(
+    view: &GraphView,
+    kind: gdk::EventType,
+    x: f64,
+    y: f64,
+    button: u32,
+) -> Result<(), Box<dyn Error>> {
+    use glib::translate::*;
+    let window = view.canvas().window().ok_or("canvas has no GDK window")?;
+    let mut event = gdk::Event::new(kind);
+    let timestamp = (glib::monotonic_time() / 1000) as u32;
+    // SAFETY: Event::new allocated the matching GDK union member. GDK owns the
+    // transferred window reference until the event is freed after dispatch.
+    unsafe {
+        let raw: *mut gdk::ffi::GdkEvent = event.to_glib_none_mut().0;
+        if kind == gdk::EventType::MotionNotify {
+            (*raw).motion.window = window.to_glib_full();
+            (*raw).motion.send_event = 1;
+            (*raw).motion.time = timestamp;
+            (*raw).motion.x = x;
+            (*raw).motion.y = y;
+            (*raw).motion.state = gdk::ModifierType::BUTTON1_MASK.into_glib();
+        } else {
+            (*raw).button.window = window.to_glib_full();
+            (*raw).button.send_event = 1;
+            (*raw).button.time = timestamp;
+            (*raw).button.x = x;
+            (*raw).button.y = y;
+            (*raw).button.button = button;
+        }
+    }
+    if let Some(pointer) = window.display().default_seat().and_then(|s| s.pointer()) {
+        event.set_device(Some(&pointer));
+    }
+    view.canvas().event(&event);
+    Ok(())
+}
+
+fn shifted_key(view: &GraphView, key: gdk::keys::Key, down: bool) -> Result<(), Box<dyn Error>> {
+    use glib::translate::*;
+    let window = view.canvas().window().ok_or("canvas has no GDK window")?;
+    let kind = if down {
+        gdk::EventType::KeyPress
+    } else {
+        gdk::EventType::KeyRelease
+    };
+    let mut event = gdk::Event::new(kind);
+    // SAFETY: Event::new created a key event and owns the window reference.
+    unsafe {
+        let raw: *mut gdk::ffi::GdkEvent = event.to_glib_none_mut().0;
+        (*raw).key.window = window.to_glib_full();
+        (*raw).key.send_event = 1;
+        (*raw).key.time = (glib::monotonic_time() / 1000) as u32;
+        (*raw).key.keyval = *key;
+        (*raw).key.state = gdk::ModifierType::SHIFT_MASK.into_glib();
+    }
+    view.canvas().event(&event);
+    Ok(())
+}
+
 fn ticks() -> Result<f64, Box<dyn Error>> {
     let stat = fs::read_to_string("/proc/self/stat")?;
     let tail = stat.rsplit_once(')').ok_or("bad process statistics")?.1;
@@ -181,6 +266,10 @@ fn run() -> Result<(), Box<dyn Error>> {
     wait_update(&updates, 0)?;
     settle(&view)?;
     let initial_settle_ms = start.elapsed().as_secs_f64() * 1000.0;
+    let deliveries = Rc::new(RefCell::new(Vec::<Value>::new()));
+    let delivery_view = view.clone();
+    let d = deliveries.clone();
+    view.connect_updated(move |_| d.borrow_mut().push(snapshot(&delivery_view)));
     let mut steps = serde_json::Map::new();
     for action in actions {
         let op = text(&action, "op");
@@ -190,6 +279,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         let event_start = events.borrow().len();
         let update_start = *updates.borrow();
         let started = Instant::now();
+        deliveries.borrow_mut().clear();
         let mut extra = json!({});
         let none = gdk::ModifierType::empty();
         match op {
@@ -210,6 +300,19 @@ fn run() -> Result<(), Box<dyn Error>> {
                 let th = impro_core::themes::get_theme(Some(&id));
                 let _ = impro_ui::apply_style(Some(th));
                 view.set_theme(&th.ui, &th.ui["accent"]);
+                settle(&view)?;
+            }
+            "focus" => {
+                view.focus_file(&root.join(text(&action, "id")));
+                settle(&view)?;
+            }
+            "accent" => {
+                let th = impro_core::themes::get_theme(Some("impro-dark"));
+                view.set_theme(&th.ui, text(&action, "color"));
+                settle(&view)?;
+            }
+            "font" => {
+                view.set_font(Some(text(&action, "family")));
                 settle(&view)?;
             }
             "active" => {
@@ -262,27 +365,33 @@ fn run() -> Result<(), Box<dyn Error>> {
             }
             "pan" => {
                 t::leave(&view);
-                t::press(&view, 2.0, 2.0, 1, none);
+                pointer_event(&view, gdk::EventType::ButtonPress, 2.0, 2.0, 1)?;
                 for i in 1..=8 {
-                    t::motion(&view, 2.0 + 10.0 * f64::from(i), 2.0 + 4.0 * f64::from(i));
+                    pointer_event(
+                        &view,
+                        gdk::EventType::MotionNotify,
+                        2.0 + 10.0 * f64::from(i),
+                        2.0 + 4.0 * f64::from(i),
+                        1,
+                    )?;
                     t::pump(16);
                 }
                 extra["held"] = state(&view);
-                t::release(&view, 82.0, 34.0, 1, none);
+                pointer_event(&view, gdk::EventType::ButtonRelease, 82.0, 34.0, 1)?;
                 t::pump(120);
                 extra["after120"] = state(&view);
                 settle(&view)?;
             }
             "stop" => {
-                t::press(&view, 2.0, 2.0, 1, none);
-                t::motion(&view, 62.0, 2.0);
-                t::release(&view, 62.0, 2.0, 1, none);
+                pointer_event(&view, gdk::EventType::ButtonPress, 2.0, 2.0, 1)?;
+                pointer_event(&view, gdk::EventType::MotionNotify, 62.0, 2.0, 1)?;
+                pointer_event(&view, gdk::EventType::ButtonRelease, 62.0, 2.0, 1)?;
                 t::pump(32);
-                t::press(&view, 2.0, 2.0, 1, none);
+                pointer_event(&view, gdk::EventType::ButtonPress, 2.0, 2.0, 1)?;
                 extra["pressed"] = state(&view);
                 t::pump(200);
                 extra["later"] = state(&view);
-                t::release(&view, 2.0, 2.0, 1, none);
+                pointer_event(&view, gdk::EventType::ButtonRelease, 2.0, 2.0, 1)?;
                 settle(&view)?;
             }
             "wheel" => {
@@ -309,13 +418,16 @@ fn run() -> Result<(), Box<dyn Error>> {
                     _ => return Err("unknown key".into()),
                 };
                 if flag(&action, "shift") {
-                    t::key(&view, gdk::keys::constants::Shift_L, true);
+                    shifted_key(&view, key, true)?;
+                } else {
+                    t::key(&view, key, true);
                 }
-                t::key(&view, key, true);
                 t::pump(200);
-                t::key(&view, key, false);
                 if flag(&action, "shift") {
+                    shifted_key(&view, key, false)?;
                     t::key(&view, gdk::keys::constants::Shift_L, false);
+                } else {
+                    t::key(&view, key, false);
                 }
                 settle(&view)?;
             }
@@ -433,6 +545,16 @@ fn run() -> Result<(), Box<dyn Error>> {
                 extra["cpu_ticks"] = json!(ticks()? - cpu);
                 extra["wall_ms"] = json!(start.elapsed().as_secs_f64() * 1000.0);
             }
+            "cap" => {
+                view.set_root(&root.with_file_name("cap-fixture"));
+                wait_update(&updates, update_start)?;
+                settle(&view)?;
+            }
+            "root-restore" => {
+                view.set_root(&root);
+                wait_update(&updates, update_start)?;
+                settle(&view)?;
+            }
             "persist" => {
                 view.set_panel_open(false);
                 view.panel().search_entry().set_text("path:hub");
@@ -454,6 +576,9 @@ fn run() -> Result<(), Box<dyn Error>> {
         }
         if !name.is_empty() {
             let mut s = snapshot(&view);
+            if matches!(op, "save" | "rename" | "delete" | "buffer") {
+                extra["deliveries"] = json!(*deliveries.borrow());
+            }
             s["before"] = before;
             s["extra"] = extra;
             s["events"] = json!(&events.borrow()[event_start..]);
