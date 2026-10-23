@@ -67,6 +67,11 @@ impl Fx {
             views.iter().all(|v| v.built_rows() == v.row_count())
         });
         settle(&self.live);
+        // The stylesheet the renderer loads is applied (and the text view's
+        // font refreshed) in the frame clock's update phase, not when the
+        // main context goes idle: wait for a real frame before measuring.
+        frame(&self.h.w.window);
+        settle(&self.live);
         drain();
     }
     fn views(&self) -> Vec<TableView> {
