@@ -12,7 +12,7 @@ run() { # name, command...
   local out="results/$1.md"; shift
   echo "## $*" > "$out"
   echo "date: $(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M IST')" >> "$out"
-  "$@" >> "$out" 2> >(tee -a "$out.err" >&2)
+  timeout "${T:-900}" "$@" >> "$out" 2> >(tee -a "$out.err" >&2) || echo "[exit $?] $*" | tee -a "$out"
   echo "[done] $out"
 }
 for phase in "$@"; do
@@ -35,19 +35,22 @@ for phase in "$@"; do
       run c-labels       $BIN/c_skia --labels
       run c-dense        $BIN/c_skia --fixture dense --res $SUBSET ;;
     d) # real VM GPU through the render node (default Mesa choice)
+      export T=60  # the GPU is shared with the user's desktop: at most 60 s per run
       run d-hw           $BIN/d_gl
       run d-hw-readback  $BIN/d_gl --readback
       run d-hw-labels    $BIN/d_gl --labels --readback
       run d-hw-dense     $BIN/d_gl --fixture dense --readback --res $SUBSET ;;
     d-sw) # forced software rasteriser
-      export LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe
+      export LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe T=400
       run d-sw           $BIN/d_gl
       run d-sw-readback  $BIN/d_gl --readback
       run d-sw-labels    $BIN/d_gl --labels --readback
       run d-sw-dense     $BIN/d_gl --fixture dense --readback --res $SUBSET ;;
     femtovg)
+      export T=60
       run femtovg-hw     $BIN/d_femtovg --labels --res 1920x1080@1,3840x2160@1,3840x2160@2 ;;
     wgpu)
+      export T=60
       run wgpu           $BIN/e_wgpu --res 1920x1080@1,3840x2160@1,3840x2160@2 ;;
     layout)
       run layout-app     $BIN/f_layout app

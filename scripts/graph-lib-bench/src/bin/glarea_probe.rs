@@ -16,7 +16,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Instant;
 
-use glib::signal::Inhibit;
+
 use glow::HasContext;
 use graph_lib_bench::cairo_scene::Plain;
 use graph_lib_bench::cur_scene::build_scene;
@@ -160,7 +160,7 @@ fn main() {
                 scene.finish();
             }
             st.handler_ms.push(t0.elapsed().as_secs_f64() * 1e3);
-            Inhibit(true)
+            glib::Propagation::Stop
         });
         area.upcast()
     } else {
@@ -205,7 +205,7 @@ fn main() {
                 Mode::Gl => {}
             }
             st.handler_ms.push(t0.elapsed().as_secs_f64() * 1e3);
-            Inhibit(true)
+            glib::Propagation::Stop
         });
         da.upcast()
     };
@@ -250,7 +250,7 @@ fn main() {
     }
     win.connect_delete_event(|_, _| {
         gtk::main_quit();
-        Inhibit(false)
+        glib::Propagation::Proceed
     });
     win.show_all();
     gtk::main();
