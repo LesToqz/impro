@@ -107,6 +107,10 @@ fn snapshot(view: &GraphView) -> Value {
     json!({"state":state(view),"nodes":nodes,"prefs":view.prefs().to_value(),
         "panel_open":view.panel_open(),"chip_visible":view.panel().chip_visible(),
         "panel_width":view.panel().root.allocated_width(),
+        "buttons":{"add":view.panel().add_rule_button().label().map(|s|s.to_string()),
+            "reset":view.panel().reset_button().tooltip_text().map(|s|s.to_string()),
+            "close":view.panel().close_button().tooltip_text().map(|s|s.to_string()),
+            "replay":replay_label(view.panel().root.upcast_ref())},
         "search":[view.panel().search_entry().accessible().and_then(|a|a.property::<Option<String>>("accessible-name")),
             view.panel().search_entry().placeholder_text().map(|s|s.to_string())],
         "cursor_set":view.canvas().window().and_then(|w|w.cursor()).is_some(),"sections":sections,"sliders":sliders,
@@ -116,6 +120,19 @@ fn snapshot(view: &GraphView) -> Value {
             view.panel().row_visible("localOutgoing"),view.panel().row_visible("showOrphans")],
         "background":background,"text_color":text_color,"accent":t::accent_hex(view),
         "mapped":view.is_mapped(),"frames":view.frame_stats().frames})
+}
+
+fn replay_label(widget: &gtk::Widget) -> Option<String> {
+    if let Some(button) = widget.downcast_ref::<gtk::Button>() {
+        if button.tooltip_text().as_deref() == Some("Replay project history") {
+            if let Some(label) = button.label() {
+                return Some(label.to_string());
+            }
+        }
+    }
+    widget
+        .downcast_ref::<gtk::Container>()
+        .and_then(|c| c.children().iter().find_map(replay_label))
 }
 
 fn type_button(widget: &gtk::Widget) -> Option<gtk::Button> {
@@ -517,6 +534,16 @@ fn run() -> Result<(), Box<dyn Error>> {
                 view.set_graph_type(GraphType::Note);
                 wait_update(&updates, update_start)?;
                 settle(&view)?;
+            }
+            "sections" => {
+                for id in ["filters", "groups", "display", "forces"] {
+                    view.panel().click_section(id);
+                }
+                t::pump(180);
+            }
+            "section" => {
+                view.panel().click_section(text(&action, "id"));
+                t::pump(180);
             }
             "type-menu" => {
                 if let Some(button) = type_button(view.panel().root.upcast_ref()) {

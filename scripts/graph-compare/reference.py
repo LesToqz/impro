@@ -108,7 +108,7 @@ def main():
         return js("(()=>{const s=auditAPI.stats();return {zoom:s.scale,target_zoom:s.targetScale,pan:s.pan,size:[s.width,s.height],nodes:s.nodes,lines:s.links,hover:s.hover,dragging:document.querySelector('#graph').classList.contains('is-grabbing'),simulating:s.simRunning,alpha:s.alpha,running:s.running,frames:s.frames}})()")
     def settle():
         pump(120)
-        poll(lambda: not state()['running'], 30)
+        poll(lambda: not state()['running'] and not js('auditAPI._debug.timelapse()'), 30)
         pump(60)
     def prefs(values):
         graph.set_settings(dict(graph._settings, **values))
@@ -139,6 +139,7 @@ def main():
           return {nodes:Object.fromEntries(d.ids().map(id=>[id,{world:d.worldPos(id),screen:d.screenPos(id),alpha:d.nodeAlpha(id),color:d.nodeColor(id)}])),
             prefs:d.settings(),panel_open:d.panelOpen(),
             sections:Array.from(document.querySelectorAll('.sec')).map(e=>[e.querySelector('.sec-head>span:not(.chev)').textContent,e.classList.contains('is-collapsed')]),
+            buttons:{add:q('.groups-new').textContent,reset:q('[data-tip="Reset graph preferences"]').getAttribute('data-tip'),close:q('[data-tip="Hide graph controls"]').getAttribute('data-tip'),replay:q('.row>[data-tip="Replay project history"]').textContent},
             sliders:ranges,chip_visible:getComputedStyle(q('.gc-chip')).display!=='none',panel_width:q('.gc-panel').getBoundingClientRect().width,search:[q('.search input').getAttribute('aria-label'),q('.search input').placeholder],labels:Array.from(document.querySelectorAll('#controls .name')).map(e=>e.firstElementChild ? e.firstElementChild.textContent : e.textContent),
             status:visible(q('#status')) && !q('#status').classList.contains('is-hidden')?q('#status').textContent:'', notice:visible(q('#notice'))?q('#notice').textContent:'',
             graph_type:d.graphType().type,local_rows:['Neighbourhood hops','Referenced by','References to','Unlinked files'].map(t=>visible(row(t))),
@@ -304,6 +305,11 @@ def main():
             graph.set_graph_type('note')
             pump(250)
             settle()
+        elif op in ('sections','section'):
+            indices=range(4) if op=='sections' else [['filters','groups','display','forces'].index(action['id'])]
+            for index in indices:
+                js('(()=>{document.querySelectorAll(".sec-head")['+str(index)+'].click();return true})()')
+            pump(180)
         elif op == 'type-menu':
             click_button('.gc-head [aria-haspopup]')
             extra['menu']=js("Array.from(document.querySelectorAll('#typemenu .item')).map(e=>e.textContent.trim())")

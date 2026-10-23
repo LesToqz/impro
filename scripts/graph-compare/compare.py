@@ -34,14 +34,14 @@ def main():
     parser.add_argument('--reuse', action='store_true', help='compare existing measurements only')
     args = parser.parse_args()
     out = args.out.resolve()
+    if args.reference is not None and out.is_relative_to(args.reference.resolve()):
+        raise RuntimeError('output must not be inside the read-only reference tree')
     out.mkdir(parents=True, exist_ok=True)
     if not args.reuse:
         if args.reference is None or not args.reference.is_dir():
             raise RuntimeError('set IMPRO_REFERENCE_DIR to the read-only reference tree')
         if not args.impro_bin.is_file():
             raise RuntimeError('build cargo build --release -p impro-graph --examples first')
-        if out.is_relative_to(args.reference.resolve()):
-            raise RuntimeError('output must not be inside the read-only reference tree')
         action_file = out/'actions.json'
         action_file.write_text(json.dumps(scenarios.actions(), indent=2))
         env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', GDK_BACKEND='x11',

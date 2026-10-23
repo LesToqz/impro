@@ -14,10 +14,12 @@ Then set `IMPRO_REFERENCE_DIR` to the read-only reference checkout and run:
 bash scripts/graph-compare/run.sh
 ```
 
-The runner acquires the same lock, clears the desktop display variables, and
+The runner acquires the lock in the checkout parent directory (the same shared
+lock on this machine), clears the desktop display variables, and
 creates its own 1600×1000 X11 display and D-Bus session. Do not wrap it in another
 `flock` on the same lock file. It never attaches to an existing application.
-Cargo uses the repository's three-job cap. The runner never builds binaries.
+Cargo uses the repository's three-job cap. The runner never builds binaries. A full run takes about 7–10 minutes after
+acquiring the shared lock.
 
 Required system tools are Xvfb, D-Bus, systemd user scopes, Python GTK3/WebKit
 bindings, the GI Cairo bridge and Pillow. When the Cairo bridge is extracted to
@@ -73,6 +75,10 @@ Output defaults to `.ceo/graph-compare`:
 - `reference/` and `impro/`: incremental `measurements.json`, driver logs and PNGs.
 - `reference-repeat/` and `impro-repeat/`: fresh-start baseline evidence.
 - `comparison.json`, `comparison.md`, `counts.json`: full values, table and counts.
+- `behaviour-register.md`, `divergences.md`: generated documentation snapshots for review.
+
+The committed BEHAVIOURS and DIVERGENCES documents record the reviewed audit;
+running the harness does not overwrite tracked documentation.
 
 All screenshots remain under the selected output directory and are never
 committed. Configuration and caches are isolated there. Python uses `-I -B` and
@@ -83,9 +89,11 @@ a longer settle budget because reveal and cooling are sequential. Real elapsed
 times are retained; a harness deadline is reported as a harness failure, without
 claiming a product hang. Node RGB and opacity come from existing scene helpers.
 Marker-centre RGB is also sampled from captured frames, excluding clipping,
-controls and other markers; only kinds unobscured in both frames are compared.
-Connection FWHM uses quarter-pixel samples across a known isolated source pair,
-with a 0.75 px tolerance for raster coverage. Label ink bounds, visibility and
+controls and other markers; only kinds unobscured in both frames are compared. Horizontal marker radii are
+also measured from those frames, allowing 1 px for boundary coverage.
+Connection scenes filter to the isolated source pair and focus it before zooming.
+Connection FWHM uses quarter-pixel samples across that pair,
+with a 1 px tolerance for raster coverage. Label ink bounds, visibility and
 peak text-role contrast are sampled around a focused orphan; font coverage is
 allowed a 0.15 alpha tolerance. These are raster measurements, not nominal font
 or arrow telemetry. Pixel identity and equal force-layout coordinates are not

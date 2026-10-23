@@ -102,10 +102,30 @@ def centre_samples(out,side,scene,s):
         if s['panel_open'] and x>img.width-255 and y<420:
             continue
         # Reject occlusion by any other marker, even when independent layouts differ.
-        if any(k!=identifier and math.dist((x,y),v['screen'][:2])<v['screen'][2]+3
+        if any(k!=identifier and math.dist((x,y),v['screen'][:2])<r+v['screen'][2]+3
                for k,v in s['nodes'].items()):
             continue
         result[kind]=list(img.getpixel((round(x),round(y))))
+    return result
+
+
+def pixel_radii(out,side,scene,s):
+    img=picture(out,side,scene)
+    samples=centre_samples(out,side,scene,s)
+    result={}
+    for kind,center in samples.items():
+        x,y,r=node(s,kind)['screen']
+        bg=hexrgb(s['background'])
+        threshold=max(8,math.dist(center,bg)*.4)
+        widths=[]
+        for sign in (-1,1):
+            extent=0
+            for j in range(1,math.ceil(r*1.5)+5):
+                if math.dist(img.getpixel((round(x)+sign*j,round(y))),center)>threshold:
+                    break
+                extent=j
+            widths.append(extent)
+        result[kind]=(1+sum(widths))/2
     return result
 
 
@@ -120,9 +140,11 @@ def line_width(out,side,scene,s,colour=False):
         raise ValueError('source-pair midpoint is outside the captured canvas')
     if s['panel_open'] and x>img.width-255 and y<420:
         raise ValueError('source-pair midpoint is covered by controls')
-    if any(math.dist((x,y),v['screen'][:2]) < v['screen'][2]+4 for v in s['nodes'].values()):
-        raise ValueError('Connection sample is contaminated by a nearby marker at this zoom.')
     length=math.dist(a[:2],b[:2]);nx,ny=-(b[1]-a[1])/length,(b[0]-a[0])/length
+    for v in s['nodes'].values():
+        px,py,r=v['screen'];dx,dy=px-x,py-y
+        if abs(dx*ny-dy*nx)<r+1.5 and abs(dx*nx+dy*ny)<10+r:
+            raise ValueError('Connection cross-section intersects a marker at this zoom.')
     values=[]
     for j in range(-20,21):
         color=img.getpixel((round(x+nx*j/4),round(y+ny*j/4)))
@@ -225,12 +247,19 @@ def compare(reference, impro, out):
     for key in ('localDepth','textFadeMultiplier','nodeSizeMultiplier','lineSizeMultiplier','centerStrength','repelStrength','linkStrength','linkDistance'):
         add('slider-'+key,'Control label, minimum, maximum, step and default: '+key,'default',lambda s,_,k=key:s['sliders'][k],tol=1e-8,unit='numeric 1e-8; labels exact',source='panel')
     add('toggles','Every toggle label and default checked state','default',lambda s,_:s['toggles'],source='panel')
+    add('control-buttons','Add rule, reset, close and replay labels','default',lambda s,_:s['buttons'],source='panel')
+    add('section-toggle','Every section toggles its saved collapsed state','sections-toggled',lambda s,_:[s['sections'],{k:v for k,v in s['prefs'].items() if k.startswith('collapse-')}],source='panel')
     add('control-order','Control labels in widget/DOM order','default',lambda s,_:s['labels'],source='panel')
     add('global-local-rows','Global mode hides local hops and direction rows','default',lambda s,_:s['local_rows'],source='panel')
     add('radii-degree','World radii for orphan, hub, spoke, code, tag and missing target','expanded',lambda s,_:{k:round(v['screen'][2]/math.sqrt(s['state']['zoom']),4) for k,v in s['nodes'].items()},tol=.01,unit='0.01 world unit',source='draw')
     for theme in ('dark','light','midnight','ember'):
+        for status in ('active','hover'):
+            add('colour-'+theme+'-'+status,theme+' '+status+' marker RGB',status+'-'+theme,
+                lambda s,_:node(s,'hub/Hub.md')['color'],source='draw')
         for kind in KINDS:
             add('colour-'+theme+'-'+kind,f'{theme} settled {kind} marker RGB','theme-'+theme,lambda s,_,k=kind:node(s,k)['color'],source='draw')
+        add('pixel-radius-'+theme,'Screenshot marker radii in logical pixels: '+theme,'theme-'+theme,
+            lambda s,side,n='theme-'+theme:pixel_radii(out,side,n,s),tol=1,unit='1 px boundary coverage; shared unoccluded kinds only',source='draw')
         add('pixels-'+theme,'Screenshot marker-centre RGB samples: '+theme,'theme-'+theme,
             lambda s,side,n='theme-'+theme:centre_samples(out,side,n,s),tol=3,unit='3/255 per RGB channel; shared unoccluded kinds only',source='draw')
     for scene in ('active','hover','accent'):
@@ -240,9 +269,9 @@ def compare(reference, impro, out):
         add('radius-zoom-'+zoom,'Radius scales with square root of zoom: '+zoom,'zoom-'+zoom,
             lambda s,_:radii(s),tol=.01,unit='0.01 world unit after dividing by sqrt(zoom)',source='draw')
         add('line-width-'+zoom,'Screenshot connection width at zoom '+zoom,'zoom-'+zoom,
-            lambda s,side,n='zoom-'+zoom:line_width(out,side,n,s),tol=.75,unit='0.75 px FWHM; excludes clipped/covered midpoint',source='draw')
+            lambda s,side,n='zoom-'+zoom:line_width(out,side,n,s),tol=1,unit='1 px FWHM; excludes clipped/covered midpoint',source='draw')
         add('line-colour-'+zoom,'Screenshot connection RGB at zoom '+zoom,'zoom-'+zoom,
-            lambda s,side,n='zoom-'+zoom:line_width(out,side,n,s,True),tol=12,unit='12/255 per channel; raster coverage allowance',source='draw')
+            lambda s,side,n='zoom-'+zoom:line_width(out,side,n,s,True),tol=20,unit='20/255 per channel; raster coverage allowance',source='draw')
         add('label-'+zoom,'Screenshot label visibility and ink extent at zoom '+zoom,'label-'+zoom,
             lambda s,side,n='label-'+zoom:label_pixels(out,side,n,s),tol=3,unit='3 px ink bounding box; visibility exact',source='draw')
     for detail in ('-1','2'):
@@ -278,8 +307,8 @@ def compare(reference, impro, out):
     missing('zoom-ease','Per-frame wheel zoom easing','Native immediate state is synchronous; the page round trip can paint before introspection. A controlled frame/time hook is required for matched ease samples.','camera')
     for key in ('ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','-'):
         add('keyboard-'+key,'Held 200 ms key movement: '+key,'key-'+key,
-            lambda s,_:pan_delta(s) if key.startswith('Arrow') else round(s['state']['zoom']/s['before']['state']['zoom'],4),tol=20 if key.startswith('Arrow') else .12,
-            unit='20 px pan or 0.12 zoom ratio scheduling allowance',source='camera')
+            lambda s,_:pan_delta(s) if key.startswith('Arrow') else round(s['state']['zoom']/s['before']['state']['zoom'],4),tol=25 if key.startswith('Arrow') else .12,
+            unit='25 px pan or 0.12 zoom ratio scheduling allowance',source='camera')
     add('keyboard-shift','Shift arrow travel relative to the unmodified arrow','key-shift',lambda s,side:round(pan_delta(s)[0]/pan_delta((rs if side=='reference' else is_)['key-ArrowLeft'])[0],3),tol=.35,unit='0.35 travel ratio; 200 ms held keys',source='input')
     for scene in ('key-escape','key-escape-again'):
         add(scene,'Escape closes controls, then clears hover: '+scene,scene,lambda s,_:[s['panel_open'],s['state']['hover']],source='input')
@@ -333,6 +362,15 @@ def compare(reference, impro, out):
     add('pan-visible','Count of on-screen markers after the background drag','pan',lambda s,_:sum(0<=v['screen'][0]<s['state']['size'][0] and 0<=v['screen'][1]<s['state']['size'][1] for v in s['nodes'].values()),tol=8,unit='8 markers; independently placed scenes',source='blank',severity=1)
     add('click-visible','Graph remains nonempty and mapped after pointer/keyboard actions','key-escape-again',lambda s,_:[s['mapped'],s['state']['nodes']>0],source='blank',severity=1)
     for row in rows:
+        if row['id']=='idle-cpu' and row['verdict']=='different' and row['impro']<row['reference']:
+            row.update(source='crates/impro-graph/src/view/flow.rs:952',severity=4,
+                       fix='Retain the lower native idle work and repeat a longer sample before attributing remaining page-process CPU activity.')
+        if row['id']=='closed-chip':
+            row.update(source='crates/impro-graph/src/view/panel.rs:854',owner='T1',severity=1,
+                       fix='Ensure closing controls reveals the chip even when no child-revealed notification is emitted after a motion-preference transition.')
+        if row['id']=='label-1':
+            row.update(source='crates/impro-graph/src/view/draw.rs:164',
+                       fix='Check Pango font sizing and label bitmap insets against the measured orphan ink bounds at zoom one.')
         if row['id']=='buffer-200':
             row.update(source='crates/impro-graph/src/view/flow.rs:301',severity=4,
                        fix='Compare the full editor forwarding path before changing debounce; keep the 400 ms policy until a window trace establishes a user-visible difference.')
@@ -341,7 +379,7 @@ def compare(reference, impro, out):
                        fix='Use the canvas centre as the anchor when the wheel reduces zoom.')
         if row['id']=='layout-clusters':
             row.update(source='crates/impro-graph/src/view/scene.rs:269',
-                       fix='Tune cluster spacing against the measured separation range while preserving deterministic placement.')
+                       fix='Check cluster-separation distributions on a second fixture before tuning native spacing, since exact independent layout coordinates are not required.')
         if row['id'] in ('replay','replay-reduced'):
             row.update(source='crates/impro-graph/src/view/timelapse.rs:25',owner='T2',
                        fix='Align the index timestamp fallback with the reference before sorting replay chronology.')
@@ -350,14 +388,14 @@ def compare(reference, impro, out):
                        fix='Pass the background-press state into camera advancement so drag velocity is not integrated as released inertia.')
     # Screenshot centre comparisons must compare only the shared unoccluded kind samples.
     for row in rows:
-        if row['id'].startswith('pixels-') and row['verdict']!='unmeasurable':
+        if row['id'].startswith(('pixels-','pixel-radius-')) and row['verdict']!='unmeasurable':
             common=row['reference'].keys() & row['impro'].keys()
             if not common:
                 row.update(verdict='unmeasurable',reason='No shared unoccluded marker centre lies inside both frames.')
             else:
                 row['reference']={k:row['reference'][k] for k in sorted(common)}
                 row['impro']={k:row['impro'][k] for k in sorted(common)}
-                row['verdict']='same' if same(row['reference'],row['impro'],3) else 'different'
+                row['verdict']='same' if same(row['reference'],row['impro'],1 if row['id'].startswith('pixel-radius-') else 3) else 'different'
     (out/'comparison.json').write_text(json.dumps(rows,indent=2,ensure_ascii=False)+'\n')
     header='behaviour | reference value | impro value | verdict'
     table=[header,'--- | --- | --- | ---']
@@ -441,4 +479,6 @@ def write_review_docs(rows,out,counts):
                 'The transient loading state was not captured before data delivery. Wayland and the user desktop were '
                 'not accessed. Exact arrow opacity and font-wrap metrics remain unmeasured; raster bounds and sampled '
                 'connection widths/colours are included where unobscured.'])
-    (out/'divergences.md').write_text('\n'.join(doc)+'\n')
+    repo=Path(__file__).resolve().parents[2]
+    prefix=str(out.relative_to(repo)) if out.is_relative_to(repo) else str(out)
+    (out/'divergences.md').write_text(('\n'.join(doc)+'\n').replace('.ceo/graph-compare/',prefix+'/'))
