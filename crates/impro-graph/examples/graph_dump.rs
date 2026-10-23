@@ -232,6 +232,7 @@ fn run_live(req: &Value) -> Value {
             }
             other => panic!("unknown op {other}"),
         }
+        assert!(index.resolution_is_consistent(), "incremental resolution diverged after {op}");
         steps.push(json!({"op": op, "result": dump_graph(&index, &index.build_graph(&opts), None)}));
     }
     json!({"steps": steps})

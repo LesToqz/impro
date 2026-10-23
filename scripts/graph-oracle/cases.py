@@ -255,3 +255,17 @@ def prefs_values():
     values.append({k: v for k, v in zip(num_keys, [9, 9, 9, 9, 99, 9, 999, 99, 99])})
     values.append({k: v for k, v in zip(num_keys, [-9, -9, -9, -9, -99, -9, -999, -99, -99])})
     return values
+
+
+QUERY_PARTS = ['alpha', 'Alpha', 'beta', 'gamma ray', '"gamma ray"', '-alpha', '-beta', 'OR', 'OR', 'tag:t1', 'tag:#t1', 'tag:proj',
+               '-tag:t1', 'tag:T1/x', 'path:sub', 'path:Sub/', 'file:alpha', 'file:.md', 'content:alpha', 'content:"[["',
+               '/a.p/', '/^---/', '/\\[\\[/', '/[/', '-/beta/', 'é', 'strasse', 'Straße', '.png', 'x', '"', '-', '/', 'a:b',
+               'PATH:a', 'src', '#t1', 'import', 'h1', '/ha/']
+
+
+def random_queries(rng, count):
+    """Queries made of operators, fields, quotes and regexes in arbitrary order."""
+    out = []
+    for _ in range(count):
+        out.append(' '.join(rng.choice(QUERY_PARTS) for _ in range(rng.randint(1, 5))))
+    return out

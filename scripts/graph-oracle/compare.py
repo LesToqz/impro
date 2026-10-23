@@ -184,13 +184,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--dump', type=Path, required=True)
     ap.add_argument('--only', default='*', help='fixture name glob')
-    ap.add_argument('--parts', default='graph,caps,live,text,prefs')
+    ap.add_argument('--parts', default='graph,caps,live,random,text,prefs')
     ap.add_argument('--fuzz', type=int, default=4000)
     ap.add_argument('--limit', type=int, default=3)
     ap.add_argument('--real', action='append', default=[], help='real tree to compare (local only)')
     ap.add_argument('--corpus', action='append', default=[], help='extra directory of files for the text comparison (local only)')
     ap.add_argument('--corpus-limit', type=int, default=3000)
     ap.add_argument('--keep', action='store_true')
+    ap.add_argument('--random', type=int, default=60, help='number of random projects (graph and live)')
     args = ap.parse_args()
     parts = set(args.parts.split(','))
     known = json.loads((HERE / 'known.json').read_text()) if (HERE / 'known.json').exists() else []
@@ -236,6 +237,8 @@ def main():
                     report.checked += 1
                     for klass, detail in diff_graph(x['result'], y['result'], times=False):
                         report.add(f'live:{label}', f'step {step} {json.dumps(x["op"])}', klass, detail)
+        if 'random' in parts:
+            compare_random(report, tmp, args.dump, work, args.random)
         if 'text' in parts:
             request = cases.text_request(list(roots.items()) + [('corpus' + str(i), d) for i, d in enumerate(args.corpus)], fuzz=args.fuzz, limit=args.corpus_limit)
             a, b = (run_side(s, request, args.dump, work) for s in ('oracle', 'impro'))
@@ -251,7 +254,7 @@ def main():
                 report.add('prefs', '', klass, detail)
         for real in args.real:
             request = cases.graph_request(Path(real), rich=False, focus_count=3, depths=(1, 2))
-            request['runs'] = [r for r in request['runs'] if r['mode'] != 'folder'][:60]
+            request['runs'] = [r for r in request['runs'] if r['mode'] != 'folder'][:80]
             compare_graph(report, 'real:' + Path(real).name, request, args.dump, work)
     finally:
         if args.keep:
@@ -261,8 +264,37 @@ def main():
     return 1 if report.print(args.limit) else 0
 
 
+def compare_random(report, tmp, dump, work, count):
+    for seed in range(count):
+        root = tmp / 'random' / str(seed)
+        root.mkdir(parents=True)
+        fixtures.random_project(seed)(root)
+        import random
+        queries = ['alpha', 'tag:t1', '-beta OR gamma', 'path:sub', 'content:alpha', '/a.p/'] + cases.random_queries(random.Random(seed), 25)
+        request = cases.graph_request(root, rich=False, focus_count=3, depths=(1, 2), query_set=queries)
+        request['runs'] += [{'name': f'q:{q}', 'mode': 'build', 'options': dict(o, query=q, groups=[q] if i == 0 else [])}
+                            for q in queries for i, o in enumerate((cases.base_sets()['all'], cases.base_sets()['strict']))]
+        compare_graph(report, 'random', request, dump, work, f'seed{seed}')
+        ops = fixtures.random_ops(seed, root)
+        answers = []
+        for side in ('oracle', 'impro'):
+            copy = tmp / 'randlive' / side / str(seed)
+            shutil.copytree(root, copy, symlinks=True)
+            req = {'mode': 'live', 'root': str(copy), 'options': cases.LIVE_OPTS, 'ops': ops}
+            answers.append(run_side(side, req, dump, work))
+        for step, (x, y) in enumerate(zip(answers[0]['steps'], answers[1]['steps'])):
+            report.checked += 1
+            for klass, detail in diff_graph(x['result'], y['result'], times=False):
+                report.add('random-live', f'seed {seed} step {step} {json.dumps(x["op"])[:200]}', klass, detail)
+
+
 def compare_graph(report, scope, request, dump, work, label=''):
     a, b = run_side('oracle', request, dump, work), run_side('impro', request, dump, work)
+    if scope.startswith('real:'):
+        full = next(x for x in a['runs'] if x['name'] == 'tg:111111')['result']
+        full_b = next(x for x in b['runs'] if x['name'] == 'tg:111111')['result']
+        print(f'{scope}: all-on build: oracle {len(full["nodes"])} nodes / {len(full["links"])} links, '
+              f'impro {len(full_b["nodes"])} nodes / {len(full_b["links"])} links')
     for x, y in zip(a['runs'], b['runs']):
         report.checked += 1
         for klass, detail in diff_graph(x['result'], y['result']):

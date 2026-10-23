@@ -43,6 +43,15 @@ def load_modules():
 GD, LP, ST = load_modules()
 
 
+def skip_markup_links():
+    """Model the one deliberate difference: `<br>`-style tags are not references."""
+    original = LP.extract_links
+
+    def extract(text):
+        return [l for l in original(text) if not is_markup(text, l)]
+    GD.extract_links = extract
+
+
 def make_options(spec):
     spec = spec or {}
     keys = ('query', 'show_tags', 'show_attachments', 'existing_only',
@@ -74,6 +83,8 @@ def dump_graph(graph, focus=None):
 
 
 def run_graph(request):
+    if request.get('skip_markup', True):
+        skip_markup_links()
     index = GD.GraphIndex(request['root'], max_nodes=request.get('max_nodes', 3000))
     index.scan()
     for path, text in request.get('overrides', {}).items():
@@ -159,28 +170,37 @@ def apply_op(index, root, op):
         else:
             os.remove(target)
         for rel in paths:
-            index.update_path(rel)
+            index.set_text(rel, None)  # as the view does: no buffer outlives its file
     elif kind == 'rename':
         source, dest = absolute(op['from']), absolute(op['to'])
         old = [op['from']]
         if os.path.isdir(source):
             old = [os.path.relpath(os.path.join(d, f), root).replace(os.sep, '/')
                    for d, _, files in os.walk(source) for f in files]
+        # unsaved buffers follow their file (the engine moves them with the rename)
+        carried = {rel: index._overrides[rel] for rel in list(index._overrides)
+                   if rel == op['from'] or rel.startswith(op['from'] + '/')}
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         os.rename(source, dest)
         for rel in old:
-            index.update_path(rel)
+            index.set_text(rel, None)
+        for rel in carried:
+            index.set_text(rel, None)
         if os.path.isdir(dest):
             for d, _, files in os.walk(dest):
                 for f in files:
-                    index.update_path(os.path.relpath(os.path.join(d, f), root).replace(os.sep, '/'))
+                    index.set_text(os.path.relpath(os.path.join(d, f), root).replace(os.sep, '/'), None)
         else:
-            index.update_path(op['to'])
+            index.set_text(op['to'], None)
+        for rel, text in carried.items():
+            index.set_text(op['to'] + rel[len(op['from']):], text)
     else:
         raise ValueError(kind)
 
 
 def run_live(request):
+    if request.get('skip_markup', True):
+        skip_markup_links()
     root = os.path.abspath(request['root'])
     index = GD.GraphIndex(root, max_nodes=request.get('max_nodes', 3000))
     index.scan()

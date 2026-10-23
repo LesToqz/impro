@@ -66,6 +66,15 @@ def dups(root):
     put(root, 'B/a2.md', '')
 
 
+def markup(root):
+    """HTML-ish text in notes: only dotted `<name.ext>` autolinks are references."""
+    put(root, 'html.md', 'a<br>b <div class="x">t</div> <details><summary>s</summary></details> <b>x</b>\n'
+        '<file.md> <sub/page.md> <v1.2> <a.b> <https://example.com> <mailto:a@b.c> <>\n')
+    put(root, 'file.md', '')
+    put(root, 'sub/page.md', '')
+    put(root, 'v1.2', 'x\n')
+
+
 def aliases(root):
     put(root, 'real.md', '# real\n')
     put(root, 'alias-holder.md', '---\naliases: [real, Nick, "Quoted Name", \'Single\']\n---\n')
@@ -363,9 +372,142 @@ def broken_py(root):
 TEXT_ONLY = {'broken_py'}
 
 FIXTURES = {
-    'links': links, 'dups': dups, 'aliases': aliases, 'tags': tags, 'attachments': attachments,
+    'links': links, 'markup': markup, 'dups': dups, 'aliases': aliases, 'tags': tags, 'attachments': attachments,
     'code_py': code_py, 'code_js': code_js, 'code_style': code_style, 'code_other': code_other,
     'specials': specials, 'broken_py': broken_py, 'empty': lambda root: None, 'one': lambda root: put(root, 'only.md', '[[only]] #solo\n'),
     'chain_3000': chain(3000), 'chain_3001': chain(3001), 'chain_3500': chain(3500),
     'mixed_3300': big_mixed, 'live_base': live_base,
 }
+
+
+# --- random projects ---------------------------------------------------------
+
+NAMES = ['alpha', 'Alpha', 'beta', 'gamma', 'Gamma Ray', 'delta', 'x', 'index', 'main', 'util', 'é', 'Straße', 'strasse', 'a.b']
+DIRS = ['', '', '', 'sub', 'Sub', 'sub/deep', 'other', 'src', 'a', 'a/b']
+TAGS = ['t1', 'T1', 't1/x', 't2', 'proj/a', 'proj/a/b', 'Proj']
+
+
+def random_text(rng, kind, files):
+    """A body for a file of `kind` that points at random names and files."""
+    def pick_name():
+        name = rng.choice(NAMES)
+        return rng.choice([name, name.upper(), name.lower(), f'{name}.md', f'{name}.png'])
+
+    def pick_path():
+        return rng.choice(['', '../', './', 'sub/', '../sub/', '/']) + pick_name()
+
+    lines = []
+    if kind == 'note':
+        if rng.random() < 0.3:
+            fm = []
+            if rng.random() < 0.7:
+                fm.append('aliases: [' + ', '.join(rng.sample(NAMES, rng.randint(1, 2))) + ']')
+            if rng.random() < 0.5:
+                fm.append('tags: [' + ', '.join(rng.sample(TAGS, 2)) + ']')
+            lines += ['---'] + fm + ['---']
+        for _ in range(rng.randint(0, 8)):
+            choice = rng.random()
+            if choice < 0.35:
+                lines.append(f'[[{pick_name()}]]')
+            elif choice < 0.45:
+                lines.append(f'[[{pick_path()}#h|alias]]')
+            elif choice < 0.55:
+                lines.append(f'![[{pick_name()}]]')
+            elif choice < 0.7:
+                lines.append(f'[t]({pick_path().replace(" ", "%20")})')
+            elif choice < 0.8:
+                lines.append('#' + rng.choice(TAGS))
+            elif choice < 0.85:
+                lines.append('`[[' + pick_name() + ']]`')
+            elif choice < 0.9:
+                lines.append(f'<{pick_path()}>')
+            else:
+                lines.append(f'![i]({pick_path()})')
+    elif kind == 'py':
+        for _ in range(rng.randint(0, 5)):
+            c = rng.random()
+            mod = rng.choice(['alpha', 'beta', 'util', 'sub.util', 'sub.deep.alpha', 'a.b', 'index', 'src.main', 'gamma'])
+            if c < 0.4:
+                lines.append(f'import {mod}')
+            elif c < 0.7:
+                lines.append(f'from {rng.choice(["", ".", "..", "...", ".sub"])}{mod if rng.random() < .7 else ""} import {rng.choice(["x", "alpha", "*"])}'.replace('from  import', 'from . import').replace('from . import *', 'from . import x'))
+            else:
+                lines.append(f'import {mod} as m')
+    elif kind in ('js', 'ts'):
+        for _ in range(rng.randint(0, 5)):
+            spec = rng.choice(['./alpha', '../beta', './sub', './sub/index', '.', '..', './util.js', './main.css', 'lib', './gamma', './Alpha', '../sub/alpha'])
+            lines.append(rng.choice([f"import x from '{spec}'", f"require('{spec}')", f"export * from '{spec}'", f"import '{spec}'"]))
+    elif kind == 'css':
+        for _ in range(rng.randint(0, 4)):
+            spec = rng.choice(['alpha.css', 'sub/beta.css', '../main.css', 'img/a.png', '/alpha.css', 'x.png'])
+            lines.append(rng.choice([f"@import '{spec}';", f'.a{{background:url({spec})}}']))
+    elif kind == 'html':
+        for _ in range(rng.randint(0, 4)):
+            spec = rng.choice(['alpha.css', 'sub/beta.html', '../main.js', 'x.png', '/alpha.css', '#top', 'https://x.y'])
+            lines.append(rng.choice([f'<a href="{spec}">', f'<img src={spec}>', f"<script src='{spec}'>"]))
+    return '\n'.join(lines) + '\n'
+
+
+def random_project(seed):
+    import random
+    rng = random.Random(seed)
+
+    def build(root):
+        files = []
+        for _ in range(rng.randint(8, 40)):
+            kind = rng.choice(['note', 'note', 'note', 'py', 'js', 'ts', 'css', 'html', 'png', 'txt'])
+            name = rng.choice(NAMES)
+            ext = {'note': rng.choice(['.md', '.md', '.markdown', '.MD']), 'py': '.py', 'js': '.js', 'ts': '.ts',
+                   'css': '.css', 'html': '.html', 'png': '.png', 'txt': '.txt'}[kind]
+            rel = '/'.join(p for p in (rng.choice(DIRS), name + ext) if p)
+            if rel.casefold() in {f.casefold() for f in files}:
+                continue  # names that fold together make the reference's lookup tables stale after removals
+            files.append(rel)
+            if kind == 'png':
+                put(root, rel, binary=b'\0\1')
+            else:
+                put(root, rel, random_text(rng, kind if kind != 'txt' else 'note', files))
+    return build
+
+
+def random_ops(seed, root, count=40):
+    """A scripted edit session over the files of an existing random project."""
+    import random
+    rng = random.Random(seed * 7919 + 1)
+    present = set()
+    for d, _, fs in os.walk(root):
+        for f in fs:
+            present.add(os.path.relpath(os.path.join(d, f), root).replace(os.sep, '/'))
+    ops = []
+    for _ in range(count):
+        c = rng.random()
+        if c < 0.35 or not present:
+            name = rng.choice(NAMES)
+            rel = '/'.join(p for p in (rng.choice(DIRS), name + rng.choice(['.md', '.md', '.py', '.js', '.css', '.png', '.txt'])) if p)
+            kind = 'py' if rel.endswith('.py') else 'js' if rel.endswith('.js') else 'css' if rel.endswith('.css') else 'note'
+            if rel.casefold() in {f.casefold() for f in present} and rel not in present:
+                continue
+            ops.append({'op': 'write', 'path': rel, 'text': random_text(rng, kind, present)})
+            present.add(rel)
+        elif c < 0.5:
+            rel = rng.choice(sorted(present))
+            kind = 'py' if rel.endswith('.py') else 'js' if rel.endswith('.js') else 'css' if rel.endswith('.css') else 'note'
+            ops.append({'op': 'set_text', 'path': rel, 'text': random_text(rng, kind, present)})
+        elif c < 0.58:
+            rel = rng.choice(sorted(present))
+            ops.append({'op': 'set_text', 'path': rel, 'text': None})
+        elif c < 0.75:
+            rel = rng.choice(sorted(present))
+            ops.append({'op': 'delete', 'path': rel})
+            present.discard(rel)
+        else:
+            rel = rng.choice(sorted(present))
+            name = rng.choice(NAMES)
+            ext = os.path.splitext(rel)[1] if rng.random() < 0.8 else '.md'
+            target = '/'.join(p for p in (rng.choice(DIRS), name + ext) if p)
+            if target.casefold() in {f.casefold() for f in present}:
+                continue
+            ops.append({'op': 'rename', 'from': rel, 'to': target})
+            present.discard(rel)
+            present.add(target)
+    return ops
