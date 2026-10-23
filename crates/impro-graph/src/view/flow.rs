@@ -1071,9 +1071,7 @@ impl Inner {
         }
         self.cancel_buffers();
         self.panel.close_popovers();
-        if let Some(m) = self.menu.borrow_mut().take() {
-            m.popdown();
-        }
+        self.close_menu();
         self.host.shutdown();
         // changes still waiting for their timer are written now
         if self.save_timer.borrow_mut().take().is_some() {

@@ -101,6 +101,66 @@ pub fn leave(view: &GraphView) {
     view.inner.on_leave(gdk::CrossingMode::Normal);
 }
 
+/// Like [`press`], with the event time in milliseconds.
+pub fn press_at(
+    view: &GraphView,
+    x: f64,
+    y: f64,
+    button: u32,
+    state: gdk::ModifierType,
+    time: u32,
+) {
+    view.inner.on_press(x, y, button, state, time);
+}
+
+/// Like [`motion`], with the event time in milliseconds.
+pub fn motion_at(view: &GraphView, x: f64, y: f64, time: u32) {
+    view.inner.on_motion(x, y, time);
+}
+
+/// Like [`release`], with the event time in milliseconds.
+pub fn release_at(
+    view: &GraphView,
+    x: f64,
+    y: f64,
+    button: u32,
+    state: gdk::ModifierType,
+    time: u32,
+) {
+    view.inner.on_release(x, y, button, state, time);
+}
+
+/// Runs the main loop until the canvas frame clock has produced `n` more
+/// frames; false if that took longer than `timeout_ms` (or the canvas is not
+/// mapped).
+pub fn wait_frames(view: &GraphView, n: u32, timeout_ms: u64) -> bool {
+    let canvas = view.canvas();
+    if !canvas.is_mapped() {
+        return false;
+    }
+    let seen = std::rc::Rc::new(std::cell::Cell::new(0u32));
+    let count = seen.clone();
+    canvas.add_tick_callback(move |_, _| {
+        count.set(count.get() + 1);
+        if count.get() >= n {
+            glib::ControlFlow::Break
+        } else {
+            glib::ControlFlow::Continue
+        }
+    });
+    wait_for(timeout_ms, || seen.get() >= n)
+}
+
+/// Number of node centres inside the canvas.
+pub fn nodes_on_screen(view: &GraphView) -> usize {
+    let s = view.inner.scene.borrow();
+    let (w, h) = s.size;
+    (0..s.len())
+        .map(|i| s.screen(i))
+        .filter(|(x, y, _)| *x >= 0.0 && *x <= w && *y >= 0.0 && *y <= h)
+        .count()
+}
+
 /// A press and release without movement.
 pub fn click(view: &GraphView, x: f64, y: f64, button: u32, state: gdk::ModifierType) {
     press(view, x, y, button, state);

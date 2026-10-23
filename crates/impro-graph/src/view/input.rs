@@ -14,6 +14,17 @@ use crate::model::NodeKind;
 /// Pixels one wheel notch is worth (what the browser engine reports).
 const NOTCH_PIXELS: f64 = 53.0;
 
+/// The modifier bit that tells a pointer button is held.
+fn button_mask(button: u32) -> gdk::ModifierType {
+    match button {
+        1 => gdk::ModifierType::BUTTON1_MASK,
+        2 => gdk::ModifierType::BUTTON2_MASK,
+        3 => gdk::ModifierType::BUTTON3_MASK,
+        4 => gdk::ModifierType::BUTTON4_MASK,
+        _ => gdk::ModifierType::BUTTON5_MASK,
+    }
+}
+
 impl Inner {
     fn node_at(&self, x: f64, y: f64) -> Option<(usize, Arc<str>)> {
         let scene = self.scene.borrow();
@@ -38,6 +49,18 @@ impl Inner {
                 self.context_for(i, x, y);
             }
             return;
+        }
+        // a press whose release never arrived (its button is not held any
+        // more) must not swallow this one
+        let stale = match self.press.borrow().as_ref() {
+            Some(Press::Node { button: b, .. }) => !state.contains(button_mask(*b)),
+            Some(Press::Pan { .. }) => {
+                !state.intersects(gdk::ModifierType::BUTTON1_MASK | gdk::ModifierType::BUTTON2_MASK)
+            }
+            None => false,
+        };
+        if stale {
+            self.abandon_press();
         }
         if self.press.borrow().is_some() || !(1..=2).contains(&button) {
             return;
@@ -73,6 +96,41 @@ impl Inner {
         };
         drop(scene);
         *self.press.borrow_mut() = Some(press);
+        self.update_cursor();
+        self.kick();
+    }
+
+    /// A motion event with its button state: a press whose button is no
+    /// longer held lost its release (a grab took it, the window lost the
+    /// pointer) and ends here instead of dragging along with the bare pointer.
+    pub(super) fn on_motion_event(
+        self: &Rc<Self>,
+        x: f64,
+        y: f64,
+        time: u32,
+        state: gdk::ModifierType,
+    ) {
+        let held = match self.press.borrow().as_ref() {
+            Some(Press::Node { button, .. }) => state.contains(button_mask(*button)),
+            Some(Press::Pan { .. }) => {
+                state.intersects(gdk::ModifierType::BUTTON1_MASK | gdk::ModifierType::BUTTON2_MASK)
+            }
+            None => true,
+        };
+        if !held {
+            self.abandon_press();
+        }
+        self.on_motion(x, y, time);
+    }
+
+    /// Ends the current press without activating, dragging on or flinging.
+    pub(super) fn abandon_press(self: &Rc<Self>) {
+        let press = self.press.borrow_mut().take();
+        match press {
+            Some(Press::Node { .. }) => self.scene.borrow_mut().end_drag(),
+            Some(Press::Pan { .. }) => self.scene.borrow_mut().cam.end_pan(f64::INFINITY, true),
+            None => return,
+        }
         self.update_cursor();
         self.kick();
     }
@@ -394,7 +452,9 @@ impl Inner {
     }
 
     pub(super) fn close_menu(&self) {
-        if let Some(m) = self.menu.borrow_mut().take() {
+        // popping down emits signals: release the slot first
+        let menu = self.menu.borrow_mut().take();
+        if let Some(m) = menu {
             m.popdown();
         }
     }

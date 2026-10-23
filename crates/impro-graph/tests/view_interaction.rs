@@ -319,3 +319,180 @@ fn the_pointer_cannot_re_enter_the_view_while_a_signal_handler_runs() {
         assert!(f.view.summary().nodes > 0);
     });
 }
+
+/// Pans from `from` by `step` per pointer move, letting one real frame run
+/// between moves as a pointer device does; returns the last event time.
+fn pan_with_frames(f: &Fixture, from: (f64, f64), step: (f64, f64), moves: u32) -> u32 {
+    let mut time = 1_000;
+    t::press_at(&f.view, from.0, from.1, 1, none(), time);
+    for i in 1..=moves {
+        time += 16;
+        let (x, y) = (from.0 + step.0 * i as f64, from.1 + step.1 * i as f64);
+        t::motion_at(&f.view, x, y, time);
+        assert!(
+            t::wait_frames(&f.view, 1, 5_000),
+            "the canvas stopped drawing"
+        );
+    }
+    time
+}
+
+#[test]
+fn a_held_pan_stays_under_the_pointer_between_moves_and_after_release() {
+    run(|| {
+        // Regression: inertia ran while the button was still down, so every
+        // frame between pointer moves pushed the view by the filtered move
+        // (pixels per event) times the frame length, thousands of pixels in
+        // total; a release after holding still left the graph off-screen.
+        let f = Fixture::new();
+        let from = empty_spot(&f, 4.0);
+        let shown = t::nodes_on_screen(&f.view);
+        assert!(shown > 0);
+        let pan0 = t::info(&f.view).pan;
+        let time = pan_with_frames(&f, from, (12.0, 5.0), 8);
+        let expected = (pan0.0 + 96.0, pan0.1 + 40.0);
+        let pan = t::info(&f.view).pan;
+        assert!(
+            (pan.0 - expected.0).abs() < 1e-6 && (pan.1 - expected.1).abs() < 1e-6,
+            "the view drifted while the pointer moved: {pan:?}, expected {expected:?}"
+        );
+        // holding still: nothing moves
+        assert!(t::wait_frames(&f.view, 10, 5_000));
+        let held = t::info(&f.view).pan;
+        assert!(
+            (held.0 - expected.0).abs() < 1e-6 && (held.1 - expected.1).abs() < 1e-6,
+            "the view drifted while the pointer held still: {held:?}, expected {expected:?}"
+        );
+        // a release after holding still does not fling
+        t::release_at(&f.view, from.0 + 96.0, from.1 + 40.0, 1, none(), time + 400);
+        assert!(t::settle(&f.view, 15_000));
+        let rest = t::info(&f.view).pan;
+        assert!((rest.0 - expected.0).abs() < 1e-6 && (rest.1 - expected.1).abs() < 1e-6);
+        assert_eq!(t::nodes_on_screen(&f.view), shown, "{rest:?}");
+    });
+}
+
+#[test]
+fn a_quick_drag_and_release_flings_a_short_way_from_the_pointer() {
+    run(|| {
+        let f = Fixture::new();
+        let from = empty_spot(&f, 4.0);
+        let pan0 = t::info(&f.view).pan;
+        let time = pan_with_frames(&f, from, (10.0, 0.0), 6);
+        let moved = t::info(&f.view).pan;
+        assert!(
+            (moved.0 - pan0.0 - 60.0).abs() < 1e-6,
+            "the view drifted during the drag: {moved:?} from {pan0:?}"
+        );
+        t::release_at(&f.view, from.0 + 60.0, from.1, 1, none(), time + 8);
+        // the fling continues in the drag direction and stays modest:
+        // 10 px per 16 ms with 86% kept per frame is about 75 px
+        assert!(t::wait_for(2_000, || t::info(&f.view).pan.0 > moved.0 + 1.0));
+        assert!(t::settle(&f.view, 15_000), "inertia must end");
+        let rest = t::info(&f.view).pan;
+        assert!(
+            rest.0 - moved.0 > 1.0 && rest.0 - moved.0 < 200.0,
+            "fling of {} px",
+            rest.0 - moved.0
+        );
+        assert!((rest.1 - moved.1).abs() < 1e-6);
+        assert!(t::nodes_on_screen(&f.view) > 0);
+    });
+}
+
+#[test]
+fn a_press_whose_release_never_arrives_does_not_keep_panning() {
+    run(|| {
+        // A release can be lost (a grab taken mid-press, the window losing the
+        // pointer). Motion without the button held then ends the press instead
+        // of dragging the view along with the bare pointer.
+        let f = Fixture::new();
+        let from = empty_spot(&f, 4.0);
+        let pan0 = t::info(&f.view).pan;
+        let held = gdk::ModifierType::BUTTON1_MASK;
+        send_pointer(&f.view, gdk::EventType::ButtonPress, from, 1, none(), 2_000);
+        send_pointer(
+            &f.view,
+            gdk::EventType::MotionNotify,
+            (from.0 + 20.0, from.1),
+            0,
+            held,
+            2_016,
+        );
+        let pan = t::info(&f.view).pan;
+        assert!((pan.0 - pan0.0 - 20.0).abs() < 1e-6, "{pan:?}");
+        // the release went elsewhere; the pointer now moves with no button down
+        send_pointer(
+            &f.view,
+            gdk::EventType::MotionNotify,
+            (from.0 + 220.0, from.1 + 90.0),
+            0,
+            none(),
+            2_500,
+        );
+        assert!(t::settle(&f.view, 15_000));
+        let after = t::info(&f.view).pan;
+        assert!(
+            (after.0 - pan.0).abs() < 1e-6 && (after.1 - pan.1).abs() < 1e-6,
+            "the bare pointer dragged the view: {after:?}"
+        );
+        // and the next click works normally
+        let (x, y, _) = f.screen("a.md");
+        send_pointer(
+            &f.view,
+            gdk::EventType::ButtonPress,
+            (x, y),
+            1,
+            none(),
+            3_000,
+        );
+        send_pointer(
+            &f.view,
+            gdk::EventType::ButtonRelease,
+            (x, y),
+            1,
+            held,
+            3_050,
+        );
+        assert_eq!(f.seen().opened, [(f.path("a.md"), OpenMode::Current)]);
+    });
+}
+
+#[test]
+fn a_double_click_opens_once_per_click_and_leaves_no_press_behind() {
+    run(|| {
+        let f = Fixture::new();
+        let (x, y, _) = f.screen("a.md");
+        let held = gdk::ModifierType::BUTTON1_MASK;
+        let mut time = 4_000;
+        for kind in [
+            gdk::EventType::ButtonPress,
+            gdk::EventType::ButtonRelease,
+            gdk::EventType::ButtonPress,
+            gdk::EventType::DoubleButtonPress,
+            gdk::EventType::ButtonRelease,
+        ] {
+            let state = if kind == gdk::EventType::ButtonRelease {
+                held
+            } else {
+                none()
+            };
+            send_pointer(&f.view, kind, (x, y), 1, state, time);
+            time += 40;
+        }
+        assert_eq!(f.seen().opened.len(), 2);
+        // nothing is still pressed: moving the pointer only hovers
+        let pan = t::info(&f.view).pan;
+        send_pointer(
+            &f.view,
+            gdk::EventType::MotionNotify,
+            (x + 150.0, y + 60.0),
+            0,
+            none(),
+            time,
+        );
+        assert!(t::settle(&f.view, 15_000));
+        assert_eq!(t::info(&f.view).pan, pan);
+        assert!(!t::info(&f.view).dragging);
+    });
+}

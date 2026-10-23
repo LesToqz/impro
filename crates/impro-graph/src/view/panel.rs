@@ -968,7 +968,8 @@ impl Panel {
     }
 
     fn show_swatches(&self, index: usize, anchor: &gtk::Button) {
-        if let Some(old) = self.parts.popover.borrow_mut().take() {
+        let old = self.parts.popover.borrow_mut().take();
+        if let Some(old) = old {
             old.popdown();
         }
         let pop = gtk::Popover::new(Some(anchor));
@@ -1022,7 +1023,8 @@ impl Panel {
     }
 
     fn show_type_menu(&self, anchor: &gtk::Button) {
-        if let Some(old) = self.parts.type_menu.borrow_mut().take() {
+        let old = self.parts.type_menu.borrow_mut().take();
+        if let Some(old) = old {
             old.popdown();
         }
         let menu = super::menu::graph_type_menu(self.parts.graph_type.get(), {
@@ -1042,10 +1044,13 @@ impl Panel {
 
     /// Closes any popover the panel opened.
     pub fn close_popovers(&self) {
-        if let Some(p) = self.parts.popover.borrow_mut().take() {
+        // popping down emits signals: release each slot first
+        let popover = self.parts.popover.borrow_mut().take();
+        if let Some(p) = popover {
             p.popdown();
         }
-        if let Some(m) = self.parts.type_menu.borrow_mut().take() {
+        let menu = self.parts.type_menu.borrow_mut().take();
+        if let Some(m) = menu {
             m.popdown();
         }
     }
