@@ -1,0 +1,78 @@
+[package]
+name = "graph-lib-bench"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+description = "Offline measurements of renderers and layout crates for the impro graph view"
+
+# Standalone: not a member of the main workspace.
+[workspace]
+
+[features]
+default = []
+cur = ["dep:impro-graph", "cairo"]
+cairo = ["dep:cairo-rs"]
+labels = ["dep:pango", "dep:pangocairo", "cairo"]
+skia = ["dep:tiny-skia", "labels"]
+glscene = ["dep:glow", "labels"]
+gl = ["glscene", "dep:khronos-egl"]
+vg = ["gl", "dep:femtovg"]
+wgpu = ["dep:wgpu", "dep:pollster", "dep:bytemuck"]
+layout = ["dep:petgraph", "dep:fjadra", "dep:force_graph", "dep:impro-graph"]
+glarea = ["dep:gtk", "dep:gdk", "dep:glib", "dep:libloading", "glscene", "cur"]
+
+[dependencies]
+impro-graph = { path = "../../crates/impro-graph", optional = true }
+cairo-rs = { version = "~0.18.5", features = ["png"], optional = true }
+pango = { version = "~0.18.3", optional = true }
+pangocairo = { version = "~0.18.0", optional = true }
+tiny-skia = { version = "=0.12.0", optional = true }
+glow = { version = "=0.18.0", optional = true }
+khronos-egl = { version = "=6.0.0", features = ["dynamic"], optional = true }
+femtovg = { version = "=0.27.0", optional = true }
+wgpu = { version = "=30.0.1", optional = true }
+pollster = { version = "0.4", optional = true }
+bytemuck = { version = "1", features = ["derive"], optional = true }
+petgraph = { version = "=0.8.3", optional = true }
+fjadra = { version = "=0.2.1", optional = true }
+force_graph = { version = "=0.4.0", optional = true }
+gtk = { version = "~0.18.2", features = ["v3_24"], optional = true }
+gdk = { version = "~0.18.2", optional = true }
+glib = { version = "~0.18.5", optional = true }
+libloading = { version = "0.8", optional = true }
+
+[[bin]]
+name = "a_current"
+required-features = ["cur"]
+[[bin]]
+name = "b_cairo"
+required-features = ["labels"]
+[[bin]]
+name = "c_skia"
+required-features = ["skia"]
+[[bin]]
+name = "d_gl"
+required-features = ["gl"]
+[[bin]]
+name = "d_femtovg"
+required-features = ["vg"]
+[[bin]]
+name = "e_wgpu"
+required-features = ["wgpu"]
+[[bin]]
+name = "f_layout"
+required-features = ["layout"]
+[[bin]]
+name = "glarea_probe"
+required-features = ["glarea"]
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+debug = false
+[[bin]]
+name = "glarea_poc"
+path = "poc/glarea_poc.rs"
+required-features = ["glarea"]
