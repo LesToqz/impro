@@ -84,7 +84,9 @@ fn prepare_search_entry(entry: &gtk::SearchEntry) {
             }
             let name = name.borrow().clone();
             let context = gtk::StyleContext::new();
-            let path = entry.path();
+            // `path()` shares the widget's own path: appending to it directly would
+            // grow the entry's real style path on every call.
+            let path = entry.path().copy().unwrap_or_default();
             let image = path.append_type(gtk::Image::static_type());
             path.iter_set_object_name(image, Some("image"));
             path.iter_add_class(image, "left");
@@ -106,7 +108,13 @@ fn prepare_search_entry(entry: &gtk::SearchEntry) {
                 entry.set_icon_from_pixbuf(gtk::EntryIconPosition::Primary, Some(&pixbuf));
             } else {
                 entry.style_context().remove_class("impro-startup-raster");
-                entry.set_icon_from_icon_name(gtk::EntryIconPosition::Primary, name.as_deref());
+                // GTK notifies `primary-icon-name` even for the same name, and a
+                // notification delivered after `updating` is cleared would re-enter
+                // here: only write when the icon really changes, or this never ends.
+                let current = entry.icon_name(gtk::EntryIconPosition::Primary);
+                if current.as_deref() != name.as_deref() {
+                    entry.set_icon_from_icon_name(gtk::EntryIconPosition::Primary, name.as_deref());
+                }
             }
             updating.set(false);
         })
