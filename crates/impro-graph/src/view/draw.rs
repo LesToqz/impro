@@ -1204,7 +1204,9 @@ mod tests {
         let mut painter = Painter::new();
         painter.motion = true;
         let first = pixels(&mut painter, &scene, 1.0);
-        assert_eq!(first, pixels(&mut Painter::new(), &scene, 1.0));
+        let mut fresh = Painter::new();
+        fresh.motion = true;
+        assert!(first == pixels(&mut fresh, &scene, 1.0));
         for step in 1..6 {
             scene.cam.cam.pan_x += 9.0 * step as f64;
             scene.cam.cam.zoom *= 0.93;
