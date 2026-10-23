@@ -240,6 +240,14 @@ fn painted(view: &GraphView) -> usize {
 fn assert_shown(h: &Harness, view: &GraphView, after: &str) {
     settle(view);
     frame(&h.w.window);
+    if let Ok(dir) = std::env::var("IMPRO_GRAPH_SHOTS") {
+        let window = &h.w.window;
+        let (w, hh) = (window.allocated_width(), window.allocated_height());
+        if let Some(pix) = window.window().and_then(|win| win.pixbuf(0, 0, w, hh)) {
+            let name = after.replace(|c: char| !c.is_ascii_alphanumeric(), "-");
+            let _ = pix.savev(format!("{dir}/{name}.png"), "png", &[]);
+        }
+    }
     let canvas = view.canvas();
     let info = testing::info(view);
     let state = format!(
@@ -341,12 +349,12 @@ fn clicks_on_the_canvas_leave_the_graph_in_view() {
         let at = empty(&view);
         let pan0 = testing::info(&view).pan;
         shaky_click(&view, at);
+        assert_shown(&h, &view, "a click on the background");
         let pan = testing::info(&view).pan;
         assert!(
             (pan.0 - pan0.0 - 1.0).abs() < 1e-6 && (pan.1 - pan0.1 - 2.0).abs() < 1e-6,
             "a click on the background moved the view from {pan0:?} to {pan:?}"
         );
-        assert_shown(&h, &view, "a click on the background");
         let at = empty(&view);
         click(&view, at, 1, NONE);
         assert_shown(&h, &view, "a still click on the background");
