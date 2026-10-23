@@ -211,7 +211,10 @@ impl Query {
             if token == "OR" {
                 clauses.push(Vec::new());
             } else {
-                clauses.last_mut().expect("never empty").push(parse_term(token));
+                clauses
+                    .last_mut()
+                    .expect("never empty")
+                    .push(parse_term(token));
             }
         }
         // `a OR` / `OR a`: empty clauses are skipped, they never match
@@ -315,7 +318,16 @@ mod tests {
     fn tokenizer_keeps_phrases_and_regexes_whole() {
         assert_eq!(
             tokenize("a \"b c\" -d path:\"x y\" /p q\\/r/ OR é"),
-            ["a", "\"b c\"", "-d", "path:\"x y\"", "/p q\\/", "r/", "OR", "é"]
+            [
+                "a",
+                "\"b c\"",
+                "-d",
+                "path:\"x y\"",
+                "/p q\\/",
+                "r/",
+                "OR",
+                "é"
+            ]
         );
         assert_eq!(tokenize("\"unclosed phrase"), ["\"unclosed", "phrase"]);
         assert_eq!(tokenize("/unclosed re"), ["/unclosed", "re"]);

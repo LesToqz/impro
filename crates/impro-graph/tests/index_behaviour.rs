@@ -608,7 +608,11 @@ fn file_time_is_the_older_of_change_and_modified_time() {
         .unwrap();
     let g = p.scan().build_graph(&GraphOptions::default());
     let time = |id: &str| g.nodes[g.index_of(id).unwrap()].ctime.unwrap();
-    assert_eq!(time("old.md"), 1_000_000.0, "an old mtime wins over a newer change time");
+    assert_eq!(
+        time("old.md"),
+        1_000_000.0,
+        "an old mtime wins over a newer change time"
+    );
     assert!(time("fresh.md") > 1_000_000_000.0);
 }
 

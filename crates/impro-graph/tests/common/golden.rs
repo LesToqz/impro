@@ -55,20 +55,31 @@ fn chain(root: &Path, count: usize) {
         if i % 997 == 0 {
             body.push("[[never]]".into());
         }
-        put(root, &format!("d{}/n{i:05}.md", i % 17), format!("{}\n", body.join(" ")).as_bytes());
+        put(
+            root,
+            &format!("d{}/n{i:05}.md", i % 17),
+            format!("{}\n", body.join(" ")).as_bytes(),
+        );
     }
 }
 
 fn big_mixed(root: &Path) {
     for i in 0..3300usize {
-        let mut body = vec![format!("[[m{:05}]]", (i * 7) % 3300), format!("#t{}", i % 40)];
+        let mut body = vec![
+            format!("[[m{:05}]]", (i * 7) % 3300),
+            format!("#t{}", i % 40),
+        ];
         if i % 11 == 0 {
             body.push(format!("[[ghost{}]]", i % 300));
         }
         if i % 13 == 0 {
             body.push(format!("![[img{}.png]]", i % 20));
         }
-        put(root, &format!("g{}/m{i:05}.md", i % 9), format!("{}\n", body.join(" ")).as_bytes());
+        put(
+            root,
+            &format!("g{}/m{i:05}.md", i % 9),
+            format!("{}\n", body.join(" ")).as_bytes(),
+        );
     }
     for i in 0..20 {
         put(root, &format!("img{i}.png"), b"\0");
@@ -151,7 +162,11 @@ pub fn check_graphs() {
             for (spec, answer) in runs.iter().zip(got["runs"].as_array().expect("runs")) {
                 let label = spec["name"].as_str().unwrap_or("?");
                 if let Some(full) = scenario["full"].get(label) {
-                    assert_eq!(canonical(&answer["result"]), canonical(full), "{name} {label}");
+                    assert_eq!(
+                        canonical(&answer["result"]),
+                        canonical(full),
+                        "{name} {label}"
+                    );
                 }
                 assert_eq!(
                     digest(&answer["result"]),
@@ -175,7 +190,11 @@ pub fn check_live() {
         let steps = got["steps"].as_array().expect("steps");
         assert_eq!(steps.len(), digests.len(), "{name}");
         for (i, (step, want)) in steps.iter().zip(digests).enumerate() {
-            assert_eq!(digest(&step["result"]), want.as_str().expect("digest"), "{name} step {i}");
+            assert_eq!(
+                digest(&step["result"]),
+                want.as_str().expect("digest"),
+                "{name} step {i}"
+            );
         }
     }
 }
@@ -198,7 +217,12 @@ pub fn check_text() {
                 }
             }
         }
-        assert_eq!(digest(&answer), want.as_str().expect("digest"), "{}", snippet["name"]);
+        assert_eq!(
+            digest(&answer),
+            want.as_str().expect("digest"),
+            "{}",
+            snippet["name"]
+        );
     }
 }
 
@@ -209,7 +233,9 @@ fn same_number(a: &Value, b: &Value) -> bool {
             x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same_number(p, q))
         }
         (Value::Object(x), Value::Object(y)) => {
-            x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).is_some_and(|w| same_number(v, w)))
+            x.len() == y.len()
+                && x.iter()
+                    .all(|(k, v)| y.get(k).is_some_and(|w| same_number(v, w)))
         }
         _ => a == b,
     }
@@ -219,9 +245,16 @@ fn same_number(a: &Value, b: &Value) -> bool {
 pub fn check_prefs() {
     let g = load("prefs.json");
     let got = run(&json!({"mode": "prefs", "values": g["values"]}));
-    let (got, want) = (got["values"].as_array().unwrap(), g["expected"].as_array().unwrap());
+    let (got, want) = (
+        got["values"].as_array().unwrap(),
+        g["expected"].as_array().unwrap(),
+    );
     for (i, (a, b)) in got.iter().zip(want).enumerate() {
-        assert!(same_number(a, b), "prefs case {i}: input {}\n got {a}\nwant {b}", g["values"][i]);
+        assert!(
+            same_number(a, b),
+            "prefs case {i}: input {}\n got {a}\nwant {b}",
+            g["values"][i]
+        );
     }
     assert_eq!(got.len(), want.len());
 }

@@ -8,7 +8,9 @@
 mod oracle_dump;
 
 fn main() {
-    let path = std::env::args().nth(1).expect("usage: graph_dump request.json");
+    let path = std::env::args()
+        .nth(1)
+        .expect("usage: graph_dump request.json");
     let req: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(path).expect("read")).expect("json");
     println!(

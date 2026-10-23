@@ -45,7 +45,10 @@ mod tests {
     use super::*;
 
     fn specs(text: &str) -> Vec<(String, u32)> {
-        imports(text).into_iter().map(|r| (r.spec, r.line)).collect()
+        imports(text)
+            .into_iter()
+            .map(|r| (r.spec, r.line))
+            .collect()
     }
 
     #[test]
@@ -65,7 +68,10 @@ mod tests {
 
     #[test]
     fn external_and_anchor_specifiers_are_skipped() {
-        assert!(specs("import a from 'http://x/y.js';\nimport b from '#local';\nimport c from '//cdn/x.js'").is_empty());
+        assert!(specs(
+            "import a from 'http://x/y.js';\nimport b from '#local';\nimport c from '//cdn/x.js'"
+        )
+        .is_empty());
     }
 
     #[test]

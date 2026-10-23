@@ -135,7 +135,11 @@ pub fn run_graph(req: &Value) -> Value {
                     let focus = local.focus.map(|i| local.graph.nodes[i].id.to_string());
                     dump_graph(&index, &local.graph, focus.as_deref())
                 }
-                "folder" => dump_graph(&index, &index.folder_graph(str_of(run, "prefix"), &opts), None),
+                "folder" => dump_graph(
+                    &index,
+                    &index.folder_graph(str_of(run, "prefix"), &opts),
+                    None,
+                ),
                 other => panic!("unknown run mode {other}"),
             };
             json!({"name": str_of(run, "name"), "result": result})
@@ -205,7 +209,8 @@ pub fn run_live(req: &Value) -> Value {
     let max = req.get("max_nodes").and_then(Value::as_u64).unwrap_or(3000) as usize;
     let opts = options_of(req.get("options"), max);
     let mut index = scan(&root);
-    let mut steps = vec![json!({"op": "scan", "result": dump_graph(&index, &index.build_graph(&opts), None)})];
+    let mut steps =
+        vec![json!({"op": "scan", "result": dump_graph(&index, &index.build_graph(&opts), None)})];
     for op in req["ops"].as_array().expect("ops") {
         let abs = |k: &str| root.join(str_of(op, k));
         match str_of(op, "op") {
@@ -235,8 +240,12 @@ pub fn run_live(req: &Value) -> Value {
             }
             other => panic!("unknown op {other}"),
         }
-        assert!(index.resolution_is_consistent(), "incremental resolution diverged after {op}");
-        steps.push(json!({"op": op, "result": dump_graph(&index, &index.build_graph(&opts), None)}));
+        assert!(
+            index.resolution_is_consistent(),
+            "incremental resolution diverged after {op}"
+        );
+        steps
+            .push(json!({"op": op, "result": dump_graph(&index, &index.build_graph(&opts), None)}));
     }
     json!({"steps": steps})
 }
