@@ -931,6 +931,7 @@ impl Inner {
                     scale,
                 },
             );
+            stalled |= painter.needs_frames();
         }
         let ms = t0.elapsed().as_secs_f64() * 1e3;
         let mut s = self.stats.get();
@@ -953,7 +954,9 @@ impl Inner {
         if self.closed.get() || self.tick.borrow().is_some() || !self.canvas.is_mapped() {
             return;
         }
-        let needs = self.replay.borrow().is_some() || self.scene.borrow().needs_frames();
+        let needs = self.replay.borrow().is_some()
+            || self.scene.borrow().needs_frames()
+            || self.painter.borrow().needs_frames();
         if !needs {
             self.canvas.queue_draw();
             return;
@@ -1011,7 +1014,7 @@ impl Inner {
         }
         self.update_cursor();
         self.canvas.queue_draw();
-        let busy = active || replaying;
+        let busy = active || replaying || self.painter.borrow().needs_frames();
         let ms = t0.elapsed().as_secs_f64() * 1e3;
         let mut s: FrameStats = self.stats.get();
         s.tick_ms = if s.tick_ms == 0.0 {

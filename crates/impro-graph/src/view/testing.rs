@@ -363,6 +363,7 @@ pub fn settle(view: &GraphView, timeout_ms: u64) -> bool {
     wait_for(timeout_ms, || {
         view.inner.has_data.get()
             && !view.inner.scene.borrow().needs_frames()
+            && !view.inner.painter.borrow().needs_frames()
             && view.inner.replay.borrow().is_none()
             && view.inner.tick.borrow().is_none()
     })

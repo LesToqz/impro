@@ -13,6 +13,8 @@ const LINE_LEVELS: f32 = 40.0;
 const NODE_LEVELS: f32 = 50.0;
 /// Labels smaller than this many pixels are not drawn.
 const MIN_LABEL_PX: f64 = 3.0;
+/// During motion nearby masks may be reused until the exact settled frame.
+const LABEL_SIZE_TOLERANCE: f64 = 0.1;
 /// Bitmaps that may be re-rendered in one frame; stale ones are scaled instead.
 const LABEL_RENDER_BUDGET: u32 = 120;
 const LABEL_PAD: i32 = 2;
@@ -61,6 +63,8 @@ pub struct DrawStats {
     pub arrows: usize,
     pub labels: usize,
     pub label_renders: usize,
+    /// Visible masks still waiting for the per-frame render budget.
+    pub labels_pending: bool,
     /// The connection surface was reused without rasterising its geometry.
     pub connections_reused: bool,
     /// Connection and marker groups repainted from kept coverage.
@@ -109,6 +113,7 @@ pub struct LabelCache {
     family: String,
     scale: f64,
     renders_this_frame: u32,
+    pending: bool,
 }
 
 impl LabelCache {
@@ -133,6 +138,7 @@ impl LabelCache {
             family: "sans".to_string(),
             scale: 1.0,
             renders_this_frame: 0,
+            pending: false,
         }
     }
 
@@ -164,6 +170,7 @@ impl LabelCache {
 
     fn begin_frame(&mut self, scale: f64) {
         self.renders_this_frame = 0;
+        self.pending = false;
         if (self.scale - scale).abs() > 1e-9 {
             self.scale = scale;
             self.entries.clear();
@@ -209,13 +216,11 @@ impl LabelCache {
         text: &str,
         px: f64,
         font_world: f64,
+        exact: bool,
     ) -> Option<(cairo::ImageSurface, f64, f64, f64)> {
-        // Integer device-pixel sizes give a stable mask at each zoom. Keeping
-        // an arbitrary nearby size lets the final picture depend on the zoom
-        // path and repeatedly resamples small glyphs.
-        let px = px.ceil();
         let stale = match self.entries.get(text) {
-            Some(l) => l.px != px,
+            Some(l) if exact => l.px != px,
+            Some(l) => (px / l.px - 1.0).abs() > LABEL_SIZE_TOLERANCE,
             None => true,
         };
         if stale {
@@ -231,6 +236,8 @@ impl LabelCache {
                 if let Some(label) = self.render(text, px, wrap) {
                     self.entries.insert(text.into(), label);
                 }
+            } else {
+                self.pending = true;
             }
         }
         self.entries
@@ -315,6 +322,10 @@ impl Default for Painter {
 }
 
 impl Painter {
+    /// True while visible label masks need another bounded warm-up frame.
+    pub fn needs_frames(&self) -> bool {
+        self.stats.labels_pending
+    }
     pub(super) fn arrow_paint(&self, scene: &Scene, dev: f32) -> Vec<super::testing::ArrowPaint> {
         let (w, h) = scene.size;
         let Some(dims) = self.arrow_dims(
@@ -403,6 +414,7 @@ impl Painter {
         opts: PaintOptions,
     ) -> Option<&cairo::ImageSurface> {
         self.stats = DrawStats::default();
+        self.labels.pending = false;
         let dev = opts.scale.max(1.0);
         let (pw, ph) = (
             (w * dev).ceil().max(1.0) as i32,
@@ -511,6 +523,7 @@ impl Painter {
             }
         }
         lap(4, &mut self.stats);
+        self.stats.labels_pending = self.labels.pending;
         self.back = Some(back);
         self.back.as_ref()
     }
@@ -1058,7 +1071,8 @@ impl Painter {
         let drop = scene.drop[i] as f64;
         let text = scene.graph.nodes[i].label();
         let renders = self.labels.renders_this_frame;
-        let Some((surface, px, width, height)) = self.labels.get(text, on_screen * dev, font)
+        let Some((surface, px, width, height)) =
+            self.labels.get(text, on_screen * dev, font, !self.motion)
         else {
             return;
         };

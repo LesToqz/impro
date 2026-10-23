@@ -152,6 +152,37 @@ fn a_settled_graph_runs_no_frames_and_a_hidden_one_pauses() {
 }
 
 #[test]
+fn visible_label_warmup_finishes_exactly_and_leaves_no_frame_callback() {
+    run(|| {
+        let project = tempfile::tempdir().expect("dir");
+        for i in 0..360 {
+            write(project.path(), &format!("file-{i:03}.md"), "unlinked\n");
+        }
+        let f = Fixture::in_dir(
+            project,
+            json!({"textFadeMultiplier":-1,"reduceMotion":true,"close":true}),
+            true,
+        );
+        f.view.fit_camera();
+        assert!(t::wait_frames(&f.view, 2, 2_000));
+        assert!(t::settle(&f.view, 5_000));
+        for id in f.ids() {
+            let paint = t::label_paint(&f.view, &id).expect("label");
+            let px = paint
+                .bitmap_font_size
+                .unwrap_or_else(|| panic!("missing mask: {id}"));
+            let expected = paint.screen_font_size * f.view.canvas().scale_factor() as f64;
+            assert!((px - expected).abs() < 1e-9, "stale label: {id}");
+        }
+        assert!(!f.view.frame_stats().animating);
+        t::pump(100);
+        let frames = f.view.frame_stats().frames;
+        t::pump(200);
+        assert_eq!(f.view.frame_stats().frames, frames, "warm-up must stop");
+    });
+}
+
+#[test]
 fn reduce_motion_skips_visual_easing() {
     run(|| {
         let f = Fixture::new();

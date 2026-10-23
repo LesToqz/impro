@@ -77,11 +77,11 @@ fn cameras(scene: &Scene) -> [(&'static str, Camera); 3] {
 
 /// Hashes of the settled picture at each camera, recorded from the renderer
 /// before the moving level of detail existed.
-// Integer-sized label masks remove zoom-history blur; only label pixels change.
+// Exact settled masks preserve the original picture after every zoom path.
 const SETTLED: [(&str, u64); 3] = [
     ("fit", 6855316917292932711),
-    ("zoom 1", 11237675232627656811),
-    ("zoomed in", 8434853540982696242),
+    ("zoom 1", 10625964012002035238),
+    ("zoomed in", 11118940497073692799),
 ];
 
 #[test]
@@ -194,4 +194,34 @@ fn settled_label_pixels_do_not_depend_on_the_previous_zoom() {
         let fresh = warm_hash(&mut Painter::new(), &scene);
         assert_eq!(from_history, fresh, "settled after zoom {zoom}");
     }
+}
+
+#[test]
+fn a_bounded_label_warmup_finishes_and_stops_requesting_frames() {
+    let mut scene = Scene::new();
+    scene.set_size(W, H);
+    scene.apply(Built::global(Graph::from_pairs(360, &[])));
+    for i in 0..360 {
+        scene.layout.pin(
+            i,
+            (i % 24) as f32 * 30.0 - 360.0,
+            (i / 24) as f32 * 40.0 - 280.0,
+        );
+    }
+    while scene.advance(1.0 / 60.0) {}
+    let mut painter = Painter::new();
+    hash(&mut painter, &scene);
+    assert!(painter.stats.labels > 0 && painter.stats.labels < 360);
+    assert!(painter.needs_frames());
+    for _ in 0..5 {
+        hash(&mut painter, &scene);
+        if !painter.needs_frames() {
+            break;
+        }
+    }
+    assert_eq!(painter.stats.labels, 360);
+    assert!(!painter.needs_frames());
+    let finished = hash(&mut painter, &scene);
+    assert_eq!(finished, warm_hash(&mut Painter::new(), &scene));
+    assert!(!painter.needs_frames());
 }

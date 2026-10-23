@@ -142,9 +142,10 @@ colours precede rule colours, then kind colours, then ordinary file colour.
 
 The view paints software-rasterised markers, anti-aliased connections and arrows
 into premultiplied ARGB32 surfaces, then composites them with Cairo. Pango labels
-use cached alpha-mask surfaces at integer device-pixel font sizes so a settled
-label does not depend on the preceding zoom path; nominal font sizes and
-wrapping stay continuous. Offscreen primitives are culled. Zoom-based label/arrow detail and dense
+reuse nearby cached alpha masks during motion, then refresh at the exact final
+font size. A bounded warm-up finishes visible masks before frame callbacks stop,
+so settled labels do not depend on the preceding zoom path. Nominal font sizes
+and wrapping stay continuous. Offscreen primitives are culled. Zoom-based label/arrow detail and dense
 label decluttering limit work, preserving focus/hover labels. A per-frame label
 render budget bounds cache misses. Connection surfaces are reused when geometry
 and style are unchanged and invalidated when positions, camera or appearance
