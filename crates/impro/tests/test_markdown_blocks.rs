@@ -449,3 +449,20 @@ fn test_divider_and_multiline_paste() {
         assert_eq!(fx.text(), markdown);
     });
 }
+
+#[test]
+fn test_code_card_runs_come_from_the_editor_highlighter_adapter() {
+    run(|| {
+        let fx = Fx::new();
+        fx.reset("```python\ndef value():\n    return 1\n```\n\nafter", None);
+        // The worker answers asynchronously; wait for its runs to be applied.
+        poll(|| fx.live.jobs_in_flight() == 0);
+        drain();
+        let control = fx.live.tag("syntax-control").expect("control tag");
+        let at = |needle: &str| fx.tab.buffer.iter_at_offset(fx.index_of(needle));
+        assert!(at("return").has_tag(&control));
+        // Prose outside the card and the language label stay plain.
+        assert!(!at("after").has_tag(&control));
+        assert!(!at("value").has_tag(&control));
+    });
+}
