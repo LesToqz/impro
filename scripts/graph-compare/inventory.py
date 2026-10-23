@@ -362,6 +362,9 @@ def compare(reference, impro, out):
     add('pan-visible','Count of on-screen markers after the background drag','pan',lambda s,_:sum(0<=v['screen'][0]<s['state']['size'][0] and 0<=v['screen'][1]<s['state']['size'][1] for v in s['nodes'].values()),tol=8,unit='8 markers; independently placed scenes',source='blank',severity=1)
     add('click-visible','Graph remains nonempty and mapped after pointer/keyboard actions','key-escape-again',lambda s,_:[s['mapped'],s['state']['nodes']>0],source='blank',severity=1)
     for row in rows:
+        if row['id']=='duration-replay-reduced':
+            row.update(source='crates/impro-graph/src/view/flow.rs:503',severity=4,
+                       fix='Re-measure completion after T2 aligns chronology, then check whether unchanged replay topology unnecessarily reheats the layout.')
         if row['id']=='idle-cpu' and row['verdict']=='different' and row['impro']<row['reference']:
             row.update(source='crates/impro-graph/src/view/flow.rs:952',severity=4,
                        fix='Retain the lower native idle work and repeat a longer sample before attributing remaining page-process CPU activity.')
@@ -426,7 +429,8 @@ def write_review_docs(rows,out,counts):
         detail=r.get('reason',r['tolerance']).replace('|','\\|').replace('\n',' ')
         register.append(f"| {r['id']} | {r['behaviour']} | {r['scenario']} | {r['verdict']} | {detail} |")
     (out/'behaviour-register.md').write_text('\n'.join(register)+'\n')
-    differences=sorted((r for r in rows if r['verdict']=='different'),key=lambda r:(r['severity'],r['id']))
+    priorities={'pan-visible':0,'pan-distance':1,'pan-inertia':2,'closed-chip':3}
+    differences=sorted((r for r in rows if r['verdict']=='different'),key=lambda r:(r['severity'],priorities.get(r['id'],100),r['id']))
     doc=['# Graph audit divergences','',f'Audit completed {stamp}.',
          '',f"{len(rows)} observable rows: {counts['same']} same, {counts['different']} different, "
          f"{counts['unmeasurable']} unmeasurable. Every measured difference is listed below. "
@@ -461,6 +465,8 @@ def write_review_docs(rows,out,counts):
                         'so the reference breaks ties by ID while impro starts with the first-created hub. '
                         'The initial snapshot records reference node chronology and native filesystem birth-time evidence. '
                         'Inspect `crates/impro-graph/src/index/scan.rs:163` together with the view sorting site.'])
+        if r['id']=='duration-replay-reduced':
+            doc.extend(['','Treat this as a timing observation requiring repetition. The earlier complete pair in `.ceo/graph-compare-reviewed` completed this step in approximately 13.8 seconds on the reference and 13.6 seconds on impro. The final reference sample is shorter. Chronology and the time of the last structural change affect cooling, so align the T2 data difference before changing replay pacing.'])
         if r['id']=='buffer-200':
             doc.extend(['','This is a widget-boundary diagnostic. The reference receives direct `set_text` calls; '
                         'the native widget itself debounces buffer updates. The reference application can debounce '
@@ -479,8 +485,7 @@ def write_review_docs(rows,out,counts):
                 '', '## Remaining measurements and Phase B requests','',
                 'The complete unmeasurable register is in BEHAVIOURS.md and the JSON table. Needed view helpers are '
                 'read-only line/arrow/label paint telemetry, effective nominal font size/wrap/alpha, cursor names, '
-                'camera velocity and controlled frame stepping. A graph-type popup helper is needed only if GTK '
-                'toplevel traversal cannot expose it. No hook was added inside the production view.',
+                'camera velocity and controlled frame stepping. No hook was added inside the production view.',
                 '', 'Full-window work is still needed for actual editor tab/dock routing, the editor-to-graph 400 ms '
                 'debounce boundary, persisted settings through a fresh application process, and write timing. '
                 'The transient loading state was not captured before data delivery. Wayland and the user desktop were '
