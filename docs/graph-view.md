@@ -188,8 +188,11 @@ Saved files, editor buffer changes (debounced 400 ms), explorer operations and O
 Folder feed the index. Deltas preserve positions of surviving nodes. Hidden views
 defer work until mapped. The active file is highlighted; themes, accent, fonts and
 Reduce motion update in place. Preferences include zoom, panel and section states,
-filters, forces, groups and traversal; saves debounce for 250 ms, normalize values,
-and merge through core's atomic settings store. Camera pan and the layout itself
+filters, forces, groups and traversal. Filter/search/group/traversal changes save
+at the 80 ms options boundary (explicit submissions save immediately); other
+preferences debounce for 250 ms. Completed zoom changes wait 500 ms before that
+250 ms settings debounce. Saves normalize values and merge through core's atomic
+settings store. Camera pan and the layout itself
 are not a persisted editor session.
 
 Saved zoom is restored within the supported bounds and survives graph rebuilds.

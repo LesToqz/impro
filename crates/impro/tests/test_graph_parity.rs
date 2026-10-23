@@ -149,6 +149,38 @@ fn graph_preferences_survive_a_fresh_process() {
 }
 
 #[test]
+fn an_offscreen_restored_zoom_fits_and_saves_through_real_frames() {
+    run(|| {
+        let mut values = impro_core::settings::defaults().clone();
+        values.insert(
+            "graph".into(),
+            json!({"scale":6,"close":true,"linkDistance":480,
+            "repelStrength":24,"centerStrength":0}),
+        );
+        let h = Harness::with(values);
+        h.write("a.md", "[[b]]\n");
+        h.write("b.md", "[[a]]\n");
+        let view = h.w.open_graph().expect("graph");
+        ready(&view);
+        let zoom = t::info(&view).zoom;
+        assert!(zoom < 6.0, "a fully off-screen restored graph must fit");
+        assert!(t::nodes_on_screen(&view) > 0);
+        assert!(view.panel().chip_visible());
+        let config = h.dir.path().join("config/impro/settings.json");
+        assert!(
+            t::wait_for(2_000, || {
+                std::fs::read(&config)
+                    .ok()
+                    .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+                    .and_then(|value| value["graph"]["scale"].as_f64())
+                    .is_some_and(|saved| (saved - zoom).abs() < 1e-9)
+            }),
+            "the recovered camera must be saved"
+        );
+    });
+}
+
+#[test]
 fn graph_settings_process() {
     let Ok(stage) = std::env::var("IMPRO_GRAPH_PROCESS_STAGE") else {
         return;
@@ -189,16 +221,24 @@ fn graph_settings_process() {
             let start = Instant::now();
             view.panel().switch("showTags").unwrap().toggle();
             frame(&w.window);
-            t::pump(120);
+            t::pump(40);
             assert_ne!(
                 disk()["graph"]["showTags"],
                 json!(true),
                 "disk write must debounce"
             );
             poll(|| disk()["graph"]["showTags"] == true);
-            assert!(start.elapsed().as_millis() >= 230);
-            assert!(start.elapsed().as_millis() < 2_000);
+            assert!(start.elapsed().as_millis() >= 60);
+            assert!(start.elapsed().as_millis() < 240);
             let preference_delay_ms = start.elapsed().as_millis();
+            let display_start = Instant::now();
+            view.panel().switch("showArrow").unwrap().toggle();
+            frame(&w.window);
+            t::pump(120);
+            assert_eq!(disk()["graph"]["showArrow"], json!(true));
+            poll(|| disk()["graph"]["showArrow"] == false);
+            let display_delay_ms = display_start.elapsed().as_millis();
+            assert!(display_delay_ms >= 230 && display_delay_ms < 2_000);
             // Adding the tag reheats physics for several seconds. Saving a
             // completed zoom must use the camera clock, independently of that.
             assert!(t::info(&view).simulating);
@@ -218,7 +258,8 @@ fn graph_settings_process() {
             record(
                 "settings-save",
                 json!({"preference_delay_ms":preference_delay_ms,
-                "zoom_delay_ms":zoom_start.elapsed().as_millis(),"pref_absent_at120":true,"zoom_absent_at600":true}),
+                "display_delay_ms":display_delay_ms,"display_absent_at120":true,
+                "zoom_delay_ms":zoom_start.elapsed().as_millis(),"pref_absent_at40":true,"zoom_absent_at600":true}),
             );
         } else {
             assert!(view.prefs().show_tags);

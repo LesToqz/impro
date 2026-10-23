@@ -53,7 +53,8 @@ pub fn arrow_opacity(zoom: f64) -> f64 {
     clamp((zoom - 0.18) / 0.62, 0.0, 1.0)
 }
 
-/// Direction marker length and height in pixels: `6·sqrt(width multiplier)`.
+/// Direction marker base dimension in pixels: `6·sqrt(width multiplier)`.
+/// The painter uses this as notch depth; tip-to-back length is four thirds of it.
 pub fn arrow_length(line_multiplier: f64) -> f64 {
     6.0 * line_multiplier.max(0.0).sqrt()
 }

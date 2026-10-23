@@ -100,29 +100,35 @@ def main():
         assert all(result[k] for k in ('close','showTags','chip_visible','visible'))
         record('settings-restore',result)
     else:
+        frame()
+        assert not disk()['showTags']
         started=time.monotonic()
         js("document.querySelector('[role=switch][aria-label=\"Tag markers\"]').click(); true")
-        frame()
-        pump(120)
-        assert not disk()['showTags']
+        pump(40)
+        assert not disk()['showTags'], f'preference sample at {(time.monotonic()-started)*1000:.1f} ms'
         poll(lambda:disk()['showTags'])
         preference_delay_ms=(time.monotonic()-started)*1000
         started=time.monotonic()
+        js("document.querySelector('[role=switch][aria-label=\"Reference direction\"]').click(); true")
+        pump(120)
+        assert disk()['showArrow']
+        poll(lambda:not disk()['showArrow'])
+        display_delay_ms=(time.monotonic()-started)*1000
+        started=time.monotonic()
         js("document.querySelector('#graph').dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,clientX:180,clientY:120,deltaY:-120})); true")
-        frame()
         pump(600)
         assert disk()['scale']==.04
         poll(lambda:abs(disk()['scale']-.04*math.exp(.25))<1e-8)
         zoom_delay_ms=(time.monotonic()-started)*1000
-        record('settings-save',dict(preference_delay_ms=preference_delay_ms,zoom_delay_ms=zoom_delay_ms,
-                                    pref_absent_at120=True,zoom_absent_at600=True))
+        record('settings-save',dict(preference_delay_ms=preference_delay_ms,display_delay_ms=display_delay_ms,
+                                    zoom_delay_ms=zoom_delay_ms,pref_absent_at40=True,
+                                    display_absent_at120=True,zoom_absent_at600=True))
         window.editor.open_file(str(args.root/'a.md'))
         poll(lambda:window.editor.current_path()==str(args.root/'a.md'))
         a=next(tab for tab in window.editor.tabs if tab.path==str(args.root/'a.md'))
         frame()
         started=time.monotonic()
         a.buffer.set_text('[[Draft Target]]\n')
-        frame()
         pump(200)
         assert '?Draft Target' not in js('auditAPI._debug.ids()')
         poll(lambda:'?Draft Target' in js('auditAPI._debug.ids()'))

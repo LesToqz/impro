@@ -277,6 +277,37 @@ fn flush_writes_pending_changes_immediately() {
 }
 
 #[test]
+fn option_changes_save_at_the_options_boundary_before_display_preferences() {
+    run(|| {
+        let f = Fixture::new();
+        f.view.panel().switch("showTags").unwrap().toggle();
+        t::pump(40);
+        assert!(f.store.saves().is_empty());
+        assert!(
+            t::wait_for(120, || f
+                .store
+                .saves()
+                .last()
+                .is_some_and(|value| value["showTags"] == true)),
+            "options must save at 80 ms"
+        );
+        let saved = f.store.saves().len();
+        f.view.panel().switch("showArrow").unwrap().toggle();
+        t::pump(120);
+        assert_eq!(
+            f.store.saves().len(),
+            saved,
+            "display changes retain the 250 ms debounce"
+        );
+        assert!(t::wait_for(500, || f
+            .store
+            .saves()
+            .last()
+            .is_some_and(|value| value["showArrow"] == false)));
+    });
+}
+
+#[test]
 fn theme_font_and_accent_apply_to_the_canvas() {
     run(|| {
         let f = Fixture::new();

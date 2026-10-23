@@ -745,6 +745,10 @@ impl Inner {
                 Change::Open(_) | Change::Replay | Change::GraphType(_) => {}
             }
         }
+        let save_delay = match &change {
+            Change::Reset | Change::RuleColor(..) => OPTIONS_DELAY_MS,
+            _ => rebuild.unwrap_or(SAVE_DELAY_MS),
+        };
         match change {
             Change::Open(open) => {
                 self.set_panel_open(open, true);
@@ -776,7 +780,7 @@ impl Inner {
             self.stop_replay();
             self.schedule_build(delay);
         }
-        self.schedule_save();
+        self.schedule_save_after(save_delay);
     }
 
     pub(super) fn set_panel_open(self: &Rc<Self>, open: bool, user: bool) {
@@ -835,15 +839,22 @@ impl Inner {
     // ---- persistence ------------------------------------------------------------------
 
     pub(super) fn schedule_save(self: &Rc<Self>) {
+        self.schedule_save_after(SAVE_DELAY_MS);
+    }
+
+    fn schedule_save_after(self: &Rc<Self>, delay_ms: u32) {
         cancel(&self.save_timer);
+        if delay_ms == 0 {
+            self.save_now();
+            return;
+        }
         let weak = self.weak();
-        let id =
-            glib::timeout_add_local_once(Duration::from_millis(SAVE_DELAY_MS as u64), move || {
-                if let Some(inner) = weak.upgrade() {
-                    inner.save_timer.borrow_mut().take();
-                    inner.save_now();
-                }
-            });
+        let id = glib::timeout_add_local_once(Duration::from_millis(delay_ms as u64), move || {
+            if let Some(inner) = weak.upgrade() {
+                inner.save_timer.borrow_mut().take();
+                inner.save_now();
+            }
+        });
         *self.save_timer.borrow_mut() = Some(id);
     }
 
