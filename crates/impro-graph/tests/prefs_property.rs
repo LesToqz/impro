@@ -1,4 +1,6 @@
 //! Preferences normalisation on randomly generated JSON.
+// `u64::is_multiple_of` needs Rust 1.90; the workspace minimum is 1.88.
+#![allow(clippy::manual_is_multiple_of)]
 
 use impro_graph::layout::Rng;
 use impro_graph::prefs::{normalize, normalize_value, GraphPrefs, LIMITS};
