@@ -1,7 +1,8 @@
 # Graph behaviour audit
 
-Phase A observes the running reference widget and impro's independent native
-widget. It does not alter either graph implementation. The oracle inputs are
+The final paired audit observes the running reference widget and impro's independent native
+widget, with full-window checks for editor debounce and settings persistence.
+Measurement does not alter either graph implementation. The oracle inputs are
 its graph specification, parameter fixture, GTK tests, browser tests and core
 tests; runtime observations are authoritative when text and behaviour differ.
 
@@ -51,7 +52,7 @@ Observable expectations to audit:
 
 The row register below contains measured verdicts, individual tolerances and
 explicit coverage gaps. Raw values live in the run's `comparison.json`;
-`DIVERGENCES.md` ranks every measured difference. An unmeasurable verdict is a
+`DIVERGENCES.md` explains every remaining difference. An unmeasurable verdict is a
 coverage gap, never a passing result.
 
 ## Measured controls
@@ -91,9 +92,9 @@ state are measured, as well as the initial section states.
 
 <!-- audit-register -->
 
-Measured 2026-10-23 13:18 IST.
+Measured 2026-10-23 19:20 IST.
 
-175 rows: 151 same, 12 different, 12 unmeasurable.
+180 rows: 176 same, 3 different, 1 unmeasurable.
 
 | ID | Observable behaviour | Scenario | Verdict | Tolerance or coverage reason |
 | --- | --- | --- | --- | --- |
@@ -171,24 +172,28 @@ Measured 2026-10-23 13:18 IST.
 | radius-zoom-1 | Radius scales with square root of zoom: 1 | zoom-1 | same | 0.01 world unit after dividing by sqrt(zoom) |
 | line-width-1 | Screenshot connection width at zoom 1 | zoom-1 | same | 1 px FWHM; excludes clipped/covered midpoint |
 | line-colour-1 | Screenshot connection RGB at zoom 1 | zoom-1 | same | 20/255 per channel; raster coverage allowance |
-| label-1 | Screenshot label visibility and ink extent at zoom 1 | label-1 | different | 3 px ink bounding box; visibility exact |
+| label-1 | Screenshot label visibility and ink extent at zoom 1 | label-1 | same | 3 px ink bounding box; visibility exact |
 | radius-zoom-2 | Radius scales with square root of zoom: 2 | zoom-2 | same | 0.01 world unit after dividing by sqrt(zoom) |
 | line-width-2 | Screenshot connection width at zoom 2 | zoom-2 | same | 1 px FWHM; excludes clipped/covered midpoint |
 | line-colour-2 | Screenshot connection RGB at zoom 2 | zoom-2 | same | 20/255 per channel; raster coverage allowance |
 | label-2 | Screenshot label visibility and ink extent at zoom 2 | label-2 | same | 3 px ink bounding box; visibility exact |
 | label-detail--1 | Label ink visibility and size with detail -1 | detail--1 | same | 3 px ink bounding box; visibility exact |
 | label-detail-2 | Label ink visibility and size with detail 2 | detail-2 | same | 3 px ink bounding box; visibility exact |
-| arrows | Arrow visibility, opacity and dart length at each zoom | default | unmeasurable | Native view exposes no arrow geometry or paint telemetry; screenshot lines and labels cannot isolate arrow alpha reliably. Request a read-only painted-arrow helper. |
+| arrows | Painted arrow opacity, length, half-width and notch at each zoom | zoom-1 | same | 0.01 logical px/opacity; culled markers omitted |
 | label-alpha-0.1 | Peak screenshot label contrast versus text role at zoom 0.1 | label-0.1 | same | 0.15 alpha estimate; font coverage differs |
 | label-alpha-0.25 | Peak screenshot label contrast versus text role at zoom 0.25 | label-0.25 | same | 0.15 alpha estimate; font coverage differs |
-| label-alpha-0.7 | Peak screenshot label contrast versus text role at zoom 0.7 | label-0.7 | different | 0.15 alpha estimate; font coverage differs |
+| label-alpha-0.7 | Peak screenshot label contrast versus text role at zoom 0.7 | label-0.7 | same | 0.15 alpha estimate; font coverage differs |
 | label-alpha-1 | Peak screenshot label contrast versus text role at zoom 1 | label-1 | same | 0.15 alpha estimate; font coverage differs |
 | label-alpha-2 | Peak screenshot label contrast versus text role at zoom 2 | label-2 | same | 0.15 alpha estimate; font coverage differs |
-| label-font-size | Nominal label font size and wrapping width | default | unmeasurable | Ink bounds and visibility are measured separately; the native label cache exposes neither effective font size nor wrap width. Request label paint telemetry. |
+| label-font-size | Nominal label font size and wrapping width | label-1 | same | 0.01 logical px; requested sizes before glyph coverage |
+| label-nominal-alpha-0.25 | Effective label alpha before glyph coverage: 0.25 | label-0.25 | same | 0.001 opacity |
+| label-nominal-alpha-0.7 | Effective label alpha before glyph coverage: 0.7 | label-0.7 | same | 0.001 opacity |
+| label-nominal-alpha-1 | Effective label alpha before glyph coverage: 1 | label-1 | same | 0.001 opacity |
+| label-nominal-alpha-2 | Effective label alpha before glyph coverage: 2 | label-2 | same | 0.001 opacity |
 | hover-dim | Hover leaves unrelated markers at 28 percent opacity | hover | same | 0.01 opacity |
 | cursor | Hover installs a pointer cursor | hover | same | exact |
-| hover-edges | Hover dims unrelated connections to 28 percent | default | unmeasurable | Native node opacity is exposed and measured; connection opacity is private and the source-pair midpoint is not guaranteed visible after camera focus. Request line paint telemetry. |
-| cursor-shape | Exact grabbing and pointer cursor names | default | unmeasurable | Reference CSS cursor is captured; native GDK cursor has no portable name getter through the allowed helpers. Request a cursor-name QA helper. |
+| hover-edges | Hover connection alpha after paint bucketing | hover | same | 0.001 opacity; touching/unrelated connections |
+| cursor-shape | Exact grabbing and pointer cursor names | hover | same | exact |
 | events-click | Emitted graph actions: click | click | same | exact |
 | events-ctrl-click | Emitted graph actions: ctrl-click | ctrl-click | same | exact |
 | events-middle-click | Emitted graph actions: middle-click | middle-click | same | exact |
@@ -204,19 +209,20 @@ Measured 2026-10-23 13:18 IST.
 | drag-held | Node drag is pinned to pointer and layout stays warm | drag | same | 0.03 layout alpha; flags exact |
 | drag-follow | Held marker stays at the requested pointer displacement during simulation | drag | same | 1 screen px |
 | drag-release | Releasing a drag emits no open action and settles | drag | same | exact |
-| pan-distance | Background drag follows 80 by 32 screen pixels | pan | different | 0.1 px |
-| pan-inertia | Inertia travel after the scripted 8-move fling | pan | different | 8 px scheduling allowance |
+| pan-distance | Background drag follows 80 by 32 screen pixels | pan | same | 0.1 px |
+| pan-inertia | Inertia travel after the scripted 8-move fling | pan | same | 8 px scheduling allowance |
 | pan-stop | Pressing the background stops inertia immediately | stop-on-press | same | 0.05 px |
-| pan-decay | Frame-independent pan velocity decay coefficient | default | unmeasurable | Travel is measured; the native testing API exposes no velocity or controlled frame advance, so exact decay cannot be separated from frame scheduling. |
+| pan-decay | Pan velocity decay over a controlled 60 Hz frame | controlled-motion | same | 1e-6 retention factor |
+| pan-filter | Released velocity after eight controlled 16 ms pointer moves | controlled-motion | same | 1e-6 logical px/ms |
 | zoom-wheel-in | Wheel target factor or limit: wheel-in | wheel-in | same | 1e-6 zoom ratio |
 | zoom-wheel-out | Wheel target factor or limit: wheel-out | wheel-out | same | 1e-6 zoom ratio |
 | zoom-ctrl-wheel | Wheel target factor or limit: ctrl-wheel | ctrl-wheel | same | 1e-6 zoom ratio |
 | zoom-wheel-max | Wheel target factor or limit: wheel-max | wheel-max | same | 1e-6 zoom ratio |
 | zoom-wheel-min | Wheel target factor or limit: wheel-min | wheel-min | same | 1e-6 zoom ratio |
 | anchor-wheel-in | Distance the pointer anchor moves: wheel-in | wheel-in | same | 0.1 px |
-| anchor-wheel-out | Distance the pointer anchor moves: wheel-out | wheel-out | different | 0.1 px |
+| anchor-wheel-out | Distance the pointer anchor moves: wheel-out | wheel-out | same | 0.1 px |
 | reduced-motion | Live reduced-motion preference reaches the zoom target within 40 ms | reduced-wheel | same | exact |
-| zoom-ease | Per-frame wheel zoom easing | default | unmeasurable | Native immediate state is synchronous; the page round trip can paint before introspection. A controlled frame/time hook is required for matched ease samples. |
+| zoom-ease | Wheel zoom easing over a controlled 60 Hz frame | controlled-motion | same | 1e-6 fraction of remaining zoom |
 | keyboard-ArrowLeft | Held 200 ms key movement: ArrowLeft | key-ArrowLeft | same | 25 px pan or 0.12 zoom ratio scheduling allowance |
 | keyboard-ArrowRight | Held 200 ms key movement: ArrowRight | key-ArrowRight | same | 25 px pan or 0.12 zoom ratio scheduling allowance |
 | keyboard-ArrowUp | Held 200 ms key movement: ArrowUp | key-ArrowUp | same | 25 px pan or 0.12 zoom ratio scheduling allowance |
@@ -237,20 +243,20 @@ Measured 2026-10-23 13:18 IST.
 | local-outgoing | Outgoing-only traversal IDs | local-outgoing | same | exact |
 | note-mode | Note graph visible IDs | note | same | exact |
 | type-menu | Global / Local / Note graph menu labels and order | type-menu | same | exact |
-| closed-chip | Closing the controls exposes the three-button chip | key-escape | different | exact |
+| closed-chip | Closing the controls exposes the three-button chip | key-escape | same | exact |
 | group-add | Colour rule count and generated colour: group-add | group-add | same | exact |
 | group-remove | Colour rule count and generated colour: group-remove | group-remove | same | exact |
 | group-colour | First matching colour rule colours file markers | group-colour | same | exact |
 | reset | Reset restores defaults while retaining search, zoom and section visibility | reset | same | 1e-8 numeric; other fields exact |
-| replay | Replay visible IDs at 250 ms and 1000 ms: replay | replay | different | exact |
-| replay-reduced | Replay visible IDs at 250 ms and 1000 ms: replay-reduced | replay-reduced | different | exact |
+| replay | Replay visible IDs at 250 ms and 1000 ms: replay | replay | same | exact |
+| replay-reduced | Replay visible IDs at 250 ms and 1000 ms: replay-reduced | replay-reduced | same | exact |
 | duration-replay | Replay reveal plus final cooling wall time: replay | replay | same | 1500 ms scheduling allowance |
 | duration-replay-reduced | Replay reveal plus final cooling wall time: replay-reduced | replay-reduced | different | 1500 ms scheduling allowance |
-| replay-speed | Exact chronological replay order and reveal rate | default | unmeasurable | Coarse replay snapshots are measured; creation timestamps and asynchronous timer dispatch prevent an exact items/second comparison without reveal-event telemetry. |
+| replay-speed | Actual reveal-plan chronology, item boundaries and reveal rate | replay | same | item indices and IDs exact; rate 1e-8 items/s |
 | status-ready | Status is hidden after a nonempty graph arrives | default | same | exact |
 | status-empty | Empty-filter status text and zero nodes | empty | same | exact |
 | status-local | No-active-file local status and zero nodes | local-empty | same | exact |
-| status-loading | Initial Mapping this project… status | default | unmeasurable | Both widgets receive data before the first settled snapshot; a blocked-index fixture or pre-data screenshot is needed to measure this transient. |
+| status-loading | Initial Mapping this project… status before data delivery | default | same | exact |
 | truncation | Truncation cap count and notice text | cap | same | exact |
 | live-save | Live save updates visible IDs | save | same | exact |
 | retention-save | Survivor world-coordinate displacement at update delivery: save | save | same | 0.05 world unit at delivery |
@@ -261,14 +267,14 @@ Measured 2026-10-23 13:18 IST.
 | new-placement | New file distance from its surviving hub neighbour at delivery | save | same | 34 world units; independent seeds within a 24-unit jitter square |
 | buffer-200 | Unsaved-buffer visible IDs after 200 ms | buffer | different | exact |
 | buffer-600 | Unsaved-buffer visible IDs after 600 ms | buffer | same | exact |
-| buffer-host-debounce | Application edit-to-graph 400 ms debounce | default | unmeasurable | Direct reference set_text runs immediately; the editor-to-widget debounce lives in the full window. The measured widget-level 200/600 ms rows must not be treated as application-level timing. |
+| buffer-host-debounce | Full-window edit debounce and local graph following tab changes | default | same | 150 ms timer dispatch allowance; flags exact |
 | font-live | Changing font family changes the focused label pixels | font | same | exact |
 | resize | Dock-sized widget resize preserves centre and mapped graph | resize | same | 0.1 logical px |
 | hidden | No frames advance during one second while unmapped | hidden | same | exact |
 | shown | Showing the hidden widget restores a nonempty mapped graph | shown | same | exact |
 | idle-cpu | Two-second settled CPU ticks (100 ticks per second on this machine) | idle | same | 2 ticks; page descendants included on reference side |
 | persistence | Persisted blob restores search, panel, zoom and all graph preferences | persist | same | 1e-8 numeric; strings/flags exact |
-| persistence-restart | Persistence through a full application process restart | default | unmeasurable | The paired drivers reconstruct widgets from their captured stores; a full editor/settings-process restart is outside the widget harness. |
-| persistence-delay | Exact preference write debounce and zoom-save time | default | unmeasurable | Saved payloads are measured; real disk writes and host settings debounce are replaced by isolated stores to avoid touching user configuration. |
-| pan-visible | Count of on-screen markers after the background drag | pan | different | 8 markers; independently placed scenes |
+| persistence-restart | Real preferences restored by a fresh full-window process | default | same | 1e-8 zoom; flags exact |
+| persistence-delay | Real preference and zoom writes after their debounce delays | default | same | 150 ms dispatch/write allowance; early-write checks exact |
+| pan-visible | Count of on-screen markers after the background drag | pan | same | 8 markers; independently placed scenes |
 | click-visible | Graph remains nonempty and mapped after pointer/keyboard actions | key-escape-again | same | exact |

@@ -66,7 +66,8 @@ Background drags use GTK-dispatched GDK events with monotonic timestamps; Shift
 keys also carry modifiers through GTK event dispatch.
 The reference page bridge events and native host signals are normalized to
 `open`, `search` and `create` records. The reference's raw new-tab flag is measured
-before its host consumes it. Editor tab/dock wiring is outside this harness.
+before its host consumes it. Editor tab/dock wiring is outside the widget
+sequence; the additional full-window checks below cover host integration.
 
 Output defaults to `.ceo/graph-compare`:
 
@@ -77,8 +78,15 @@ Output defaults to `.ceo/graph-compare`:
 - `comparison.json`, `comparison.md`, `counts.json`: full values, table and counts.
 - `behaviour-register.md`, `divergences.md`: generated documentation snapshots for review.
 
-The committed BEHAVIOURS and DIVERGENCES documents record the reviewed audit;
-running the harness does not overwrite tracked documentation.
+The committed BEHAVIOURS and DIVERGENCES documents record the final reviewed
+audit measured 2026-10-23 19:20 IST: 180 rows, 176 same, 3 different and
+1 unmeasurable. The evidence is archived under
+`<home>/projects/impro-wt/.qa-archive/graph-fixes/final-reviewed/`.
+Running the harness does not overwrite tracked documentation. To update the
+register, use `--reuse --out <existing-output-directory>` to regenerate the
+snapshots, then replace BEHAVIOURS from `<!-- audit-register -->` onward with
+`behaviour-register.md`. Review the values and dispositions separately before
+updating DIVERGENCES; a generated snapshot is not a reviewed acceptance decision.
 
 All screenshots remain under the selected output directory and are never
 committed. Configuration and caches are isolated there. Python uses `-I -B` and
@@ -104,8 +112,9 @@ Survivor positions are sampled at graph delivery: around the reference's public
 `setData` method and inside the native public updated signal. Sampling before
 cooling distinguishes retained positions from subsequent simulation movement.
 Reference unsaved-buffer calls reach the widget immediately; application editor
-forwarding is a separate debounce layer, so the widget-level timing difference
-must be investigated in the host before proposing a user-facing change.
+forwarding is a separate debounce layer. The final full-window
+`buffer-host-debounce` row confirms both applications follow the 400 ms policy;
+the widget-only 200 ms difference compares different API boundaries.
 
 CPU evidence counts `/proc` user+system ticks during two seconds of a blocking GLib
 main loop with a single completion timeout. The idle sample does not use the
