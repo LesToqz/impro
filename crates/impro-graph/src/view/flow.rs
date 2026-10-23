@@ -901,9 +901,14 @@ impl Inner {
             area.allocated_height() as f64,
         );
         let scale = area.scale_factor() as f64;
+        let mut stalled = false;
         if let (Ok(scene), Ok(mut painter)) =
             (self.scene.try_borrow(), self.painter.try_borrow_mut())
         {
+            // something changed the scene without asking for frames
+            stalled = scene.needs_frames()
+                && self.tick.try_borrow().is_ok_and(|t| t.is_none())
+                && self.replay.try_borrow().is_ok_and(|r| r.is_none());
             // The frame after the last moving one is drawn at full quality.
             painter.motion = scene.moving();
             painter.paint(
@@ -926,6 +931,11 @@ impl Inner {
         };
         s.frames += 1;
         self.stats.set(s);
+        if stalled {
+            if let Some(me) = self.weak().upgrade() {
+                me.kick();
+            }
+        }
     }
 
     /// Makes sure frames run while something moves.

@@ -496,3 +496,33 @@ fn a_double_click_opens_once_per_click_and_leaves_no_press_behind() {
         assert!(!t::info(&f.view).dragging);
     });
 }
+
+#[test]
+fn a_right_click_finishes_its_highlight_fade_and_a_dismissed_menu_is_forgotten() {
+    run(|| {
+        // Regression: the right click highlighted the file without asking for
+        // frames, so the fade froze part-way until the next input; a menu
+        // dismissed outside the view stayed recorded as open.
+        let f = Fixture::new();
+        assert!(t::open_context_menu(&f.view, "a.md"));
+        assert!(
+            !t::needs_frames(&f.view) || f.view.frame_stats().animating,
+            "the highlight fade has no frames: {:?}",
+            t::frame_reasons(&f.view)
+        );
+        t::context_menu(&f.view).expect("menu").cancel();
+        assert!(
+            t::context_menu(&f.view).is_none(),
+            "a dismissed menu is forgotten"
+        );
+        assert!(
+            t::settle(&f.view, 5_000),
+            "the fade stalled: {:?}",
+            t::frame_reasons(&f.view)
+        );
+        // Escape now goes to the panel, not to the forgotten menu
+        assert!(f.view.panel_open());
+        t::key(&f.view, keys::Escape, true);
+        assert!(!f.view.panel_open());
+    });
+}

@@ -48,6 +48,8 @@ impl Inner {
             if let Some((i, _)) = self.node_at(x, y) {
                 self.context_for(i, x, y);
             }
+            // the menu's file stays highlighted: its fade needs frames
+            self.kick();
             return;
         }
         // a press whose release never arrived (its button is not held any
@@ -443,8 +445,13 @@ impl Inner {
             );
         }
         let weak = self.weak();
-        menu.connect_deactivate(move |_| {
+        menu.connect_deactivate(move |m| {
             if let Some(inner) = weak.upgrade() {
+                // dismissed by a click elsewhere: forget it
+                let current = inner.menu.borrow().as_ref() == Some(m);
+                if current {
+                    inner.menu.borrow_mut().take();
+                }
                 inner.canvas.grab_focus();
             }
         });

@@ -281,6 +281,11 @@ pub fn needs_frames(view: &GraphView) -> bool {
     view.inner.scene.borrow().needs_frames()
 }
 
+/// Why the scene still wants frames (empty when at rest).
+pub fn frame_reasons(view: &GraphView) -> Vec<&'static str> {
+    view.inner.scene.borrow().frame_reasons()
+}
+
 /// Number of cached label bitmaps.
 pub fn label_cache_len(view: &GraphView) -> usize {
     view.inner.painter.borrow().labels.len()
