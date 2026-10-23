@@ -6,9 +6,7 @@ terminal docks, a native project graph, read-only Git history, palettes and sett
 
 ## Install and run
 
-Build requirements: the workspace declares Rust **1.80 or newer**, but the current
-lockfile selects dependencies (`plist` and `time`) that require **Rust 1.88 or
-newer**. Use a current stable toolchain for this checkout. A C toolchain,
+Build requirements: **Rust 1.88 or newer**. A C toolchain,
 pkg-config and GTK3, VTE and WebKit2GTK development libraries are also required.
 On Debian/Ubuntu:
 
@@ -17,6 +15,9 @@ sudo apt install build-essential pkg-config libgtk-3-dev libvte-2.91-dev libwebk
 cargo build --release -p impro
 cargo run --release -p impro -- [folder]
 ```
+
+The repository caps parallel compile jobs at 3 to bound memory on small machines;
+`CARGO_BUILD_JOBS=N cargo build --release -p impro` overrides this limit.
 
 `[folder]` denotes an optional directory argument; omit it to open the current
 directory. The executable is `target/release/impro`. For command-line information:
