@@ -16,16 +16,16 @@ run() {
   timeout "${T:-900}" "$@" >> "$out" 2> >(tee -a "$out.err" >&2) || echo "[exit $?] $*" | tee -a "$out"
   echo "[done] $out"
 }
-# device 3840x2160 through scale 1 (3840x2160 logical) and scale 2 (1920x1080 logical)
-for cfg in "3840x2160 1" "1920x1080 2"; do
-  set -- $cfg; size=$1; scale=$2
+# window sizes on the 3840x2160 virtual monitor (GDK_SCALE is ignored by GTK3 on
+# Wayland, so every row is device scale 1); override with SIZES="2560x1440"
+for size in ${SIZES:-3840x2160 2560x1440 1920x1080}; do
   for mode in blit gl current; do
-    GDK_SCALE=$scale PROBE_MODE=$mode PROBE_SIZE=$size run probe-wl4k-$mode-s$scale \
+    PROBE_MODE=$mode PROBE_SIZE=$size run probe-wl4k-$mode-$size \
       dbus-run-session -- bash "$WL" $BIN/glarea_probe
   done
-  GDK_SCALE=$scale PROBE_MODE=current PROBE_MOTION=1 PROBE_SIZE=$size run probe-wl4k-current-motion-s$scale \
+  PROBE_MODE=current PROBE_MOTION=1 PROBE_SIZE=$size run probe-wl4k-current-motion-$size \
     dbus-run-session -- bash "$WL" $BIN/glarea_probe
 done
 # the proof of concept (scripted pan + zoom, no pointer needed)
-run poc-wl4k-auto dbus-run-session -- bash "$WL" $BIN/glarea_poc --auto --size 1920x1080
-GDK_BACKEND=x11 run poc-x-auto xvfb-run -a -s '-screen 0 1920x1080x24' dbus-run-session -- $BIN/glarea_poc --auto --size 1280x720
+[ -n "${SKIP_POC:-}" ] || run poc-wl4k-auto dbus-run-session -- bash "$WL" $BIN/glarea_poc --auto --size 1920x1080
+[ -n "${SKIP_POC:-}" ] || GDK_BACKEND=x11 run poc-x-auto xvfb-run -a -s '-screen 0 1920x1080x24' dbus-run-session -- $BIN/glarea_poc --auto --size 1280x720
