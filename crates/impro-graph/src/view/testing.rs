@@ -144,8 +144,16 @@ pub fn advance_frame(view: &GraphView, seconds: f64) -> bool {
     active
 }
 
+/// Reveal-plan telemetry; each entry gives the item at which files first appear.
+#[derive(Clone, Debug)]
+pub struct ReplayPlanInfo {
+    pub total: usize,
+    pub rate: f64,
+    pub reveals: Vec<(usize, Vec<String>)>,
+}
+
 /// The actual reveal plan, sampled without running the clock or changing data.
-pub fn replay_plan(view: &GraphView) -> (usize, f64, Vec<(usize, Vec<String>)>) {
+pub fn replay_plan(view: &GraphView) -> ReplayPlanInfo {
     let scene = view.inner.scene.borrow();
     let graph = &scene.graph;
     let plan = super::timelapse::Plan::new(graph, view.prefs().show_orphans);
@@ -164,11 +172,11 @@ pub fn replay_plan(view: &GraphView) -> (usize, f64, Vec<(usize, Vec<String>)>) 
             reveals.push((item, new))
         }
     }
-    (
-        plan.total(),
-        crate::geometry::timeline_speed(plan.total()),
+    ReplayPlanInfo {
+        total: plan.total(),
+        rate: crate::geometry::timeline_speed(plan.total()),
         reveals,
-    )
+    }
 }
 
 /// Ids of the shown nodes, sorted.

@@ -288,12 +288,12 @@ def main():
             settle()
         elif op == 'pan':
             pointer('pointerleave',-1000,-1000)
-            pointer('pointerdown',2,2)
+            pointer('pointerdown',2,2,timestamp=1000)
             for i in range(1,9):
-                pointer('pointermove',2+10*i,2+4*i)
+                pointer('pointermove',2+10*i,2+4*i,timestamp=1000+16*i)
                 pump(16)
             extra['held'] = state()
-            pointer('pointerup',82,34)
+            pointer('pointerup',82,34,timestamp=1144)
             pump(120)
             extra['after120'] = state()
             settle()

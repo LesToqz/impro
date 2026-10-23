@@ -33,6 +33,7 @@ def main():
     parser.add_argument('--skip-repeat', action='store_true', help='omit the fresh-start repeat probes')
     parser.add_argument('--reuse', action='store_true', help='compare existing measurements only')
     parser.add_argument('--layout-sweep', action='store_true', help='compare generated layout fixtures and fresh-start repeats')
+    parser.add_argument('--window-test-bin', type=Path, help='run the built native window parity test and paired full-window oracle')
     args = parser.parse_args()
     out = args.out.resolve()
     if args.reference is not None and out.is_relative_to(args.reference.resolve()):
@@ -78,6 +79,17 @@ def main():
                    '--actions',str(repeat),'--out',str(out/'reference-repeat')],out/'reference-repeat',env)
             scenarios.fixture(root)
             drive([str(args.impro_bin.resolve()),str(root),str(repeat),str(out/'impro-repeat')],out/'impro-repeat',env)
+    if args.window_test_bin:
+        if args.reference is None or not args.window_test_bin.is_file():
+            raise RuntimeError('window checks need the reference and a built test_graph_parity binary')
+        env = dict(os.environ, XDG_CONFIG_HOME=str(out/'window-config'),
+                   XDG_CACHE_HOME=str(out/'window-cache'), GIO_USE_VFS='local')
+        for stage in ('save','restore'):
+            drive(['/usr/bin/python3','-I','-B',str(HERE/'window_reference.py'),
+                   '--reference',str(args.reference.resolve()),'--root',str(out/'window-fixture'),
+                   '--out',str(out/'window-reference'),'--stage',stage],out/('window-reference-'+stage),env)
+        env['IMPRO_GRAPH_WINDOW_EVIDENCE'] = str(out/'window-impro')
+        drive(['timeout','280',str(args.window_test_bin.resolve()),'--nocapture'],out/'window-impro',env)
     reference = json.loads((out/'reference/measurements.json').read_text())
     impro = json.loads((out/'impro/measurements.json').read_text())
     # Detailed measurement rows are provided by the inventory module.

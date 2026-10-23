@@ -257,6 +257,11 @@ def compare(reference, impro, out):
         rows.append(row)
     def missing(identifier,description,reason,source='flow'):
         add(identifier,description,'default',lambda *_:None,reason=reason,source=source)
+    def window_value(side, name):
+        path=out/('window-'+side)/(name+'.json')
+        if not path.is_file():
+            raise ValueError('Run --window-test-bin with the built test_graph_parity binary for paired full-window evidence.')
+        return json.loads(path.read_text())
     add('initial-defaults','Default visibility, force, display, local and camera preferences','default',lambda s,_:s['prefs'],source='panel')
     add('initial-graph','Default visible IDs and undirected line count','default',lambda s,_:[sorted(s['nodes']),s['state']['lines']],source='data',severity=1)
     add('search-label','Search field accessible label and placeholder','default',lambda s,_:s['search'],source='panel')
@@ -377,15 +382,18 @@ def compare(reference, impro, out):
     add('new-placement','New file distance from its surviving hub neighbour at delivery','save',lambda s,side:placement(s,side),tol=34,unit='34 world units; independent seeds within a 24-unit jitter square',source='flow')
     add('buffer-200','Unsaved-buffer visible IDs after 200 ms','buffer',lambda s,_:sorted(s['extra']['at200']['nodes']),source='flow',severity=2)
     add('buffer-600','Unsaved-buffer visible IDs after 600 ms','buffer',lambda s,_:sorted(s['extra']['at600']['nodes']),source='data')
-    missing('buffer-host-debounce','Application edit-to-graph 400 ms debounce','Direct reference set_text runs immediately; the editor-to-widget debounce lives in the full window. The measured widget-level 200/600 ms rows must not be treated as application-level timing.','flow')
+    add('buffer-host-debounce','Full-window edit debounce and local graph following tab changes','default',
+        lambda _,side:window_value(side,'buffer'),tol=150,unit='150 ms timer dispatch allowance; flags exact',source='flow')
     add('font-live','Changing font family changes the focused label pixels','font',lambda s,side:font_changed(out,side,s),source='draw')
     add('resize','Dock-sized widget resize preserves centre and mapped graph','resize',lambda s,_:[s['state']['size'],pan_delta(s),s['mapped']],tol=.1,unit='0.1 logical px',source='camera')
     add('hidden','No frames advance during one second while unmapped','hidden',lambda s,_:s['extra']['at1000'].get('frames',s['extra']['at1000'].get('ticks',0))-s['extra']['at0'].get('frames',s['extra']['at0'].get('ticks',0)),source='flow',severity=1)
     add('shown','Showing the hidden widget restores a nonempty mapped graph','shown',lambda s,_:[s['mapped'],s['state']['nodes'],s['panel_open']],source='blank',severity=1)
     add('idle-cpu','Two-second settled CPU ticks (100 ticks per second on this machine)','idle',lambda s,_:s['extra']['cpu_ticks'],tol=2,unit='2 ticks; page descendants included on reference side',source='flow')
     add('persistence','Persisted blob restores search, panel, zoom and all graph preferences','persist',lambda s,_:s['extra']['restored'],tol=1e-8,unit='1e-8 numeric; strings/flags exact',source='panel')
-    missing('persistence-restart','Persistence through a full application process restart','The paired drivers reconstruct widgets from their captured stores; a full editor/settings-process restart is outside the widget harness.','flow')
-    missing('persistence-delay','Exact preference write debounce and zoom-save time','Saved payloads are measured; real disk writes and host settings debounce are replaced by isolated stores to avoid touching user configuration.','flow')
+    add('persistence-restart','Real preferences restored by a fresh full-window process','default',
+        lambda _,side:window_value(side,'settings-restore'),tol=1e-8,unit='1e-8 zoom; flags exact',source='flow')
+    add('persistence-delay','Real preference and zoom writes after their debounce delays','default',
+        lambda _,side:window_value(side,'settings-save'),tol=150,unit='150 ms dispatch/write allowance; early-write checks exact',source='flow')
     add('pan-visible','Count of on-screen markers after the background drag','pan',lambda s,_:sum(0<=v['screen'][0]<s['state']['size'][0] and 0<=v['screen'][1]<s['state']['size'][1] for v in s['nodes'].values()),tol=8,unit='8 markers; independently placed scenes',source='blank',severity=1)
     add('click-visible','Graph remains nonempty and mapped after pointer/keyboard actions','key-escape-again',lambda s,_:[s['mapped'],s['state']['nodes']>0],source='blank',severity=1)
     for row in rows:

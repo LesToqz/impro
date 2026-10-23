@@ -131,3 +131,18 @@ It compares hub/spokes, a chain, isolated clusters and 3000 files, with a fresh
 process repeat of each implementation. `layout-results.json` records settle
 time, spacing, cluster-centroid separation and maximum repeat displacement.
 The large fixture skips the quadratic nearest-neighbour diagnostic.
+
+For full-window debounce and real persistence, build
+`cargo test --release -p impro --test test_graph_parity --no-run` with the shared
+resource lock, then pass the printed test executable:
+
+```sh
+bash scripts/graph-compare/run.sh --reuse --out .ceo/graph-compare \
+  --window-test-bin target/release/deps/test_graph_parity-<build-hash>
+```
+
+This runs the reference window twice in fresh processes and the native window
+regressions, writes isolated evidence under `window-reference` / `window-impro`,
+and merges those rows with the existing widget audit. Omit `--reuse` to run the
+widget audit first as well. Both real settings files live in temporary config
+directories; the user configuration is never written.

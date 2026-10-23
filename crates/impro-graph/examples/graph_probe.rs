@@ -209,10 +209,27 @@ fn pointer_event(
     y: f64,
     button: u32,
 ) -> Result<(), Box<dyn Error>> {
+    pointer_event_at(
+        view,
+        kind,
+        x,
+        y,
+        button,
+        (glib::monotonic_time() / 1000) as u32,
+    )
+}
+
+fn pointer_event_at(
+    view: &GraphView,
+    kind: gdk::EventType,
+    x: f64,
+    y: f64,
+    button: u32,
+    timestamp: u32,
+) -> Result<(), Box<dyn Error>> {
     use glib::translate::*;
     let window = view.canvas().window().ok_or("canvas has no GDK window")?;
     let mut event = gdk::Event::new(kind);
-    let timestamp = (glib::monotonic_time() / 1000) as u32;
     // SAFETY: Event::new allocated the matching GDK union member. GDK owns the
     // transferred window reference until the event is freed after dispatch.
     unsafe {
@@ -459,19 +476,20 @@ fn run() -> Result<(), Box<dyn Error>> {
             }
             "pan" => {
                 t::leave(&view);
-                pointer_event(&view, gdk::EventType::ButtonPress, 2.0, 2.0, 1)?;
+                pointer_event_at(&view, gdk::EventType::ButtonPress, 2.0, 2.0, 1, 1000)?;
                 for i in 1..=8 {
-                    pointer_event(
+                    pointer_event_at(
                         &view,
                         gdk::EventType::MotionNotify,
                         2.0 + 10.0 * f64::from(i),
                         2.0 + 4.0 * f64::from(i),
                         1,
+                        1000 + 16 * i,
                     )?;
                     t::pump(16);
                 }
                 extra["held"] = state(&view);
-                pointer_event(&view, gdk::EventType::ButtonRelease, 82.0, 34.0, 1)?;
+                pointer_event_at(&view, gdk::EventType::ButtonRelease, 82.0, 34.0, 1, 1144)?;
                 t::pump(120);
                 extra["after120"] = state(&view);
                 settle(&view)?;
@@ -626,8 +644,8 @@ fn run() -> Result<(), Box<dyn Error>> {
                 settle(&view)?;
             }
             "replay" => {
-                let (total, rate, reveals) = t::replay_plan(&view);
-                extra["plan"] = json!({"total":total,"rate":rate,"reveals":reveals});
+                let plan = t::replay_plan(&view);
+                extra["plan"] = json!({"total":plan.total,"rate":plan.rate,"reveals":plan.reveals});
                 view.replay_history();
                 t::pump(250);
                 extra["at250"] = snapshot(&view);

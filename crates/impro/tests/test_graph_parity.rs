@@ -8,6 +8,18 @@ use impro_graph::{view::testing as t, GraphType, GraphView};
 use serde_json::json;
 use std::{path::Path, process::Command, time::Instant};
 
+fn record(name: &str, value: serde_json::Value) {
+    if let Some(dir) = std::env::var_os("IMPRO_GRAPH_WINDOW_EVIDENCE") {
+        let dir = Path::new(&dir);
+        std::fs::create_dir_all(dir).unwrap();
+        std::fs::write(
+            dir.join(format!("{name}.json")),
+            serde_json::to_vec_pretty(&value).unwrap(),
+        )
+        .unwrap();
+    }
+}
+
 fn ready(view: &GraphView) {
     poll(|| view.summary().nodes > 0);
     assert!(t::settle(view, 20_000));
@@ -84,6 +96,7 @@ fn editor_buffer_changes_wait_400_ms_and_local_graph_follows_tab_changes() {
         t::pump(200);
         assert!(!t::node_ids(&view).contains(&"?Draft Target".into()));
         poll(|| t::node_ids(&view).contains(&"?Draft Target".into()));
+        let buffer_ms = start.elapsed().as_millis();
         assert!(
             start.elapsed().as_millis() >= 380,
             "buffer debounce fired early"
@@ -108,6 +121,10 @@ fn editor_buffer_changes_wait_400_ms_and_local_graph_follows_tab_changes() {
         frame(&h.w.window);
         poll(|| t::node_ids(&local).contains(&"?Draft Target".into()));
         assert!(!t::node_ids(&local).contains(&"other.md".into()));
+        record(
+            "buffer",
+            json!({"at200":false,"after":true,"elapsed_ms":buffer_ms,"local_follow":true}),
+        );
     });
 }
 
@@ -181,6 +198,7 @@ fn graph_settings_process() {
             poll(|| disk()["graph"]["showTags"] == true);
             assert!(start.elapsed().as_millis() >= 230);
             assert!(start.elapsed().as_millis() < 2_000);
+            let preference_delay_ms = start.elapsed().as_millis();
             // Adding the tag reheats physics for several seconds. Saving a
             // completed zoom must use the camera clock, independently of that.
             assert!(t::info(&view).simulating);
@@ -197,9 +215,20 @@ fn graph_settings_process() {
             );
             assert!(zoom_start.elapsed().as_millis() >= 700);
             assert!(zoom_start.elapsed().as_millis() < 2_000);
+            record(
+                "settings-save",
+                json!({"preference_delay_ms":preference_delay_ms,
+                "zoom_delay_ms":zoom_start.elapsed().as_millis(),"pref_absent_at120":true,"zoom_absent_at600":true}),
+            );
         } else {
             assert!(view.prefs().show_tags);
             poll(|| t::node_ids(&view).contains(&"#topic".into()));
+            record(
+                "settings-restore",
+                json!({"scale":t::info(&view).zoom,"close":!view.panel_open(),
+                "showTags":view.prefs().show_tags,"chip_visible":view.panel().chip_visible(),
+                "visible":t::nodes_on_screen(&view)>0,"fresh_process":true}),
+            );
         }
         view.shutdown();
         unsafe { w.window.destroy() };
