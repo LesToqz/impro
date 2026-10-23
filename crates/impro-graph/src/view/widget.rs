@@ -116,6 +116,8 @@ pub struct FrameStats {
     pub frames: u64,
     /// Smoothed draw time in milliseconds.
     pub draw_ms: f64,
+    /// Draw time of the latest frame in milliseconds.
+    pub last_draw_ms: f64,
     /// Smoothed tick (simulation + easing) time in milliseconds.
     pub tick_ms: f64,
     /// True while a frame callback is attached.

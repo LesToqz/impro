@@ -292,6 +292,12 @@ pub fn wait_frames(view: &GraphView, n: u32, timeout_ms: u64) -> bool {
     wait_for(timeout_ms, || seen.get() >= n)
 }
 
+/// Restarts the layout simulation as a structural edit would.
+pub fn reheat(view: &GraphView) {
+    view.inner.scene.borrow_mut().layout.restart();
+    view.inner.kick();
+}
+
 /// Number of node centres inside the canvas.
 pub fn nodes_on_screen(view: &GraphView) -> usize {
     let s = view.inner.scene.borrow();
@@ -335,7 +341,9 @@ pub fn open_context_menu(view: &GraphView, id: &str) -> bool {
 pub fn pump(ms: u64) {
     let end = Instant::now() + Duration::from_millis(ms);
     loop {
-        while gtk::events_pending() {
+        // Frames that take longer than their interval keep events pending
+        // forever: the deadline is checked between events, too.
+        while gtk::events_pending() && Instant::now() < end {
             gtk::main_iteration_do(false);
         }
         if Instant::now() >= end {
@@ -351,6 +359,12 @@ pub fn wait_for(timeout_ms: u64, mut done: impl FnMut() -> bool) -> bool {
     loop {
         while gtk::events_pending() {
             gtk::main_iteration_do(false);
+            if done() {
+                return true;
+            }
+            if Instant::now() >= end {
+                return false;
+            }
         }
         if done() {
             return true;
@@ -462,6 +476,36 @@ impl FrameShot<'_> {
         self.inner.painter.borrow().stats
     }
 
+    /// Why the scene still wants frames.
+    pub fn reasons(&self) -> Vec<&'static str> {
+        self.inner.scene.borrow().frame_reasons()
+    }
+
+    /// Milliseconds the canvas spent painting this frame.
+    pub fn draw_ms(&self) -> f64 {
+        self.inner.stats.get().last_draw_ms
+    }
+
+    /// The labels this frame painted (needs [`capture_frames`]).
+    pub fn labels(&self) -> Vec<(String, super::draw::LabelDrawn)> {
+        let scene = self.inner.scene.borrow();
+        self.inner
+            .painter
+            .borrow()
+            .label_log
+            .iter()
+            .filter(|l| l.node < scene.len())
+            .map(|l| (scene.graph.nodes[l.node].id.to_string(), l.clone()))
+            .collect()
+    }
+
+    /// Screen centre and radius of every marker, in logical pixels, as the
+    /// painter projected them for this frame.
+    pub fn markers(&self) -> Vec<(f64, f64, f64)> {
+        let scene = self.inner.scene.borrow();
+        (0..scene.len()).map(|i| scene.screen(i)).collect()
+    }
+
     /// True while the scene's geometry changes between frames.
     pub fn moving(&self) -> bool {
         self.inner.scene.borrow().moving()
@@ -511,6 +555,20 @@ impl FrameShot<'_> {
             a.iter().zip(b.iter()).filter(|(x, y)| x != y).count()
         };
         let mut shown = shown;
+        if let Some(dir) = std::env::var_os("IMPRO_FRAME_DUMP") {
+            static DUMPED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+            if DUMPED.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % 20 == 0 {
+                let n = DUMPED.load(std::sync::atomic::Ordering::Relaxed);
+                let dir = std::path::PathBuf::from(dir);
+                let _ = std::fs::create_dir_all(&dir);
+                for (name, surface) in [("shown", &shown), ("fresh", &other)] {
+                    if let Ok(mut f) = std::fs::File::create(dir.join(format!("{n:04}-{name}.png")))
+                    {
+                        let _ = surface.write_to_png(&mut f);
+                    }
+                }
+            }
+        }
         let (width, height, stride) = (
             shown.width() as usize,
             shown.height() as usize,
@@ -579,6 +637,10 @@ impl Rect {
 pub struct ControlsGeometry {
     /// The pane the view fills.
     pub pane: Option<Rect>,
+    /// The root of the controls (strip or panel).
+    pub controls: Option<Rect>,
+    /// The panel's revealer is shown (open, or fading out).
+    pub revealer_shown: bool,
     /// The closed strip and its buttons (empty while the panel is open).
     pub chip: Option<Rect>,
     pub chip_buttons: Vec<Rect>,
@@ -608,6 +670,8 @@ pub fn controls_geometry(view: &GraphView) -> ControlsGeometry {
     let panel = &view.inner.panel;
     let mut g = ControlsGeometry {
         pane: rect_in(&view.inner.root_box, &root),
+        controls: rect_in(panel.controls_root(), &root),
+        revealer_shown: panel.revealer_shown(),
         ..ControlsGeometry::default()
     };
     if panel.chip_visible() {
@@ -646,4 +710,123 @@ pub fn snapshot(view: &GraphView) -> Option<(i32, i32, i32, Vec<u8>)> {
     let stride = surface.stride();
     let data = surface.data().ok()?.to_vec();
     Some((w, h, stride, data))
+}
+
+// ---- a project shaped like a real large one ----------------------------------------
+
+/// What the generator produces.
+#[derive(Clone, Copy, Debug)]
+pub struct BigProject {
+    /// Files in total (the view's cap).
+    pub total: usize,
+    /// Linked clusters of three to ten files (stars, rings, chains, cliques).
+    pub clusters: usize,
+    /// Files of the hub, each linking to the next `hub_reach` ones.
+    pub hub: usize,
+    pub hub_reach: usize,
+    pub seed: u64,
+}
+
+impl Default for BigProject {
+    fn default() -> Self {
+        BigProject {
+            total: 3_000,
+            clusters: 80,
+            hub: 50,
+            hub_reach: 24,
+            seed: 20_261_023,
+        }
+    }
+}
+
+struct Lcg(u64);
+
+impl Lcg {
+    fn next(&mut self) -> u64 {
+        self.0 = self
+            .0
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
+        self.0 >> 33
+    }
+    fn range(&mut self, lo: usize, hi: usize) -> usize {
+        lo + (self.next() as usize) % (hi - lo + 1)
+    }
+}
+
+fn note(path: &str, links: &[String]) -> (String, String) {
+    let mut text = String::from("# note\n");
+    for link in links {
+        text.push_str(&format!("[[{link}]] "));
+    }
+    text.push('\n');
+    (path.to_string(), text)
+}
+
+impl BigProject {
+    /// Relative path and text of every file.
+    pub fn files(&self) -> Vec<(String, String)> {
+        let mut rng = Lcg(self.seed);
+        let mut out: Vec<(String, String)> = Vec::new();
+        let name = |dir: &str, i: usize| format!("{dir}-{i:04}");
+        // the hub
+        for i in 0..self.hub {
+            let links: Vec<String> = (1..=self.hub_reach)
+                .map(|k| name("hub", (i + k) % self.hub))
+                .collect();
+            out.push(note(&format!("hub/{}.md", name("hub", i)), &links));
+        }
+        // clusters
+        for c in 0..self.clusters {
+            let size = rng.range(3, 10);
+            let id = |i: usize| name(&format!("cl{c:02}"), i);
+            let links = |i: usize| -> Vec<String> {
+                match c % 4 {
+                    // star around file 0
+                    0 => {
+                        if i == 0 {
+                            (1..size).map(id).collect()
+                        } else {
+                            Vec::new()
+                        }
+                    }
+                    // ring
+                    1 => vec![id((i + 1) % size)],
+                    // chain
+                    2 => {
+                        if i + 1 < size {
+                            vec![id(i + 1)]
+                        } else {
+                            Vec::new()
+                        }
+                    }
+                    // clique
+                    _ => (i + 1..size).map(id).collect(),
+                }
+            };
+            for i in 0..size {
+                out.push(note(&format!("cluster/{c:02}/{}.md", id(i)), &links(i)));
+            }
+        }
+        // the unlinked disc fills the rest up to the cap
+        let rest = self.total.saturating_sub(out.len());
+        for i in 0..rest {
+            out.push(note(
+                &format!("loose/{:02}/{}.md", i % 40, name("loose", i)),
+                &[],
+            ));
+        }
+        out
+    }
+
+    /// Writes the files below `root`.
+    pub fn write(&self, root: &std::path::Path) {
+        for (rel, text) in self.files() {
+            let path = root.join(&rel);
+            if let Some(dir) = path.parent() {
+                let _ = std::fs::create_dir_all(dir);
+            }
+            let _ = std::fs::write(path, text);
+        }
+    }
 }

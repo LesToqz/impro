@@ -940,6 +940,7 @@ impl Inner {
         } else {
             s.draw_ms * 0.9 + ms * 0.1
         };
+        s.last_draw_ms = ms;
         s.frames += 1;
         self.stats.set(s);
         let probe = self.probe.try_borrow().ok().and_then(|p| p.clone());

@@ -41,7 +41,7 @@ fn check_strip(f: &Fixture, state: &str) {
     near(
         pane.right() - chip.right(),
         MARGIN,
-        "strip right margin",
+        &format!("strip right margin ({g:?})"),
         state,
     );
     near(chip.y - pane.y, MARGIN, "strip top margin", state);
@@ -162,7 +162,7 @@ fn sized(prefs: serde_json::Value, size: (i32, i32)) -> Fixture {
 fn the_closed_strip_hugs_the_corner_with_icons_on_one_axis() {
     run(|| {
         for size in [(904, 1240), (1920, 1080), (640, 480)] {
-            let f = sized(json!({"graph": {"close": true}}), size);
+            let f = sized(json!({"close": true}), size);
             check_strip(&f, &format!("saved close {size:?}"));
             check_ink(&f, &format!("saved close {size:?}"));
             // the host shows everything again when it re-adds the page

@@ -271,7 +271,299 @@ fn bench_hot(n: usize, edges: usize) {
     }
 }
 
+/// Frame timings of the real widget: `graph_bench frames [WIDTHxHEIGHT ...]`
+/// (device pixels; run under Xvfb, `GDK_SCALE` picks the device scale).
+mod frames {
+    use std::cell::RefCell;
+    use std::rc::Rc;
+    use std::time::{Duration, Instant};
+
+    use gtk::prelude::*;
+    use impro_graph::view::testing::{self as t, BigProject};
+    use impro_graph::view::{MemoryStore, ViewOptions};
+    use impro_graph::GraphView;
+
+    use super::percentile;
+
+    #[derive(Default)]
+    struct Log {
+        draw: Vec<f64>,
+        interval: Vec<f64>,
+        last: Option<Instant>,
+    }
+
+    fn summary(v: &[f64]) -> String {
+        if v.is_empty() {
+            return "      -".into();
+        }
+        let mut s = v.to_vec();
+        format!(
+            "p50 {:>6.2}  p95 {:>6.2}  p99 {:>6.2}  max {:>6.2}",
+            percentile(&mut s, 0.5),
+            percentile(&mut s, 0.95),
+            percentile(&mut s, 0.99),
+            percentile(&mut s, 1.0)
+        )
+    }
+
+    fn cpu_seconds() -> f64 {
+        let stat = std::fs::read_to_string("/proc/self/stat").unwrap_or_default();
+        let fields: Vec<&str> = stat
+            .rsplit(')')
+            .next()
+            .unwrap_or("")
+            .split_whitespace()
+            .collect();
+        let ticks = |i: usize| {
+            fields
+                .get(i)
+                .and_then(|v| v.parse::<f64>().ok())
+                .unwrap_or(0.0)
+        };
+        (ticks(11) + ticks(12)) / 100.0
+    }
+
+    fn frame(view: &GraphView) {
+        t::wait_frames(view, 1, 5_000);
+    }
+
+    struct Rig {
+        view: GraphView,
+        window: gtk::Window,
+        log: Rc<RefCell<Log>>,
+        t0: Instant,
+        _project: tempfile::TempDir,
+        spots: Vec<(f64, f64)>,
+    }
+
+    impl Rig {
+        fn new(logical: (i32, i32)) -> Rig {
+            let project = tempfile::tempdir().expect("tempdir");
+            BigProject::default().write(project.path());
+            let view = GraphView::with_options(
+                project.path(),
+                ViewOptions {
+                    store: Arc::new(MemoryStore::new(serde_json::json!({}))),
+                    scan: true,
+                },
+            );
+            let window = gtk::Window::new(gtk::WindowType::Toplevel);
+            window.set_default_size(logical.0, logical.1);
+            window.add(&*view);
+            window.show_all();
+            window.move_(0, 0);
+            assert!(t::wait_for(60_000, || view.summary().nodes > 0), "no graph");
+            t::settle_now(&view);
+            assert!(t::settle(&view, 60_000), "never settled");
+            let log = Rc::new(RefCell::new(Log::default()));
+            let sink = log.clone();
+            t::set_probe(&view, move |shot| {
+                let mut l = sink.borrow_mut();
+                let now = Instant::now();
+                if let Some(prev) = l.last {
+                    l.interval.push((now - prev).as_secs_f64() * 1e3);
+                }
+                l.last = Some(now);
+                l.draw.push(shot.draw_ms());
+            });
+            let mut rig = Rig {
+                view,
+                window,
+                log,
+                t0: Instant::now(),
+                _project: project,
+                spots: Vec::new(),
+            };
+            rig.find_spots();
+            rig
+        }
+
+        /// Canvas points at least 8 px from any marker.
+        fn find_spots(&mut self) {
+            let (w, h) = t::info(&self.view).size;
+            let nodes: Vec<(f64, f64, f64)> = t::node_ids(&self.view)
+                .iter()
+                .filter_map(|id| t::node_screen(&self.view, id))
+                .collect();
+            let mut y = 40.0;
+            while y < h - 40.0 {
+                let mut x = 40.0;
+                while x < w - 40.0 {
+                    if nodes
+                        .iter()
+                        .all(|(nx, ny, r)| (nx - x).hypot(ny - y) > r + 8.0)
+                    {
+                        self.spots.push((x, y));
+                    }
+                    x += 23.0;
+                }
+                y += 23.0;
+            }
+            if self.spots.is_empty() {
+                self.spots.push((6.0, 6.0));
+            }
+        }
+
+        fn ms(&self) -> u32 {
+            1_000 + self.t0.elapsed().as_millis() as u32
+        }
+
+        fn reset_log(&self) {
+            *self.log.borrow_mut() = Log::default();
+        }
+
+        fn report(&self, name: &str) {
+            let l = self.log.borrow();
+            println!(
+                "    {name:<22} frames {:>4} | draw ms {} | interval ms {}",
+                l.draw.len(),
+                summary(&l.draw),
+                summary(&l.interval)
+            );
+        }
+
+        fn settle(&self) {
+            t::settle(&self.view, 30_000);
+            t::pump(100);
+        }
+
+        fn held_pan(&self, frames: u32) {
+            self.settle();
+            let none = gdk::ModifierType::empty();
+            let (mut x, mut y) = self.spots[self.spots.len() / 2];
+            t::motion_at(&self.view, x, y, self.ms());
+            frame(&self.view);
+            self.reset_log();
+            t::press_at(&self.view, x, y, 1, none, self.ms());
+            for k in 0..frames {
+                frame(&self.view);
+                let speed = 3.0 + 20.0 * (1.0 + (k as f64 / 15.0).sin());
+                x += speed * 0.8;
+                y += speed * 0.4;
+                if x > 1_000.0 || y > 600.0 {
+                    x -= 800.0;
+                    y -= 400.0;
+                    t::release_at(&self.view, x, y, 1, none, self.ms() + 400);
+                    t::press_at(&self.view, x, y, 1, none, self.ms());
+                }
+                t::motion_at(&self.view, x, y, self.ms());
+            }
+            self.report("held pan");
+            self.reset_log();
+            // release with a fling and let it decay
+            t::release_at(&self.view, x, y, 1, none, self.ms());
+            t::wait_for(10_000, || !t::needs_frames(&self.view));
+            self.report("fling decay");
+        }
+
+        fn zoom(&self) {
+            self.settle();
+            let (w, h) = t::info(&self.view).size;
+            self.reset_log();
+            for round in 0..4 {
+                let dir = if round % 2 == 0 { 53.0 } else { -53.0 };
+                for _ in 0..5 {
+                    t::wheel(&self.view, w / 2.0 + 40.0, h / 2.0, dir, false);
+                    frame(&self.view);
+                }
+                t::wait_for(10_000, || !t::needs_frames(&self.view));
+            }
+            self.report("wheel zoom");
+        }
+
+        fn hover(&self, frames: u32) {
+            self.settle();
+            let (w, h) = t::info(&self.view).size;
+            self.reset_log();
+            let (mut x, mut y) = (w * 0.3, h * 0.3);
+            for k in 0..frames {
+                frame(&self.view);
+                x = w * 0.3 + (k as f64 * 9.0) % (w * 0.4);
+                y = h * 0.3 + (k as f64 * 5.0) % (h * 0.4);
+                t::motion_at(&self.view, x, y, self.ms());
+            }
+            let _ = (x, y);
+            self.report("hover movement");
+        }
+
+        fn simulation(&self) {
+            self.settle();
+            self.reset_log();
+            t::reheat(&self.view);
+            t::wait_for(30_000, || !t::needs_frames(&self.view));
+            self.report("layout settling");
+        }
+
+        fn idle(&self) {
+            self.settle();
+            let (c0, t0) = (cpu_seconds(), Instant::now());
+            t::pump(2_000);
+            let used = cpu_seconds() - c0;
+            println!(
+                "    idle: {:.0} ms CPU over {:.1} s settled",
+                used * 1e3,
+                t0.elapsed().as_secs_f64()
+            );
+        }
+    }
+
+    use std::sync::Arc;
+
+    pub fn run(args: &[String]) {
+        gtk::init().expect("an X display (run under xvfb-run)");
+        impro_ui::init();
+        impro_graph::init();
+        let scale: i32 = std::env::var("GDK_SCALE")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1);
+        let sizes: Vec<(i32, i32)> = if args.is_empty() {
+            vec![(1920, 1080), (2560, 1440), (3840, 2160)]
+        } else {
+            args.iter()
+                .filter_map(|a| a.split_once('x'))
+                .filter_map(|(w, h)| Some((w.parse().ok()?, h.parse().ok()?)))
+                .collect()
+        };
+        let cpu = std::fs::read_to_string("/proc/cpuinfo")
+            .ok()
+            .and_then(|s| {
+                s.lines()
+                    .find(|l| l.starts_with("model name"))
+                    .map(String::from)
+            })
+            .unwrap_or_default();
+        println!(
+            "{cpu} | threads {}",
+            std::thread::available_parallelism().map_or(1, |n| n.get())
+        );
+        for (w, h) in sizes {
+            println!("== {w}x{h} device pixels, scale {scale}, 3000 nodes");
+            let rig = Rig::new((w / scale, h / scale));
+            let info = t::info(&rig.view);
+            println!(
+                "    canvas {:?} logical, {} nodes, {} lines",
+                info.size, info.nodes, info.lines
+            );
+            rig.held_pan(150);
+            rig.zoom();
+            rig.hover(150);
+            rig.simulation();
+            rig.idle();
+            rig.window.close();
+            rig.view.shutdown();
+            t::pump(200);
+        }
+        let _ = Duration::from_secs(0);
+    }
+}
+
 fn main() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().map(String::as_str) == Some("frames") {
+        frames::run(&args[1..]);
+        return;
+    }
     bench(300, 800);
     bench(3000, 8000);
     bench_hot(3000, 8000);

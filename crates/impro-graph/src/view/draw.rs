@@ -77,6 +77,23 @@ pub struct DrawStats {
     pub line_ms: [f64; 3],
 }
 
+/// One label as painted, in logical pixels (tests).
+#[derive(Clone, Debug, PartialEq)]
+pub struct LabelDrawn {
+    pub node: usize,
+    /// Top-left corner of the drawn bitmap.
+    pub x: f64,
+    pub y: f64,
+    /// Drawn size.
+    pub w: f64,
+    pub h: f64,
+    pub alpha: f64,
+    /// Font size in device pixels the bitmap was rendered at.
+    pub bitmap_px: f64,
+    /// The bitmap was stretched to another size than it was rendered at.
+    pub stretched: bool,
+}
+
 /// Per-frame switches.
 #[derive(Clone, Copy, Debug)]
 pub struct PaintOptions {
@@ -314,6 +331,7 @@ pub struct Painter {
     /// Tests: keep a copy of every frame as it stood before its labels.
     pub capture: bool,
     pub(super) unlabelled: Option<cairo::ImageSurface>,
+    pub(super) label_log: Vec<LabelDrawn>,
     pub labels: LabelCache,
     pub stats: DrawStats,
 }
@@ -384,6 +402,7 @@ impl Painter {
             back_size: (0, 0),
             capture: false,
             unlabelled: None,
+            label_log: Vec::new(),
             labels: LabelCache::new(),
             stats: DrawStats::default(),
         }
@@ -419,6 +438,7 @@ impl Painter {
         opts: PaintOptions,
     ) -> Option<&cairo::ImageSurface> {
         self.stats = DrawStats::default();
+        self.label_log.clear();
         self.labels.pending = false;
         let dev = opts.scale.max(1.0);
         let (pw, ph) = (
@@ -676,7 +696,10 @@ impl Painter {
                 .palette
                 .line
                 .mix(scene.palette.line_highlight, qm / 10.0);
-            let cache_key = (j - i >= GROUP_CACHE_MIN).then(|| geometry ^ member.rotate_left(17));
+            // Moving frames never keep coverage: their key would hold no
+            // geometry and a later frame would replay another camera's lines.
+            let cache_key =
+                (keep && j - i >= GROUP_CACHE_MIN).then(|| geometry ^ member.rotate_left(17));
             if let Some(hit) = cache_key.and_then(|k| self.group_take(k)) {
                 self.stats.group_hits += 1;
                 hit.mask.paint(cr, c.rgb(), qa / LINE_LEVELS);
@@ -1125,6 +1148,18 @@ impl Painter {
         } else {
             cr.translate(x, y);
         }
+        if self.capture {
+            self.label_log.push(LabelDrawn {
+                node: i,
+                x,
+                y,
+                w: lw,
+                h: height * k,
+                alpha,
+                bitmap_px: px,
+                stretched: (k - 1.0 / dev).abs() >= 1e-3,
+            });
+        }
         cr.scale(k, k);
         let _ = cr.mask_surface(&surface, 0.0, 0.0);
         let _ = cr.restore();
@@ -1154,6 +1189,47 @@ mod tests {
         let mut png = Vec::new();
         surface.write_to_png(&mut png).expect("PNG");
         png
+    }
+
+    /// A chain whose single connection group is large enough to be cached.
+    fn chain_scene() -> Scene {
+        let mut scene = Scene::new();
+        scene.set_size(240.0, 180.0);
+        let pairs: Vec<(u32, u32)> = (0..299).map(|i| (i, i + 1)).collect();
+        scene.apply(Built::global(Graph::from_pairs(300, &pairs)));
+        while scene.advance(1.0 / 60.0) {}
+        let bounds = scene.layout.bounds().expect("bounds");
+        let mut fit = crate::geometry::Camera::default();
+        fit.fit(bounds, 240.0, 180.0, 10.0);
+        scene.cam.cam = fit;
+        scene.cam.target_zoom = fit.zoom;
+        scene
+    }
+
+    #[test]
+    fn moving_frames_never_replay_connections_of_another_camera() {
+        let mut scene = chain_scene();
+        let mut painter = Painter::new();
+        painter.motion = true;
+        let first = pixels(&mut painter, &scene, 1.0);
+        assert_eq!(first, pixels(&mut Painter::new(), &scene, 1.0));
+        for step in 1..6 {
+            scene.cam.cam.pan_x += 9.0 * step as f64;
+            scene.cam.cam.zoom *= 0.93;
+            let moved = pixels(&mut painter, &scene, 1.0);
+            let mut fresh = Painter::new();
+            fresh.motion = true;
+            assert!(
+                moved == pixels(&mut fresh, &scene, 1.0),
+                "step {step}: a moving frame differs from a fresh redraw"
+            );
+        }
+        // the settled frame after the motion is exact as well
+        painter.motion = false;
+        assert_eq!(
+            pixels(&mut painter, &scene, 1.0),
+            pixels(&mut Painter::new(), &scene, 1.0)
+        );
     }
 
     #[test]

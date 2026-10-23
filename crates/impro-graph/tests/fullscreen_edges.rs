@@ -30,7 +30,7 @@ fn probe_edges_during_pan_after_zoom_out() {
             if let Some(c) = shot.compare_fresh() {
                 sink.borrow_mut().push((shot.info().pan, c));
             }
-            eprintln!("frame {} compare {:?}", sink.borrow().len(), t0.elapsed());
+            let _ = t0;
         });
         let centre = (w as f64 / 2.0, h as f64 / 2.0);
         wheel_frames(&f.view, centre, 120.0, 40);

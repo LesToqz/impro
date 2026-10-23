@@ -526,6 +526,12 @@ impl Panel {
         panel_revealer.set_transition_duration(120);
         panel_revealer.add(&frame);
         panel_revealer.set_reveal_child(true);
+        // A closed panel must take no room: the revealer keeps its full
+        // width while faded out (crossfade), so only an explicit hide frees
+        // the corner for the strip, and `show_all` of the host must not
+        // bring it back.
+        panel_revealer.show_all();
+        panel_revealer.set_no_show_all(true);
 
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
         class(&root, "impro-graph-controls");
@@ -697,8 +703,16 @@ impl Panel {
             .panel_revealer
             .connect_child_revealed_notify(move |r| {
                 if !r.is_child_revealed() && !p.parts.open.get() {
-                    r.hide();
-                    Self::set_row_visible(&p.parts.chip, true);
+                    // Outside the revealer's own animation step, so the
+                    // corner is laid out again for the strip alone.
+                    let (p, r) = (p.clone(), r.clone());
+                    glib::idle_add_local_once(move || {
+                        if !p.parts.open.get() && !r.is_child_revealed() {
+                            r.hide();
+                            Self::set_row_visible(&p.parts.chip, true);
+                            p.root.queue_resize();
+                        }
+                    });
                 }
             });
     }
@@ -859,9 +873,8 @@ impl Panel {
         p.open.set(open);
         if open {
             p.chip.hide();
-            p.panel_revealer.show();
+            Self::set_row_visible(&p.panel_revealer, true);
             p.panel_revealer.set_reveal_child(true);
-            self.parts.panel_revealer.show_all();
         } else {
             p.panel_revealer.set_reveal_child(false);
             if !p.animated.get() || !p.panel_revealer.is_mapped() {
@@ -1152,6 +1165,11 @@ impl Panel {
     /// The three-button strip shown while the panel is closed.
     pub fn chip_visible(&self) -> bool {
         self.parts.chip.is_visible()
+    }
+
+    /// The panel's revealer is shown (open, or fading out).
+    pub fn revealer_shown(&self) -> bool {
+        self.parts.panel_revealer.is_visible()
     }
 
     /// The root of the controls (strip or panel), as placed on the canvas.
