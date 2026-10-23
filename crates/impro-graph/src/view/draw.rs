@@ -318,7 +318,9 @@ pub struct Painter {
     keys: Vec<u64>,
     segments: Vec<[f32; 4]>,
     shapes: Vec<[(f32, f32); 4]>,
-    dense: bool,
+    /// Whether the scene counts as dense; it flips with hysteresis, so a
+    /// fresh painter must start from the same value to draw the same frame.
+    pub(super) dense: bool,
     label_cells: Vec<bool>,
     label_grid: (usize, usize),
     label_origin: (f64, f64),

@@ -547,6 +547,7 @@ impl FrameShot<'_> {
         let mut fresh = super::draw::Painter::new();
         fresh.threads = painter.threads;
         fresh.motion = painter.motion;
+        fresh.dense = painter.dense;
         fresh.capture = true;
         fresh.render(
             &scene,
@@ -561,6 +562,7 @@ impl FrameShot<'_> {
         let mut again = super::draw::Painter::new();
         again.threads = painter.threads;
         again.motion = painter.motion;
+        again.dense = painter.dense;
         again.capture = true;
         again.render(
             &scene,

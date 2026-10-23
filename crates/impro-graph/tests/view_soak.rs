@@ -107,15 +107,20 @@ impl Soak {
                 ));
             }
         }
-        self.labels(&facts);
+        // easing of label detail, sizes or colours is the documented fade
+        let eased = shot
+            .reasons()
+            .iter()
+            .any(|r| !matches!(*r, "velocity" | "tracking" | "keys"));
+        self.labels(&facts, !eased);
     }
 
     /// A label fully on screen in one frame must be there in the next, at the
     /// place the camera's translation puts it.
-    fn labels(&mut self, facts: &FrameFacts) {
+    fn labels(&mut self, facts: &FrameFacts, steady: bool) {
         let i = &facts.info;
         let labels: HashMap<String, LabelDrawn> = facts.labels.iter().cloned().collect();
-        let quiet = i.hover.is_none() && !i.simulating && !i.dragging;
+        let quiet = steady && i.hover.is_none() && !i.simulating && !i.dragging;
         let segment = if self.translating && quiet {
             self.segment
         } else {
@@ -136,8 +141,14 @@ impl Soak {
                     match labels.get(id) {
                         None => bad.push(format!("{id} vanished")),
                         Some(b) => {
-                            if (b.x - a.x - dx).abs() > 1.0 || (b.y - a.y - dy).abs() > 1.0 {
-                                bad.push(format!("{id} moved off the camera"));
+                            // a bitmap refreshed at its exact size is a little
+                            // wider: the label stays centred under its marker
+                            let mx = (b.x + b.w / 2.0) - (a.x + a.w / 2.0) - dx;
+                            let my = b.y - a.y - dy;
+                            if mx.abs() > 1.0 || my.abs() > 1.0 {
+                                bad.push(format!(
+                                    "{id} moved off the camera by ({mx:.2}, {my:.2}): {a:?} -> {b:?}"
+                                ));
                             }
                             if (b.alpha - a.alpha).abs() > 0.02 {
                                 bad.push(format!("{id} alpha {} -> {}", a.alpha, b.alpha));
