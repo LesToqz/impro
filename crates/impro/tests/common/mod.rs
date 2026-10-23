@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+pub mod md;
 use gtk::prelude::*;
 use impro::MainWindow;
 use impro_core::settings;

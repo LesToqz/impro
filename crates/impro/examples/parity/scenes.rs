@@ -36,10 +36,6 @@ pub fn run() {
     }
     let args: Vec<_> = std::env::args().collect();
     let scene = args.get(2).expect("scene name").as_str();
-    if scene.starts_with("notes-") {
-        println!("unsupported {scene}");
-        std::process::exit(77);
-    }
     let root = PathBuf::from(&args[3]);
     let output = PathBuf::from(&args[4]);
     let mut values = impro_core::settings::defaults().clone();
@@ -56,6 +52,7 @@ pub fn run() {
     app.register(None::<&gio::Cancellable>).unwrap();
     let w = impro::MainWindow::with_values(&app, &root, values);
     w.window.set_default_size(1190, 750);
+    let mut graph_view = None;
     w.show();
     for name in ["main.py", "README.md", "data.json"] {
         w.editor.open_file(root.join(name));
@@ -202,8 +199,77 @@ pub fn run() {
                 });
             }
         }
+        "notes-live" | "notes-list" | "notes-code" | "notes-table" | "notes-selection"
+        | "notes-scrolled" | "notes-fullwidth" => {
+            open(".impro/Notes/Live.md");
+            let tab = w.editor.current_tab().unwrap();
+            let live = impro_markdown::livemd::for_view(&tab.view).expect("live renderer");
+            let ready = || {
+                let tables = live
+                    .tables()
+                    .map(|t| t.views().iter().all(|v| v.built_rows() == v.row_count()))
+                    .unwrap_or(true);
+                !live.pending()
+                    && live.unpainted_blocks() == 0
+                    && live.jobs_in_flight() == 0
+                    && tables
+            };
+            poll(ready);
+            let text = tab.text();
+            let offset = |needle: &str, extra: usize| {
+                (text[..text.find(needle).unwrap()].chars().count() + extra) as i32
+            };
+            // The view lays its lines out lazily, so a requested offset can be
+            // clamped until the layout reaches it: re-apply until it holds.
+            let scroll = match scene {
+                "notes-code" => 200.0,
+                "notes-table" => 420.0,
+                "notes-scrolled" => 400.0,
+                _ => 0.0,
+            };
+            let apply_scroll = || {
+                if scroll > 0.0 {
+                    let adjustment = tab.view.vadjustment().unwrap();
+                    poll(|| {
+                        adjustment.set_value(scroll);
+                        (adjustment.value() - scroll).abs() < 1.0 && ready()
+                    });
+                }
+            };
+            apply_scroll();
+            tab.view.grab_focus();
+            if scene == "notes-selection" {
+                tab.buffer.select_range(
+                    &tab.buffer.iter_at_offset(offset("bold", 4)),
+                    &tab.buffer.iter_at_offset(offset("bold", 0)),
+                );
+            } else {
+                let at = match scene {
+                    "notes-list" => offset("A nested bullet", 4),
+                    "notes-code" => offset("return f", 3),
+                    "notes-table" => offset("Ada", 1),
+                    _ => offset("A paragraph", 4),
+                };
+                tab.buffer.place_cursor(&tab.buffer.iter_at_offset(at));
+            }
+            poll(ready);
+
+            if scene == "notes-table" {
+                // The caret enters the grid it lands in: wait for that focus.
+                let views = || live.tables().map(|t| t.views()).unwrap_or_default();
+                poll(|| views().iter().any(|v| v.focused()));
+                poll(ready);
+                // Focusing a cell may scroll it into view: restore the fixed offset.
+                apply_scroll();
+            }
+            if scene == "notes-selection" {
+                let bar = impro_markdown::seltoolbar::of(&tab.view).expect("selection toolbar");
+                poll(|| bar.popover().is_visible() && bar.popover().allocated_width() > 1);
+            }
+        }
         "graph" => {
             let graph = w.open_graph().unwrap();
+            graph_view = Some(graph.clone());
             poll(|| {
                 graph.summary().files_indexed > 0
                     && graph.widget().allocated_width() > 1
@@ -255,7 +321,9 @@ pub fn run() {
                 .all(|p| p.terminal.is_none() || terminal_text(p).contains("$ "))
         });
     }
-    if !matches!(scene, "palette" | "palette-query" | "switcher") && !scene.starts_with("settings-")
+    if !matches!(scene, "palette" | "palette-query" | "switcher")
+        && !scene.starts_with("settings-")
+        && !scene.starts_with("notes-")
     {
         GtkWindowExt::set_focus(&w.window, None::<&gtk::Widget>);
     }
@@ -283,6 +351,17 @@ pub fn run() {
         let pixels = capture(&target, &output);
         stable = if pixels == previous { stable + 1 } else { 0 };
         previous = pixels;
+    }
+    if let Some(graph) = graph_view {
+        // Geometry is read once the dock allocation has completed.
+        let path = output.with_extension("json");
+        let mut structure: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        structure["panel_size"] = serde_json::json!([
+            graph.widget().allocated_width(),
+            graph.widget().allocated_height()
+        ]);
+        std::fs::write(path, serde_json::to_vec_pretty(&structure).unwrap()).unwrap();
     }
     println!("settled {scene}");
     w.shutdown();

@@ -566,6 +566,9 @@ fn classify_span(
         if all.contains("punctuation.definition.list") {
             kind = Some("keyword");
         }
+        if all.contains("meta.link.inline.description") {
+            kind = Some("string");
+        }
     }
     if lang == "YAML" {
         if all.contains("entity.name.tag") {
@@ -615,6 +618,15 @@ fn classify_span(
             offset + value.chars().count(),
             kind.unwrap_or("string"),
         );
+        return;
+    }
+    if lang == "Markdown" && kind.is_none() {
+        // Prose is plain text: the word heuristics below are for code.
+        return;
+    }
+    if lang == "Rust" && all.contains("support.macro") && value.ends_with('!') {
+        // Pygments lexes `name!` as one function token.
+        push_run(out, offset, offset + value.chars().count(), "function");
         return;
     }
     let chars: Vec<_> = value.char_indices().collect();

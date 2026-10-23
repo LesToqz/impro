@@ -19,8 +19,60 @@ SCENES = [
     'terminal-maximized', 'terminal-hover', 'palette', 'palette-query', 'switcher', 'notice',
     *['settings-'+p for p in ['appearance','editor','files','terminal','graph','gitgraph','notes','hotkeys','about']],
     'git-horizontal', 'git-vertical', 'commit-horizontal', 'commit-vertical', 'graph',
-    'notes-live', 'notes-table', 'notes-selection',
+    'notes-live', 'notes-list', 'notes-code', 'notes-table', 'notes-selection',
+    'notes-scrolled', 'notes-fullwidth',
 ]
+
+LIVE_NOTE = '''# Heading one
+
+## Heading two
+
+### Heading three
+
+A paragraph with **bold**, *italic*, ~~strike~~ and `inline code` spans, a [link](https://example.org) and a [[Second]] link.
+
+- [ ] An open task
+- [x] A finished task
+- A bullet
+  - A nested bullet
+
+1. First step
+2. Second step
+   1. A nested step
+
+> A quoted line of thought.
+
+```python
+def greet(name):
+    return f"Hello {name}"
+```
+
+| Name | Role |
+| :--- | ---: |
+| Ada | Math |
+| Lin | Code |
+
+---
+
+![A local pixel](pixel.png)
+
+A closing paragraph, long enough to wrap across more than one line of the readable column so that the scrolled capture has real content below the image and the wrapping is part of what both sides must agree on.
+
+Another short closing line.
+'''
+
+
+def png(width, height):
+    """A small deterministic gradient PNG, written with the standard library only."""
+    import struct
+    import zlib
+    rows = b''.join(b'\x00' + b''.join(bytes((x * 255 // (width - 1), y * 255 // (height - 1), 160)) for x in range(width))
+                    for y in range(height))
+    def chunk(kind, data):
+        body = kind + data
+        return struct.pack('>I', len(data)) + body + struct.pack('>I', zlib.crc32(body))
+    return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', width, height, 8, 2, 0, 0, 0))
+            + chunk(b'IDAT', zlib.compress(rows, 9)) + chunk(b'IEND', b''))
 
 
 def fixture(root, reference=None):
@@ -37,10 +89,12 @@ def fixture(root, reference=None):
         source = reference/'tests/fixtures/gitcommit_reference.json'
         payload = json.loads(source.read_text())
         files['history.json'] = json.dumps(payload['stats'], indent=2)+'\n'
+    files['.impro/Notes/Live.md'] = LIVE_NOTE
     for name, content in files.items():
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
+    (root / '.impro/Notes/pixel.png').write_bytes(png(96, 48))
     # Keep displayed age stable across both runs.
     for path in root.rglob('*'):
         os.utime(path, (1700000000, 1700000000))
@@ -108,6 +162,8 @@ def main():
                GDK_DPI_SCALE='1', IMPRO_REDUCE_MOTION='1', SHELL=str(shell), ENV='/dev/null',
                PS1='$ ', LC_ALL='C.UTF-8', TZ='UTC', NO_AT_BRIDGE='1',
                IMPRO_PARITY_SETTINGS=json.dumps(values), IMPRO_PARITY_HEAD=head)
+    # Live-note scenes render Markdown live; the readable column is the default.
+    live_values = dict(values, md_live_preview=True, md_readable_width=True)
     driver = Path(__file__).with_name('reference.py')
     rows = []
     started = time.monotonic()
@@ -120,8 +176,12 @@ def main():
                 command = ([str(binary),'scene',scene,str(root),str(image),'impro-'+theme] if side == 'impro' else
                     ['/usr/bin/python3',str(driver),'--reference',str(Path(args.reference).resolve()),
                      '--scene',scene,'--root',str(root),'--output',str(image),'--theme',theme])
+                scene_env = env
+                if scene.startswith('notes-'):
+                    scene_env = dict(env, IMPRO_PARITY_SETTINGS=json.dumps(
+                        dict(live_values, md_readable_width=scene != 'notes-fullwidth')))
                 try:
-                    process = subprocess.run(command, env=env, capture_output=True, timeout=45)
+                    process = subprocess.run(command, env=scene_env, capture_output=True, timeout=45)
                 except subprocess.TimeoutExpired as error:
                     (out/(stem+'-'+side+'.log')).write_bytes((error.stdout or b'')+(error.stderr or b''))
                     row.update(status='error', side=side, detail='capture timed out after 45s')

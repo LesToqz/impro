@@ -533,6 +533,32 @@ fn test_add_bars_append_a_row_and_a_column() {
 }
 
 #[test]
+fn test_caret_placed_in_an_unbuilt_table_enters_its_grid_when_it_is_built() {
+    run(|| {
+        let filler = "A filler paragraph.\n\n".repeat(80);
+        let source = format!("{filler}{TABLE}\nend\n");
+        impro_ui::motion::set_reduce_motion(true);
+        let h = Harness::new();
+        let tab = h.note("note.md", &source);
+        let live = live_of(&tab);
+        let fx = Fx { h, tab, live };
+        settle(&fx.live);
+        fx.tab.view.grab_focus();
+        let at = source[..source.find("| 1").unwrap()].chars().count() as i32 + 3;
+        fx.buffer().place_cursor(&fx.buffer().iter_at_offset(at));
+        settle(&fx.live);
+        // Scroll the table into view: its grid is built and takes the caret.
+        let adjustment = fx.tab.view.vadjustment().unwrap();
+        let target = fx.tab.view.line_yrange(&fx.buffer().iter_at_offset(at)).0 - 100;
+        poll(|| {
+            adjustment.set_value(f64::from(target));
+            fx.views().iter().any(|v| v.focused())
+        });
+        assert_eq!(fx.at(&fx.view()), (1, 0));
+    });
+}
+
+#[test]
 fn test_malformed_tables_render_and_edit_without_errors() {
     run(|| {
         let wide = (0..40)

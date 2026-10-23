@@ -146,6 +146,9 @@ impl Inner {
         }
         if let Some(table) = table {
             self.tables().build(table);
+            // A caret that landed in the block before its grid existed (the
+            // grid is built when the block nears the viewport) enters it now.
+            self.queue_caret();
             self.queue_fill();
         }
         if code.is_some() {
