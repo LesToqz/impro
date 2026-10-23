@@ -180,7 +180,8 @@ Click a file to open it; Ctrl+click or middle click requests another tab. Contex
 menu open modes currently converge on the normal tabbed editor, including the
 right-pane request. Tags focus explorer search; unresolved targets with safe,
 simple names create a note in the project root. Drag a marker to pin it during
-interaction, drag empty space to pan, and scroll to zoom about the pointer.
+interaction, drag empty space to pan, and scroll to zoom using the centre/pointer
+anchor rule described under Drawing and motion.
 Arrow keys pan, Shift speeds movement, plus/minus zoom, Enter opens the hovered
 file, and Esc closes the menu or controls panel before clearing hover. Application
 palette, quick switcher and settings shortcuts remain available.
