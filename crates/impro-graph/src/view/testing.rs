@@ -504,7 +504,7 @@ impl FrameShot<'_> {
     }
 
     /// Milliseconds the canvas spent painting this frame.
-    pub fn draw_ms(&self) -> f64 {
+    pub fn last_draw_ms(&self) -> f64 {
         self.inner.stats.get().last_draw_ms
     }
 
@@ -581,7 +581,10 @@ impl FrameShot<'_> {
         let mut shown = shown;
         if let Some(dir) = std::env::var_os("IMPRO_FRAME_DUMP") {
             static DUMPED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-            if DUMPED.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % 20 == 0 {
+            if DUMPED
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+                .is_multiple_of(20)
+            {
                 let n = DUMPED.load(std::sync::atomic::Ordering::Relaxed);
                 let dir = std::path::PathBuf::from(dir);
                 let _ = std::fs::create_dir_all(&dir);

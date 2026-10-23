@@ -364,7 +364,7 @@ mod frames {
                     l.interval.push((now - prev).as_secs_f64() * 1e3);
                 }
                 l.last = Some(now);
-                l.draw.push(shot.draw_ms());
+                l.draw.push(shot.last_draw_ms());
             });
             let mut rig = Rig {
                 view,

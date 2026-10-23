@@ -94,7 +94,7 @@ impl Soak {
                 i.zoom, i.pan
             ));
         }
-        let ms = shot.draw_ms();
+        let ms = shot.last_draw_ms();
         self.worst_ms = self.worst_ms.max(ms);
         if ms > DRAW_BOUND_MS {
             self.fail(format!("frame took {ms:.1} ms"));

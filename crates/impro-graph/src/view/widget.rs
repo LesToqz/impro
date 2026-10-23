@@ -124,6 +124,9 @@ pub struct FrameStats {
     pub animating: bool,
 }
 
+/// A test hook called after every painted frame.
+pub(super) type ProbeFn = Rc<dyn Fn(&Inner)>;
+
 pub(super) struct Inner {
     pub root_box: gtk::Box,
     pub overlay: gtk::Overlay,
@@ -169,7 +172,7 @@ pub(super) struct Inner {
     pub closed: Cell<bool>,
     pub stats: Cell<FrameStats>,
     /// Tests: called after every painted frame.
-    pub probe: RefCell<Option<Rc<dyn Fn(&Inner)>>>,
+    pub probe: RefCell<Option<ProbeFn>>,
     pub me: RefCell<Weak<Inner>>,
 }
 
