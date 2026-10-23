@@ -77,10 +77,11 @@ fn cameras(scene: &Scene) -> [(&'static str, Camera); 3] {
 
 /// Hashes of the settled picture at each camera, recorded from the renderer
 /// before the moving level of detail existed.
+// Integer-sized label masks remove zoom-history blur; only label pixels change.
 const SETTLED: [(&str, u64); 3] = [
     ("fit", 6855316917292932711),
-    ("zoom 1", 10625964012002035238),
-    ("zoomed in", 11118940497073692799),
+    ("zoom 1", 11237675232627656811),
+    ("zoomed in", 8434853540982696242),
 ];
 
 #[test]
@@ -176,4 +177,21 @@ fn kept_group_coverage_paints_exactly_what_a_fresh_painter_does() {
         }
     }
     assert!(hits > 0, "easing frames reuse kept groups");
+}
+
+#[test]
+fn settled_label_pixels_do_not_depend_on_the_previous_zoom() {
+    let mut scene = Scene::new();
+    scene.set_size(W, H);
+    scene.apply(Built::global(Graph::from_pairs(1, &[])));
+    while scene.advance(1.0 / 60.0) {}
+    let mut painter = Painter::new();
+    for zoom in [0.96, 0.8, 1.05, 2.0] {
+        scene.cam.set_zoom_now(zoom, W, H);
+        warm_hash(&mut painter, &scene);
+        scene.cam.set_zoom_now(1.0, W, H);
+        let from_history = warm_hash(&mut painter, &scene);
+        let fresh = warm_hash(&mut Painter::new(), &scene);
+        assert_eq!(from_history, fresh, "settled after zoom {zoom}");
+    }
 }

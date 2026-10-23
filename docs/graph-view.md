@@ -107,7 +107,9 @@ hiding nearby files. Screen radius multiplies this by the square root of zoom,
 so markers shrink more slowly than spacing when zooming out. Label opacity is
 `clamp((zoom - 0.12)/0.7 - detail*0.25, 0, 1)`. Connection width stays constant
 in screen pixels. Direction opacity is `clamp((zoom - 0.18)/0.62, 0, 1)`;
-marker length is `6*sqrt(width multiplier)` pixels. Label font size is
+dart length is `8*sqrt(width multiplier)` pixels, half-width is
+`4*sqrt(width multiplier)`, and notch depth is `6*sqrt(width multiplier)`.
+Label font size is
 `12 + radius*0.2`, with a 224-unit wrap width and 12-unit hover offset.
 
 Simulation runs at 60 ticks/second. Cooling reaches 0.002 after 240 ticks from
@@ -139,8 +141,9 @@ colours precede rule colours, then kind colours, then ordinary file colour.
 
 The view paints software-rasterised markers, anti-aliased connections and arrows
 into premultiplied ARGB32 surfaces, then composites them with Cairo. Pango labels
-use cached alpha-mask surfaces; size tolerance lets nearby zoom levels reuse a
-bitmap. Offscreen primitives are culled. Zoom-based label/arrow detail and dense
+use cached alpha-mask surfaces at integer device-pixel font sizes so a settled
+label does not depend on the preceding zoom path; nominal font sizes and
+wrapping stay continuous. Offscreen primitives are culled. Zoom-based label/arrow detail and dense
 label decluttering limit work, preserving focus/hover labels. A per-frame label
 render budget bounds cache misses. Connection surfaces are reused when geometry
 and style are unchanged and invalidated when positions, camera or appearance

@@ -13,8 +13,6 @@ const LINE_LEVELS: f32 = 40.0;
 const NODE_LEVELS: f32 = 50.0;
 /// Labels smaller than this many pixels are not drawn.
 const MIN_LABEL_PX: f64 = 3.0;
-/// Cached label bitmaps within this relative size of the wanted one are reused.
-const LABEL_SIZE_TOLERANCE: f64 = 0.1;
 /// Bitmaps that may be re-rendered in one frame; stale ones are scaled instead.
 const LABEL_RENDER_BUDGET: u32 = 120;
 const LABEL_PAD: i32 = 2;
@@ -212,8 +210,12 @@ impl LabelCache {
         px: f64,
         font_world: f64,
     ) -> Option<(cairo::ImageSurface, f64, f64, f64)> {
+        // Integer device-pixel sizes give a stable mask at each zoom. Keeping
+        // an arbitrary nearby size lets the final picture depend on the zoom
+        // path and repeatedly resamples small glyphs.
+        let px = px.ceil();
         let stale = match self.entries.get(text) {
-            Some(l) => (px / l.px - 1.0).abs() > LABEL_SIZE_TOLERANCE,
+            Some(l) => l.px != px,
             None => true,
         };
         if stale {
