@@ -1,5 +1,7 @@
 # impro
 
+[![CI](https://github.com/LesToqz/impro/actions/workflows/ci.yml/badge.svg)](https://github.com/LesToqz/impro/actions/workflows/ci.yml)
+
 A small Linux IDE built in Rust with GTK 3, gtk-rs, VTE 2.91 and syntect.
 It combines a project explorer and search, tabbed editor and live Markdown notes,
 terminal docks, a native project graph, read-only Git history, palettes and settings.
@@ -477,6 +479,21 @@ menu/tooltip shadows depend on the compositor. Ctrl+P in the explorer opens the
 Quick Switcher. Ctrl+Q quits even with terminal focus. Search uses Rust regex
 syntax rather than Python regex syntax.
 
+## Continuous integration
+
+Every pull request runs formatting, clippy, an MSRV (1.88) check, the unit,
+integration, doc and Git-page JavaScript tests, an end-to-end smoke test of the
+release binary and a performance budget gate. A separate Security workflow runs
+cargo-deny, gitleaks, CodeQL and workflow linting. A nightly workflow runs a
+before/after performance comparison, a graph soak test, repeated runs to find
+flaky tests, a toolchain canary and a coverage report. To run the tests locally:
+
+```sh
+bash scripts/ci/run-tests.sh all
+```
+
+See [docs/ci.md](docs/ci.md) for the job map, local commands and maintenance notes.
+
 ## Environment variables
 
 | Variable                                    | Purpose                                                                       |
@@ -516,3 +533,8 @@ always uses its native renderer.
 
 See [Architecture](docs/ARCHITECTURE.md) for dependency direction and QA helpers,
 and [Design tokens](docs/design-tokens.md) for shared geometry, colour and motion.
+
+## Licence
+
+MIT, see [LICENSE](LICENSE). Bundled icons keep their own licences; see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
