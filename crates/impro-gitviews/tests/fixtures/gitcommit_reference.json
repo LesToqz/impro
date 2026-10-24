@@ -6,7 +6,7 @@
   "parents": [
     "c597b716dad75794505ffc875c9d22eb01933aab"
   ],
-  "subject": "Merge ceo/codex/pane-split: draggable dividers between the panes of both docks (terminal/terminal)",
+  "subject": "Merge feature/pane-split: draggable dividers between the panes of both docks (terminal/terminal)",
   "body": "",
   "author": {
     "name": "Example Author",
