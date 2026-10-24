@@ -1,0 +1,62 @@
+{
+  "provisional": true,
+  "note": "Calibrated from five local release runs on a fast development machine (4 vCPU class, Xvfb). Recalibrate after the first five runs on the CI runner: set baseline to the observed median, warn to about 1.75x and fail to about 3x. A fail breach is re-measured once; only a second breach fails the job. Sizes: warn at +8%, fail at +15%.",
+  "metrics": [
+    {
+      "name": "startup_median_ms",
+      "unit": "ms",
+      "baseline": 220,
+      "warn": 385,
+      "fail": 660,
+      "note": "Median first-paint-ms of 10 fresh impro processes after one warm-up."
+    },
+    {
+      "name": "startup_ratio",
+      "unit": "x",
+      "baseline": 2.31,
+      "warn": 4.0,
+      "fail": 7.0,
+      "note": "Median impro first paint divided by the empty-window floor measured in the same run; independent of machine speed."
+    },
+    {
+      "name": "key_to_paint_ms",
+      "unit": "ms",
+      "baseline": 15.8,
+      "warn": 28,
+      "fail": 47,
+      "note": "Median of window_qa performance open/switch/toggle key-to-paint timings."
+    },
+    {
+      "name": "graph_draw_p50_ms",
+      "unit": "ms",
+      "baseline": 1.81,
+      "warn": 3.2,
+      "fail": 5.4,
+      "note": "graph_bench: settled 3,000-node graph at fit zoom, median draw."
+    },
+    {
+      "name": "graph_layout_tick_ms",
+      "unit": "ms",
+      "baseline": 1.71,
+      "warn": 3.0,
+      "fail": 5.1,
+      "note": "graph_bench: 3,000-node layout tick, median."
+    },
+    {
+      "name": "idle_cpu_ticks",
+      "unit": "ticks",
+      "baseline": 1,
+      "warn": 5,
+      "fail": 30,
+      "note": "utime+stime clock ticks over 10 idle seconds, 3 seconds after start."
+    },
+    {
+      "name": "binary_size_mib",
+      "unit": "MiB",
+      "baseline": 11.63,
+      "warn": 12.56,
+      "fail": 13.37,
+      "note": "Size of the release impro binary."
+    }
+  ]
+}
