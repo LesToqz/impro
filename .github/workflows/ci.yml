@@ -1,0 +1,203 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # One pinned stable toolchain, bumped deliberately.
+  RUST_VERSION: "1.99.1"
+  # Minimum supported Rust version (README and workspace manifest).
+  MSRV: "1.88"
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ---------------------------------------------------------------- lint
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-linux-gui
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt,clippy
+          gui: "true"
+          nextest: "false"
+          cache-key: lint
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Shellcheck (CI scripts)
+        run: shellcheck scripts/ci/*.sh
+      - name: Shellcheck (other scripts, report only)
+        continue-on-error: true
+        run: shellcheck $(git ls-files 'scripts/*.sh' ':!scripts/ci/*.sh') packaging/install.sh
+      - name: Python syntax
+        run: >-
+          python3 -c 'import ast,sys;[ast.parse(open(p).read(),p) for p in sys.argv[1:]]'
+          $(git ls-files '*.py')
+
+  # ---------------------------------------------------------------- msrv
+  msrv:
+    name: MSRV check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-linux-gui
+        with:
+          toolchain: ${{ env.MSRV }}
+          components: ""
+          gui: "true"
+          nextest: "false"
+          cache-key: msrv
+      - name: Check on the minimum supported Rust version
+        run: cargo check --workspace --all-targets --locked
+
+  # ---------------------------------------------------------------- test
+  test:
+    name: Functional tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-linux-gui
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: ""
+          gui: "true"
+          nextest: "true"
+          cache-key: test
+      - name: Unit tests
+        run: scripts/ci/run-tests.sh unit
+      - name: Integration tests
+        run: scripts/ci/run-tests.sh integration
+      - name: Doc tests
+        run: scripts/ci/run-tests.sh doc
+      - name: Git pages (Node)
+        run: scripts/ci/run-tests.sh js
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: junit
+          path: target/nextest/ci/junit.xml
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ------------------------------------------------------- build-release
+  build-release:
+    name: Release build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-linux-gui
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: ""
+          gui: "true"
+          nextest: "false"
+          cache-key: release
+      - name: Build release binary and QA examples
+        run: cargo build --release --locked -p impro --example window_qa --example startup_floor
+      - name: Upload binaries
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-bin
+          path: |
+            target/release/impro
+            target/release/examples/window_qa
+            target/release/examples/startup_floor
+          retention-days: 3
+          if-no-files-found: error
+
+  # --------------------------------------------------------------- smoke
+  smoke:
+    name: Smoke test
+    needs: build-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install runtime packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-3-0t64 libvte-2.91-0 libwebkit2gtk-4.1-0 \
+            xvfb dbus dbus-x11 desktop-file-utils \
+            fonts-dejavu-core fonts-noto-core
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-bin
+          path: ${{ runner.temp }}/release-bin
+      - name: Make binaries executable
+        run: chmod +x "$RUNNER_TEMP"/release-bin/impro "$RUNNER_TEMP"/release-bin/examples/*
+      - name: Smoke test
+        env:
+          IMPRO_SMOKE_OUTPUT_DIR: ${{ runner.temp }}/smoke
+        run: scripts/ci/smoke.sh "$RUNNER_TEMP/release-bin/impro"
+      - name: Installer test
+        run: IMPRO_INSTALL_BINARY="$RUNNER_TEMP/release-bin/impro" bash scripts/test-install.sh
+      - name: Validate desktop entry
+        run: desktop-file-validate packaging/impro.desktop
+      - name: Upload first-paint screenshot
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: first-paint
+          path: ${{ runner.temp }}/smoke/first-paint.png
+          retention-days: 3
+          if-no-files-found: ignore
+
+  # --------------------------------------------------------- ci-success
+  # The single status that branch protection requires.
+  ci-success:
+    name: CI success
+    needs:
+      - lint
+      - msrv
+      - test
+      - build-release
+      - smoke
+      # the perf-budget job is added here by the performance task
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every job to succeed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | python3 -c '
+          import json, sys
+          needs = json.load(sys.stdin)
+          bad = {name: job["result"] for name, job in needs.items() if job["result"] != "success"}
+          for name, job in needs.items():
+              print(name, job["result"])
+          if bad:
+              sys.exit("not successful: " + ", ".join(f"{n}={r}" for n, r in bad.items()))
+          '
