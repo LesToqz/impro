@@ -1,4 +1,4 @@
-## dbus-run-session -- bash <home>/projects/impro-wt/graph-lib-eval/.ceo/scratch/run-wl-4k.sh target/release/glarea_poc --auto --size 1920x1080
+## dbus-run-session -- bash <scratch-dir>/run-wl-4k.sh target/release/glarea_poc --auto --size 1920x1080
 date: 2026-10-23 23:08 IST
 SpiRegistry daemon is running with well-known name - org.a11y.atspi.Registry
 GNOME_KEYRING_CONTROL=/run/user/1000/keyring

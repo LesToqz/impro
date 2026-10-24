@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Reproduce the measurements. Heavy: run as
-#   flock <home>/projects/impro-wt/.heavy.lock systemd-run --user --scope -q \
+# Reproduce the measurements. Heavy: run as (<lock-file> = any lock file shared by heavy jobs)
+#   flock <lock-file> systemd-run --user --scope -q \
 #     -p MemoryMax=3500M -p MemorySwapMax=0 ./bench.sh <phase>...
 # Phases: build a b c d d-sw femtovg wgpu layout   (raw output goes to results/<phase>.md)
 set -u

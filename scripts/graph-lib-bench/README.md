@@ -31,11 +31,11 @@ Resolutions are logical sizes 1920×1080, 2560×1440, 3840×2160 at device scale
 
 ## Reproduce
 
-Heavy: serialise with the shared lock and cap memory.
+Heavy: serialise with a lock (`<lock-file>`: any lock file shared by heavy jobs) and cap memory.
 
 ```sh
 cd scripts/graph-lib-bench
-flock <home>/projects/impro-wt/.heavy.lock systemd-run --user --scope -q \
+flock <lock-file> systemd-run --user --scope -q \
   -p MemoryMax=3500M -p MemorySwapMax=0 ./bench.sh build a b c      # CPU candidates
 flock … ./bench.sh d d-sw femtovg wgpu layout                       # GPU + layout (no window is opened)
 ```
