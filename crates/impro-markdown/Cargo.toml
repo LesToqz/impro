@@ -14,7 +14,7 @@ gdk-pixbuf.workspace = true
 impro-core.workspace = true
 impro-ui.workspace = true
 regex.workspace = true
-fancy-regex = "0.16"
+fancy-regex = "0.19"
 
 [dev-dependencies]
 impro-editor = { path = "../impro-editor" }
