@@ -479,14 +479,14 @@ syntax rather than Python regex syntax.
 
 ## Environment variables
 
-| Variable | Purpose |
-| --- | --- |
-| `IMPRO_REDUCE_MOTION=1` | Finish interface animations immediately |
-| `IMPRO_QA_SCREENSHOT=path.png` | Capture the first complete window paint and exit; parent directory must exist |
-| `IMPRO_QA_TIMING=1` | Print startup phases and `first-paint-ms` with the screenshot helper |
-| `IMPRO_QA_TRACE=1` | Trace startup phases to stderr |
-| `IMPRO_EDITOR_TRACE=1` | Print editor/highlighting diagnostic timings |
-| `IMPRO_INSTALL_BINARY=/absolute/path/impro` | Install an existing executable without rebuilding |
+| Variable                                    | Purpose                                                                       |
+| ------------------------------------------- | ----------------------------------------------------------------------------- |
+| `IMPRO_REDUCE_MOTION=1`                     | Finish interface animations immediately                                       |
+| `IMPRO_QA_SCREENSHOT=path.png`              | Capture the first complete window paint and exit; parent directory must exist |
+| `IMPRO_QA_TIMING=1`                         | Print startup phases and `first-paint-ms` with the screenshot helper          |
+| `IMPRO_QA_TRACE=1`                          | Trace startup phases to stderr                                                |
+| `IMPRO_EDITOR_TRACE=1`                      | Print editor/highlighting diagnostic timings                                  |
+| `IMPRO_INSTALL_BINARY=/absolute/path/impro` | Install an existing executable without rebuilding                             |
 
 QA examples also accept capture and fixture variables documented in
 [Architecture](docs/ARCHITECTURE.md#qa-helpers). Graph-related identity constants
@@ -495,23 +495,24 @@ always uses its native renderer.
 
 ## Project layout
 
-| Path | Responsibility |
-| --- | --- |
-| `crates/impro` | Binary and application/window integration |
-| `crates/impro-core` | Settings, themes, filesystem and note logic; no GTK |
-| `crates/impro-ui` | Shared widgets, CSS registry, motion, icons and note toolbar |
-| `crates/impro-vte` | GTK3-compatible VTE wrapper and local sys binding |
-| `crates/impro-explorer` | File tree, notes list, project search and Git status |
-| `crates/impro-editor` | Tabs, source editing, gutters and syntect highlighting |
-| `crates/impro-markdown` | Live Markdown, block/table editing, slash menu and selection toolbar |
-| `crates/impro-terminal` | Bottom/right terminal panes, splits and resize handling |
-| `crates/impro-chrome` | Titlebar, palettes, overlay and notices |
-| `crates/impro-settings-ui` | Searchable settings dialog and hotkeys |
-| `crates/impro-graph` | Native graph engine, layout, renderer and controls |
-| `crates/impro-gitviews` | Git history/diff data and embedded WebKit pages |
-| `docs` | Architecture, graph behaviour and design tokens |
-| `packaging` | User installer, desktop entry and icon |
-| `scripts` | Test wrappers and startup measurement helper |
+| Path                       | Responsibility                                                       |
+| -------------------------- | -------------------------------------------------------------------- |
+| `crates/impro`             | Binary and application/window integration                            |
+| `crates/impro-core`        | Settings, themes, filesystem and note logic; no GTK                  |
+| `crates/impro-ui`          | Shared widgets, CSS registry, motion, icons and note toolbar         |
+| `crates/impro-vte`         | GTK3-compatible VTE wrapper and local sys binding                    |
+| `crates/impro-explorer`    | File tree, notes list, project search and Git status                 |
+| `crates/impro-editor`      | Tabs, source editing, gutters and syntect highlighting               |
+| `crates/impro-markdown`    | Live Markdown, block/table editing, slash menu and selection toolbar |
+| `crates/impro-terminal`    | Bottom/right terminal panes, splits and resize handling              |
+| `crates/impro-chrome`      | Titlebar, palettes, overlay and notices                              |
+| `crates/impro-settings-ui` | Searchable settings dialog and hotkeys                               |
+| `crates/impro-graph`       | Native graph engine, layout, renderer and controls                   |
+| `crates/impro-gitviews`    | Git history/diff data and embedded WebKit pages                      |
+| `docs`                     | Architecture, graph behaviour and design tokens                      |
+| `packaging`                | User installer, desktop entry and icon                               |
+| `scripts`                  | Test wrappers and startup measurement helper                         |
+|                            |                                                                      |
 
 See [Architecture](docs/ARCHITECTURE.md) for dependency direction and QA helpers,
 and [Design tokens](docs/design-tokens.md) for shared geometry, colour and motion.
