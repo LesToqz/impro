@@ -16,7 +16,7 @@ STATUS: DONE
 | metric | source | why |
 | --- | --- | --- |
 | `startup_median_ms` (p90 reported) | 10 fresh `impro` runs after one warm-up, `first-paint-ms` | the charter figure (ceiling 400 ms) |
-| `startup_ratio` | impro median / `startup_floor` median, interleaved in the same run | independent of machine speed; the strict startup check |
+| `startup_ratio` | impro median / `startup_floor` median, interleaved in the same run | coarse, volatile guard (see the calibration caveat); the absolute median is the primary check |
 | `key_to_paint_ms` | `window_qa performance` JSON, median of open/switch/toggle | machine-readable JSON, no text scraping; already built |
 | `graph_draw_p50_ms`, `graph_layout_tick_ms` | `graph_bench`, 3,000-node section | pure CPU, stable (spread under 2%), parsed with anchored regexes |
 | `idle_cpu_ticks` | `/proc/<pid>/stat` utime+stime over 10 s, 3 s after start | warn above 5, fail above 30 |
@@ -47,12 +47,16 @@ Budgets (`provisional: true`):
 | metric | baseline | warn | fail |
 | --- | ---: | ---: | ---: |
 | startup_median_ms | 220 | 385 | 660 |
-| startup_ratio | 2.31 | 4.0 | 7.0 |
+| startup_ratio | 3.2 | 5.5 | 10.0 |
 | key_to_paint_ms | 15.8 | 28 | 47 |
 | graph_draw_p50_ms | 1.81 | 3.2 | 5.4 |
 | graph_layout_tick_ms | 1.71 | 3.0 | 5.1 |
 | idle_cpu_ticks | 1 | 5 | 30 |
 | binary_size_mib | 11.63 | 12.56 | 13.37 |
+
+### Calibration caveat
+
+The startup ratio is less machine-independent than first assumed. Two independent later runs on a quiet machine with the same build gave 3.81 and 3.88 (floor median 49 ms, impro median 187-192 ms), against 2.31 in the calibration runs (floor about 94 ms). The empty-window floor varies about 2x between sessions (session-service activation noise), so the ratio is volatile (observed 2.3-3.9). The thresholds were therefore widened to baseline 3.2, warn 5.5, fail 10.0, keeping the warn level clear of the quiet-machine value. The ratio is a coarse guard; the absolute `startup_median_ms` remains the primary startup check. After the re-calibration the gate passes (exit 0, all metrics ok, ratio 2.35 in that run) and `--budget-scale 0.2` still exits 1.
 
 The idle baseline is 1 (the README figure), not the observed 0, so a ratio is never taken against zero.
 
