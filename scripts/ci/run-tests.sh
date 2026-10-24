@@ -71,7 +71,7 @@ run_unit() {
 
 run_integration() {
     group "integration tests"
-    run_suite 'kind(test)' --tests -- "$@"
+    run_suite 'kind(test)' --test '*' -- "$@"
 }
 
 run_doc() {
