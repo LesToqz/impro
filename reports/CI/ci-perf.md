@@ -63,7 +63,7 @@ The idle baseline is 1 (the README figure), not the observed 0, so a ratio is ne
 - Missing binary directory: exit 2. Directory without binaries: exit 2.
 - Local run time of the gate: 37-38 s (warm-up, 2x10 startup runs, a 15 s `window_qa performance` run, `graph_bench`, 13 s idle window). Expect 1.5-3x on the runner, so about 1-2 minutes, plus a possible second pass.
 - `ab_perf.py`, same build on both sides (`--runs 10 --frame-rounds 2`): exit 0 in 88 s, ratios 0.99-1.02. With the empty-window example standing in for the old `impro`: workspace startup 93 ms -> 219 ms (2.34x), exit 1. With a base directory lacking binaries: exit 2.
-- `actionlint` on `ci.yml` and `nightly.yml`: nothing in `nightly.yml` or in my `ci.yml` changes. It reports two shellcheck warnings (SC2046) in the pre-existing `lint` job (lines 49 and 51), which I did not touch. `zizmor --offline --min-severity medium .github`: no findings. `py_compile` clean. No shell scripts were added.
+- `actionlint` on `ci.yml` and `nightly.yml`: nothing in `nightly.yml` or in my `ci.yml` changes. The two shellcheck warnings (SC2046) in the `lint` job were fixed by switching to NUL-delimited file lists; actionlint with shellcheck integration (shellcheck v0.11.0) is clean on all workflows. `zizmor --offline --min-severity medium .github`: no findings. `py_compile` clean. No shell scripts were added.
 - The four hygiene greps print nothing. `git diff --stat main...HEAD` lists only owned files.
 
 ## A/B base
@@ -88,6 +88,16 @@ The idle baseline is 1 (the README figure), not the observed 0, so a ratio is ne
 ## `ci.yml` diff
 
 ```diff
+@@ lint job (follow-up fix) @@
+-        run: shellcheck $(git ls-files 'scripts/*.sh' ':!scripts/ci/*.sh') packaging/install.sh
++        run: |
++          { git ls-files -z 'scripts/*.sh' ':!scripts/ci/*.sh'; printf '%s\0' packaging/install.sh; } | xargs -0 shellcheck
+-        run: >-
+-          python3 -c '...ast.parse...'
+-          $(git ls-files '*.py')
++        run: |
++          git ls-files -z '*.py' | xargs -0 python3 -c 'import ast,sys;[ast.parse(open(p).read(),p) for p in sys.argv[1:]]'
+
 diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
 index e68e28f..5aad1c3 100644
 --- a/.github/workflows/ci.yml
