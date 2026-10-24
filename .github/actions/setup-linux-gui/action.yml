@@ -34,7 +34,9 @@ runs:
           build-essential pkg-config \
           libgtk-3-dev libvte-2.91-dev libwebkit2gtk-4.1-dev \
           xvfb dbus dbus-x11 desktop-file-utils \
-          fonts-dejavu-core fonts-noto-core
+          fonts-dejavu-core fonts-noto-core \
+          librsvg2-common adwaita-icon-theme yaru-theme-icon \
+          gsettings-desktop-schemas at-spi2-core shared-mime-info
 
     - name: Install Rust toolchain
       shell: bash
