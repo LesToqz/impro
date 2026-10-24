@@ -60,7 +60,7 @@ All four entries carry a reason and "review by 2027-04-24".
 
 | Scope | Commits scanned | Findings |
 | --- | --- | --- |
-| Full history, all refs (includes local `ceo/**` branches) | 306 | 0 |
+| Full history, all local refs | 306 | 0 |
 | `main` only | 293 | 0 |
 
 No rule ids, files or commits to report; no allow-list needed.
