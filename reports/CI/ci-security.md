@@ -2,7 +2,7 @@
 
 STATUS: PARTIAL
 
-PARTIAL because (1) the `[bans] wildcards` check cannot be set to `deny` without a `Cargo.toml` change (see Open issues), and (2) the repository-wide `git grep -n '/home/'` gate is not empty because of files outside this task's ownership (see Open issues). Everything owned by this task is done and verified locally as far as possible.
+PARTIAL because (1) the `[bans] wildcards` check cannot be set to `deny` without a `Cargo.toml` change (see Open issues), and (2) the repository-wide absolute-local-path gate is not empty because of files outside this task's ownership (see Open issues). Everything owned by this task is done and verified locally as far as possible.
 
 ## Files
 
@@ -50,7 +50,7 @@ All four entries carry a reason and "review by 2027-04-24".
 
 **Proof the gate catches them.** With the ignore list removed (`--config` pointing at a copy without `ignore`), `cargo deny check advisories` fails and reports exactly those four ids on those four crates. With the committed file, no "advisory not detected" warnings appear, so the list is complete and minimal. The committed run prints `advisories ok, bans ok, licenses ok, sources ok` and exits 0.
 
-**Differences from the expected list in the brief.** The GTK3-binding "unmaintained" advisories (RUSTSEC-2024-0412/0413/0416 and family) are **not reported** by cargo-deny 0.20.2 against the current RustSec DB, even with `unmaintained = "all"`, so they are not in the list (deriving from real output, not guessing). Conversely, `proc-macro-error`, `bincode` and `yaml-rust` were not anticipated. The last two come from `syntect`, **outside the gtk-rs/webkit2gtk stack**; they are informational "unmaintained" notices, not vulnerabilities, with no safe upgrade offered, so I ignored them with documented reasons. If you prefer not to ignore anything outside the stack, drop those two entries and the gate goes red until `syntect` is replaced or updated.
+**Differences from the expected list in the brief.** The GTK3-binding "unmaintained" advisories (RUSTSEC-2024-0412/0413/0416 and family) are **not reported** by cargo-deny 0.20.2: those RustSec advisories (for example RUSTSEC-2024-0413 for `atk`) were withdrawn from the RustSec database on 2026-08-14 (checked in the local advisory database copy), so they are not in the list (derived from real output, not guessing). Conversely, `proc-macro-error`, `bincode` and `yaml-rust` were not anticipated. The last two come from `syntect`, **outside the gtk-rs/webkit2gtk stack**; they are informational "unmaintained" notices, not vulnerabilities, with no safe upgrade offered, so I ignored them with documented reasons. If you prefer not to ignore anything outside the stack, drop those two entries and the gate goes red until `syntect` is replaced or updated.
 
 ### Licence allow-list
 
@@ -83,7 +83,7 @@ No rule ids, files or commits to report; no allow-list needed.
 ## Open issues
 
 1. **Wildcard bans are `warn`, not `deny`.** The workspace crates do not set `publish = false`, so cargo-deny treats their `path` dependencies as wildcards on public crates, and `allow-wildcard-paths = true` has no effect (12 workspace crates error under `deny`). Verified on a scratch copy: adding `publish = false` to every crate makes `bans` pass with `wildcards = "deny"`. Needs a `Cargo.toml` change by its owner (for example `publish = false` in each crate), then flip `wildcards` to `"deny"` in `deny.toml`.
-2. **`git grep -n '/home/'` is not empty on this branch**, from files I do not own: `scripts/graph-compare/{README.md,DIVERGENCES.md}`, `scripts/graph-lib-bench/{README.md,bench.sh}`, and about 20 `scripts/graph-lib-bench/results/*.md` files contain absolute local paths (some also contain `<home>/` and a scratch directory name). Two test fixtures under `crates/impro-gitviews/tests/fixtures/` contain harmless sample paths (`/home/dev/...`). These must be cleaned before the repository is published.
+2. **The absolute-local-path gate is not empty on this branch**, from files I do not own: `scripts/graph-compare/{README.md,DIVERGENCES.md}`, `scripts/graph-lib-bench/{README.md,bench.sh}`, and about 20 `scripts/graph-lib-bench/results/*.md` files contain absolute local filesystem paths. Two test fixtures under `crates/impro-gitviews/tests/fixtures/` contain harmless sample paths. These must be cleaned before the repository is published.
 3. **`scripts/graph-lib-bench/`** is a standalone Cargo project with its own lockfile and is not covered by `cargo deny`, Dependabot (`directory: /` only) or CodeQL's Rust analysis of the workspace. Add a second Dependabot `cargo` entry and a cargo-deny run for it if it should be covered.
 4. Dependabot proposes patch updates of the pinned stack; only minor and major bumps are blocked.
 5. Review the ignore list by 2027-04-24, or earlier when `syntect` or the gtk-rs stack changes.
