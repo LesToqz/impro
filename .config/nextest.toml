@@ -1,0 +1,21 @@
+# Test runner profiles. Select `ci` with --profile ci (the default runner of
+# scripts/ci/run-tests.sh is cargo; nextest is used with IMPRO_CI_RUNNER=nextest).
+
+[profile.default]
+fail-fast = false
+
+[profile.ci]
+# One retry absorbs timing-sensitive tests on a loaded machine; a test that
+# passes only on retry is reported as flaky in the run summary.
+retries = 1
+fail-fast = false
+# Every test is a GTK process on one shared Xvfb display. Run concurrently
+# (4 threads), about 17 window/focus/pixel tests fail deterministically; each
+# of them passes alone and when run one at a time, so tests run serially.
+test-threads = 1
+# The slowest test measured is 53 s (under 4-way contention); stop a hang
+# after three 60 s periods.
+slow-timeout = { period = "60s", terminate-after = 3 }
+
+[profile.ci.junit]
+path = "junit.xml"
