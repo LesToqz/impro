@@ -71,6 +71,9 @@ run_unit() {
 
 run_integration() {
     group "integration tests"
+    # Some tests spawn the QA example binaries; selecting only test targets
+    # (--test '*', or nextest) does not build examples.
+    cargo build --examples --workspace --locked
     run_suite 'kind(test)' --test '*' -- "$@"
 }
 
