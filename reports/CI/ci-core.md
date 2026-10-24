@@ -38,7 +38,7 @@ Prebuilt `x86_64-unknown-linux-gnu` release. The sha256 matched the published ch
 | nextest 3 (4 threads) | 243 s | 198 pass | 1072 pass, 14 skipped | 2 | 20 |
 | `scripts/test.sh --no-fail-fast` (cargo) | 563 s | all pass (includes doc tests) | | | |
 
-**Rule outcome: nextest was red 3 times in a row, so the default runner is `cargo`.** `IMPRO_CI_RUNNER=nextest` stays available.
+**Rule outcome: nextest was red 3 times in a row, so the default runner is `cargo`.** This follows the selection rule used for this work: nextest is the default only if it is green three times in a row. `IMPRO_CI_RUNNER=nextest` stays available.
 
 First failure, and the cause:
 
@@ -138,6 +138,5 @@ The newest release at least 7 days old was taken; the dates are as of 2026-10-24
 
 ## Open issues
 
-- On this branch's base, `git grep -n '/home/'` is not empty, but none of the matches are in files owned by this task. They are local absolute paths in `scripts/graph-compare/`, `scripts/graph-lib-bench/` and two `impro-gitviews` test fixtures. `main` has since changed those files. Re-run the check after merging.
 - A faster, parallel nextest setup would need one Xvfb (and session bus) per test process, for example a nextest wrapper script. I did not build one; it is outside the brief.
 - `RUST_VERSION` 1.99.1 is the toolchain installed on this machine and is pinned deliberately.
