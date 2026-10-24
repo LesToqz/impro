@@ -138,6 +138,6 @@ The newest release at least 7 days old was taken; the dates are as of 2026-10-24
 
 ## Open issues
 
-- `git grep -n '/home/'` is not empty, but none of the matches are in files owned by this task. They are in `scripts/graph-compare/`, `scripts/graph-lib-bench/` (READMEs, `bench.sh` and recorded `results/*.md`) and two `impro-gitviews` test fixtures. The first group contains local absolute paths that should be removed before publication.
+- On this branch's base, `git grep -n '/home/'` is not empty, but none of the matches are in files owned by this task. They are local absolute paths in `scripts/graph-compare/`, `scripts/graph-lib-bench/` and two `impro-gitviews` test fixtures. `main` has since changed those files. Re-run the check after merging.
 - A faster, parallel nextest setup would need one Xvfb (and session bus) per test process, for example a nextest wrapper script. I did not build one; it is outside the brief.
 - `RUST_VERSION` 1.99.1 is the toolchain installed on this machine and is pinned deliberately.
