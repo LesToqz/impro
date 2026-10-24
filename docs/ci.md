@@ -255,6 +255,25 @@ check:
 - **Artifacts.** `release-bin` must contain `impro` and `examples/graph_bench`.
   The JUnit upload finds no file with the default cargo runner.
 
+### Known runner differences
+
+- **VTE 0.76 teardown critical.** On Ubuntu 24.04 (libvte 0.76) dropping the last
+  reference to a terminal while its window is being unrealized makes libvte emit
+  two GLib-GObject criticals (`invalid (NULL) pointer instance` and
+  `g_signal_handlers_disconnect_matched: assertion 'G_TYPE_CHECK_INSTANCE
+  (instance)' failed`). They are harmless at run time, but the suite runs with
+  `G_DEBUG=fatal-criticals`, which turns them into an abort. libvte 0.84 does not
+  emit them.
+- **Tolerance.** `scripts/ci/run-tests.sh integration` runs the two affected
+  `impro-terminal` targets, `test_resizegate` and `test_terminal_startup`, with
+  criticals non-fatal and fails if their output contains any other `CRITICAL`
+  line. Every other target keeps `G_DEBUG=fatal-criticals`. The targets are listed
+  in one place at the top of the script, and
+  `scripts/ci/run-tests.sh --self-test-critical-filter` checks the filter.
+- **Nextest.** The opt-in nextest mode does not apply this tolerance.
+- **Revisit** when the runner image ships a newer libvte or the product stops
+  dropping a terminal during unrealize.
+
 ## Measured wall times
 
 Wall times have **not been measured on a hosted runner yet**. Local runs on a
