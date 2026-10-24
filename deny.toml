@@ -1,0 +1,54 @@
+# cargo-deny policy for impro (Linux-only desktop IDE).
+# Run: cargo deny --locked check advisories bans licenses sources
+# Schema: cargo-deny 0.20.x.
+
+[graph]
+# The project only ships for Linux, so platform-specific crates for other
+# targets are not part of the audited graph.
+targets = ["x86_64-unknown-linux-gnu"]
+
+[advisories]
+yanked = "deny"
+# Also report unmaintained crates that are only reached transitively.
+unmaintained = "all"
+# Every entry needs a reason and is reviewed again by 2027-04-24.
+ignore = [
+    { id = "RUSTSEC-2024-0429", reason = "glib 0.18 VariantStrIter is unsound, but the GTK stack is pinned to gtk-rs 0.18 by design (webkit2gtk 2.0 links against it) and impro never uses glib::Variant iteration; review by 2027-04-24." },
+    { id = "RUSTSEC-2024-0370", reason = "proc-macro-error is unmaintained, but it is a compile-time dependency of the pinned gtk-rs 0.18 macro crates (glib-macros, gtk3-macros) and cannot be upgraded without leaving the stack; review by 2027-04-24." },
+    { id = "RUSTSEC-2025-0141", reason = "bincode 1.x is unmaintained (no vulnerability), pulled in only by syntect for its bundled syntax sets, which are loaded from trusted build-time data and never from user input; review by 2027-04-24." },
+    { id = "RUSTSEC-2024-0320", reason = "yaml-rust is unmaintained (no vulnerability), pulled in only by syntect to read bundled .sublime-syntax definitions, never user-supplied YAML; review by 2027-04-24." },
+]
+
+[licenses]
+# Permissive licences only. Each is the minimum needed: every crate in the
+# graph offers at least one of these (dual-licensed crates such as
+# MIT OR Unlicense, MIT OR Zlib or 0BSD OR MIT are satisfied through MIT).
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception", # target-lexicon (build-time only)
+    "Unicode-3.0",                    # unicode-ident
+]
+confidence-threshold = 0.9
+
+# impro-gitviews has no `license` field in its manifest; the workspace is MIT.
+[[licenses.clarify]]
+crate = "impro-gitviews"
+expression = "MIT"
+license-files = []
+
+[bans]
+multiple-versions = "warn"
+# Wildcard version requirements are denied. NOTE: workspace crates are not
+# marked `publish = false`, so cargo-deny treats their path dependencies as
+# wildcards on public crates and `allow-wildcard-paths` has no effect. Until
+# they are marked unpublished, wildcards can only be warned about; then switch
+# this to "deny".
+wildcards = "warn"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
