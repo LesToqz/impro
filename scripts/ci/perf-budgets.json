@@ -13,10 +13,10 @@
     {
       "name": "startup_ratio",
       "unit": "x",
-      "baseline": 2.31,
-      "warn": 4.0,
-      "fail": 7.0,
-      "note": "Median impro first paint divided by the empty-window floor measured in the same run; independent of machine speed."
+      "baseline": 3.2,
+      "warn": 5.5,
+      "fail": 10.0,
+      "note": "Median impro first paint divided by the empty-window floor measured in the same run. The ratio is volatile (observed 2.3-3.9 locally, floor 49-95 ms between sessions) and is a coarse guard; the absolute startup_median_ms remains the primary startup check."
     },
     {
       "name": "key_to_paint_ms",
