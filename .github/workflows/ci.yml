@@ -46,11 +46,11 @@ jobs:
         run: shellcheck scripts/ci/*.sh
       - name: Shellcheck (other scripts, report only)
         continue-on-error: true
-        run: shellcheck $(git ls-files 'scripts/*.sh' ':!scripts/ci/*.sh') packaging/install.sh
+        run: |
+          { git ls-files -z 'scripts/*.sh' ':!scripts/ci/*.sh'; printf '%s\0' packaging/install.sh; } | xargs -0 shellcheck
       - name: Python syntax
-        run: >-
-          python3 -c 'import ast,sys;[ast.parse(open(p).read(),p) for p in sys.argv[1:]]'
-          $(git ls-files '*.py')
+        run: |
+          git ls-files -z '*.py' | xargs -0 python3 -c 'import ast,sys;[ast.parse(open(p).read(),p) for p in sys.argv[1:]]'
 
   # ---------------------------------------------------------------- msrv
   msrv:
