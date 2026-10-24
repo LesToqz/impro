@@ -8,7 +8,7 @@ divergences. Acceptance does not turn a `different` row into `same`.
 
 ## Evidence and reproduction
 
-Read-only archive root: `<home>/projects/impro-wt/.qa-archive/`.
+Read-only archive root: `<archive-dir>/` (the directory holding the archived audit runs).
 The final source of truth is `graph-fixes/final-reviewed/comparison.json`, with
 `comparison.md`, `behaviour-register.md` and `actions.json` beside it. Driver
 values are in `final-reviewed/{reference,impro}/measurements.json`, keyed by

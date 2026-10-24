@@ -27,3 +27,12 @@ xvfb-run -a dbus-run-session -- python3 crates/impro-ui/assets/icons/regenerate.
 ```
 
 The raw rasters are checked in; normal Cargo builds need no extra tools.
+
+## Licence and provenance
+
+These icons and rasters are not covered by the project's MIT licence. Seventeen
+SVGs come from the Yaru icon theme (CC BY-SA 4.0) and
+`panel-bottom-symbolic.svg` from GNOME libpanel (LGPL-3.0-or-later); the
+`.rgba` rasters are adaptations under the same terms as their sources. See
+`THIRD_PARTY_NOTICES.md` at the repository root for holders, licences and
+source links.

@@ -1,4 +1,4 @@
-## dbus-run-session -- bash <home>/projects/impro-wt/graph-lib-eval/.ceo/scratch/run-wl-4k.sh target/release/glarea_probe
+## dbus-run-session -- bash <scratch-dir>/run-wl-4k.sh target/release/glarea_probe
 date: 2026-10-23 23:07 IST
 SpiRegistry daemon is running with well-known name - org.a11y.atspi.Registry
 GDK backend: GdkWaylandDisplay; mode current

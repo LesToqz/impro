@@ -1,9 +1,9 @@
 # Paired graph audit
 
-Build the native probe once, using the machine's shared resource lock:
+Build the native probe once, using a lock (`<lock-file>` below: any lock file shared by heavy jobs):
 
 ```sh
-flock <home>/projects/impro-wt/.heavy.lock \
+flock <lock-file> \
   systemd-run --user --scope -q -p MemoryMax=3500M -p MemorySwapMax=0 \
   cargo build --release -p impro-graph --examples
 ```
@@ -81,7 +81,7 @@ Output defaults to `.ceo/graph-compare`:
 The committed BEHAVIOURS and DIVERGENCES documents record the final reviewed
 audit measured 2026-10-23 19:20 IST: 180 rows, 176 same, 3 different and
 1 unmeasurable. The evidence is archived under
-`<home>/projects/impro-wt/.qa-archive/graph-fixes/final-reviewed/`.
+`<archive-dir>/graph-fixes/final-reviewed/`.
 Running the harness does not overwrite tracked documentation. To update the
 register, use `--reuse --out <existing-output-directory>` to regenerate the
 snapshots, then replace BEHAVIOURS from `<!-- audit-register -->` onward with
