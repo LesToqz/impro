@@ -1,6 +1,6 @@
 # CI stability: Functional tests job on the hosted runner
 
-STATUS: PARTIAL (round 1). Groups B and C cannot be confirmed without a run on the hosted runner.
+STATUS: PARTIAL (round 2). Stays PARTIAL until a green run on the hosted runner is confirmed.
 
 ## Round 1
 
@@ -57,3 +57,45 @@ Expected to show: (a) whether the new packages fix groups B and C; (b) if a cras
 - If the crashes persist with the packages installed, are they caused by the older GTK/VTE (a test or product issue), in which case a test fix is needed (not in this round's scope)?
 - If criticals are harmless when not fatal, should `G_DEBUG=fatal-criticals` be kept for the hosted runner?
 - The AT-SPI bus warning is expected to remain; `at-spi2-core` provides the bus launcher but the tests do not start it.
+
+## Round 2
+
+### Runner evidence (from the first pull-request run)
+
+- Groups A and B and the `impro-chrome test_prompt` SIGSEGV are fixed by round 1. Two targets still failed: `impro-terminal --test test_resizegate` and `--test test_terminal_startup`.
+- With `G_DEBUG` unset both pass on the runner (20/20 and 12/12). They abort only under `G_DEBUG=fatal-criticals`, on exactly this pair of GLib messages emitted during teardown: `invalid (NULL) pointer instance` and `g_signal_handlers_disconnect_matched: assertion 'G_TYPE_CHECK_INSTANCE (instance)' failed`.
+- gdb: the last reference to an `impro_vte::Terminal` is dropped in `impro_terminal::resizegate::stop_waiting` (from `ResizeGate::unrealize`); libvte's own dispose code (VTE 0.76.0) then calls `g_signal_handlers_disconnect_matched` with a NULL instance. A library-side teardown critical of the older VTE (development machine: 0.84, which does not emit it). Not caused by parallelism (`--test-threads 1` crashes the same way).
+
+### Changes
+
+- `scripts/ci/run-tests.sh` (cargo runner): the two targets are declared once at the top (`tolerated_pkg`, `tolerated_targets`). `integration` runs (a) every other target with `G_DEBUG=fatal-criticals` as before (`--workspace --exclude impro-terminal --test '*'`, plus `-p impro-terminal --test <name>` for each other terminal target) and (b) the two tolerated targets with `G_DEBUG` unset, output captured. After (b) every line containing `CRITICAL` that is not one of the two known messages (matched on message text, not pid or time) is listed and fails the script. Each part runs even if another failed; exit status is non-zero if any part failed. The nextest mode is unchanged and does not apply the tolerance (stated in a script comment and in the docs).
+- `.github/workflows/ci-diagnose.yml` removed.
+- `docs/ci.md`: new subsection "Known runner differences".
+- No product code or test files changed.
+
+### Filter self-test (`scripts/ci/run-tests.sh --self-test-critical-filter`)
+
+```
+self-test (i) known messages: accepted (expected)
+self-test (ii) with unrelated critical: rejected (expected), offending line: (x:1): Gtk-CRITICAL **: 00:00:00.000: gtk_widget_show: assertion 'GTK_IS_WIDGET (widget)' failed
+self-test (iii) empty output: accepted (expected)
+```
+
+(i) used two known messages with different pids and times; exit status of the self-test is 0.
+
+### Local run of the split
+
+A temporary copy of the script with the strict workspace part limited to `-p impro-explorer` (so only that crate and `impro-terminal` ran), executed through `integration`:
+
+- Printed `integration targets: 90 in total, 2 tolerated, 88 strict`.
+- Strict part: all `impro-explorer` and the six other `impro-terminal` targets ran. Tolerated part: `test_resizegate` 20 passed, `test_terminal_startup` 12 passed, no CRITICAL lines (VTE 0.84 locally).
+- One strict-part failure: `test_panesplit::test_real_webkit_resize_keeps_page_state_and_pause_resume` ("GTK operation timed out") while the machine was loaded; rerun alone, `test_panesplit` gives 14 passed. Looks like a load-sensitive timeout; not related to the change.
+
+### Target counts
+
+`cargo metadata` lists 90 integration test targets in total (8 in `impro-terminal`). Part (b) runs 2; part (a) runs 88 (82 outside `impro-terminal`, 6 inside), so (a)+(b) = 90, the same set as before. The script prints these numbers at the start of `integration`. The full suite was not run here.
+
+### Open issues
+
+- Confirm a green run on the hosted runner, including that the two tolerated targets print no other CRITICAL.
+- Revisit the tolerance when the runner image has a newer libvte, or when the product avoids dropping a terminal during unrealize.
