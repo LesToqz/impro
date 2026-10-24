@@ -46,11 +46,11 @@ jobs:
         run: shellcheck scripts/ci/*.sh
       - name: Shellcheck (other scripts, report only)
         continue-on-error: true
-        run: shellcheck $(git ls-files 'scripts/*.sh' ':!scripts/ci/*.sh') packaging/install.sh
+        run: |
+          { git ls-files -z 'scripts/*.sh' ':!scripts/ci/*.sh'; printf '%s\0' packaging/install.sh; } | xargs -0 shellcheck
       - name: Python syntax
-        run: >-
-          python3 -c 'import ast,sys;[ast.parse(open(p).read(),p) for p in sys.argv[1:]]'
-          $(git ls-files '*.py')
+        run: |
+          git ls-files -z '*.py' | xargs -0 python3 -c 'import ast,sys;[ast.parse(open(p).read(),p) for p in sys.argv[1:]]'
 
   # ---------------------------------------------------------------- msrv
   msrv:
@@ -121,7 +121,9 @@ jobs:
           nextest: "false"
           cache-key: release
       - name: Build release binary and QA examples
-        run: cargo build --release --locked -p impro --example window_qa --example startup_floor
+        run: >-
+          cargo build --release --locked -p impro -p impro-graph
+          --bin impro --example window_qa --example startup_floor --example graph_bench
       - name: Upload binaries
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -130,6 +132,7 @@ jobs:
             target/release/impro
             target/release/examples/window_qa
             target/release/examples/startup_floor
+            target/release/examples/graph_bench
           retention-days: 3
           if-no-files-found: error
 
@@ -173,6 +176,51 @@ jobs:
           retention-days: 3
           if-no-files-found: ignore
 
+  # -------------------------------------------------------- perf-budget
+  # Gross-regression gate: startup (absolute and relative to an empty GTK
+  # window), frame timings, idle CPU and binary size. See scripts/ci/perf_gate.py.
+  perf-budget:
+    name: Performance budget
+    needs: build-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install runtime packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-3-0t64 libvte-2.91-0 libwebkit2gtk-4.1-0 \
+            xvfb dbus dbus-x11 desktop-file-utils \
+            fonts-dejavu-core fonts-noto-core
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-bin
+          path: ${{ runner.temp }}/release-bin
+      - name: Make binaries executable
+        run: chmod +x "$RUNNER_TEMP"/release-bin/impro "$RUNNER_TEMP"/release-bin/examples/*
+      - name: Performance budgets
+        env:
+          GDK_BACKEND: x11
+          GIO_USE_VFS: local
+        run: >-
+          xvfb-run -a dbus-run-session --
+          python3 scripts/ci/perf_gate.py
+          --bin-dir "$RUNNER_TEMP/release-bin"
+          --budgets scripts/ci/perf-budgets.json
+          --output "$RUNNER_TEMP/perf/perf.json"
+          --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: perf-results
+          path: ${{ runner.temp }}/perf/perf.json
+          retention-days: 14
+          if-no-files-found: ignore
+
   # --------------------------------------------------------- ci-success
   # The single status that branch protection requires.
   ci-success:
@@ -183,7 +231,7 @@ jobs:
       - test
       - build-release
       - smoke
-      # the perf-budget job is added here by the performance task
+      - perf-budget
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
