@@ -8,6 +8,7 @@ fn extraction_matches_unix_selection_viewport_and_ranges() {
     gtk::init().unwrap();
     for bytes in [
         "abc",
+        "a\tb",
         "ab界cdef\r\nnext",
         "first\r\nsecond\r\nthird\r\nfourth\r\nfifth",
     ] {

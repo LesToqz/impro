@@ -412,6 +412,7 @@ pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<S
         }
     };
     let monitor_process = duplicate(process.as_raw_handle())?;
+    let wait_handle = duplicate(monitor_process.as_raw_handle())?;
     let (control_tx, control_rx) = mpsc::channel();
     let (input_tx, input_rx) = mpsc::channel::<Option<Vec<u8>>>();
     let session = Arc::new(Session {
@@ -441,7 +442,6 @@ pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<S
     let state = Arc::downgrade(&session);
     // A dedicated waiter wakes the controller on child exit; idle terminals poll nothing.
     let done = session.control.clone();
-    let wait_handle = duplicate(monitor_process.as_raw_handle())?;
     thread::spawn(move || {
         unsafe {
             WaitForSingleObject(wait_handle.as_raw_handle(), INFINITE);

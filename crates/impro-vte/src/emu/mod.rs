@@ -356,8 +356,19 @@ impl Screen {
                 self.columns()
             };
             let begin = result.len();
+            let mut tab_mode = false;
             for col in left..right {
                 let cell = &line[Column(col)];
+                if tab_mode {
+                    if self.tracking.tabs[col] || cell.c != ' ' {
+                        tab_mode = false;
+                    } else {
+                        continue;
+                    }
+                }
+                if cell.c == '\t' {
+                    tab_mode = true;
+                }
                 if cell
                     .flags
                     .intersects(Flags::WIDE_CHAR_SPACER | Flags::LEADING_WIDE_CHAR_SPACER)

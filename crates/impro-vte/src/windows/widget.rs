@@ -398,19 +398,47 @@ impl Terminal {
                 }
                 Output::Data(packet, ack) => {
                     let weak = t.downgrade();
-                    // Exactly one packet is outstanding; the reader waits for ack.
-                    // Yield between packets so GTK can paint and dispatch input.
-                    glib::idle_add_local_once(move || {
-                        if let Some(t) = weak.upgrade().filter(|t| !t.imp().closed.get()) {
-                            let start = Instant::now();
-                            t.feed(&packet.bytes);
-                            drop(packet);
-                            t.emit_by_name::<()>("contents-changed", &[]);
-                            t.imp()
-                                .max_slice
-                                .set(t.imp().max_slice.get().max(start.elapsed()));
+                    // One packet is outstanding. Feed at most 256 bytes at once,
+                    // yielding after a 2 ms budget, even within a single packet.
+                    let mut packet = Some(packet);
+                    let mut ack = Some(ack);
+                    let mut consumed = 0;
+                    glib::idle_add_local(move || {
+                        let Some(t) = weak.upgrade().filter(|t| !t.imp().closed.get()) else {
+                            packet.take();
+                            if let Some(ack) = ack.take() {
+                                let _ = ack.send(());
+                            }
+                            return glib::ControlFlow::Break;
+                        };
+                        let start = Instant::now();
+                        let length = packet.as_ref().expect("pending output").bytes.len();
+                        while consumed < length {
+                            let end = (consumed + 256).min(length);
+                            t.feed(&packet.as_ref().expect("pending output").bytes[consumed..end]);
+                            consumed = end;
+                            if start.elapsed() >= Duration::from_millis(2) || t.imp().closed.get() {
+                                break;
+                            }
                         }
-                        let _ = ack.send(());
+                        let finished = consumed == length || t.imp().closed.get();
+                        if finished {
+                            packet.take();
+                            if !t.imp().closed.get() {
+                                t.emit_by_name::<()>("contents-changed", &[]);
+                            }
+                            if let Some(ack) = ack.take() {
+                                let _ = ack.send(());
+                            }
+                        }
+                        t.imp()
+                            .max_slice
+                            .set(t.imp().max_slice.get().max(start.elapsed()));
+                        if finished {
+                            glib::ControlFlow::Break
+                        } else {
+                            glib::ControlFlow::Continue
+                        }
                     });
                 }
                 Output::Exited(status) => {
@@ -464,6 +492,7 @@ impl Terminal {
             lines as usize
         });
         self.update_adjustment();
+        self.queue_draw();
     }
     pub fn has_selection(&self) -> bool {
         self.imp()
@@ -478,11 +507,18 @@ impl Terminal {
         self.imp().session.borrow().clone().map(Pty)
     }
     pub fn reset(&self, clear_tabstops: bool, clear_history: bool) {
+        let selected = self.has_selection();
         self.imp()
             .screen
             .borrow_mut()
             .reset(clear_tabstops, clear_history);
+        self.update_adjustment();
+        self.restart_blink();
         self.queue_draw();
+        if selected {
+            self.emit_by_name::<()>("selection-changed", &[]);
+        }
+        self.emit_by_name::<()>("contents-changed", &[]);
     }
     pub fn copy_clipboard_format(&self, format: Format) {
         let text = self.imp().screen.borrow().selection();
@@ -595,18 +631,25 @@ impl Terminal {
     }
     pub fn set_allow_hyperlink(&self, value: bool) {
         self.imp().allow_hyperlink.set(value);
+        if !value {
+            self.imp().hover.borrow_mut().take();
+            self.imp().hover_points.borrow_mut().clear();
+        }
+        self.queue_draw();
     }
     pub fn allow_hyperlink(&self) -> bool {
         self.imp().allow_hyperlink.get()
     }
     pub fn set_input_enabled(&self, value: bool) {
         self.imp().input_enabled.set(value);
+        self.restart_blink();
     }
     pub fn input_enabled(&self) -> bool {
         self.imp().input_enabled.get()
     }
     pub fn set_bold_is_bright(&self, value: bool) {
         self.imp().bold_is_bright.set(value);
+        self.queue_draw();
     }
     pub fn bold_is_bright(&self) -> bool {
         self.imp().bold_is_bright.get()
@@ -1555,7 +1598,12 @@ impl Terminal {
             .borrow()
             .mode()
             .contains(TermMode::SHOW_CURSOR);
-        if self.imp().focused.get() && self.is_mapped() && enabled && visible {
+        if self.imp().focused.get()
+            && self.is_mapped()
+            && enabled
+            && visible
+            && self.input_enabled()
+        {
             let weak = self.downgrade();
             let id = glib::timeout_add_local(Duration::from_millis(600), move || {
                 if let Some(t) = weak.upgrade() {
