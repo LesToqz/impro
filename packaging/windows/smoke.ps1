@@ -25,6 +25,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'smoke-args.ps1')
+. (Join-Path $PSScriptRoot 'lab-helpers.ps1')
 
 $AppId = '{084215CE-9F22-4B49-9F5F-65835332B838}'
 $UninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\${AppId}_is1"
@@ -128,22 +129,36 @@ function Test-App([string]$AppDir) {
     if ($r.ExitCode -ne 2) { Fail "invalid folder exited $($r.ExitCode), expected 2" }
     Pass 'invalid folder exits 2'
 
-    $png = Join-Path $OutDir "first-paint-$Mode.png"
-    Remove-Item -LiteralPath $png -ErrorAction SilentlyContinue
-    $launchEnv = $envs + @{ IMPRO_QA_SCREENSHOT = $png; IMPRO_QA_TIMING = '1' }
-    $r = Invoke-Capture -Exe $exe -Arguments @($folder) -TimeoutSec $LaunchTimeoutSec -EnvVars $launchEnv -Tag "launch-$Mode"
-    if ($r.TimedOut) { Fail "launch did not exit within ${LaunchTimeoutSec}s" }
-    if ($r.ExitCode -ne 0) { Fail "launch exited $($r.ExitCode)" }
-    Pass 'launch exits 0'
-    if (-not (Test-Path -LiteralPath $png) -or (Get-Item -LiteralPath $png).Length -eq 0) { Fail "no screenshot written to $png" }
-    $bytes = [IO.File]::ReadAllBytes($png)
-    $sig = ($bytes[0..7] | ForEach-Object { $_.ToString('x2') }) -join ''
-    if ($sig -ne '89504e470d0a1a0a') { Fail "screenshot is not a PNG (magic $sig)" }
-    if ($bytes.Length -lt 5000) { Fail "screenshot is only $($bytes.Length) bytes, looks blank" }
-    Pass "screenshot is a PNG of $($bytes.Length) bytes"
-
-    $all = $r.Stdout + "`n" + $r.Stderr
-    $timing = ($all -split "`r?`n") | Where-Object { $_ -match 'first-paint-ms' } | Select-Object -First 1
+    # Two launches in fresh processes: the first one pays the one-time first-run costs (font cache and so on),
+    # the second one is warm. Both numbers are logged; every launch is finished and logged before anything fails.
+    $launches = @()
+    foreach ($run in 'cold', 'warm') {
+        $png = Join-Path $OutDir "first-paint-$Mode-$run.png"
+        Remove-Item -LiteralPath $png -ErrorAction SilentlyContinue
+        $launchEnv = $envs + @{ IMPRO_QA_SCREENSHOT = $png; IMPRO_QA_TIMING = '1' }
+        $r = Invoke-Capture -Exe $exe -Arguments @($folder) -TimeoutSec $LaunchTimeoutSec -EnvVars $launchEnv -Tag "launch-$Mode-$run"
+        $text = $r.Stdout + "`n" + $r.Stderr
+        $paint = Get-TimingValue $text 'first-paint-ms'
+        $gtk = Get-TimingValue $text 'app-gtk-startup-ms'
+        Step ("launch {0}: first-paint-ms={1} app-gtk-startup-ms={2} exit={3}" -f $run, (Format-Millis $paint), (Format-Millis $gtk), $r.ExitCode)
+        $launches += [pscustomobject]@{ Run = $run; Result = $r; Png = $png; Text = $text }
+    }
+    foreach ($l in $launches) {
+        if ($l.Result.TimedOut) { Fail "$($l.Run) launch did not exit within ${LaunchTimeoutSec}s" }
+        if ($l.Result.ExitCode -ne 0) { Fail "$($l.Run) launch exited $($l.Result.ExitCode)" }
+    }
+    Pass 'both launches exit 0'
+    # The screenshot verdict is the cold launch; the warm capture is only judged when the cold one fails,
+    # so that one broken capture is reported together with the state of the other.
+    $coldProblems = @(Test-ScreenshotProblems -Path $launches[0].Png)
+    if ($coldProblems.Count -gt 0) {
+        $warmProblems = @(Test-ScreenshotProblems -Path $launches[1].Png)
+        $warmNote = if ($warmProblems.Count -gt 0) { 'warm launch: ' + ($warmProblems -join '; ') } else { 'warm launch screenshot is fine' }
+        Fail ("cold launch: " + ($coldProblems -join '; ') + " | $warmNote")
+    }
+    Pass 'cold launch screenshot is a non-blank PNG'
+    $all = ($launches | ForEach-Object { $_.Text }) -join "`n"
+    $timing = ($launches[0].Text -split "`r?`n") | Where-Object { $_ -match 'first-paint-ms' } | Select-Object -First 1
     if ($timing) { Pass "first paint reported: $timing" } else { Write-Host '::warning::no first-paint-ms line in the app output (GUI-subsystem stdio may not reach the pipe)' }
     foreach ($bad in 'Unrecognized image file format', 'Settings schema .* is not installed', 'Failed to load module') {
         if ($all -match $bad) { Fail "runtime data problem in app output: matched '$bad'" }
