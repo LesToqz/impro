@@ -1,11 +1,9 @@
 # win-foundation report
 
-STATUS: PARTIAL
+STATUS: DONE
 
-One item is blocked by the ownership rules: `crates/impro-terminal/src/resizegate.rs` needs a
-one-line `#[cfg(unix)]` (patch below). Everything else is done. With that one line applied, acceptance
-item 1 passes (verified on a temporary uncommitted edit, then reverted); without it,
-`scripts/windows/check.sh -p impro-terminal` fails with exactly one error.
+Continuation applied: `#[cfg(unix)]` added before the `if let Some(pty) = terminal.pty()` block in
+`crates/impro-terminal/src/resizegate.rs` (the only edit needed there; no behavioural change on Linux).
 
 ## What changed
 
@@ -71,21 +69,8 @@ item 1 passes (verified on a temporary uncommitted edit, then reverted); without
   HOME -> `impro_core::platform::home_dir()`; `/` -> `fs_root()` (`%SystemDrive%\`). `webkit2gtk` dev-dependency is `cfg(unix)`.
 - `crates/impro/Cargo.toml`: `webkit2gtk` (dependency) and `javascriptcore-rs` (dev-dependency) under `cfg(unix)`. `impro-vte` stays unconditional (it now exists on both).
 
-## BLOCKED item: `crates/impro-terminal/src/resizegate.rs` (not owned)
-`glib::source::unix_fd_add_local` does not exist on Windows (line ~298). The call sits inside `if let Some(pty) = terminal.pty()`, which is always `None` on the stub, so a gate changes nothing on Linux. Needed patch (apply with `git apply`):
-
-```diff
---- a/crates/impro-terminal/src/resizegate.rs
-+++ b/crates/impro-terminal/src/resizegate.rs
-@@ -293,6 +293,7 @@ impl ResizeGate {
-                     g.answered(t);
-                 }
-             }));
-+            #[cfg(unix)]
-             if let Some(pty) = terminal.pty() {
-                 let weak = Rc::downgrade(&answer);
-                 let source = glib::source::unix_fd_add_local(
-```
+## Applied: `crates/impro-terminal/src/resizegate.rs`
+`glib::source::unix_fd_add_local` does not exist on Windows, so the pty-fd watch block is now `#[cfg(unix)]` (on the stub `terminal.pty()` is always `None`, so nothing is lost). One added line.
 
 ## Signature differences: vte stub vs Unix wrapper
 | Item | Unix | Windows stub |
@@ -101,8 +86,8 @@ Not identical but source-compatible: gitviews `webview()` (returns `webkit2gtk::
 
 ## How verified (exact commands and results)
 Machine: Linux host, `x86_64-pc-windows-gnu` rust-std, no Windows/wine/mingw.
-1. Fresh cache: `rm -rf ~/.cache/impro-win-sysroot; scripts/windows/check.sh -p impro-core -p impro-ui -p impro-vte -p impro-gitviews -p impro-terminal` (with the resizegate patch applied temporarily) -> exit 0, wall 94 s (80 s of it fetching 61 packages, ~108 MB download, 25 MB on disk). Warm and offline: exit 0, 0.17 s. Without the patch: 1 error (resizegate.rs, see above).
-2. Windows-target lints: `IMPRO_WIN_CARGO_CMD=clippy scripts/windows/check.sh -p impro-core -p impro-ui -p impro-vte -p impro-gitviews [-p impro-terminal with patch] -- -D warnings` -> clean.
+1. Fresh cache: `rm -rf ~/.cache/impro-win-sysroot; scripts/windows/check.sh -p impro-core -p impro-ui -p impro-vte -p impro-gitviews -p impro-terminal` -> exit 0, wall 94 s (80 s of it fetching 61 packages, ~108 MB download, 25 MB on disk). Warm and offline: exit 0, 0.17 s.
+2. Windows-target lints: `IMPRO_WIN_CARGO_CMD=clippy scripts/windows/check.sh -p impro-core -p impro-ui -p impro-vte -p impro-gitviews -p impro-terminal -- -D warnings` -> clean.
 3. Windows test targets: `scripts/windows/check.sh --tests -p impro-core`, `-p impro-ui`, `-p impro-vte`, `-p impro-gitviews` all compile (Unix-only tests are `cfg(unix)`); `impro-terminal` tests were not tried.
 4. Linux: `cargo fmt --all --check` ok; `cargo clippy --workspace --all-targets -- -D warnings` ok; `cargo build --workspace` ok; `cargo test -p impro --no-run` ok;
    `clippy -p impro-vte -p impro-gitviews --features ...stub-backend --all-targets -- -D warnings` ok.
@@ -122,7 +107,7 @@ Windows type-check results of the remaining crates (compiler-verified):
 | impro-editor | 6 errors | `src/file.rs` 6 (`OpenOptionsExt::custom_flags(libc::O_NONBLOCK)`, `PermissionsExt::mode/from_mode`, `OsStrExt::as_bytes`) |
 | impro-settings-ui | 3 errors | `src/pages.rs` 3 (`libc::access(X_OK)` + `OsStrExt`; same executable-shell check as `pick_shell`) |
 | impro (host) | not checkable yet: its dependencies above fail first | static scan (not compiler-verified): `src/preferences.rs:235` `PermissionsExt` (shell executable check); `src/cli.rs:47,51` reads only `HOME` (use `impro_core::platform::expand_tilde`); its `examples/` (`window_qa`, `toolchain_spike`, `parity/scenes`) and `impro-gitviews` examples/`tests/common`, `impro-terminal/examples/webkit_host_qa.rs` use `webkit2gtk`/`webview()` and cannot build on Windows (use `--lib --bins`, not `--all-targets`) |
-Also plan for: `impro-terminal/src/resizegate.rs` (patch above), tests of other crates (untried), and `libc` unused on Windows in impro-core/impro-vte.
+Also plan for: `impro-terminal/src/resizegate.rs` (now applied), tests of other crates (untried), and `libc` unused on Windows in impro-core/impro-vte.
 
 ## Unverified at runtime (Windows)
 Nothing here ran on Windows. Specifically unverified: `MoveFileExW` no-replace semantics for directories and across volumes; `SHFileOperationW` (path form, thread/COM requirements when called from the worker, the nuke-warning dialog); `GetLocalTime` formatting; `CREATE_NO_WINDOW` behaviour; `taskkill` as the git watchdog; `%APPDATA%` fallbacks; the stub widgets' layout (notice centring) and the idle-callback timing; `Pid` handle truncation in `pid_number` (unused until a real spawn exists). The sysroot supplies headers and `.pc` files only: no linking, so link-time issues (missing import libs, DLL names) are not covered.
@@ -137,3 +122,9 @@ adwaita-icon-theme-51.0-1 adwaita-icon-theme-legacy-46.2-1 atk-2.62.0.1-1 brotli
 - The Windows `trash()` uses the Recycle Bin (a decision; the brief left it open). If a later task prefers a private trash directory, `fsops::trash` is the only place to change.
 - `stub-backend` features are not exercised by `scripts/ci/run-tests.sh`; a CI task should add `cargo test -p impro-vte -p impro-gitviews --features impro-vte/stub-backend,impro-gitviews/stub-backend --test stub`.
 - Windows `pick_shell` prefers `SHELL`, then `ComSpec`; the real terminal task should decide (PowerShell, user choice).
+
+## Continuation re-verification (after `git rebase main`)
+- `scripts/windows/check.sh -p impro-core -p impro-ui -p impro-vte -p impro-gitviews -p impro-terminal` -> exit 0.
+- Same crates with `IMPRO_WIN_CARGO_CMD=clippy ... -- -D warnings` -> exit 0.
+- `cargo fmt --all --check` ok; `cargo clippy --workspace --all-targets -- -D warnings` ok; `cargo test -p impro-terminal --no-run` ok.
+- `cargo test -p impro-terminal --test test_resizegate` (xvfb + dbus): 20 passed, 0 failed.
