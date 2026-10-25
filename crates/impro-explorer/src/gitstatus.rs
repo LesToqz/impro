@@ -235,6 +235,20 @@ pub fn run(
 
 /// Parse v1 `-z` output (rename destination first), including unloaded descendants.
 pub fn parse_porcelain(data: &[u8], repo: &Path, root: &Path, max_entries: usize) -> Snapshot {
+    // Git emits ordinary drive/UNC paths, while Rust canonicalize returns
+    // verbatim paths on Windows. Compare existing directory handles' canonical
+    // names, then put snapshot keys back in the explorer's original spelling.
+    // This also handles a caller reaching the same directory through a junction.
+    #[cfg(windows)]
+    let original_root = root;
+    #[cfg(windows)]
+    let canonical_root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
+    #[cfg(windows)]
+    let root = canonical_root.as_path();
+    #[cfg(windows)]
+    let canonical_repo = repo.canonicalize().unwrap_or_else(|_| repo.to_path_buf());
+    #[cfg(windows)]
+    let repo = canonical_repo.as_path();
     let mut result = Snapshot::default();
     // A byte cap may end halfway through a filename; never invent that row.
     let mut records: Vec<&[u8]> = data.split(|b| *b == 0).collect();
@@ -290,6 +304,23 @@ pub fn parse_porcelain(data: &[u8], repo: &Path, root: &Path, max_entries: usize
                 aggregate(&mut result, &source, root, Kind::Modified);
             }
         }
+    }
+    #[cfg(windows)]
+    {
+        let rebase = |paths: HashMap<PathBuf, Status>| {
+            paths
+                .into_iter()
+                .map(|(path, status)| {
+                    let path = path
+                        .strip_prefix(root)
+                        .map(|relative| original_root.join(relative))
+                        .unwrap_or(path);
+                    (path, status)
+                })
+                .collect()
+        };
+        result.files = rebase(result.files);
+        result.folders = rebase(result.folders);
     }
     result
 }
@@ -476,6 +507,16 @@ pub fn run(
 #[cfg(all(test, windows))]
 mod windows_tests {
     use super::*;
+    #[test]
+    fn canonical_git_root_keeps_explorer_path_spelling() {
+        let dir = tempfile::tempdir().unwrap();
+        let repo = dir.path().canonicalize().unwrap();
+        let snapshot = parse_porcelain(b"?? nested/file.txt\0", &repo, dir.path(), MAX_ENTRIES);
+        assert!(snapshot
+            .files
+            .contains_key(&dir.path().join("nested/file.txt")));
+        assert!(snapshot.folders.contains_key(dir.path()));
+    }
     #[test]
     fn git_utf8_paths_and_crlf_are_decoded() {
         assert_eq!(
