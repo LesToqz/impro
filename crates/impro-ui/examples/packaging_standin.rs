@@ -142,6 +142,23 @@ fn run_gui(folder: &Path, started: Instant) -> i32 {
         eprintln!("impro: cannot initialise GTK: {e}");
         return 1;
     }
+    if std::env::var_os("IMPRO_QA_TIMING").is_some() {
+        println!(
+            "app-gtk-startup-ms={:.3}",
+            started.elapsed().as_secs_f64() * 1000.0
+        );
+        for key in [
+            "PANGOCAIRO_BACKEND",
+            "DBUS_SESSION_BUS_ADDRESS",
+            "GSETTINGS_BACKEND",
+            "FC_DEBUG",
+        ] {
+            println!(
+                "STANDIN-ENV {key}={}",
+                std::env::var(key).unwrap_or_else(|_| "<unset>".into())
+            );
+        }
+    }
     // Resource checks relative to the executable only make sense in a bundle.
     let bundle = cfg!(windows) || std::env::var_os("IMPRO_STANDIN_BUNDLE_CHECK").is_some();
     let checks = Rc::new(Checks::default());

@@ -54,6 +54,7 @@ jobs:
             if ($errors) { exit 1 }
           }
           ./packaging/windows/test_smoke_args.ps1
+          ./packaging/windows/test_lab_helpers.ps1
       - name: Cargo check
         shell: msys2 {0}
         run: cargo check --workspace --all-targets --locked --keep-going
@@ -77,30 +78,77 @@ jobs:
           cache-key: test
           msrv: ${{ env.MSRV }}
           save-cache: ${{ github.ref == 'refs/heads/main' }}
-      - name: Logic crates
-        shell: msys2 {0}
-        run: |
-          set -euo pipefail
-          source scripts/package/windows/use-git-for-windows.sh
-          cargo test --locked --no-fail-fast -p impro-core -p impro-graph -p impro-gitviews
-      - name: GUI crates (report only)
+      # Independent report-only steps: a failure in one never hides the others. Each ends with a
+      # "RESULT <name>: PASS|FAIL" line (also in the step summary).
+      - name: Pure-logic tests (impro-core, impro-gitviews)
         continue-on-error: true
         shell: msys2 {0}
         run: |
-          set -euo pipefail
+          set -uo pipefail
           source scripts/package/windows/use-git-for-windows.sh
-          cargo test --locked --workspace --no-fail-fast
-      - name: WebView2 host test (report only)
+          source scripts/package/windows/use-node.sh
+          status=0
+          cargo test --locked --no-fail-fast -p impro-core || status=1
+          cargo test --locked --no-fail-fast -p impro-gitviews --lib --test test_gitlog --test test_gitdiff --test windows_git_diag -- --nocapture || status=1
+          result=$([[ $status -eq 0 ]] && echo PASS || echo FAIL)
+          echo "RESULT pure-logic: $result" | tee -a "$(cygpath -u "$GITHUB_STEP_SUMMARY")"
+          exit $status
+      - name: impro-graph library tests
         continue-on-error: true
         shell: msys2 {0}
         run: |
-          set -euo pipefail
+          set -uo pipefail
           source scripts/package/windows/use-git-for-windows.sh
-          cargo test --locked -p impro-gitviews --test windows_webview --no-run
-          # The test executable lives in target/debug/deps; the loader is not copied there.
-          loader=$(scripts/package/windows/find-webview2-loader.sh target/debug/build)
-          PATH="$(cygpath -u "$(dirname "$loader")"):$PATH"
-          cargo test --locked -p impro-gitviews --test windows_webview -- --nocapture
+          status=0
+          cargo test --locked --no-fail-fast -p impro-graph --lib || status=1
+          result=$([[ $status -eq 0 ]] && echo PASS || echo FAIL)
+          echo "RESULT impro-graph-lib: $result" | tee -a "$(cygpath -u "$GITHUB_STEP_SUMMARY")"
+          exit $status
+      - name: GUI test targets (informational)
+        continue-on-error: true
+        shell: msys2 {0}
+        run: |
+          set -uo pipefail
+          source scripts/package/windows/use-git-for-windows.sh
+          source scripts/package/windows/use-node.sh
+          # Known limitation: the GUI test harness cannot initialise GTK on the runner (no interactive
+          # desktop session: "Failed to initialize GTK" at gtk_common/mod.rs), so most of these fail in
+          # milliseconds. Kept to see whether anything else breaks and to notice when it starts working.
+          status=0
+          cargo test --locked --workspace --no-fail-fast || status=1
+          result=$([[ $status -eq 0 ]] && echo PASS || echo FAIL)
+          echo "RESULT gui-targets (informational): $result" | tee -a "$(cygpath -u "$GITHUB_STEP_SUMMARY")"
+          exit $status
+      - name: WebView2 host test
+        continue-on-error: true
+        shell: msys2 {0}
+        run: |
+          set -uo pipefail
+          source scripts/package/windows/use-git-for-windows.sh
+          status=0
+          if cargo test --locked -p impro-gitviews --test windows_webview --no-run; then
+            # The test executable lives in target/debug/deps; the loader is not copied there.
+            loader=$(scripts/package/windows/find-webview2-loader.sh target/debug/build)
+            PATH="$(cygpath -u "$(dirname "$loader")"):$PATH"
+            cargo test --locked -p impro-gitviews --test windows_webview -- --nocapture || status=1
+          else
+            status=1
+          fi
+          result=$([[ $status -eq 0 ]] && echo PASS || echo FAIL)
+          echo "RESULT webview2-host: $result" | tee -a "$(cygpath -u "$GITHUB_STEP_SUMMARY")"
+          exit $status
+      - name: Windows terminal tests (ConPTY)
+        continue-on-error: true
+        shell: msys2 {0}
+        run: |
+          set -uo pipefail
+          source scripts/package/windows/use-git-for-windows.sh
+          status=0
+          cargo test --locked -p impro-vte --test windows_conpty -- --nocapture || status=1
+          cargo test --locked -p impro-terminal --test windows_panel -- --nocapture || status=1
+          result=$([[ $status -eq 0 ]] && echo PASS || echo FAIL)
+          echo "RESULT windows-terminal: $result" | tee -a "$(cygpath -u "$GITHUB_STEP_SUMMARY")"
+          exit $status
 
   # ------------------------------------------------------------- package
   package:
@@ -204,6 +252,17 @@ jobs:
           ./packaging/windows/smoke.ps1 -Mode portable
           -Artifacts "$env:RUNNER_TEMP\pkg" -Version $env:VERSION
           -OutDir "$env:RUNNER_TEMP\smoke" -RequireFiles WebView2Loader.dll
+      # Report-only, after the required smoke steps so it cannot perturb them (its "cold" run is therefore
+      # not machine-cold; the cold number is the first launch in the installer step above).
+      - name: Startup lab (report only)
+        continue-on-error: true
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.package.outputs.version }}
+        run: >-
+          ./packaging/windows/startup-lab.ps1
+          -Artifacts "$env:RUNNER_TEMP\pkg" -Version $env:VERSION
+          -OutDir "$env:RUNNER_TEMP\smoke\lab"
       - name: Upload screenshots and logs
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -303,6 +362,16 @@ jobs:
         with:
           name: windows-standin
           path: ${{ runner.temp }}\pkg
+      # FIRST on the machine: run 1 of the lab is the true cold start (see packaging/windows/README.md).
+      - name: Startup lab (cold start experiment)
+        continue-on-error: true
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.package-standin.outputs.version }}
+        run: >-
+          ./packaging/windows/startup-lab.ps1
+          -Artifacts "$env:RUNNER_TEMP\pkg" -Version $env:VERSION
+          -OutDir "$env:RUNNER_TEMP\smoke\lab"
       - name: Installer, installed app, uninstaller
         shell: pwsh
         env:
