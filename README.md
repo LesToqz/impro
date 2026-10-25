@@ -4,11 +4,23 @@
 
 [![CI](https://github.com/LesToqz/impro/actions/workflows/ci.yml/badge.svg)](https://github.com/LesToqz/impro/actions/workflows/ci.yml)
 
-A small Linux IDE built in Rust with GTK 3, gtk-rs, VTE 2.91 and syntect.
+A small IDE for Linux and Windows built in Rust with GTK 3, gtk-rs, syntect, and VTE 2.91 (Linux) or a ConPTY terminal (Windows).
 It combines a project explorer and search, tabbed editor and live Markdown notes,
 terminal docks, a native project graph, read-only Git history, palettes and settings.
 
-## Install and run
+## Install
+
+| Platform | How |
+| --- | --- |
+| Linux (Debian/Ubuntu) | `.deb` from the `impro-deb` artifact of the `Package (Linux)` workflow: `sudo apt install ./impro_<version>_amd64.deb` |
+| Windows 10 1809+ / 11, x64 | `impro-<version>-x64-setup.exe` (per-user installer) or `impro-<version>-x64-portable.zip` from the `impro-windows` artifact of the `Windows` workflow; details in [docs/windows.md](docs/windows.md) |
+| Linux, from source | see below |
+| Windows, from source | MSYS2 UCRT64 with GTK 3 and the `x86_64-pc-windows-gnu` Rust target; see [docs/windows.md](docs/windows.md) and [docs/packaging.md](docs/packaging.md) |
+
+The installers are unsigned and have not yet been verified on Windows hardware.
+Package contents and how they are built: [docs/packaging.md](docs/packaging.md).
+
+## Build from source on Linux
 
 Build requirements: **Rust 1.88 or newer**. A C toolchain,
 pkg-config and GTK3, VTE and WebKit2GTK development libraries are also required.
@@ -34,7 +46,7 @@ cargo run --release -p impro -- --help
 Help begins `usage: impro [-h] [--version] [folder]`. Bad arguments and invalid
 folders exit with status 2; help and version need no display.
 
-Runtime requires GTK3 and VTE 2.91 (native VTE version 0.72 or newer).
+On Linux, runtime requires GTK3 and VTE 2.91 (native VTE version 0.72 or newer).
 WebKit2GTK 4.1 supplies the Git pages: no WebKit process starts until a Git graph
 or commit page opens. The binary links the WebKit library, so the library must
 be installed even when those pages are unused; the lazy boundary is page/process
@@ -529,8 +541,8 @@ always uses its native renderer.
 | `crates/impro-settings-ui` | Searchable settings dialog and hotkeys                               |
 | `crates/impro-graph`       | Native graph engine, layout, renderer and controls                   |
 | `crates/impro-gitviews`    | Git history/diff data and embedded WebKit pages                      |
-| `docs`                     | Architecture, graph behaviour and design tokens                      |
-| `packaging`                | User installer, desktop entry and icon                               |
+| `docs`                     | Architecture, Windows, packaging, CI, graph behaviour, design tokens |
+| `packaging`                | Linux user installer, `.deb` metadata, Windows installer, icons      |
 | `scripts`                  | Test wrappers and startup measurement helper                         |
 |                            |                                                                      |
 
