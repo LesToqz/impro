@@ -457,7 +457,7 @@ impl Terminal {
     pub fn set_scrollback_lines(&self, lines: CLong) {
         self.imp().scrollback.set(lines);
         self.imp().screen.borrow_mut().set_scrollback(if lines < 0 {
-            1_000_000
+            usize::MAX / 2
         } else {
             lines as usize
         });

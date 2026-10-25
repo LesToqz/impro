@@ -216,7 +216,7 @@ fn windows_terminal_lifecycle_and_widget() {
                 "-NoLogo",
                 "-NoProfile",
                 "-Command",
-                "Write-Host \"$([char]27)[31mimpro-red$([char]27)[0m\"; exit 0",
+                "Write-Host \"$([char]27)[38;2;255;0;0mimpro-red$([char]27)[0m\"; exit 0",
             ],
         );
         wait("PowerShell ANSI output", || {
@@ -224,7 +224,7 @@ fn windows_terminal_lifecycle_and_widget() {
         });
         assert_eq!(*exits.borrow(), [0]);
         assert!(!text(&t).contains("[31m"));
-        assert!(t.text_format(Format::Html).unwrap().contains("#cd3131"));
+        assert!(t.text_format(Format::Html).unwrap().contains("#ff0000"));
         unsafe {
             window.destroy();
         }
