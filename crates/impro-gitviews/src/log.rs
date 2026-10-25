@@ -44,27 +44,40 @@ fn run_with<T: Send + 'static>(
     partial: bool,
     parse: impl FnOnce(&mut dyn Read) -> std::io::Result<T> + Send + 'static,
 ) -> Result<(T, bool), GitError> {
-    let mut child = ChildGuard(
-        impro_core::process::command("git")
-            .args(["--no-pager", "-c", "core.quotepath=off", "-C"])
-            .arg(root)
-            .args(args)
-            .env("GIT_OPTIONAL_LOCKS", "0")
-            .env("GIT_TERMINAL_PROMPT", "0")
-            .env("GIT_NO_LAZY_FETCH", "1")
-            .env("LC_ALL", "C")
-            .env("GIT_PAGER", "cat")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::null())
-            .spawn()
-            .map_err(|e| {
-                GitError(if e.kind() == std::io::ErrorKind::NotFound {
-                    "git-missing"
-                } else {
-                    "not-a-repo"
-                })
-            })?,
-    );
+    let debug = std::env::var_os("IMPRO_GIT_DEBUG").is_some_and(|v| v == "1");
+    let mut command = impro_core::process::command("git");
+    command
+        .args(["--no-pager", "-c", "core.quotepath=off", "-C"])
+        .arg(root)
+        .args(args)
+        .env("GIT_OPTIONAL_LOCKS", "0")
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .env("GIT_NO_LAZY_FETCH", "1")
+        .env("LC_ALL", "C")
+        .env("GIT_PAGER", "cat")
+        .stdout(Stdio::piped())
+        .stderr(if debug { Stdio::piped() } else { Stdio::null() });
+    let mut child = ChildGuard(command.spawn().map_err(|e| {
+        if debug {
+            eprintln!("impro: git failed: {args:?} status=spawn-error stderr={e}");
+        }
+        GitError(if e.kind() == std::io::ErrorKind::NotFound {
+            "git-missing"
+        } else {
+            "not-a-repo"
+        })
+    })?);
+    let diagnostics = child.stderr.take().map(|mut stderr| {
+        std::thread::spawn(move || {
+            // Keep the head of stderr and drain the rest so git never blocks on a full pipe.
+            let mut head = Vec::new();
+            let _ = (&mut stderr)
+                .take(DEBUG_STDERR as u64)
+                .read_to_end(&mut head);
+            let _ = std::io::copy(&mut stderr, &mut std::io::sink());
+            head
+        })
+    });
     let stdout = child.stdout.take().ok_or(GitError("git-failed"))?;
     let (tx, rx) = mpsc::sync_channel(1);
     let reader = std::thread::spawn(move || {
@@ -123,6 +136,12 @@ fn run_with<T: Send + 'static>(
         }
     });
     let status = child.wait();
+    if let Some(diagnostics) = diagnostics {
+        let stderr = diagnostics.join().unwrap_or_default();
+        if !status.as_ref().is_ok_and(|s| s.success()) {
+            report_failure(args, &status, &stderr);
+        }
+    }
     let timed_out = Instant::now() >= deadline;
     let (lock, condition) = &*signal;
     *lock.lock().unwrap_or_else(|e| e.into_inner()) = true;
@@ -137,6 +156,24 @@ fn run_with<T: Send + 'static>(
     }
     let _ = reader.join();
     result
+}
+/// Bytes of git's stderr kept for the `IMPRO_GIT_DEBUG=1` diagnostic line.
+const DEBUG_STDERR: usize = 400;
+/// One stderr line per failed git invocation; only reached when `IMPRO_GIT_DEBUG=1`.
+fn report_failure(
+    args: &[&str],
+    status: &std::io::Result<std::process::ExitStatus>,
+    stderr: &[u8],
+) {
+    let code = match status {
+        Ok(s) => s.code().map_or_else(|| format!("{s}"), |c| c.to_string()),
+        Err(e) => format!("wait error: {e}"),
+    };
+    let stderr = String::from_utf8_lossy(&stderr[..stderr.len().min(DEBUG_STDERR)]);
+    eprintln!(
+        "impro: git failed: {args:?} status={code} stderr={}",
+        stderr.trim_end().replace(['\r', '\n'], " ")
+    );
 }
 struct ChildGuard(std::process::Child);
 impl std::ops::Deref for ChildGuard {
@@ -250,6 +287,13 @@ pub fn infer_merged_name(subject: &[u8]) -> Option<String> {
     } else {
         Some(clean(name.as_bytes(), Some(300), false, false))
     }
+}
+/// Strip git's trailing newline; on Windows also a carriage return, should a git build emit one.
+fn trim_eol(value: &str) -> &str {
+    #[cfg(windows)]
+    return value.trim_end_matches(['\r', '\n']);
+    #[cfg(not(windows))]
+    value.trim_end_matches('\n')
 }
 fn text(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).into_owned()
@@ -399,7 +443,7 @@ pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
                 e
             }
         })?;
-        let top = text(&top).trim_end_matches('\n').to_owned();
+        let top = trim_eol(&text(&top)).to_owned();
         r["repo"]["name"] = json!(clean(
             Path::new(&top)
                 .file_name()
@@ -417,7 +461,7 @@ pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
             MAX_OUTPUT,
             false,
         ) {
-            Ok((b, _)) => Some(text(&b).trim_end_matches('\n').to_owned()),
+            Ok((b, _)) => Some(trim_eol(&text(&b)).to_owned()),
             Err(e) if e.0 == "git-failed" => None,
             Err(e) => return Err(e),
         };
