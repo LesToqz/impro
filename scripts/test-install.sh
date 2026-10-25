@@ -49,13 +49,19 @@ else
 fi
 launcher="$HOME/.local/bin/impro"
 desktop="$HOME/.local/share/applications/impro.desktop"
-icon="$HOME/.local/share/icons/hicolor/scalable/apps/impro.svg"
+hicolor="$HOME/.local/share/icons/hicolor"
+icon="$hicolor/scalable/apps/impro.svg"
+sizes=(16 24 32 48 64 128 256 512)
 for attempt in 1 2; do
     bash "$repo/packaging/install.sh"
     test -x "$launcher"
     cmp "$IMPRO_INSTALL_BINARY" "$launcher"
     cmp "$repo/packaging/impro.desktop" "$desktop"
     cmp "$repo/packaging/impro.svg" "$icon"
+    for size in "${sizes[@]}"; do
+        cmp "$repo/packaging/icons/hicolor/${size}x${size}/apps/impro.png" "$hicolor/${size}x${size}/apps/impro.png"
+        test "$(stat -c %a "$hicolor/${size}x${size}/apps/impro.png")" = 644
+    done
     test "$(stat -c %a "$launcher")" = 755
     test "$(stat -c %a "$desktop")" = 644
     test "$(stat -c %a "$icon")" = 644
@@ -73,6 +79,9 @@ for attempt in 1 2; do
     test ! -e "$launcher"
     test ! -e "$desktop"
     test ! -e "$icon"
+    for size in "${sizes[@]}"; do
+        test ! -e "$hicolor/${size}x${size}/apps/impro.png"
+    done
     test -z "$(find "$HOME" -type f -print -quit)"
     echo "PASS isolated uninstall $attempt (no files remain)"
 done

@@ -1,5 +1,6 @@
 //! Application window and feature composition. All handles live on GTK's thread.
 pub mod app;
+pub mod app_icon;
 pub mod cli;
 mod commands;
 mod docks;

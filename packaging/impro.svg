@@ -1,5 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <rect x="4" y="4" width="120" height="120" rx="24" fill="#1e1e2e"/>
-  <path d="M48 34H30v60h18m32-60h18v60H80" fill="none" stroke="#89b4fa" stroke-width="8" stroke-linejoin="round"/>
-  <path d="M61 45v38" stroke="#a6e3a1" stroke-width="8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<defs>
+<linearGradient id="gt" gradientUnits="userSpaceOnUse" x1="214" y1="224" x2="321" y2="56"><stop offset="0" stop-color="#4258f5"/><stop offset="0.5" stop-color="#7575f8"/><stop offset="1" stop-color="#a893fa"/></linearGradient>
+<linearGradient id="gb" gradientUnits="userSpaceOnUse" x1="0" y1="268" x2="0" y2="470"><stop offset="0" stop-color="#1f2db4"/><stop offset="0.25" stop-color="#3f45e4"/><stop offset="0.65" stop-color="#4b67f6"/><stop offset="1" stop-color="#3e77f8"/></linearGradient>
+<linearGradient id="gs" gradientUnits="userSpaceOnUse" x1="250" y1="300" x2="191" y2="405"><stop offset="0" stop-color="#1426b0" stop-opacity="1"/><stop offset="0.4" stop-color="#1a34c0" stop-opacity="0.5"/><stop offset="1" stop-color="#2050e0" stop-opacity="0"/></linearGradient>
+<linearGradient id="go" gradientUnits="userSpaceOnUse" x1="286" y1="325" x2="346" y2="212"><stop offset="0" stop-color="#7c70f7"/><stop offset="1" stop-color="#a273f8"/></linearGradient>
+<clipPath id="cb"><path d="M357.9 227.1A23.5 23.5 0 0 0 324.0 206.1L192.8 270.6A53.0 53.0 0 0 0 163.2 318.2L163.2 462.5A15.0 15.0 0 0 0 185.8 475.5L329.8 391.8A56.5 56.5 0 0 0 357.9 342.9Z"/></clipPath>
+</defs>
+<rect width="512" height="512" rx="112" ry="112" fill="#0c0a16"/>
+<g transform="scale(0.984615)">
+<path d="M349.1 63.5A16.0 16.0 0 0 0 326.1 49.1L216.1 102.6A45.0 45.0 0 0 0 190.8 143.1L190.8 209.6A16.0 16.0 0 0 0 213.8 223.9L324.1 170.1A44.5 44.5 0 0 0 349.1 130.1Z" fill="url(#gt)"/>
+<g clip-path="url(#cb)">
+<rect x="150" y="190" width="230" height="320" fill="url(#gb)"/>
+<path d="M212 262L243 312L357 376L357 500L212 500Z" fill="url(#gs)"/>
+<path d="M212 262C212 290 225 302 243 312L357 376L357 190L212 190Z" fill="url(#go)"/>
+</g></g>
 </svg>
