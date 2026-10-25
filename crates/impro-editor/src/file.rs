@@ -1,11 +1,9 @@
 //! Blocking file helpers. Panel operations call these on workers.
+#[cfg(unix)]
+use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 use std::{
     fs,
     io::{self, Read, Write},
-    os::unix::{
-        ffi::OsStrExt,
-        fs::{OpenOptionsExt, PermissionsExt},
-    },
     path::{Path, PathBuf},
     time::SystemTime,
 };
@@ -29,10 +27,11 @@ pub fn detect_line_ending(text: &str) -> &'static str {
 }
 pub fn read_file(path: impl AsRef<Path>) -> io::Result<Document> {
     let path = path.as_ref();
-    let stream = fs::OpenOptions::new()
-        .read(true)
-        .custom_flags(libc::O_NONBLOCK)
-        .open(path)?;
+    let mut options = fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    options.custom_flags(libc::O_NONBLOCK);
+    let stream = options.open(path)?;
     let meta = stream.metadata()?;
     if !meta.is_file() {
         return Err(invalid("Cannot open a non-regular file"));
@@ -64,10 +63,17 @@ pub fn atomic_write(path: impl AsRef<Path>, text: &str, ending: &str) -> io::Res
     let path = path.as_ref();
     let target = resolve_target(path)?;
     let parent = target.parent().unwrap_or_else(|| Path::new("."));
+    #[cfg(unix)]
     let mode = match target.metadata() {
         Ok(m) => m.permissions().mode(),
         Err(e) if e.kind() == io::ErrorKind::NotFound => 0o644,
         Err(e) => return Err(e),
+    };
+    #[cfg(windows)]
+    let permissions = match target.metadata() {
+        Ok(meta) => Some(meta.permissions()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+        Err(error) => return Err(error),
     };
     let mut temp = tempfile::Builder::new()
         .prefix(".impro-")
@@ -77,10 +83,18 @@ pub fn atomic_write(path: impl AsRef<Path>, text: &str, ending: &str) -> io::Res
     } else {
         temp.write_all(text.as_bytes())?;
     }
+    #[cfg(unix)]
     temp.as_file()
         .set_permissions(fs::Permissions::from_mode(mode))?;
+    #[cfg(windows)]
+    if let Some(permissions) = permissions {
+        temp.as_file().set_permissions(permissions)?;
+    }
     temp.as_file().sync_all()?;
     temp.persist(&target).map_err(|e| e.error)?;
+    // Opening directories as files for fsync is a Unix operation. persist uses
+    // MoveFileExW(REPLACE_EXISTING) on Windows and replaces an existing file.
+    #[cfg(unix)]
     fs::File::open(parent)?.sync_all()?;
     target.metadata()?.modified()
 }
@@ -134,7 +148,7 @@ pub(crate) fn absolute(path: &Path) -> PathBuf {
 pub(crate) fn path_signal(path: &Path) -> String {
     glib::filename_to_uri(path, None)
         .map(|s| s.to_string())
-        .unwrap_or_else(|_| String::from_utf8_lossy(path.as_os_str().as_bytes()).into_owned())
+        .unwrap_or_else(|_| path.to_string_lossy().into_owned())
 }
 pub fn leading_whitespace(line: &str) -> &str {
     &line[..line
@@ -173,4 +187,19 @@ pub fn toggle_comments(text: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+#[cfg(test)]
+mod line_ending_tests {
+    #[test]
+    fn crlf_is_normalized_for_editing_and_restored_on_atomic_save() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("lines.txt");
+        std::fs::write(&path, b"first\r\nsecond\r\n").unwrap();
+        let doc = super::read_file(&path).unwrap();
+        assert_eq!(doc.text, "first\nsecond\n");
+        assert_eq!(doc.ending, "CRLF");
+        super::atomic_write(&path, &doc.text, doc.ending).unwrap();
+        assert_eq!(std::fs::read(&path).unwrap(), b"first\r\nsecond\r\n");
+    }
 }

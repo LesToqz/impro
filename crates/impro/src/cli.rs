@@ -43,17 +43,7 @@ fn parse_args(args: impl IntoIterator<Item = OsString>, cwd: &Path) -> Result<Co
     let raw = folder
         .map(PathBuf::from)
         .unwrap_or_else(|| cwd.to_path_buf());
-    let expanded = if raw == Path::new("~") {
-        std::env::var_os("HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| raw.clone())
-    } else if let Ok(rest) = raw.strip_prefix("~/") {
-        std::env::var_os("HOME")
-            .map(|h| PathBuf::from(h).join(rest))
-            .unwrap_or_else(|| raw.clone())
-    } else {
-        raw.clone()
-    };
+    let expanded = impro_core::platform::expand_tilde(&raw);
     let full = if expanded.is_absolute() {
         expanded
     } else {
@@ -72,20 +62,24 @@ pub fn run() -> glib::ExitCode {
     let cwd = match std::env::current_dir() {
         Ok(cwd) => cwd,
         Err(e) => {
+            attach_console();
             eprintln!("impro: error: cannot read current directory: {e}");
             return glib::ExitCode::from(2);
         }
     };
     match parse_args(std::env::args_os().skip(1), &cwd) {
         Ok(Command::Version) => {
+            attach_console();
             println!("impro {}", impro_core::identity::VERSION);
             glib::ExitCode::SUCCESS
         }
         Ok(Command::Help) => {
+            attach_console();
             println!("{USAGE}\n\nimpro desktop IDE\n\npositional arguments:\n  folder\n\noptions:\n  -h, --help   show this help message and exit\n  --version    show the application version and exit");
             glib::ExitCode::SUCCESS
         }
         Err(error) => {
+            attach_console();
             eprintln!("{USAGE}\nimpro: error: {error}");
             glib::ExitCode::from(2)
         }
@@ -132,5 +126,37 @@ mod tests {
             parse_args(args(&["/tmp", "extra"]), Path::new("/")).unwrap_err(),
             "unrecognized arguments: extra"
         );
+    }
+}
+
+/// Release GUI executables have no console by default. Inherited redirected
+/// handles are already usable: AttachConsole can replace them, so save and restore
+/// each valid handle if the other stream needs attachment. Never allocate a new
+/// console when launched by Explorer.
+fn attach_console() {
+    #[cfg(windows)]
+    unsafe {
+        use windows_sys::Win32::{
+            Foundation::INVALID_HANDLE_VALUE,
+            System::Console::{
+                AttachConsole, GetStdHandle, SetStdHandle, ATTACH_PARENT_PROCESS, STD_ERROR_HANDLE,
+                STD_OUTPUT_HANDLE,
+            },
+        };
+        let output = GetStdHandle(STD_OUTPUT_HANDLE);
+        let error = GetStdHandle(STD_ERROR_HANDLE);
+        let valid = |handle: windows_sys::Win32::Foundation::HANDLE| {
+            !handle.is_null() && handle != INVALID_HANDLE_VALUE
+        };
+        // SAFETY: only process-owned standard handles and the documented parent
+        // process constant are used; no handle is closed or dereferenced here.
+        if (!valid(output) || !valid(error)) && AttachConsole(ATTACH_PARENT_PROCESS) != 0 {
+            if valid(output) {
+                SetStdHandle(STD_OUTPUT_HANDLE, output);
+            }
+            if valid(error) {
+                SetStdHandle(STD_ERROR_HANDLE, error);
+            }
+        }
     }
 }

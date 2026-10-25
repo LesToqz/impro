@@ -14,7 +14,7 @@ use impro_ui::widgets::{
     HotkeyChip, RowOptions, SearchField, SettingCard, SettingRow, SwatchPicker, Toggle, WrapBox,
 };
 use serde_json::Value;
-use std::{path::Path, rc::Rc};
+use std::rc::Rc;
 
 const LICENSE_NOTE: &str = "impro runs on GTK 3, VTE and WebKitGTK (LGPL-2.1-or-later libraries) \
 through the gtk-rs bindings. Icons come from your system icon theme and the interface uses your \
@@ -47,28 +47,9 @@ fn limits(key: &str) -> (f64, f64) {
     settings::limits().get(key).copied().unwrap_or((8.0, 24.0))
 }
 
-fn is_executable(path: &Path) -> bool {
-    use std::os::unix::ffi::OsStrExt;
-    std::ffi::CString::new(path.as_os_str().as_bytes())
-        // SAFETY: a valid NUL-terminated path; access only reads file metadata.
-        .is_ok_and(|c| unsafe { libc::access(c.as_ptr(), libc::X_OK) } == 0)
-}
-
-/// `shutil.which` or an existing executable file.
+/// Resolve an explicit executable path or a command on PATH.
 fn shell_found(text: &str) -> bool {
-    let direct = Path::new(text);
-    if direct.is_file() && is_executable(direct) {
-        return true;
-    }
-    if text.contains('/') {
-        return false;
-    }
-    std::env::var_os("PATH").is_some_and(|paths| {
-        std::env::split_paths(&paths).any(|dir| {
-            let candidate = dir.join(text);
-            candidate.is_file() && is_executable(&candidate)
-        })
-    })
+    impro_core::platform::find_executable(text).is_some()
 }
 
 fn ui_font() -> String {
