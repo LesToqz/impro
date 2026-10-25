@@ -243,10 +243,18 @@ impl Startup {
         let state = self.clone();
         let terminal = t.downgrade();
         let cancellable = pane.cancellable.clone();
+        #[cfg(unix)]
+        let argv = [shell.as_str(), "-i"];
+        #[cfg(windows)]
+        let argv = windows_shell_argv(&shell);
+        #[cfg(unix)]
+        let environment = &["TERM=xterm-256color", "COLORTERM=truecolor"][..];
+        #[cfg(windows)]
+        let environment = &["TERM_PROGRAM=impro", "COLORTERM=truecolor"][..];
         t.spawn_async_path(
             Some(&cwd),
-            &[&shell, "-i"],
-            &["TERM=xterm-256color", "COLORTERM=truecolor"],
+            &argv,
+            environment,
             glib::SpawnFlags::DEFAULT,
             -1,
             Some(&cancellable),
@@ -301,5 +309,31 @@ impl Startup {
                 }
             },
         );
+    }
+}
+
+#[cfg(any(windows, test))]
+fn windows_shell_argv(shell: &str) -> Vec<&str> {
+    let name = shell
+        .rsplit(['\\', '/'])
+        .next()
+        .unwrap_or(shell)
+        .to_ascii_lowercase();
+    match name.as_str() {
+        "pwsh" | "pwsh.exe" | "powershell" | "powershell.exe" => vec![shell, "-NoLogo"],
+        "bash" | "bash.exe" | "sh" | "sh.exe" | "zsh" | "zsh.exe" => vec![shell, "-i"],
+        _ => vec![shell],
+    }
+}
+#[cfg(test)]
+mod windows_shell_tests {
+    #[test]
+    fn shell_arguments_preserve_configured_paths() {
+        for shell in [r"C:\Program Files\PowerShell\7\pwsh.exe", "powershell.exe"] {
+            assert_eq!(super::windows_shell_argv(shell), [shell, "-NoLogo"]);
+        }
+        assert_eq!(super::windows_shell_argv("cmd.exe"), ["cmd.exe"]);
+        assert_eq!(super::windows_shell_argv("bash.exe"), ["bash.exe", "-i"]);
+        assert_eq!(super::windows_shell_argv("wsl.exe"), ["wsl.exe"]);
     }
 }

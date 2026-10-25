@@ -37,15 +37,55 @@ pub fn pick_shell() -> PathBuf {
         })
         .unwrap_or_else(|| DEFAULT_SHELL.into())
 }
-/// Resolve the shell. Windows has no execute bit: take an existing `SHELL` or `ComSpec`.
-/// TODO(terminal task): prefer PowerShell / a user-configured shell once a real backend exists.
+/// Resolve a configured shell, then PowerShell 7, Windows PowerShell, and cmd.
 #[cfg(windows)]
 pub fn pick_shell() -> PathBuf {
-    ["SHELL", "ComSpec"]
-        .into_iter()
-        .filter_map(std::env::var_os)
+    fn find(name: &str) -> Option<PathBuf> {
+        let path = PathBuf::from(name);
+        if path.is_file() {
+            return Some(path);
+        }
+        std::env::var_os("PATH")
+            .into_iter()
+            .flat_map(|p| std::env::split_paths(&p).collect::<Vec<_>>())
+            .map(|p| p.join(name))
+            .find(|p| p.is_file())
+    }
+    if let Some(shell) = std::env::var_os("SHELL").and_then(|s| find(&s.to_string_lossy())) {
+        return shell;
+    }
+    if let Some(shell) = find("pwsh.exe") {
+        return shell;
+    }
+    if let Some(shell) = std::env::var_os("ProgramFiles")
+        .map(|p| {
+            PathBuf::from(p)
+                .join("PowerShell")
+                .join("7")
+                .join("pwsh.exe")
+        })
+        .filter(|p| p.is_file())
+    {
+        return shell;
+    }
+    if let Some(shell) = find("powershell.exe") {
+        return shell;
+    }
+    if let Some(shell) = std::env::var_os("SystemRoot")
+        .map(|p| {
+            PathBuf::from(p)
+                .join("System32")
+                .join("WindowsPowerShell")
+                .join("v1.0")
+                .join("powershell.exe")
+        })
+        .filter(|p| p.is_file())
+    {
+        return shell;
+    }
+    std::env::var_os("ComSpec")
         .map(PathBuf::from)
-        .find(|p| p.is_file())
+        .filter(|p| p.is_file())
         .unwrap_or_else(|| DEFAULT_SHELL.into())
 }
 /// The filesystem root used as the last-resort working directory.
@@ -89,19 +129,16 @@ pub fn safe_cwd(path: impl AsRef<Path>) -> PathBuf {
     }
     fs_root()
 }
-/// The numeric process id kept for a spawned child. On Windows glib hands out a process
-/// `HANDLE`, whose significant bits fit in 32.
+/// Convert the spawn result to the numeric child id stored by the panel.
 #[cfg(unix)]
 pub(crate) fn pid_number(pid: glib::Pid) -> i32 {
     pid.0
 }
 #[cfg(windows)]
 pub(crate) fn pid_number(pid: glib::Pid) -> i32 {
-    pid.0 as usize as i32
+    impro_vte::pid_number(pid)
 }
 /// Ask a child to hang up (`SIGHUP`).
-/// TODO(terminal task): Windows needs the pseudo-console handle, not a process id; until a
-/// real backend exists nothing is ever spawned there, so this is a deliberate no-op.
 #[cfg(unix)]
 pub(crate) fn hangup_pid(pid: i32) {
     unsafe {
@@ -109,7 +146,9 @@ pub(crate) fn hangup_pid(pid: i32) {
     }
 }
 #[cfg(windows)]
-pub(crate) fn hangup_pid(_pid: i32) {}
+pub(crate) fn hangup_pid(pid: i32) {
+    impro_vte::hangup_pid(pid);
+}
 
 // Reserve admission before constructing widgets that can emit user signals.
 struct Admission<'a> {

@@ -1,8 +1,12 @@
+#[cfg(unix)]
 #[path = "../tests/common/mod.rs"]
 mod common;
+#[cfg(unix)]
 use common::*;
+#[cfg(unix)]
 use gtk::prelude::*;
 // This standalone QA host also supports WebKit feature levels before 2.40.
+#[cfg(unix)]
 #[allow(deprecated)]
 fn main() {
     gtk::init().expect("GTK display");
@@ -76,3 +80,6 @@ fn main() {
     }
     pump(300);
 }
+
+#[cfg(not(unix))]
+fn main() {}
