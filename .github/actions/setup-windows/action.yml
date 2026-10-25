@@ -1,0 +1,81 @@
+name: Set up Windows GTK build
+description: Install MSYS2 UCRT64 with GTK3 and Rust (x86_64-pc-windows-gnu), verify the MSRV and set up a build cache. Later steps use the msys2 shell. The calling workflow must set CARGO_HOME to a path outside the MSYS2 home so the cache can find it.
+
+inputs:
+  cache-key:
+    description: Shared key for the Cargo build cache.
+    required: true
+  extra-packages:
+    description: Additional whitespace-separated pacman packages (full names, e.g. mingw-w64-ucrt-x86_64-nsis).
+    required: false
+    default: ""
+  msrv:
+    description: Minimum Rust version the MSYS2 compiler must satisfy (major.minor).
+    required: false
+    default: "1.88"
+  save-cache:
+    description: Whether this run may save the Cargo cache ("true" or "false").
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Log disk space and runner
+      shell: pwsh
+      run: |
+        Get-PSDrive -PSProvider FileSystem | Format-Table Name, @{n='UsedGB';e={[math]::Round($_.Used/1GB,1)}}, @{n='FreeGB';e={[math]::Round($_.Free/1GB,1)}} | Out-String | Write-Host
+        Write-Host "workspace: $env:GITHUB_WORKSPACE"
+        Write-Host "image: $env:ImageOS $env:ImageVersion"
+
+    - name: Install MSYS2 (UCRT64), GTK3 and Rust
+      uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2.33.0
+      with:
+        msystem: UCRT64
+        update: true
+        cache: true
+        install: >-
+          git
+          zip
+          unzip
+          mingw-w64-ucrt-x86_64-gcc
+          mingw-w64-ucrt-x86_64-pkgconf
+          mingw-w64-ucrt-x86_64-rust
+          mingw-w64-ucrt-x86_64-gtk3
+          mingw-w64-ucrt-x86_64-gdk-pixbuf2
+          mingw-w64-ucrt-x86_64-librsvg
+          mingw-w64-ucrt-x86_64-adwaita-icon-theme
+          mingw-w64-ucrt-x86_64-shared-mime-info
+          mingw-w64-ucrt-x86_64-ttf-dejavu
+          mingw-w64-ucrt-x86_64-python
+          mingw-w64-ucrt-x86_64-ntldd
+          ${{ inputs.extra-packages }}
+
+    - name: Verify toolchain
+      id: rust
+      shell: msys2 {0}
+      env:
+        MSRV: ${{ inputs.msrv }}
+      run: |
+        set -euo pipefail
+        echo "MSYSTEM=$MSYSTEM prefix=$MINGW_PREFIX"
+        rustc --version --verbose
+        cargo --version
+        pkg-config --modversion gtk+-3.0
+        version=$(rustc --version | sed -E 's/^rustc ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+        host=$(rustc -vV | sed -n 's/^host: //p')
+        if [[ $host != x86_64-pc-windows-gnu ]]; then
+          echo "::error::unexpected rustc host $host (want x86_64-pc-windows-gnu)"; exit 1
+        fi
+        if [[ $(printf '%s\n%s\n' "$MSRV" "$version" | sort -V | head -n 1) != "$MSRV" ]]; then
+          echo "::error::MSYS2 rustc $version is older than the MSRV $MSRV; fall back to rustup's x86_64-pc-windows-gnu toolchain"
+          exit 1
+        fi
+        echo "version=$version" >> "$(cygpath -u "$GITHUB_OUTPUT")"
+
+    - name: Cache Cargo build
+      uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      with:
+        shared-key: windows-${{ inputs.cache-key }}
+        key: rustc-${{ steps.rust.outputs.version }}
+        save-if: ${{ inputs.save-cache == 'true' }}
