@@ -150,8 +150,10 @@ with the shared target directory.
   20, gitdiff 19, gitlog 19 + 1 pre-existing ignored, gitviews 5, i.e. the real WebKit
   pages). The new policy/diagnostics/root tests are part of the 20 lib tests.
 - `scripts/ci/run-tests.sh js`: 19 pass.
-- Forbidden-word, local-path and `git diff --check` gates: see the end of this file's
-  commit; all empty.
+- Gates: the forbidden-word grep over tracked files and commit messages prints nothing,
+  `git diff --check` is clean. The only `/home/...` strings in tracked files are the
+  pre-existing sample data in two gitviews JSON fixtures and an `impro-core` unit test
+  (not paths of a person; untouched).
 
 ## Diagnostics format and runbook
 
