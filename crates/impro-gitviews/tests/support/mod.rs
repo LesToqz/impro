@@ -25,6 +25,21 @@ impl Drop for Temp {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
+/// The null device as git understands it (`GIT_CONFIG_GLOBAL` needs an existing, empty file).
+pub const NULL_FILE: &str = if cfg!(windows) { "NUL" } else { "/dev/null" };
+/// A path for `core.hooksPath` that holds no hooks: `/dev/null` on Unix, an empty directory
+/// elsewhere (a device name is not a directory on Windows).
+pub fn no_hooks_path() -> String {
+    if cfg!(windows) {
+        let dir = std::env::temp_dir()
+            .join("impro-gitviews-test-repos")
+            .join("no-hooks");
+        fs::create_dir_all(&dir).unwrap();
+        dir.to_string_lossy().replace('\\', "/")
+    } else {
+        NULL_FILE.to_owned()
+    }
+}
 pub struct GitRepo {
     pub path: PathBuf,
     pub tick: u64,
@@ -48,13 +63,14 @@ impl GitRepo {
         r
     }
     pub fn command(&self, args: &[&str], input: Option<&[u8]>, env: &[(&str, String)]) -> String {
+        let hooks = format!("core.hooksPath={}", no_hooks_path());
         let mut cmd = Command::new("git");
         for (k, _) in std::env::vars().filter(|(k, _)| k.starts_with("GIT_")) {
             cmd.env_remove(k);
         }
         cmd.args([
             "-c",
-            "core.hooksPath=/dev/null",
+            &hooks,
             "-c",
             "commit.gpgsign=false",
             "-c",
@@ -65,7 +81,7 @@ impl GitRepo {
         ])
         .arg(&self.path)
         .args(args)
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_GLOBAL", NULL_FILE)
         .env("GIT_CONFIG_NOSYSTEM", "1")
         .env("GIT_TERMINAL_PROMPT", "0")
         .env("GIT_AUTHOR_NAME", "Ada Example")

@@ -4,6 +4,7 @@ use impro_gitviews::{
     log,
 };
 use serde_json::{json, Value};
+#[cfg(unix)]
 use std::fs;
 use std::time::{Duration, Instant};
 use support::*;
@@ -251,16 +252,35 @@ fn test_statuses_renames_copies_typechange_mode_binary_and_delete() {
 fn test_machine_paths_spaces_unicode_quotes_newlines_tabs_and_leading_dash() {
     let t = Temp::new();
     let mut r = GitRepo::new(&t.0);
-    let names = [
-        "Привет мир.py",
-        "a \"quoted\" file.txt",
-        "line\nbreak.py",
-        "tab\tname.py",
-        "-option.py",
-        "a:b.py",
-        "literal[1].py",
-        "back\\slash.py",
-    ];
+    // Windows rejects `"`, `:`, `\`, newline and tab in file names: use look-alikes there.
+    #[cfg(unix)]
+    let (names, renamed) = (
+        [
+            "Привет мир.py",
+            "a \"quoted\" file.txt",
+            "line\nbreak.py",
+            "tab\tname.py",
+            "-option.py",
+            "a:b.py",
+            "literal[1].py",
+            "back\\slash.py",
+        ],
+        "renamed\nnew.py",
+    );
+    #[cfg(windows)]
+    let (names, renamed) = (
+        [
+            "Привет мир.py",
+            "a \u{201c}quoted\u{201d} file.txt",
+            "line\u{240a}break.py",
+            "tab\u{2409}name.py",
+            "-option.py",
+            "a\u{a789}b.py",
+            "literal[1].py",
+            "back\u{ff3c}slash.py",
+        ],
+        "renamed\u{240a}new.py",
+    );
     r.commit(
         &names
             .iter()
@@ -282,13 +302,13 @@ fn test_machine_paths_spaces_unicode_quotes_newlines_tabs_and_leading_dash() {
     r.commit(
         &[
             (names[2], None),
-            ("renamed\nnew.py", Some("value = \"🌍\"\n".as_bytes())),
+            (renamed, Some("value = \"🌍\"\n".as_bytes())),
         ],
         "Commit",
     );
     let d = head(&r);
-    assert_eq!(file(&d, "renamed\nnew.py")["old_path"], names[2]);
-    assert_eq!(file(&d, "renamed\nnew.py")["status"], "renamed");
+    assert_eq!(file(&d, renamed)["old_path"], names[2]);
+    assert_eq!(file(&d, renamed)["status"], "renamed");
 }
 #[test]
 fn test_first_parent_merge_and_octopus() {
@@ -480,17 +500,21 @@ fn test_unknown_revisions_git_missing_and_injections() {
                     ["error"],
                 "not-a-repo"
             );
-            let fake = path.join("fake");
-            fs::create_dir(&fake).unwrap();
-            executable(
-                &fake.join("git"),
-                "#!/usr/bin/python3\nimport time\ntime.sleep(10)\n",
-            );
-            std::env::set_var("PATH", &fake);
-            assert_eq!(
-                diff::commit_detail(path, "HEAD", Limits::default(), None)["error"],
-                "timeout"
-            );
+            // A script as the fake `git` is Unix-only.
+            #[cfg(unix)]
+            {
+                let fake = path.join("fake");
+                fs::create_dir(&fake).unwrap();
+                executable(
+                    &fake.join("git"),
+                    "#!/usr/bin/python3\nimport time\ntime.sleep(10)\n",
+                );
+                std::env::set_var("PATH", &fake);
+                assert_eq!(
+                    diff::commit_detail(path, "HEAD", Limits::default(), None)["error"],
+                    "timeout"
+                );
+            }
             std::env::set_var("PATH", "");
             assert_eq!(
                 diff::commit_detail(path, "HEAD", Limits::default(), None)["error"],
@@ -752,4 +776,43 @@ fn test_context_output_cap_and_invalid_utf8() {
         "output-too-large"
     );
     assert_eq!(log::timezone_minutes("invalid"), 0);
+}
+/// `IMPRO_GIT_DEBUG=1` prints one stderr line per failed git run; unset it stays silent.
+#[test]
+fn test_git_debug_reports_failed_invocations_only_when_enabled() {
+    const MARK: &str = "IMPRO_TEST_GIT_DEBUG_ROOT";
+    if let Some(root) = std::env::var_os(MARK) {
+        let r = GitRepo::new(std::path::Path::new(&root));
+        let d = diff::commit_detail(&r.path, "HEAD", Limits::default(), None);
+        assert_eq!(d["error"], "unknown-revision");
+        return;
+    }
+    let run = |debug: Option<&str>| {
+        let t = Temp::new();
+        let mut cmd = std::process::Command::new(std::env::current_exe().unwrap());
+        cmd.args([
+            "--exact",
+            "test_git_debug_reports_failed_invocations_only_when_enabled",
+            "--nocapture",
+        ])
+        .env(MARK, &t.0)
+        .env_remove("IMPRO_GIT_DEBUG");
+        if let Some(value) = debug {
+            cmd.env("IMPRO_GIT_DEBUG", value);
+        }
+        let out = cmd.output().unwrap();
+        assert!(out.status.success(), "{out:?}");
+        String::from_utf8_lossy(&out.stderr).into_owned()
+    };
+    let on = run(Some("1"));
+    let line = on
+        .lines()
+        .find(|l| l.starts_with("impro: git failed: "))
+        .unwrap_or_else(|| panic!("no diagnostic line in {on:?}"));
+    assert!(line.contains("rev-parse"), "{line}");
+    assert!(line.contains(" status=128 "), "{line}");
+    assert!(line.contains(" stderr=fatal: "), "{line}");
+    assert!(line.len() < 1000, "{line}");
+    assert!(!run(None).contains("impro: git failed"));
+    assert!(!run(Some("0")).contains("impro: git failed"));
 }

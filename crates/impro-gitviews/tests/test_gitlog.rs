@@ -238,6 +238,8 @@ fn test_three_thousand_commits_performance() {
     assert_eq!(g["truncated"], true);
     topological(&g);
 }
+// Needs a Unix script as the fake `git` (and /proc for the first).
+#[cfg(unix)]
 #[test]
 fn test_bounded_runner_reaps_on_timeout_and_cap() {
     isolated("test_bounded_runner_reaps_on_timeout_and_cap", |path| {
@@ -287,6 +289,8 @@ fn test_bounded_runner_reaps_on_timeout_and_cap() {
         assert!(!std::path::Path::new(&format!("/proc/{pid}")).exists());
     });
 }
+// Needs a Unix script as the fake `git` (and /proc for the first).
+#[cfg(unix)]
 #[test]
 fn test_dirty_failure_and_count_fallback() {
     isolated("test_dirty_failure_and_count_fallback", |path| {
