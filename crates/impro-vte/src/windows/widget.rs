@@ -37,6 +37,7 @@ mod imp {
         pub resize_source: RefCell<Option<glib::SourceId>>,
         pub blink_source: RefCell<Option<glib::SourceId>>,
         pub cursor_visible: Cell<bool>,
+        pub focused: Cell<bool>,
         pub spawning: Cell<bool>,
         pub exited: Cell<bool>,
         pub closed: Cell<bool>,
@@ -78,6 +79,7 @@ mod imp {
                 resize_source: RefCell::new(None),
                 blink_source: RefCell::new(None),
                 cursor_visible: Cell::new(true),
+                focused: Cell::new(false),
                 spawning: Cell::new(false),
                 exited: Cell::new(false),
                 closed: Cell::new(false),
@@ -1116,18 +1118,25 @@ impl Terminal {
         });
         self.connect_unrealize(|t| t.imp().im.set_client_window(None::<&gdk::Window>));
         self.connect_focus_in_event(|t, _| {
+            t.imp().focused.set(true);
             t.imp().im.focus_in();
             t.focus_report(true);
             t.restart_blink();
             glib::Propagation::Proceed
         });
         self.connect_focus_out_event(|t, _| {
+            t.imp().focused.set(false);
             t.imp().im.focus_out();
             t.focus_report(false);
             t.restart_blink();
             glib::Propagation::Proceed
         });
-        self.connect_unmap(|t| t.restart_blink());
+        self.connect_unmap(|t| {
+            let id = t.imp().blink_source.borrow_mut().take();
+            if let Some(id) = id {
+                id.remove();
+            }
+        });
         self.connect_map(|t| t.restart_blink());
         self.connect_button_press_event(|t, e| {
             let (x, y) = e.position();
@@ -1546,7 +1555,7 @@ impl Terminal {
             .borrow()
             .mode()
             .contains(TermMode::SHOW_CURSOR);
-        if self.has_focus() && self.is_mapped() && enabled && visible {
+        if self.imp().focused.get() && self.is_mapped() && enabled && visible {
             let weak = self.downgrade();
             let id = glib::timeout_add_local(Duration::from_millis(600), move || {
                 if let Some(t) = weak.upgrade() {
