@@ -152,7 +152,7 @@ fn windows_terminal_lifecycle_and_widget() {
         wait("resize reaches ConPTY", || {
             t.pty().is_some_and(|p| {
                 p.size().unwrap() == (t.column_count() as i32, t.row_count() as i32)
-            }) && t.column_count() > 80
+            }) && (t.column_count(), t.row_count()) != previous_grid
         });
         t.feed_child(b"echo %IMPRO_CONPTY_TEST%\r");
         wait("environment and input", || text(&t).contains("alive"));
