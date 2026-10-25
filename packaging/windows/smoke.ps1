@@ -24,6 +24,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+. (Join-Path $PSScriptRoot 'smoke-args.ps1')
+
 $AppId = '{084215CE-9F22-4B49-9F5F-65835332B838}'
 $UninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\${AppId}_is1"
 $ExpectedUsage = 'usage: impro [-h] [--version] [folder]'
@@ -235,8 +237,7 @@ try {
         Assert-Path $setup 'setup exe'
         $dir = Join-Path $Work 'install dir'
         $log = Join-Path $OutDir 'install.log'
-        $setupArgs = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CURRENTUSER', "/DIR=$dir", "/LOG=$log",
-                  '/TASKS=desktopicon,contextmenu,addtopath')
+        $setupArgs = New-InnoArgumentList -Dir $dir -Log $log -Tasks 'desktopicon,contextmenu,addtopath'
         Step "installing: $setup $($setupArgs -join ' ')"
         $p = Start-Process -FilePath $setup -ArgumentList $setupArgs -PassThru -Wait
         Step "installer exit code $($p.ExitCode)"
@@ -260,7 +261,7 @@ try {
         if (-not $uninstaller) { Fail 'uninstaller not found in install dir' }
         Step "uninstalling with $($uninstaller.Name)"
         $ulog = Join-Path $OutDir 'uninstall.log'
-        $p = Start-Process -FilePath $uninstaller.FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/LOG=$ulog") -PassThru -Wait
+        $p = Start-Process -FilePath $uninstaller.FullName -ArgumentList (New-InnoArgumentList -Log $ulog) -PassThru -Wait
         Step "uninstaller exit code $($p.ExitCode)"
         Wait-Gone { -not (Test-Path -LiteralPath $dir) } 'install dir'
         Show-Registry 'after uninstall'
