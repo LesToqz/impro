@@ -754,7 +754,14 @@ fn test_twenty_file_and_three_thousand_line_performance() {
     let d = diff::commit_detail(&r.path, "HEAD", Limits::default(), Some(&Syntax));
     assert_eq!(d["stats"]["files"], 20);
     assert_eq!(d["truncated"], false);
-    assert!(start.elapsed() < Duration::from_millis(300));
+    // Spawning git costs several times more on Windows (process creation, antivirus
+    // scanning of the child), so the budget there is 4x; Unix keeps 300 ms.
+    let budget = if cfg!(windows) { 1200 } else { 300 };
+    let elapsed = start.elapsed();
+    assert!(
+        elapsed < Duration::from_millis(budget),
+        "20-file diff took {elapsed:?}, budget {budget} ms"
+    );
 }
 #[test]
 fn test_context_output_cap_and_invalid_utf8() {

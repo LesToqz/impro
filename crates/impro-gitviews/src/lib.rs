@@ -42,6 +42,8 @@ pub mod gitviews;
 #[cfg(windows)]
 mod gitviews_windows;
 #[cfg(any(windows, test))]
+mod windows_diag;
+#[cfg(any(windows, test))]
 mod windows_policy;
 // Portable notice host retained for explicit stub tests.
 pub mod log;

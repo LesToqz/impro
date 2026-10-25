@@ -408,6 +408,47 @@ fn timing_impro_and_five_thousand_commits() {
     }
 }
 
+/// Commit ids with the platform removed: parents become positions in the commit list.
+fn shape(graph: &serde_json::Value) -> serde_json::Value {
+    let commits = graph["commits"].as_array().unwrap();
+    let position = |hash: &serde_json::Value| commits.iter().position(|c| &c["hash"] == hash);
+    json!({
+        "ok": graph["ok"], "total": graph["total"], "truncated": graph["truncated"],
+        "dirty": graph["dirty"], "branch": graph["head"]["branch"],
+        "detached": graph["head"]["detached"], "default_branch": graph["repo"]["default_branch"],
+        "commits": commits.iter().map(|c| json!({
+            "subject": c["subject"], "author": c["author"], "email": c["email"],
+            "ts": c["ts"], "tz": c["tz"], "cts": c["cts"], "refs": c["refs"],
+            "merged_name": c["merged_name"],
+            "parents": c["parents"].as_array().unwrap().iter().map(position).collect::<Vec<_>>(),
+        })).collect::<Vec<_>>(),
+    })
+}
+/// Holds on every platform: ref names, parent topology, subjects and metadata match the
+/// frozen reference even where commit ids cannot (see the parity test below).
+#[test]
+fn test_showcase_reference_structure_parity() {
+    let expected: serde_json::Value =
+        serde_json::from_str(include_str!("support/reference.json")).unwrap();
+    let t = Temp::new();
+    let r = showcase(&t.0);
+    let names = |refs: &str| -> Vec<String> {
+        refs.lines()
+            .map(|l| l.split_whitespace().nth(1).unwrap().to_owned())
+            .collect()
+    };
+    assert_eq!(
+        names(&r.git(&["show-ref"])),
+        names(expected["refs"].as_str().unwrap())
+    );
+    let graph = log::collect_graph(&t.0, None);
+    assert_eq!(shape(&graph), shape(&expected["graph"]));
+}
+/// Commit ids hash the trees. The showcase makes `app.py` executable with `chmod`, which
+/// only exists on Unix (NTFS has no mode bits, git records 100644), so on Windows every
+/// id from that commit on differs from the Linux-generated reference. The structure
+/// test above covers Windows instead.
+#[cfg(unix)]
 #[test]
 fn test_showcase_reference_json_parity() {
     let expected: serde_json::Value =

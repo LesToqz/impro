@@ -1,11 +1,12 @@
 //! WebView2 child controller hosted by a native GTK3 DrawingArea on the GTK thread.
-use crate::{protocol, windows_policy as policy};
+use crate::{protocol, windows_diag as diag, windows_policy as policy};
 use glib::{subclass::prelude::*, translate::*};
 use gtk::{prelude::*, subclass::prelude::*};
 use serde_json::Value;
 use std::{
     cell::{Cell, OnceCell, RefCell},
     rc::{Rc, Weak},
+    sync::atomic::{AtomicUsize, Ordering},
     time::Duration,
 };
 use webview2_com::{
@@ -26,6 +27,8 @@ use windows::{
         UI::Input::KeyboardAndMouse::{GetKeyState, VK_CONTROL, VK_MENU, VK_SHIFT},
     },
 };
+
+static HOSTS: AtomicUsize = AtomicUsize::new(0);
 
 type Message = Rc<dyn Fn(Value)>;
 type Error = Rc<dyn Fn(&str)>;
@@ -182,7 +185,8 @@ struct State {
     starting: Cell<bool>,
     closed: Cell<bool>,
     failed: Cell<bool>,
-    navigation_allowed: Cell<bool>,
+    navigations: RefCell<policy::Navigations>,
+    diag: RefCell<diag::Diagnostics>,
     page_ready: Cell<bool>,
     syncing_focus: Cell<bool>,
     leaving_focus: Cell<bool>,
@@ -217,7 +221,14 @@ impl WebView {
             starting: Cell::new(false),
             closed: Cell::new(false),
             failed: Cell::new(false),
-            navigation_allowed: Cell::new(false),
+            navigations: RefCell::new(policy::Navigations::default()),
+            diag: RefCell::new(diag::Diagnostics::new(
+                HOSTS.fetch_add(1, Ordering::Relaxed) + 1,
+                diag::echo_enabled(
+                    std::env::var("IMPRO_GIT_DEBUG").ok().as_deref(),
+                    std::env::var("IMPRO_GIT_DIAG").ok().as_deref(),
+                ),
+            )),
             page_ready: Cell::new(false),
             syncing_focus: Cell::new(false),
             leaving_focus: Cell::new(false),
@@ -355,9 +366,23 @@ impl WebView {
     pub fn fallback_reason(&self) -> Option<String> {
         self.0.notice.borrow().clone()
     }
+    /// Timeline of the page load (phase timings, every HRESULT, navigation decisions).
+    /// Printed to stderr as it happens when `IMPRO_GIT_DEBUG=1` or `IMPRO_GIT_DIAG=1`.
+    #[doc(hidden)]
+    pub fn diagnostics(&self) -> String {
+        self.0.diag.borrow().render()
+    }
     pub(crate) fn shutdown(&self) {
         self.0.shutdown();
     }
+}
+/// `"<call> failed: <message>, HRESULT 0x........"`, the one error shape used in notices.
+fn failure(call: &str, error: &windows::core::Error) -> String {
+    format!(
+        "{call} failed: {}, HRESULT {}",
+        error.message().trim(),
+        diag::hresult(error.code().0)
+    )
 }
 fn wide(value: &str) -> Vec<u16> {
     value.encode_utf16().chain(Some(0)).collect()
@@ -378,6 +403,24 @@ impl State {
             }
         }
     }
+    fn note(&self, text: &str) {
+        self.diag.borrow_mut().note(text);
+    }
+    fn mark(&self, phase: diag::Phase, text: &str) {
+        self.diag.borrow_mut().mark(phase, text);
+    }
+    /// Record a failed call in the timeline and return its notice text.
+    fn failed(&self, call: &str, error: &windows::core::Error) -> String {
+        let text = failure(call, error);
+        self.diag.borrow_mut().fail(&text);
+        text
+    }
+    /// Log a failing call on the way out of `?`.
+    fn step<T>(&self, call: &str, result: windows::core::Result<T>) -> windows::core::Result<T> {
+        result.inspect_err(|error| {
+            self.failed(call, error);
+        })
+    }
     fn cancel_timeout(&self) {
         let timeout = self.timeout.borrow_mut().take();
         if let Some(timeout) = timeout {
@@ -389,6 +432,7 @@ impl State {
         self.cancel_timeout();
         self.starting.set(false);
         self.page_ready.set(false);
+        *self.navigations.borrow_mut() = policy::Navigations::default();
         let session = self.session.borrow_mut().take();
         if let Some(session) = session {
             session.close();
@@ -408,13 +452,25 @@ impl State {
             self.surface.destroy();
         }
     }
-    fn fallback(self: &Rc<Self>, text: &str) {
+    /// Show the notice. `code` is the concrete cause (one short line, may be empty).
+    fn fallback(self: &Rc<Self>, text: &str, code: &str) {
         if self.closed.get() || self.failed.replace(true) {
             return;
         }
         self.epoch.set(self.epoch.get().wrapping_add(1));
         self.cancel_timeout();
-        *self.notice.borrow_mut() = Some(text.into());
+        let notice = if code.is_empty() {
+            text.to_owned()
+        } else {
+            format!("{text}\n[{code}]")
+        };
+        {
+            let mut diag = self.diag.borrow_mut();
+            diag.note(&format!("FALLBACK notice: {notice}"));
+            let summary = diag.summary();
+            diag.note(&format!("phases: {summary}"));
+        }
+        *self.notice.borrow_mut() = Some(notice);
         // Never destroy a native parent from inside a synchronous WebView2 callback.
         let weak = Rc::downgrade(self);
         glib::idle_add_local_once(move || {
@@ -457,13 +513,16 @@ impl State {
         {
             return;
         }
+        *self.navigations.borrow_mut() = policy::Navigations::default();
         if policy::forced_notice(std::env::var("IMPRO_GIT_PAGES").ok().as_deref()) {
-            self.fallback("Disabled by IMPRO_GIT_PAGES=notice.");
+            self.fallback("Disabled by IMPRO_GIT_PAGES=notice.", "");
             return;
         }
+        self.note("begin: creating the WebView2 environment");
         let result = self.create_environment();
         if let Err(error) = result {
-            self.fallback(&error);
+            self.diag.borrow_mut().fail(&error);
+            self.fallback(&error, "");
         }
     }
     fn create_environment(self: &Rc<Self>) -> Result<(), String> {
@@ -486,8 +545,14 @@ impl State {
         let mut version = PWSTR::null();
         let detection =
             unsafe { GetAvailableCoreWebView2BrowserVersionString(PCWSTR::null(), &mut version) };
-        let _version = CoTaskMemPWSTR::from(version);
-        detection.map_err(|e| format!("Evergreen runtime was not found: {e}"))?;
+        let version = CoTaskMemPWSTR::from(version);
+        detection.map_err(|e| {
+            failure(
+                "Evergreen runtime detection (GetAvailableCoreWebView2BrowserVersionString)",
+                &e,
+            )
+        })?;
+        self.note(&format!("Evergreen runtime version {version}"));
         let options = CoreWebView2EnvironmentOptions::default();
         unsafe {
             options.set_additional_browser_arguments(policy::BROWSER_ARGUMENTS.into());
@@ -499,7 +564,14 @@ impl State {
         let timer = glib::timeout_add_local_once(Duration::from_secs(60), move || {
             if let Some(s) = weak.upgrade().filter(|s| s.current(epoch)) {
                 s.timeout.borrow_mut().take();
-                s.fallback("WebView2 did not finish creating the page within 60 seconds.");
+                let phase = s.diag.borrow().last_phase().map_or("none", |p| p.label());
+                s.note(&format!(
+                    "TIMER: the 60 s creation/ready timer fired; last phase reached: {phase}"
+                ));
+                s.fallback(
+                    "WebView2 did not finish creating the page within 60 seconds.",
+                    &format!("60 s timer fired; last phase reached: {phase}"),
+                );
             }
         });
         *self.timeout.borrow_mut() = Some(timer);
@@ -513,6 +585,7 @@ impl State {
                     result.and_then(|_| environment.ok_or_else(windows::core::Error::from_win32));
                 match result {
                     Ok(environment) => {
+                        s.mark(diag::Phase::Environment, "environment created");
                         *s.environment.borrow_mut() = Some(environment.clone());
                         let weak = Rc::downgrade(&s);
                         let completion = CreateCoreWebView2ControllerCompletedHandler::create(
@@ -527,13 +600,22 @@ impl State {
                                     controller.ok_or_else(windows::core::Error::from_win32)
                                 }) {
                                     Ok(controller) => {
+                                        s.mark(diag::Phase::Controller, "controller created");
                                         if let Err(error) = s.install(controller) {
-                                            s.fallback(&format!("WebView2 setup: {error}"));
+                                            let code = s.diag.borrow().failure().map_or_else(
+                                                || failure("setup", &error),
+                                                str::to_owned,
+                                            );
+                                            s.fallback("WebView2 setup failed.", &code);
                                         }
                                     }
-                                    Err(error) => s.fallback(&format!(
-                                        "WebView2 controller creation: {error}"
-                                    )),
+                                    Err(error) => {
+                                        let code = s.failed(
+                                            "CreateCoreWebView2Controller completion",
+                                            &error,
+                                        );
+                                        s.fallback("WebView2 controller creation failed.", &code);
+                                    }
                                 }
                                 Ok(())
                             }),
@@ -541,10 +623,14 @@ impl State {
                         if let Err(error) =
                             unsafe { environment.CreateCoreWebView2Controller(hwnd, &completion) }
                         {
-                            s.fallback(&format!("WebView2 controller request: {error}"));
+                            let code = s.failed("CreateCoreWebView2Controller", &error);
+                            s.fallback("WebView2 controller request failed.", &code);
                         }
                     }
-                    Err(error) => s.fallback(&format!("WebView2 environment creation: {error}")),
+                    Err(error) => {
+                        let code = s.failed("CreateCoreWebView2Environment completion", &error);
+                        s.fallback("WebView2 environment creation failed.", &code);
+                    }
                 }
                 Ok(())
             },
@@ -557,10 +643,12 @@ impl State {
                 &completion,
             )
         }
-        .map_err(|e| format!("WebView2 environment request: {e}"))
+        .map_err(|e| failure("CreateCoreWebView2EnvironmentWithOptions", &e))
     }
     fn install(self: &Rc<Self>, controller: ICoreWebView2Controller) -> windows::core::Result<()> {
-        let web = match unsafe { controller.CoreWebView2() } {
+        let web = match self.step("CoreWebView2Controller.CoreWebView2", unsafe {
+            controller.CoreWebView2()
+        }) {
             Ok(web) => web,
             Err(error) => {
                 let _ = unsafe { controller.Close() };
@@ -577,6 +665,7 @@ impl State {
         self.starting.set(false);
         let epoch = self.epoch.get();
         // Each handler owns only a Weak<State>. Registrations are removed before Close.
+        // A failing call inside a handler is logged, never returned to the runtime.
         macro_rules! event {
             ($object:expr, $add:ident, $remove:ident, $handler:ident, |$s:ident, $args:ident| $body:block) => {{
                 let weak = Rc::downgrade(self);
@@ -585,14 +674,25 @@ impl State {
                         return Ok(());
                     };
                     if let Some($args) = args {
-                        $body
+                        let outcome = (|| -> windows::core::Result<()> {
+                            $body
+                            Ok(())
+                        })();
+                        if let Err(error) = outcome {
+                            $s.diag
+                                .borrow_mut()
+                                .fail(&failure(concat!(stringify!($handler), " body"), &error));
+                        }
                     }
                     Ok(())
                 }));
                 let object = $object.clone();
                 let mut token = 0;
                 unsafe {
-                    object.$add(&handler, &mut token)?;
+                    self.step(
+                        stringify!($add),
+                        object.$add(&handler, &mut token),
+                    )?;
                 }
                 session.removals.borrow_mut().push(Box::new(move || {
                     let _ = unsafe { object.$remove(token) };
@@ -601,36 +701,93 @@ impl State {
         }
         let prefs = policy::Settings::new(std::env::var("IMPRO_GIT_DEVTOOLS").ok().as_deref());
         unsafe {
-            let settings = session.web.Settings()?;
-            settings.SetAreDevToolsEnabled(prefs.devtools)?;
-            settings.SetAreDefaultContextMenusEnabled(prefs.context_menus)?;
-            settings.SetIsStatusBarEnabled(prefs.status_bar)?;
-            settings.SetIsZoomControlEnabled(prefs.zoom)?;
-            settings.SetIsBuiltInErrorPageEnabled(prefs.error_page)?;
-            settings.SetIsWebMessageEnabled(true)?;
-            settings.SetAreHostObjectsAllowed(false)?;
-            settings.SetAreDefaultScriptDialogsEnabled(false)?;
-            settings
-                .cast::<ICoreWebView2Settings3>()?
-                .SetAreBrowserAcceleratorKeysEnabled(prefs.browser_accelerators)?;
-            let settings4 = settings.cast::<ICoreWebView2Settings4>()?;
-            settings4.SetIsPasswordAutosaveEnabled(prefs.passwords)?;
-            settings4.SetIsGeneralAutofillEnabled(prefs.autofill)?;
-            settings
-                .cast::<ICoreWebView2Settings5>()?
-                .SetIsPinchZoomEnabled(prefs.zoom)?;
-            settings
-                .cast::<ICoreWebView2Settings6>()?
-                .SetIsSwipeNavigationEnabled(prefs.swipe)?;
-            session.web.cast::<ICoreWebView2_8>()?.SetIsMuted(true)?;
-            session
-                .controller
-                .cast::<ICoreWebView2Controller2>()?
-                .SetDefaultBackgroundColor(self.background.get())?;
+            macro_rules! call {
+                ($name:literal, $expr:expr) => {
+                    self.step($name, $expr)?
+                };
+            }
+            let settings = call!("Settings", session.web.Settings());
+            call!(
+                "SetAreDevToolsEnabled",
+                settings.SetAreDevToolsEnabled(prefs.devtools)
+            );
+            call!(
+                "SetAreDefaultContextMenusEnabled",
+                settings.SetAreDefaultContextMenusEnabled(prefs.context_menus)
+            );
+            call!(
+                "SetIsStatusBarEnabled",
+                settings.SetIsStatusBarEnabled(prefs.status_bar)
+            );
+            call!(
+                "SetIsZoomControlEnabled",
+                settings.SetIsZoomControlEnabled(prefs.zoom)
+            );
+            call!(
+                "SetIsBuiltInErrorPageEnabled",
+                settings.SetIsBuiltInErrorPageEnabled(prefs.error_page)
+            );
+            call!(
+                "SetIsWebMessageEnabled",
+                settings.SetIsWebMessageEnabled(true)
+            );
+            call!(
+                "SetAreHostObjectsAllowed",
+                settings.SetAreHostObjectsAllowed(false)
+            );
+            call!(
+                "SetAreDefaultScriptDialogsEnabled",
+                settings.SetAreDefaultScriptDialogsEnabled(false)
+            );
+            call!(
+                "SetAreBrowserAcceleratorKeysEnabled",
+                call!("Settings3", settings.cast::<ICoreWebView2Settings3>())
+                    .SetAreBrowserAcceleratorKeysEnabled(prefs.browser_accelerators)
+            );
+            let settings4 = call!("Settings4", settings.cast::<ICoreWebView2Settings4>());
+            call!(
+                "SetIsPasswordAutosaveEnabled",
+                settings4.SetIsPasswordAutosaveEnabled(prefs.passwords)
+            );
+            call!(
+                "SetIsGeneralAutofillEnabled",
+                settings4.SetIsGeneralAutofillEnabled(prefs.autofill)
+            );
+            call!(
+                "SetIsPinchZoomEnabled",
+                call!("Settings5", settings.cast::<ICoreWebView2Settings5>())
+                    .SetIsPinchZoomEnabled(prefs.zoom)
+            );
+            call!(
+                "SetIsSwipeNavigationEnabled",
+                call!("Settings6", settings.cast::<ICoreWebView2Settings6>())
+                    .SetIsSwipeNavigationEnabled(prefs.swipe)
+            );
+            call!(
+                "SetIsMuted",
+                call!("WebView2_8", session.web.cast::<ICoreWebView2_8>()).SetIsMuted(true)
+            );
+            call!(
+                "SetDefaultBackgroundColor",
+                call!(
+                    "Controller2",
+                    session.controller.cast::<ICoreWebView2Controller2>()
+                )
+                .SetDefaultBackgroundColor(self.background.get())
+            );
             // Bounds are physical pixels; Chromium follows monitor DPI for CSS pixels.
-            let controller3 = session.controller.cast::<ICoreWebView2Controller3>()?;
-            controller3.SetBoundsMode(COREWEBVIEW2_BOUNDS_MODE_USE_RAW_PIXELS)?;
-            controller3.SetShouldDetectMonitorScaleChanges(true)?;
+            let controller3 = call!(
+                "Controller3",
+                session.controller.cast::<ICoreWebView2Controller3>()
+            );
+            call!(
+                "SetBoundsMode",
+                controller3.SetBoundsMode(COREWEBVIEW2_BOUNDS_MODE_USE_RAW_PIXELS)
+            );
+            call!(
+                "SetShouldDetectMonitorScaleChanges",
+                controller3.SetShouldDetectMonitorScaleChanges(true)
+            );
         }
         event!(
             session.web,
@@ -646,12 +803,19 @@ impl State {
                 if let Some(value) = protocol::parse_message(&raw.to_string()) {
                     if value["type"] == "ready" {
                         s.page_ready.set(true);
+                        s.navigations.borrow_mut().disarm();
                         s.cancel_timeout();
+                        s.mark(diag::Phase::Ready, "page sent its ready message");
+                    } else if value["type"] == "error" {
+                        let message = value["message"].as_str().unwrap_or("?");
+                        s.note(&format!("page error: {}", diag::clip(message, 200)));
                     }
                     let callback = s.message.borrow().clone();
                     if let Some(callback) = callback {
                         callback(value);
                     }
+                } else {
+                    s.note("web message that is not JSON was dropped");
                 }
             }
         );
@@ -661,16 +825,7 @@ impl State {
             remove_NavigationStarting,
             NavigationStartingEventHandler,
             |s, args| {
-                let mut uri = PWSTR::null();
-                unsafe {
-                    args.Uri(&mut uri)?;
-                }
-                let uri = CoTaskMemPWSTR::from(uri);
-                let allowed =
-                    s.navigation_allowed.replace(false) && uri.to_string() == "about:blank";
-                unsafe {
-                    args.SetCancel(!allowed)?;
-                }
+                s.navigation_starting(&args, false)?;
             }
         );
         event!(
@@ -678,10 +833,8 @@ impl State {
             add_FrameNavigationStarting,
             remove_FrameNavigationStarting,
             NavigationStartingEventHandler,
-            |_s, args| {
-                unsafe {
-                    args.SetCancel(true)?;
-                }
+            |s, args| {
+                s.navigation_starting(&args, true)?;
             }
         );
         event!(
@@ -689,9 +842,14 @@ impl State {
             add_NewWindowRequested,
             remove_NewWindowRequested,
             NewWindowRequestedEventHandler,
-            |_s, args| {
+            |s, args| {
                 unsafe {
                     args.SetHandled(true)?;
+                }
+                let mut uri = PWSTR::null();
+                if unsafe { args.Uri(&mut uri) }.is_ok() {
+                    let uri = CoTaskMemPWSTR::from(uri).to_string();
+                    s.note(&format!("new window refused: {}", diag::describe_uri(&uri)));
                 }
             }
         );
@@ -700,9 +858,13 @@ impl State {
             add_PermissionRequested,
             remove_PermissionRequested,
             PermissionRequestedEventHandler,
-            |_s, args| {
+            |s, args| {
                 unsafe {
                     args.SetState(COREWEBVIEW2_PERMISSION_STATE_DENY)?;
+                }
+                let mut kind = COREWEBVIEW2_PERMISSION_KIND::default();
+                if unsafe { args.PermissionKind(&mut kind) }.is_ok() {
+                    s.note(&format!("permission denied: kind {}", kind.0));
                 }
             }
         );
@@ -713,12 +875,14 @@ impl State {
             NavigationCompletedEventHandler,
             |s, args| {
                 let mut success = windows::core::BOOL::default();
+                let mut status = COREWEBVIEW2_WEB_ERROR_STATUS::default();
+                let mut id = 0u64;
                 unsafe {
                     args.IsSuccess(&mut success)?;
+                    args.WebErrorStatus(&mut status)?;
+                    args.NavigationId(&mut id)?;
                 }
-                if !success.as_bool() && !s.page_ready.get() {
-                    s.fallback("WebView2 could not load the embedded Git page.");
-                }
+                s.navigation_completed(id, success.as_bool(), status.0);
             }
         );
         event!(
@@ -731,8 +895,15 @@ impl State {
                 unsafe {
                     args.ProcessFailedKind(&mut kind)?;
                 }
+                s.note(&format!(
+                    "ProcessFailed kind {} ({})",
+                    kind.0,
+                    diag::process_failed_name(kind.0)
+                ));
                 s.report(&format!(
-                    "Git web process stopped: {kind:?}; recreating the page."
+                    "Git web process stopped: {} ({}); recreating the page.",
+                    diag::process_failed_name(kind.0),
+                    kind.0
                 ));
                 let weak = Rc::downgrade(&s);
                 glib::idle_add_local_once(move || {
@@ -761,19 +932,40 @@ impl State {
             remove_WebResourceRequested,
             WebResourceRequestedEventHandler,
             |s, args| {
-                let environment = s.environment.borrow().clone();
-                if let Some(environment) = environment {
-                    let response = unsafe {
-                        environment.CreateWebResourceResponse(
-                            None,
-                            403,
-                            windows::core::w!("Blocked"),
-                            windows::core::w!("Content-Type: text/plain"),
-                        )?
-                    };
-                    unsafe {
-                        args.SetResponse(&response)?;
+                let request = unsafe { args.Request()? };
+                let mut uri = PWSTR::null();
+                unsafe {
+                    request.Uri(&mut uri)?;
+                }
+                let uri = CoTaskMemPWSTR::from(uri).to_string();
+                // The embedded document itself arrives here as a data: request and
+                // must pass untouched; only requests that could leave the process are refused.
+                if policy::blocks_resource(&uri) {
+                    let environment = s.environment.borrow().clone();
+                    if let Some(environment) = environment {
+                        let response = unsafe {
+                            environment.CreateWebResourceResponse(
+                                None,
+                                403,
+                                windows::core::w!("Blocked"),
+                                windows::core::w!("Content-Type: text/plain"),
+                            )?
+                        };
+                        unsafe {
+                            args.SetResponse(&response)?;
+                        }
+                        s.note(&format!(
+                            "resource blocked (403): {}",
+                            diag::describe_uri(&uri)
+                        ));
+                    } else {
+                        s.note(&format!(
+                            "resource NOT blocked (no environment): {}",
+                            diag::describe_uri(&uri)
+                        ));
                     }
+                } else {
+                    s.note(&format!("resource passed: {}", diag::describe_uri(&uri)));
                 }
             }
         );
@@ -783,11 +975,12 @@ impl State {
             add_DownloadStarting,
             remove_DownloadStarting,
             DownloadStartingEventHandler,
-            |_s, args| {
+            |s, args| {
                 unsafe {
                     args.SetCancel(true)?;
                     args.SetHandled(true)?;
                 }
+                s.note("download cancelled");
             }
         );
         event!(
@@ -868,34 +1061,148 @@ impl State {
         );
         self.resize();
         self.visible(self.surface.is_mapped());
+        self.note("controller configured; registering the document-created shim");
         let weak = Rc::downgrade(self);
         let completion = AddScriptToExecuteOnDocumentCreatedCompletedHandler::create(Box::new(
             move |result, _| {
                 if let Some(s) = weak.upgrade().filter(|s| s.current(epoch)) {
                     match result {
                         Ok(()) => {
+                            s.mark(diag::Phase::Shim, "document-created shim registered");
                             let session = s.session();
-                            let html = wide(&s.html.borrow());
-                            s.navigation_allowed.set(true);
+                            let (html, bytes) = {
+                                let html = s.html.borrow();
+                                (wide(&html), html.len())
+                            };
+                            // The runtime navigates to a data: URI for NavigateToString (the
+                            // page origin is about:blank). Arm exactly that one navigation.
+                            s.navigations.borrow_mut().arm();
+                            s.note(&format!(
+                                "NavigateToString: document is {bytes} bytes (runtime limit 2 MiB); navigation armed"
+                            ));
                             if let Some(session) = session {
-                                if let Err(error) =
-                                    unsafe { session.web.NavigateToString(PCWSTR(html.as_ptr())) }
+                                match unsafe { session.web.NavigateToString(PCWSTR(html.as_ptr())) }
                                 {
-                                    s.fallback(&format!("WebView2 document load: {error}"));
+                                    Ok(()) => s.note("NavigateToString returned S_OK"),
+                                    Err(error) => {
+                                        let code = s.failed("NavigateToString", &error);
+                                        s.fallback("WebView2 document load failed.", &code);
+                                    }
                                 }
                             }
                         }
-                        Err(error) => s.fallback(&format!("WebView2 bridge injection: {error}")),
+                        Err(error) => {
+                            let code =
+                                s.failed("AddScriptToExecuteOnDocumentCreated completion", &error);
+                            s.fallback("WebView2 bridge injection failed.", &code);
+                        }
                     }
                 }
                 Ok(())
             },
         ));
         let bridge = wide(policy::BRIDGE);
-        unsafe {
+        self.step("AddScriptToExecuteOnDocumentCreated", unsafe {
             session
                 .web
                 .AddScriptToExecuteOnDocumentCreated(PCWSTR(bridge.as_ptr()), &completion)
+        })
+    }
+    /// Cancel everything except the one armed document navigation (fail closed: any
+    /// unreadable argument cancels).
+    fn navigation_starting(
+        self: &Rc<Self>,
+        args: &ICoreWebView2NavigationStartingEventArgs,
+        frame: bool,
+    ) -> windows::core::Result<()> {
+        let kind = if frame {
+            "FrameNavigationStarting"
+        } else {
+            "NavigationStarting"
+        };
+        let read = || -> windows::core::Result<(String, u64, bool, bool)> {
+            let mut raw = PWSTR::null();
+            unsafe { args.Uri(&mut raw)? };
+            let uri = CoTaskMemPWSTR::from(raw).to_string();
+            let mut id = 0u64;
+            let mut user = windows::core::BOOL::default();
+            let mut redirected = windows::core::BOOL::default();
+            unsafe {
+                args.NavigationId(&mut id)?;
+                args.IsUserInitiated(&mut user)?;
+                args.IsRedirected(&mut redirected)?;
+            }
+            Ok((uri, id, user.as_bool(), redirected.as_bool()))
+        };
+        let (cancel, line, document) = match read() {
+            Err(error) => (
+                true,
+                format!(
+                    "{kind}: arguments unreadable, cancelled; {}",
+                    failure("read", &error)
+                ),
+                false,
+            ),
+            Ok((uri, id, user, redirected)) => {
+                let verdict = if frame {
+                    policy::NavigationVerdict::Cancel("frame navigation")
+                } else {
+                    self.navigations.borrow_mut().starting(id, &uri, redirected)
+                };
+                let (cancel, outcome) = match verdict {
+                    policy::NavigationVerdict::Document => {
+                        (false, "ALLOWED (the armed document)".into())
+                    }
+                    policy::NavigationVerdict::Blank => (false, "allowed (blank page)".into()),
+                    policy::NavigationVerdict::Cancel(why) => (true, format!("CANCELLED: {why}")),
+                };
+                (
+                    cancel,
+                    format!(
+                        "{kind} id={id} uri={} user_initiated={user} redirected={redirected} -> {outcome}",
+                        diag::describe_uri(&uri)
+                    ),
+                    verdict == policy::NavigationVerdict::Document,
+                )
+            }
+        };
+        let applied = self.step(&format!("{kind}.SetCancel({cancel})"), unsafe {
+            args.SetCancel(cancel)
+        });
+        if document {
+            self.mark(diag::Phase::NavigationStarted, &line);
+        } else {
+            self.note(&line);
+        }
+        applied
+    }
+    fn navigation_completed(self: &Rc<Self>, id: u64, success: bool, status: i32) {
+        let completion = self
+            .navigations
+            .borrow()
+            .completed(id, success, status == 14);
+        let name = diag::web_error_name(status);
+        let line = format!(
+            "NavigationCompleted id={id} IsSuccess={success} WebErrorStatus={status} ({name}) -> {completion:?}"
+        );
+        match completion {
+            policy::Completion::DocumentLoaded => {
+                self.mark(diag::Phase::NavigationCompleted, &line)
+            }
+            policy::Completion::DocumentFailed | policy::Completion::UnknownFailure => {
+                self.note(&line);
+                if !self.page_ready.get() {
+                    let document = self.navigations.borrow().document();
+                    self.fallback(
+                        "WebView2 could not load the embedded Git page.",
+                        &format!(
+                            "NavigationCompleted IsSuccess=false WebErrorStatus={status} ({name}) navigation_id={id} document_id={}",
+                            document.map_or("none".into(), |d| d.to_string())
+                        ),
+                    );
+                }
+            }
+            policy::Completion::PolicyCancelled | policy::Completion::Unrelated => self.note(&line),
         }
     }
     fn resize(&self) {
