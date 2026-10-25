@@ -27,7 +27,10 @@ use std::{
 use windows_sys::{
     core::HRESULT,
     Win32::{
-        Foundation::{DuplicateHandle, DUPLICATE_SAME_ACCESS, HANDLE, WAIT_FAILED, WAIT_OBJECT_0},
+        Foundation::{
+            DuplicateHandle, DUPLICATE_SAME_ACCESS, HANDLE, INVALID_HANDLE_VALUE, WAIT_FAILED,
+            WAIT_OBJECT_0,
+        },
         System::{
             Console::{COORD, HPCON},
             LibraryLoader::{GetModuleHandleW, GetProcAddress},
@@ -37,6 +40,24 @@ use windows_sys::{
         },
     },
 };
+
+/// Startup information that attaches the child to the pseudo console and nothing else.
+///
+/// Without explicit standard handles the child inherits the parent's redirected stdio: runner
+/// evidence showed `cmd /c echo impro-ok` writing to the test process's stdout pipe instead of the
+/// console host, and an interactive `cmd.exe` reading EOF from the parent's stdin and exiting 0.
+/// Marking all three handles invalid (as portable-pty does) leaves the pseudo console as the only
+/// stdio the child can use.
+fn startup_info_for_pseudoconsole(attribute_list: LPPROC_THREAD_ATTRIBUTE_LIST) -> STARTUPINFOEXW {
+    let mut info: STARTUPINFOEXW = unsafe { mem::zeroed() };
+    info.StartupInfo.cb = mem::size_of::<STARTUPINFOEXW>() as u32;
+    info.StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
+    info.StartupInfo.hStdInput = INVALID_HANDLE_VALUE;
+    info.StartupInfo.hStdOutput = INVALID_HANDLE_VALUE;
+    info.StartupInfo.hStdError = INVALID_HANDLE_VALUE;
+    info.lpAttributeList = attribute_list;
+    info
+}
 
 type Create = unsafe extern "system" fn(COORD, HANDLE, HANDLE, u32, *mut HPCON) -> HRESULT;
 type Resize = unsafe extern "system" fn(HPCON, COORD) -> HRESULT;
@@ -477,9 +498,10 @@ fn start(request: Request, output: glib::Sender<Output>, diag: &Diag) -> io::Res
     };
     let created = (|| {
         let mut attributes = Attributes::new(hpc)?;
-        let mut info: STARTUPINFOEXW = unsafe { mem::zeroed() };
-        info.StartupInfo.cb = mem::size_of::<STARTUPINFOEXW>() as u32;
-        info.lpAttributeList = attributes.pointer();
+        let info = startup_info_for_pseudoconsole(attributes.pointer());
+        diag.log(format_args!(
+            "child stdio: explicit invalid handles (pseudo console only)"
+        ));
         let mut process: PROCESS_INFORMATION = unsafe { mem::zeroed() };
         let argv = if request.flags.contains(glib::SpawnFlags::FILE_AND_ARGV_ZERO)
             && request.argv.len() > 1
@@ -516,7 +538,8 @@ fn start(request: Request, output: glib::Sender<Output>, diag: &Diag) -> io::Res
                 "Terminal spawn cancelled or timed out",
             ));
         }
-        // No handles are inherited: ConPTY is passed only through the attribute list.
+        // No handles are inherited: ConPTY is passed only through the attribute list, and the
+        // standard handles are explicitly invalid (see `startup_info_for_pseudoconsole`).
         let application = if request.flags.contains(glib::SpawnFlags::FILE_AND_ARGV_ZERO) {
             executable.as_ptr()
         } else {
@@ -811,4 +834,24 @@ fn start(request: Request, output: glib::Sender<Output>, diag: &Diag) -> io::Res
     let _ = attach_tx.send(Arc::downgrade(&session));
     let _ = activate_tx.send(true);
     Ok(session)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn startup_info_uses_explicit_invalid_stdio_handles() {
+        let list = 0x1000usize as LPPROC_THREAD_ATTRIBUTE_LIST;
+        let info = startup_info_for_pseudoconsole(list);
+        assert_eq!(
+            info.StartupInfo.cb as usize,
+            mem::size_of::<STARTUPINFOEXW>()
+        );
+        assert_ne!(info.StartupInfo.dwFlags & STARTF_USESTDHANDLES, 0);
+        assert_eq!(info.StartupInfo.hStdInput, INVALID_HANDLE_VALUE);
+        assert_eq!(info.StartupInfo.hStdOutput, INVALID_HANDLE_VALUE);
+        assert_eq!(info.StartupInfo.hStdError, INVALID_HANDLE_VALUE);
+        assert_eq!(info.lpAttributeList, list);
+    }
 }
