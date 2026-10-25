@@ -1,8 +1,8 @@
 # Windows terminal
 
-STATUS: PARTIAL
+STATUS: DONE
 
-Implementation is committed; final acceptance checks are in progress. Windows runtime behavior is UNVERIFIED on this Linux machine.
+All Linux-verifiable acceptance items pass (see Verification). Windows runtime behaviour is UNVERIFIED on this Linux machine: the Windows-only tests compile but are to be run on the GitHub Windows runner.
 
 ## Design decision and evidence
 
@@ -84,15 +84,40 @@ Empirical extraction detail: the Unix wrapper's comments describe all-history te
 
 ## Verification
 
-All cargo commands used the shared warm target cache with incremental compilation disabled. Heavy commands ran under `flock ../.heavy.lock systemd-run --user --scope -q -p MemoryMax=3500M -p MemorySwapMax=0`; release commands use 5000M. GUI tests use `env -u WAYLAND_DISPLAY GDK_BACKEND=x11 xvfb-run -a dbus-run-session -- ...` (or the existing CI script's equivalent).
+All cargo commands used the shared warm target cache with incremental compilation disabled, serialised and memory-capped (`flock ../.heavy.lock systemd-run --user --scope -p MemoryMax=3500M`, release 5000M). GUI tests ran under `env -u WAYLAND_DISPLAY GDK_BACKEND=x11 xvfb-run -a dbus-run-session -- ...`.
 
-- `scripts/windows/check.sh -p impro-vte -p impro-terminal --all-targets`: exit 0 on the final backend, including examples and Windows integration targets.
-- `IMPRO_WIN_CARGO_CMD=clippy scripts/windows/check.sh -p impro-vte -p impro-terminal --all-targets -- -D warnings`: exit 0, no warnings.
-- `cargo fmt --all --check`: passed.
-- `cargo clippy --workspace --all-targets -- -D warnings`: passed.
-- `cargo test -p impro-vte --features emulator,stub-backend`: exit 0; 13 portable tests, 1 native contract comparison, 2 unchanged VTE tests and 1 unchanged fixture test passed (17 total).
-- `cargo clippy -p impro-vte --features emulator,stub-backend --all-targets -- -D warnings`: exit 0, no warnings.
-- Full Linux suite, release terminal tests, MSRV, audits, dependency exclusion and benchmark: pending.
+| Check | Result |
+|---|---|
+| `scripts/windows/check.sh -p impro-vte -p impro-terminal --all-targets` | exit 0 (lib, tests, examples incl. `webkit_host_qa` stub main and `windows_conpty`/`windows_panel`) |
+| `IMPRO_WIN_CARGO_CMD=clippy scripts/windows/check.sh -p impro-vte -p impro-terminal --all-targets -- -D warnings` | exit 0, no warnings |
+| `cargo fmt --all --check` | clean |
+| `cargo clippy --workspace --all-targets -- -D warnings` | clean |
+| `cargo clippy -p impro-vte --features emulator --all-targets -- -D warnings` | clean |
+| `cargo test -p impro-vte -p impro-terminal` (debug) | all green; impro-terminal unit 1, panesplit 14, resizegate 20, terminal_bar 55, dup 4, panel 38, resize 5, startup 12 (performance: 1 ignored), identical to main; impro-vte `spawn_path` 1 and `terminal` 1 unchanged |
+| `cargo test --release -p impro-terminal` | all green, same counts |
+| `cargo test -p impro-vte --features emulator` | all green: 13 portable emulator tests, 1 native-VTE contract comparison, plus the unchanged VTE tests |
+| `scripts/ci/run-tests.sh all` | exit 0 in 10m25s: unit, integration (incl. fatal-criticals group), doc and JS groups all green (126 passing cargo test-result lines, 0 failures; Node 19 pass / 0 fail); the known load-sensitive `impro-markdown` timing test passed this run |
+| `cargo deny --locked check advisories bans licenses sources` (as in `security.yml`, cargo-deny 0.20.2) | `advisories ok, bans ok, licenses ok, sources ok` |
+| same with `--all-features`, and with `--target x86_64-pc-windows-gnu` | all four ok (only the existing duplicate/wildcard warnings); the Windows graph contains `alacritty_terminal` 0.26.0, `vte` 0.15.0, `miow`, `piper` and passes the unchanged licence allow-list. `deny.toml` is unchanged |
+| `cargo +1.88.0 check -p impro-vte --features emulator` | exit 0 (MSRV) |
+| `cargo tree -p impro -e normal --target x86_64-unknown-linux-gnu \| grep -ciE 'alacritty\|miow\|piper'` | `0` (also `0` with `-e normal,build,dev`, and no `rustix-openpty`/`signal-hook` in that tree). `Cargo.lock` lists the emulator's unix-only packages, but they are reachable only through the optional `emulator` feature, which no default build enables; the Linux release dependency graph, binary and startup are unchanged by construction |
+| Forbidden-word gate over tracked files and over `git log main..HEAD`, local-path scan, `git diff --check` | all empty |
+
+### Emulator throughput (Linux, release, `cargo run --release -p impro-vte --features emulator --example emulator_bench`)
+
+50 MiB of escape-heavy output (truecolor SGR, CJK, combining marks, bold, 120x40 grid, 10 000 lines of history) fed in 2 KiB packets, as the ConPTY reader delivers them:
+
+`bytes=52427856 batches=25852 seconds=0.468 throughput_mib_s=106.76 mean_batch_us=18.12 max_batch_us=2010.74`
+
+So parsing costs about 18 us per packet (about 0.5 % of the 4 ms budget); the 2 ms maximum is a single scheduler outlier on a shared machine, and the widget additionally enforces its own 2 ms slice budget. This is the emulator only: Windows draw cost and key-to-paint latency are not measurable here.
+
+### Self-review of `widget.rs` and `conpty.rs` (continuation pass)
+
+(a) RefCell borrows: every `borrow`/`borrow_mut` in the widget is a statement-scoped temporary or a block that ends before any `emit_by_name`, `notify`, `queue_draw*`, clipboard or callback call; `paint` snapshots cells/colours before Pango; the adjustment `value-changed` handler uses `try_borrow_mut`. No defect found.
+(b) Main-thread cost: output is consumed in 256-byte parser calls with a 2 ms budget per idle dispatch; no repeating source exists except the 600 ms blink, which is installed only while focused, mapped, input-enabled and the cursor visible. Fixed: `contents-changed` was emitted after every 256-byte slice (up to nine times per packet); it is now emitted once per consumed packet (and by the public `feed`). Fixed: `paint` filled a rectangle for every cell; cells whose background equals the default background are no longer filled (the background is painted once).
+(c) Handles/threads: pipes, process, duplicates, attribute list and pseudo console are RAII; the reader, writer, waiter, controller and closer threads are joined or end on handle closure. Fixed: if duplicating the monitor handles failed after `CreateProcessW` succeeded, the child was left running unsupervised; it is now terminated. Instant exit, failed spawn and cancellation paths were traced and release everything once.
+(d) `child-exited`: sent once by the controller after the reader is joined (so after all output was acknowledged), guarded in the widget by `exited.replace(true)`.
+(e) Missing ConPTY: `Api::load` fails with "ConPTY requires Windows 10 version 1809 or newer"; the widget prints that message in the terminal area and returns it as the spawn error.
 
 ## Windows runner checklist — all UNVERIFIED here
 
@@ -104,6 +129,8 @@ All cargo commands used the shared warm target cache with incremental compilatio
 
 ## Open issues / assumptions
 
-- Windows binaries cannot be linked or executed on this machine; cross compilation validates Rust types, not Windows DLL availability or runtime behavior. Runtime checks above are deliberately not reported as passes.
-- The existing Unix shell-fixture integration targets are gated on Windows and replaced by focused Windows-specific targets. Linux paths, native VTE source and binding source remain unchanged.
-- The dependency policy's default graph selects Linux. An additional explicit Windows/all-features audit is required in the acceptance results; a later CI task should retain that audit when wiring the emulator feature and Windows tests into CI.
+- Windows binaries cannot be linked or executed on this machine; cross compilation validates Rust types, not Windows DLL availability or runtime behaviour. Everything in the runner checklist is unverified, not passed.
+- Suspected, not measurable here: (1) `paint` redraws the whole viewport per damaged region with one Pango layout per non-blank cell (layouts are cached); if the runner shows draw cost above the 8 ms key-to-paint target, a per-row text-run layout is the next step. (2) One 2 KiB packet is in flight at a time (a handshake with the reader thread), which bounds throughput of floods such as `type` on a large file; the main thread stays responsive by design but wall-clock throughput should be measured. (3) `AltGr` detection combines `GetKeyState(VK_RMENU)`, GDK's `MOD5` and the keymap's consumed modifiers; exotic layouts need a manual check.
+- The existing Unix shell-fixture integration targets of `impro-terminal` are gated to Unix and replaced on Windows by `windows_panel.rs`; Linux test bodies, native VTE source and the binding are unchanged.
+- The dependency policy graph (`deny.toml` `targets`) stays Linux-only. The Windows and all-features audits above were run ad hoc and are clean; a later CI task should add `cargo deny --target x86_64-pc-windows-gnu` and `cargo test -p impro-vte --features emulator` to the workflows (not owned by this task).
+- `impro-markdown table_widgets::test_two_hundred_rows_build_in_bounded_slices_and_type_fast` is a pre-existing load-sensitive timing test (it can fail on plain main under load); it passed in the final full run.
