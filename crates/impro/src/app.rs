@@ -14,7 +14,9 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
     let preferences = crate::preferences::load_values();
     timing("preferences", started);
     let qa_path = std::env::var_os(identity::QA_SCREENSHOT_ENV).map(PathBuf::from);
-    let flags = if qa_path.is_some() {
+    // Windows is deployed without a session bus. NON_UNIQUE disables bus-name
+    // ownership and remote activation; each invocation owns its own window.
+    let flags = if cfg!(windows) || qa_path.is_some() {
         gio::ApplicationFlags::NON_UNIQUE
     } else {
         gio::ApplicationFlags::FLAGS_NONE

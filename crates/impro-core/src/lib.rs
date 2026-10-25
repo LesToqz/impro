@@ -2,6 +2,7 @@
 pub mod fsops;
 pub mod identity;
 pub mod notes;
+#[path = "exec.rs"]
 pub mod platform;
 pub mod process;
 pub mod settings;

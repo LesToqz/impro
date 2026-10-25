@@ -7,12 +7,15 @@
 use crate::pool::CancelToken;
 use impro_core::fsops::absolute;
 use std::collections::HashMap;
+#[cfg(unix)]
 use std::ffi::OsStr;
 use std::io::{self, Read};
+#[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
+#[cfg(unix)]
 use std::os::unix::io::AsRawFd;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, Stdio};
 use std::time::{Duration, Instant};
 
 pub const MAX_ENTRIES: usize = 20_000;
@@ -139,6 +142,7 @@ fn finish(mut child: Child, deadline: Instant) -> io::Result<std::process::ExitS
 ///
 /// `record_limit` counts NUL-terminated records; reaching it (or `max_output` bytes)
 /// kills the process and reports a truncated read instead of an error.
+#[cfg(unix)]
 pub fn run(
     root: &Path,
     args: &[&str],
@@ -147,7 +151,7 @@ pub fn run(
     max_output: usize,
     cancel: Option<&CancelToken>,
 ) -> io::Result<Output> {
-    let mut child = Command::new("git")
+    let mut child = impro_core::process::command("git")
         .arg("-C")
         .arg(root)
         .args(args)
@@ -231,11 +235,25 @@ pub fn run(
 
 /// Parse v1 `-z` output (rename destination first), including unloaded descendants.
 pub fn parse_porcelain(data: &[u8], repo: &Path, root: &Path, max_entries: usize) -> Snapshot {
+    // Git emits ordinary drive/UNC paths, while Rust canonicalize returns
+    // verbatim paths on Windows. Compare existing directory handles' canonical
+    // names, then put snapshot keys back in the explorer's original spelling.
+    // This also handles a caller reaching the same directory through a junction.
+    #[cfg(windows)]
+    let original_root = root;
+    #[cfg(windows)]
+    let canonical_root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
+    #[cfg(windows)]
+    let root = canonical_root.as_path();
+    #[cfg(windows)]
+    let canonical_repo = repo.canonicalize().unwrap_or_else(|_| repo.to_path_buf());
+    #[cfg(windows)]
+    let repo = canonical_repo.as_path();
     let mut result = Snapshot::default();
     // A byte cap may end halfway through a filename; never invent that row.
     let mut records: Vec<&[u8]> = data.split(|b| *b == 0).collect();
     records.pop();
-    let resolve = |bytes: &[u8]| absolute(repo.join(OsStr::from_bytes(bytes)));
+    let resolve = |bytes: &[u8]| absolute(repo.join(git_path(bytes)));
     let mut count = 0usize;
     let mut index = 0usize;
     while index < records.len() {
@@ -287,6 +305,23 @@ pub fn parse_porcelain(data: &[u8], repo: &Path, root: &Path, max_entries: usize
             }
         }
     }
+    #[cfg(windows)]
+    {
+        let rebase = |paths: HashMap<PathBuf, Status>| {
+            paths
+                .into_iter()
+                .map(|(path, status)| {
+                    let path = path
+                        .strip_prefix(root)
+                        .map(|relative| original_root.join(relative))
+                        .unwrap_or(path);
+                    (path, status)
+                })
+                .collect()
+        };
+        result.files = rebase(result.files);
+        result.folders = rebase(result.folders);
+    }
     result
 }
 
@@ -329,7 +364,7 @@ pub fn collect_status_with(root: &Path, limits: &Limits, cancel: Option<&CancelT
             limits.max_output,
             cancel,
         )?;
-        let repo = PathBuf::from(OsStr::from_bytes(trim_newline(&top.data)));
+        let repo = git_path(trim_newline(&top.data));
         let git_dir = run(
             &root,
             &["rev-parse", "--absolute-git-dir"],
@@ -353,9 +388,7 @@ pub fn collect_status_with(root: &Path, limits: &Limits, cancel: Option<&CancelT
             cancel,
         )?;
         let mut result = parse_porcelain(&output.data, &repo, &root, limits.max_entries);
-        result.git_dir = Some(PathBuf::from(OsStr::from_bytes(trim_newline(
-            &git_dir.data,
-        ))));
+        result.git_dir = Some(git_path(trim_newline(&git_dir.data)));
         result.truncated |= output.truncated;
         Ok(result)
     };
@@ -363,6 +396,165 @@ pub fn collect_status_with(root: &Path, limits: &Limits, cancel: Option<&CancelT
 }
 
 fn trim_newline(bytes: &[u8]) -> &[u8] {
+    #[cfg(unix)]
     let end = bytes.iter().rposition(|b| *b != b'\n').map_or(0, |i| i + 1);
+    #[cfg(windows)]
+    let end = bytes
+        .iter()
+        .rposition(|b| !matches!(b, b'\r' | b'\n'))
+        .map_or(0, |i| i + 1);
     &bytes[..end]
+}
+
+#[cfg(unix)]
+fn git_path(bytes: &[u8]) -> PathBuf {
+    PathBuf::from(OsStr::from_bytes(bytes))
+}
+
+#[cfg(windows)]
+fn git_path(bytes: &[u8]) -> PathBuf {
+    PathBuf::from(String::from_utf8_lossy(bytes).replace('/', "\\"))
+}
+
+/// Windows pipes cannot be polled with libc. A bounded channel keeps at most one
+/// extra chunk in memory; dropping the receiver releases a blocked sender. Killing
+/// git closes its pipe, so the detached reader exits without delaying cancellation.
+#[cfg(windows)]
+pub fn run(
+    root: &Path,
+    args: &[&str],
+    deadline: Instant,
+    record_limit: Option<usize>,
+    max_output: usize,
+    cancel: Option<&CancelToken>,
+) -> io::Result<Output> {
+    use std::sync::mpsc::{sync_channel, RecvTimeoutError};
+    let mut child = impro_core::process::command("git")
+        .arg("-C")
+        .arg(root)
+        .args(args)
+        .env("GIT_OPTIONAL_LOCKS", "0")
+        .env("LC_ALL", "C")
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()?;
+    let mut stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| io::Error::other("git stdout unavailable"))?;
+    let (send, receive) = sync_channel(1);
+    std::thread::spawn(move || loop {
+        let mut chunk = vec![0; 65536];
+        let result = match stdout.read(&mut chunk) {
+            Ok(0) => break,
+            Ok(count) => {
+                chunk.truncate(count);
+                Ok(chunk)
+            }
+            Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+            Err(error) => Err(error),
+        };
+        let failed = result.is_err();
+        if send.send(result).is_err() || failed {
+            break;
+        }
+    });
+    let mut data = Vec::new();
+    let mut records = 0;
+    let mut truncated = false;
+    let failure = loop {
+        if cancel.is_some_and(CancelToken::is_cancelled) {
+            break Some(io::Error::new(io::ErrorKind::Interrupted, "cancelled"));
+        }
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            break Some(io::Error::new(io::ErrorKind::TimedOut, "git timed out"));
+        }
+        match receive.recv_timeout(remaining.min(Duration::from_millis(100))) {
+            Ok(Ok(chunk)) => {
+                let count = chunk.len().min(max_output.saturating_sub(data.len()));
+                data.extend_from_slice(&chunk[..count]);
+                records += chunk[..count].iter().filter(|b| **b == 0).count();
+                if data.len() >= max_output || record_limit.is_some_and(|limit| records >= limit) {
+                    truncated = true;
+                    break None;
+                }
+            }
+            Ok(Err(error)) => break Some(error),
+            Err(RecvTimeoutError::Timeout) => continue,
+            Err(RecvTimeoutError::Disconnected) => break None,
+        }
+    };
+    if failure.is_some() || truncated {
+        let _ = child.kill();
+    }
+    drop(receive);
+    let status = finish(
+        child,
+        deadline.max(Instant::now() + Duration::from_millis(1)),
+    );
+    if let Some(error) = failure {
+        return Err(error);
+    }
+    let status = status?;
+    if !status.success() && !truncated {
+        return Err(io::Error::other(format!("git exited with {status}")));
+    }
+    Ok(Output { data, truncated })
+}
+
+#[cfg(all(test, windows))]
+mod windows_tests {
+    use super::*;
+    #[test]
+    fn canonical_git_root_keeps_explorer_path_spelling() {
+        let dir = tempfile::tempdir().unwrap();
+        let repo = dir.path().canonicalize().unwrap();
+        let snapshot = parse_porcelain(b"?? nested/file.txt\0", &repo, dir.path(), MAX_ENTRIES);
+        assert!(snapshot
+            .files
+            .contains_key(&dir.path().join("nested/file.txt")));
+        assert!(snapshot.folders.contains_key(dir.path()));
+    }
+    #[test]
+    fn git_utf8_paths_and_crlf_are_decoded() {
+        assert_eq!(
+            git_path("C:/日本語/project".as_bytes()),
+            PathBuf::from("C:\\日本語\\project")
+        );
+        assert_eq!(trim_newline(b"C:/repo\r\n"), b"C:/repo");
+        assert_eq!(
+            git_path(b"//server/share/repo"),
+            PathBuf::from(r"\\server\share\repo")
+        );
+    }
+    #[test]
+    fn reader_honors_expired_deadline_and_cancellation() {
+        let dir = tempfile::tempdir().unwrap();
+        let error = run(
+            dir.path(),
+            &["--version"],
+            Instant::now(),
+            None,
+            MAX_OUTPUT,
+            None,
+        )
+        .unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::TimedOut);
+        let cancel = CancelToken::new();
+        cancel.cancel();
+        let started = Instant::now();
+        let error = run(
+            dir.path(),
+            &["--version"],
+            started + TIMEOUT,
+            None,
+            MAX_OUTPUT,
+            Some(&cancel),
+        )
+        .unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::Interrupted);
+        assert!(started.elapsed() < Duration::from_secs(1));
+    }
 }

@@ -67,8 +67,10 @@ pub fn path_of(model: &impl IsA<gtk::TreeModel>, iter: &gtk::TreeIter) -> gtk::T
 
 /// First of the 128 private-use characters that stand for the raw bytes 0x80-0xFF in
 /// a path stored in a tree model.
+#[cfg(unix)]
 const RAW_BASE: u32 = 0xF700;
 
+#[cfg(unix)]
 fn raw_char(c: char) -> Option<u8> {
     let c = c as u32;
     (RAW_BASE + 0x80..=RAW_BASE + 0xFF)
@@ -82,6 +84,7 @@ fn raw_char(c: char) -> Option<u8> {
 /// private-use characters that would be mistaken for them) become one private-use
 /// character each, so [`decode_path`] gives back exactly the file on disk; a lossy
 /// conversion would name a different (or no) file.
+#[cfg(unix)]
 pub fn encode_path(path: &std::path::Path) -> String {
     use std::os::unix::ffi::OsStrExt;
     let bytes = path.as_os_str().as_bytes();
@@ -110,6 +113,7 @@ pub fn encode_path(path: &std::path::Path) -> String {
 }
 
 /// The path that [`encode_path`] turned into `text`.
+#[cfg(unix)]
 pub fn decode_path(text: &str) -> std::path::PathBuf {
     use std::os::unix::ffi::OsStringExt;
     if !text.chars().any(|c| raw_char(c).is_some()) {
@@ -187,4 +191,66 @@ pub fn find_child(
         row = next_iter(model, &candidate);
     }
     None
+}
+
+/// Lossless UTF-16 encoding for Windows model strings, including unpaired
+/// surrogates. Encodings only round-trip within this process/platform. A reserved
+/// prefix is escaped too; decoding arbitrary model strings remains memory-safe.
+#[cfg(windows)]
+pub fn encode_path(path: &std::path::Path) -> String {
+    use std::os::windows::ffi::OsStrExt;
+    if let Some(text) = path.to_str().filter(|s| !s.starts_with('\u{E000}')) {
+        return text.to_owned();
+    }
+    let mut text = String::from("\u{E000}");
+    for unit in path.as_os_str().encode_wide() {
+        use std::fmt::Write;
+        write!(text, "{unit:04x}").expect("string write");
+    }
+    text
+}
+
+#[cfg(windows)]
+pub fn decode_path(text: &str) -> std::path::PathBuf {
+    use std::os::windows::ffi::OsStringExt;
+    if let Some(hex) = text
+        .strip_prefix('\u{E000}')
+        .filter(|s| s.is_ascii() && s.len() % 4 == 0)
+    {
+        let units: Option<Vec<_>> = hex
+            .as_bytes()
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|chunk| u16::from_str_radix(std::str::from_utf8(chunk).ok()?, 16).ok())
+            .collect();
+        if let Some(units) = units {
+            return std::ffi::OsString::from_wide(&units).into();
+        }
+    }
+    text.into()
+}
+
+#[cfg(test)]
+mod path_tests {
+    use super::*;
+    #[test]
+    fn unicode_and_reserved_characters_round_trip() {
+        for text in [
+            "folder/日本語.txt",
+            "\u{E000}file",
+            "\u{E080}file",
+            "C:\\folder\\file",
+        ] {
+            let path = std::path::Path::new(text);
+            assert_eq!(decode_path(&encode_path(path)), path);
+        }
+    }
+    #[cfg(windows)]
+    #[test]
+    fn unpaired_surrogate_round_trip() {
+        use std::os::windows::ffi::OsStringExt;
+        let path = std::path::PathBuf::from(std::ffi::OsString::from_wide(&[0x61, 0xd800, 0x62]));
+        assert_eq!(decode_path(&encode_path(&path)), path);
+    }
 }

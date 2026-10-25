@@ -1,5 +1,8 @@
+#[cfg(unix)]
 use gtk::prelude::*;
+#[cfg(unix)]
 use webkit2gtk::WebViewExt;
+#[cfg(unix)]
 fn main() {
     gtk::init().expect("GTK initialization");
     let window = gtk::Window::new(gtk::WindowType::Toplevel);
@@ -38,3 +41,6 @@ fn main() {
     );
     gtk::main();
 }
+
+#[cfg(not(unix))]
+fn main() {}

@@ -1,16 +1,21 @@
 //! Criterion-free timings with real GTK draws. Run optimized under Xvfb.
+#[cfg(unix)]
 use gtk::prelude::*;
+#[cfg(unix)]
 use impro_editor::{EditorPanel, Response};
+#[cfg(unix)]
 use std::{
     cell::{Cell, RefCell},
     rc::Rc,
     time::{Duration, Instant},
 };
+#[cfg(unix)]
 fn pump() {
     if gtk::events_pending() {
         gtk::main_iteration_do(false);
     }
 }
+#[cfg(unix)]
 fn until(f: impl Fn() -> bool) {
     let end = Instant::now() + Duration::from_secs(60);
     while !f() {
@@ -19,9 +24,11 @@ fn until(f: impl Fn() -> bool) {
         std::thread::sleep(Duration::from_micros(200));
     }
 }
+#[cfg(unix)]
 fn ms(d: Duration) -> f64 {
     d.as_secs_f64() * 1000.0
 }
+#[cfg(unix)]
 fn main() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("large.py");
@@ -277,6 +284,7 @@ fn main() {
     }
     pump();
 }
+#[cfg(unix)]
 fn cpu_time() -> f64 {
     let mut value = libc::timespec {
         tv_sec: 0,
@@ -288,6 +296,7 @@ fn cpu_time() -> f64 {
     value.tv_sec as f64 + value.tv_nsec as f64 / 1e9
 }
 
+#[cfg(unix)]
 fn rss_kib() -> usize {
     std::fs::read_to_string("/proc/self/status")
         .unwrap()
@@ -298,6 +307,7 @@ fn rss_kib() -> usize {
         })
         .unwrap()
 }
+#[cfg(unix)]
 fn cpu_ticks() -> u64 {
     let stat = std::fs::read_to_string("/proc/self/stat").unwrap();
     let fields: Vec<_> = stat
@@ -308,6 +318,7 @@ fn cpu_ticks() -> u64 {
         .collect();
     fields[11].parse::<u64>().unwrap() + fields[12].parse::<u64>().unwrap()
 }
+#[cfg(unix)]
 fn measure_typing(tab: &impro_editor::EditorTab, phase: &str, count: usize) {
     let pending = Rc::new(Cell::new(None::<Instant>));
     let samples = Rc::new(RefCell::new(Vec::new()));
@@ -338,3 +349,6 @@ fn measure_typing(tab: &impro_editor::EditorTab, phase: &str, count: usize) {
         assert!(p95 < 8.0, "{phase} typing p95 {p95:.3} ms exceeds 8 ms");
     }
 }
+
+#[cfg(not(unix))]
+fn main() {}

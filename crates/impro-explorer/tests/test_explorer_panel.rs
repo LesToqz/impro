@@ -10,6 +10,7 @@ use impro_explorer::explorer::{
 };
 use std::cell::RefCell;
 use std::collections::HashSet;
+#[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -235,6 +236,7 @@ fn test_new_targets_and_set_root() {
 }
 
 #[test]
+#[cfg(unix)]
 fn test_permission_error_and_symlink_cycle() {
     run(|| {
         let f = setup();
@@ -930,6 +932,7 @@ fn test_menu_sensitivity_for_root_and_selection() {
 }
 
 #[test]
+#[cfg(unix)]
 fn test_no_filesystem_work_needed_on_main_thread_for_selection_target() {
     run(|| {
         // The target folder is derived from the model icon, so no stat call is needed.

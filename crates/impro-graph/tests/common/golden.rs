@@ -114,11 +114,11 @@ fn build_tree(root: &Path, tree: &Value) {
     }
     for e in tree["files"].as_array().expect("files") {
         let rel = e["path"].as_str().expect("path");
-        if let Some(target) = e.get("link").and_then(Value::as_str) {
+        if let Some(_target) = e.get("link").and_then(Value::as_str) {
             let path = root.join(rel);
             std::fs::create_dir_all(path.parent().expect("parent")).expect("mkdir");
             #[cfg(unix)]
-            let _ = std::os::unix::fs::symlink(target, path);
+            let _ = std::os::unix::fs::symlink(_target, path);
             continue;
         }
         let bytes = if let Some(t) = e.get("text").and_then(Value::as_str) {

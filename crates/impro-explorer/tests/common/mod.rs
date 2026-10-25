@@ -15,6 +15,7 @@ pub fn run(f: impl FnOnce() + Send + 'static) {
     let worker = GTK.get_or_init(|| {
         let (tx, rx) = mpsc::channel::<Job>();
         std::thread::spawn(move || {
+            #[cfg(unix)]
             std::env::set_var("GDK_BACKEND", "x11");
             gtk::init().expect("Xvfb display");
             impro_ui::init();
@@ -288,6 +289,7 @@ impl Recorder {
 }
 
 /// Minimal XTest driver (loaded at run time) to push real pointer events at the X server.
+#[cfg(unix)]
 pub struct XTest {
     display: *mut std::ffi::c_void,
     motion: unsafe extern "C" fn(*mut std::ffi::c_void, i32, i32, i32, u64) -> i32,
@@ -296,6 +298,7 @@ pub struct XTest {
     close: unsafe extern "C" fn(*mut std::ffi::c_void) -> i32,
 }
 
+#[cfg(unix)]
 impl XTest {
     pub fn open() -> Option<Self> {
         unsafe {
@@ -341,6 +344,7 @@ impl XTest {
     }
 }
 
+#[cfg(unix)]
 impl Drop for XTest {
     fn drop(&mut self) {
         unsafe {

@@ -231,11 +231,7 @@ impl MainWindow {
         let expected = shell.clone();
         let weak = self.weak();
         self.worker(
-            move || {
-                use std::os::unix::fs::PermissionsExt;
-                std::fs::metadata(&shell)
-                    .is_ok_and(|m| m.is_file() && m.permissions().mode() & 0o111 != 0)
-            },
+            move || impro_core::platform::is_executable(std::path::Path::new(&shell)),
             move |valid| {
                 if let Some(this) = weak.upgrade().map(Self) {
                     if this.values()["terminal_shell"].as_str() != Some(&expected) {

@@ -1,3 +1,4 @@
+#![cfg(unix)]
 //! File names that are not UTF-8 stay the files they are: the tree, selection, signals
 //! and search results hand back the exact path on disk.
 mod common;
