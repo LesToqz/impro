@@ -383,6 +383,9 @@ impl Terminal {
                                 ));
                             }
                             let pid = glib::Pid(session.process.as_raw_handle());
+                            session
+                                .diag
+                                .log(format_args!("session attached to the widget"));
                             *t.imp().session.borrow_mut() = Some(session);
                             t.schedule_resize();
                             Ok(pid)

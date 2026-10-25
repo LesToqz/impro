@@ -1,14 +1,15 @@
 //! ConPTY ownership and blocking I/O. No Win32 call here executes on GTK's thread.
 use crate::{
-    diag::Diag,
+    diag::{escape, Diag},
     emu::quoting::command_line,
-    lifecycle::{Action, CprScanner, Lifecycle, Phase, Timing, CPR_REPLY},
+    input::{self, InputSender},
+    lifecycle::{Action, CprScanner, ExitProbe, Lifecycle, Phase, Timing, CPR_REPLY, STILL_ACTIVE},
 };
 use std::{
     collections::{BTreeMap, HashMap},
     ffi::{c_void, OsStr},
     fs::File,
-    io::{self, Read, Write},
+    io::{self, Read},
     mem,
     os::windows::{
         ffi::OsStrExt,
@@ -26,7 +27,7 @@ use std::{
 use windows_sys::{
     core::HRESULT,
     Win32::{
-        Foundation::{DuplicateHandle, DUPLICATE_SAME_ACCESS, HANDLE},
+        Foundation::{DuplicateHandle, DUPLICATE_SAME_ACCESS, HANDLE, WAIT_FAILED, WAIT_OBJECT_0},
         System::{
             Console::{COORD, HPCON},
             LibraryLoader::{GetModuleHandleW, GetProcAddress},
@@ -159,6 +160,18 @@ fn duplicate(handle: HANDLE) -> io::Result<OwnedHandle> {
     Ok(unsafe { OwnedHandle::from_raw_handle(copy) })
 }
 
+/// `WaitForSingleObject` result in words; `os_error` is `GetLastError` taken right after the call.
+fn wait_result(result: u32, os_error: i32) -> String {
+    match result {
+        WAIT_OBJECT_0 => "WAIT_OBJECT_0".to_owned(),
+        WAIT_FAILED => format!("WAIT_FAILED(os error {os_error})"),
+        other => format!("0x{other:x}"),
+    }
+}
+
+/// How many output chunks per session are described in the timeline.
+const LOGGED_CHUNKS: usize = 24;
+
 pub struct Packet {
     pub bytes: Vec<u8>,
     session: Arc<Session>,
@@ -179,7 +192,8 @@ pub enum Output {
 enum Control {
     Resize,
     Stop,
-    ChildExit,
+    /// The process wait fired; carries what the waiter found out about the process.
+    ChildExit(ExitProbe),
     /// The reader obtained or delivered output (extends the quiet period after the exit).
     Output,
     ReaderEof,
@@ -196,8 +210,15 @@ pub struct Session {
     requested_columns: AtomicI32,
     requested_rows: AtomicI32,
     stopping: AtomicBool,
-    input: mpsc::Sender<Option<Vec<u8>>>,
+    input: InputSender,
     control: mpsc::Sender<Control>,
+}
+impl Drop for Session {
+    fn drop(&mut self) {
+        self.diag.log(format_args!(
+            "session handle released (the input queue is closed by the controller, not by this)"
+        ));
+    }
 }
 static SESSIONS: OnceLock<Mutex<HashMap<u32, Weak<Session>>>> = OnceLock::new();
 fn sessions() -> &'static Mutex<HashMap<u32, Weak<Session>>> {
@@ -217,8 +238,15 @@ pub fn hangup_pid(pid: i32) {
     }
 }
 impl Session {
+    #[track_caller]
     pub fn stop(&self) {
         if !self.stopping.swap(true, Ordering::AcqRel) {
+            let caller = std::panic::Location::caller();
+            self.diag.log(format_args!(
+                "stop called from {}:{}",
+                caller.file(),
+                caller.line()
+            ));
             let _ = self.control.send(Control::Stop);
         }
     }
@@ -244,12 +272,18 @@ pub struct Request {
     pub flags: glib::SpawnFlags,
 }
 
-fn exit_code(process: HANDLE) -> u32 {
-    let mut status = 1;
-    unsafe {
-        GetExitCodeProcess(process, &mut status);
+/// Ask the process handle itself (zero-timeout wait plus exit code) whether the process is gone.
+fn probe(process: HANDLE) -> ExitProbe {
+    let signalled = unsafe { WaitForSingleObject(process, 0) } == WAIT_OBJECT_0;
+    let mut code = STILL_ACTIVE;
+    if unsafe { GetExitCodeProcess(process, &mut code) } == 0 {
+        // Unknown code: an exited process reports a generic failure, a running one stays active.
+        code = if signalled { 1 } else { STILL_ACTIVE };
     }
-    status
+    ExitProbe { signalled, code }
+}
+fn exit_code(process: HANDLE) -> u32 {
+    probe(process).code
 }
 /// `ClosePseudoConsole` may block until the output buffered in the pipe was read and conhost's
 /// shutdown requests were answered, so it only ever runs on a thread that is not the reader.
@@ -353,8 +387,12 @@ fn start(request: Request, output: glib::Sender<Output>, diag: &Diag) -> io::Res
         )));
     }
     let console = Console { handle: hpc, api };
+    diag.log(format_args!(
+        "pseudo console created ({}x{})",
+        request.columns, request.rows
+    ));
     let (control_tx, control_rx) = mpsc::channel::<Control>();
-    let (input_tx, input_rx) = mpsc::channel::<Option<Vec<u8>>>();
+    let (input_tx, input_rx) = mpsc::channel::<input::Message>();
     // Start draining before CreateProcess/ClosePseudoConsole: closing can itself
     // write a final frame, even on the process-creation failure path.
     let drain = Arc::new(AtomicBool::new(false));
@@ -370,6 +408,7 @@ fn start(request: Request, output: glib::Sender<Output>, diag: &Diag) -> io::Res
             let mut buffer = [0u8; 2048];
             let mut cpr = CprScanner::default();
             let mut total = 0usize;
+            let mut chunks = 0usize;
             // Attached lazily so the pipe is drained while the process is still being created.
             let mut attached: Option<Option<Weak<Session>>> = None;
             let end = loop {
@@ -380,6 +419,13 @@ fn start(request: Request, output: glib::Sender<Output>, diag: &Diag) -> io::Res
                 };
                 if total == 0 {
                     diag.log(format_args!("first output byte ({n} bytes)"));
+                }
+                chunks += 1;
+                if chunks <= LOGGED_CHUNKS {
+                    diag.log(format_args!(
+                        "output chunk #{chunks}: {n} bytes [{}]",
+                        escape(&buffer[..n], 160)
+                    ));
                 }
                 total += n;
                 let _ = control.send(Control::Output);
@@ -544,21 +590,55 @@ fn start(request: Request, output: glib::Sender<Output>, diag: &Diag) -> io::Res
         .lock()
         .unwrap()
         .insert(pid, Arc::downgrade(&session));
-    let writer = thread::spawn(move || {
-        let mut writer = File::from(input_write);
-        while let Ok(Some(bytes)) = input_rx.recv() {
-            if writer.write_all(&bytes).is_err() {
-                break;
-            }
-        }
-    });
+    // The write end of the input pipe lives exactly as long as this thread, which ends only when
+    // the controller releases the session (closing marker) or every sender is gone. A failing write
+    // never closes it: the console host reads end-of-input as the user leaving and the shell exits.
+    let writer = {
+        let diag = diag.clone();
+        thread::spawn(move || {
+            let mut pipe = File::from(input_write);
+            let end = input::pump(&input_rx, &mut pipe, &mut |line| {
+                diag.log(format_args!("{line}"))
+            });
+            diag.log(format_args!("writer thread exit ({})", end.reason()));
+            drop(pipe);
+            diag.log(format_args!(
+                "input pipe write end closed ({})",
+                end.reason()
+            ));
+        })
+    };
     let state = Arc::downgrade(&session);
     // A dedicated waiter wakes the controller on child exit; idle terminals poll nothing.
+    let waiter_diag = diag.clone();
     thread::spawn(move || {
-        unsafe {
-            WaitForSingleObject(wait_handle.as_raw_handle(), INFINITE);
+        let mut ignored = 0u32;
+        loop {
+            let result = unsafe { WaitForSingleObject(wait_handle.as_raw_handle(), INFINITE) };
+            let os_error = io::Error::last_os_error().raw_os_error().unwrap_or(0);
+            let found = probe(wait_handle.as_raw_handle());
+            if found.is_exit() {
+                waiter_diag.log(format_args!(
+                    "process wait signalled (WaitForSingleObject={}, handle=process duplicate, \
+                     GetExitCodeProcess={}, still_active=false)",
+                    wait_result(result, os_error),
+                    found.code
+                ));
+                let _ = control_tx.send(Control::ChildExit(found));
+                break;
+            }
+            // A wait that returns while the process runs is not an exit: never report one.
+            ignored += 1;
+            if ignored <= 3 {
+                waiter_diag.log(format_args!(
+                    "process wait returned {} but the process is still active (GetExitCodeProcess={}); \
+                     exit event ignored",
+                    wait_result(result, os_error),
+                    found.code
+                ));
+            }
+            thread::sleep(Duration::from_millis(50));
         }
-        let _ = control_tx.send(Control::ChildExit);
     });
     let (activate_tx, activate_rx) = mpsc::channel();
     let controller_output = output.clone();
@@ -600,6 +680,10 @@ fn start(request: Request, output: glib::Sender<Output>, diag: &Diag) -> io::Res
                                     },
                                 )
                             };
+                            diag.log(format_args!(
+                                "ResizePseudoConsole({columns}x{rows}) returned 0x{:08x}",
+                                result as u32
+                            ));
                             if result >= 0 {
                                 s.columns.store(columns, Ordering::Release);
                                 s.rows.store(rows, Ordering::Release);
@@ -613,12 +697,19 @@ fn start(request: Request, output: glib::Sender<Output>, diag: &Diag) -> io::Res
                     drain.store(true, Ordering::Release);
                     life.stop(now)
                 }
-                Ok(Control::ChildExit) => {
-                    diag.log(format_args!(
-                        "process exit observed (exit code {})",
-                        exit_code(monitor_process.as_raw_handle())
-                    ));
-                    life.process_exited(now)
+                Ok(Control::ChildExit(found)) => {
+                    let actions = life.process_probed(now, found);
+                    if found.is_exit() {
+                        diag.log(format_args!(
+                            "process exit observed (exit code {})",
+                            found.code
+                        ));
+                    } else {
+                        diag.log(format_args!(
+                            "exit event ignored: the process is still active"
+                        ));
+                    }
+                    actions
                 }
                 Ok(Control::Output) => {
                     life.output(now);

@@ -20,4 +20,6 @@ pub mod diag;
 #[cfg(any(windows, feature = "emulator"))]
 pub mod emu;
 #[cfg(any(windows, feature = "emulator"))]
+pub mod input;
+#[cfg(any(windows, feature = "emulator"))]
 pub mod lifecycle;

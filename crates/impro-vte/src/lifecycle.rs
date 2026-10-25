@@ -22,6 +22,24 @@ use std::time::{Duration, Instant};
 
 /// How often a stuck blocking read is cancelled again (a cancel can race with the read).
 pub const CANCEL_REPEAT: Duration = Duration::from_millis(50);
+/// `GetExitCodeProcess` result of a process that is still running.
+pub const STILL_ACTIVE: u32 = 259;
+
+/// What the driver learned when its process wait fired: whether a zero-timeout wait on the process
+/// handle really reports it as signalled and the code `GetExitCodeProcess` returned. A wait that
+/// returned for another reason (failure, wrong handle) must never be taken for an exit.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ExitProbe {
+    pub signalled: bool,
+    pub code: u32,
+}
+impl ExitProbe {
+    /// The process has really exited. `STILL_ACTIVE` with an unsignalled handle is a running process;
+    /// a signalled handle is an exit whatever its code (a process may exit with 259).
+    pub fn is_exit(self) -> bool {
+        self.signalled || self.code != STILL_ACTIVE
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Timing {
@@ -83,6 +101,7 @@ pub struct Lifecycle {
     reader_eof: bool,
     abandoned: bool,
     terminated: bool,
+    spurious_exits: u32,
 }
 
 impl Lifecycle {
@@ -100,6 +119,7 @@ impl Lifecycle {
             reader_eof: false,
             abandoned: false,
             terminated: false,
+            spurious_exits: 0,
         }
     }
     pub fn phase(&self) -> Phase {
@@ -120,6 +140,19 @@ impl Lifecycle {
         if self.phase != Phase::Done {
             self.last_output = Some(now);
         }
+    }
+    /// The process-exit wait fired and the driver probed the process. An event that does not describe
+    /// a real exit (still running) is counted and ignored; the machine stays where it was.
+    pub fn process_probed(&mut self, now: Instant, probe: ExitProbe) -> Vec<Action> {
+        if !probe.is_exit() {
+            self.spurious_exits += 1;
+            return Vec::new();
+        }
+        self.process_exited(now)
+    }
+    /// Exit events ignored because the process was still running.
+    pub fn spurious_exits(&self) -> u32 {
+        self.spurious_exits
     }
     /// The process-exit wait fired.
     pub fn process_exited(&mut self, now: Instant) -> Vec<Action> {

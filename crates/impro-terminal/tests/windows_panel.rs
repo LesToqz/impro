@@ -36,22 +36,89 @@ fn dump(panel: &TerminalPanel) -> String {
     }
     out
 }
-/// Wait (pumping GTK) until every named condition holds; on timeout say which one was still false
-/// and print the panes and the backend timeline.
-fn wait_all(label: &str, panel: &TerminalPanel, conditions: &[(&str, &dyn Fn() -> bool)]) {
+/// Why a step failed: the message, the panes (ids, child ids, grids) and the backend timeline.
+fn fail(label: &str, panel: &TerminalPanel, message: &str) -> ! {
+    panic!(
+        "Windows dock step failed: {label}\n{message}\n{}--- backend timeline ---\n{}",
+        dump(panel),
+        diag::timeline_text()
+    );
+}
+/// One step of the scenario. The pane count must be `before` when it starts and must stay within
+/// `allowed` for its whole duration, so a condition over panes can never hold vacuously (`all()`
+/// over an empty list is true). Conditions are latched: each must have been true at some point.
+fn step(
+    label: &str,
+    panel: &TerminalPanel,
+    before: usize,
+    allowed: &[usize],
+    conditions: &[(&str, &dyn Fn() -> bool)],
+) {
+    let count = || panel.panes().len();
+    if count() != before {
+        fail(
+            label,
+            panel,
+            &format!("precondition: {before} pane(s) expected, found {}", count()),
+        );
+    }
     let deadline = Instant::now() + Duration::from_secs(30);
-    while !conditions.iter().all(|(_, c)| c()) {
+    let latched: Vec<Cell<bool>> = conditions.iter().map(|_| Cell::new(false)).collect();
+    loop {
+        if !allowed.contains(&count()) {
+            fail(
+                label,
+                panel,
+                &format!("pane count {} left the allowed {allowed:?}", count()),
+            );
+        }
+        let mut all = true;
+        for ((_, condition), latch) in conditions.iter().zip(&latched) {
+            if !latch.get() && condition() {
+                latch.set(true);
+            }
+            all &= latch.get();
+        }
+        if all {
+            return;
+        }
         if Instant::now() >= deadline {
             let state = conditions
                 .iter()
-                .map(|(name, c)| format!("  {name}: {}", c()))
+                .zip(&latched)
+                .map(|((name, c), latch)| {
+                    format!("  {name}: ever true: {}, now: {}", latch.get(), c())
+                })
                 .collect::<Vec<_>>()
                 .join("\n");
-            panic!(
-                "Windows dock timeout: {label}\nconditions:\n{state}\n{}--- backend timeline ---\n{}",
-                dump(panel),
-                diag::timeline_text()
+            fail(label, panel, &format!("timeout\nconditions:\n{state}"));
+        }
+        glib::MainContext::default().iteration(false);
+        std::thread::sleep(Duration::from_millis(2));
+    }
+}
+/// The shells must keep running by themselves: pump for `duration` and fail the moment a pane is
+/// gone, closed, lost its child id or the backend reports a process exit.
+fn stay_alive(label: &str, panel: &TerminalPanel, panes: usize, duration: Duration) {
+    let until = Instant::now() + duration;
+    while Instant::now() < until {
+        let now = panel.panes();
+        if now.len() != panes
+            || now
+                .iter()
+                .any(|p| p.is_closed() || p.is_closing() || p.pid().is_none())
+        {
+            fail(
+                label,
+                panel,
+                &format!("expected {panes} live pane(s), found {}", now.len()),
             );
+        }
+        if let Some(line) = diag::timeline()
+            .iter()
+            .find(|l| l.contains("process exit observed"))
+        {
+            fail(label, panel, &format!("a shell exited by itself: {line}"));
         }
         glib::MainContext::default().iteration(false);
         std::thread::sleep(Duration::from_millis(2));
@@ -65,7 +132,8 @@ fn released() -> usize {
 }
 fn resized(panel: &TerminalPanel, old: &[(i64, i64)]) -> bool {
     let panes = panel.panes();
-    panes.len() == old.len()
+    !old.is_empty()
+        && panes.len() == old.len()
         && panes.iter().zip(old).all(|(p, old)| {
             let t = p.terminal.as_ref().unwrap();
             (t.column_count(), t.row_count()) != *old
@@ -104,52 +172,72 @@ fn split_resize_close_and_input() {
     window.add(&panel);
     window.show_all();
 
-    // 1. Two panes, each with a running shell.
-    wait_all(
+    // 1. Two panes, each with a running shell, and both still running two seconds later: an
+    //    interactive shell only leaves when told to.
+    step(
         "both children",
         &panel,
-        &[
-            ("two panes", &|| panel.panes().len() == 2),
-            ("both panes have a child id", &|| {
-                panel.panes().iter().all(|p| p.pid().is_some())
-            }),
-        ],
+        2,
+        &[2],
+        &[("both panes have a child id", &|| {
+            panel.panes().iter().all(|p| p.pid().is_some())
+        })],
     );
     let ids: Vec<u64> = panel.panes().iter().map(|p| p.id).collect();
+    stay_alive(
+        "shells stay alive after start",
+        &panel,
+        2,
+        Duration::from_secs(2),
+    );
     for pane in panel.panes() {
         pane.terminal
             .as_ref()
             .unwrap()
             .feed_child(b"echo impro-dock-ok\r");
     }
-    wait_all(
+    step(
         "input reaches both panes",
         &panel,
+        2,
+        &[2],
         &[("echo visible in every pane", &|| {
-            panel
-                .panes()
-                .iter()
-                .all(|p| grid(p.terminal.as_ref().unwrap()).contains("impro-dock-ok"))
+            let panes = panel.panes();
+            panes.len() == 2
+                && panes
+                    .iter()
+                    .all(|p| grid(p.terminal.as_ref().unwrap()).contains("impro-dock-ok"))
         })],
     );
 
     // 2. Resize reaches both grids and both pseudo consoles.
     let previous = grids(&panel);
+    assert_eq!(
+        previous.len(),
+        2,
+        "grids before the resize\n{}",
+        dump(&panel)
+    );
     window.resize(1300, 750);
-    wait_all(
+    step(
         "resized grids",
         &panel,
+        2,
+        &[2],
         &[("both grids changed and acknowledged", &|| {
             resized(&panel, &previous)
         })],
     );
 
-    // 3. A shell that exits by itself closes its pane (child-exited -> close_pane).
+    // 3. Typing `exit` into one live pane closes exactly that pane (child-exited -> close_pane).
     let leaving = panel.panes()[1].clone();
+    assert_eq!(leaving.id, ids[1]);
     leaving.terminal.as_ref().unwrap().feed_child(b"exit\r");
-    wait_all(
+    step(
         "typed exit closes its pane",
         &panel,
+        2,
+        &[2, 1],
         &[
             ("one pane remains", &|| panel.panes().len() == 1),
             ("the other pane is the survivor", &|| {
@@ -158,13 +246,26 @@ fn split_resize_close_and_input() {
         ],
     );
     assert!(!last_closed.get(), "the survivor must stay open");
+    assert!(
+        panel.panes()[0].pid().is_some() && !panel.panes()[0].is_closed(),
+        "the survivor's shell must still run\n{}",
+        dump(&panel)
+    );
 
     // 4. The survivor still resizes and takes input.
     let previous = grids(&panel);
+    assert_eq!(
+        previous.len(),
+        1,
+        "grids before the resize\n{}",
+        dump(&panel)
+    );
     window.resize(1100, 650);
-    wait_all(
+    step(
         "survivor resized",
         &panel,
+        1,
+        &[1],
         &[("grid changed and acknowledged", &|| {
             resized(&panel, &previous)
         })],
@@ -174,9 +275,11 @@ fn split_resize_close_and_input() {
         .as_ref()
         .unwrap()
         .feed_child(b"echo impro-survivor-ok\r");
-    wait_all(
+    step(
         "surviving pane input",
         &panel,
+        1,
+        &[1],
         &[("echo visible in the survivor", &|| {
             panel
                 .panes()
@@ -200,9 +303,11 @@ fn split_resize_close_and_input() {
         "close_current must remove the pane synchronously\n{}",
         dump(&panel)
     );
-    wait_all(
+    step(
         "closed pane releases its session",
         &panel,
+        0,
+        &[0],
         &[
             ("session resources released", &|| released() > before),
             ("last-closed emitted", &|| last_closed.get()),

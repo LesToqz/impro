@@ -1,9 +1,19 @@
 //! The pseudo-console shutdown state machine, driven with a virtual clock.
 #![cfg(feature = "emulator")]
-use impro_vte::lifecycle::{
-    Action, CprScanner, Lifecycle, Phase, Timing, CANCEL_REPEAT, CPR_REPLY,
+use impro_vte::{
+    diag::escape,
+    input::{pump, InputEnd, Message},
+    lifecycle::{
+        Action, CprScanner, ExitProbe, Lifecycle, Phase, Timing, CANCEL_REPEAT, CPR_REPLY,
+        STILL_ACTIVE,
+    },
 };
-use std::time::{Duration, Instant};
+use std::{
+    io::{self, Write},
+    sync::mpsc,
+    thread,
+    time::{Duration, Instant},
+};
 
 fn ms(n: u64) -> Duration {
     Duration::from_millis(n)
@@ -283,4 +293,168 @@ fn cursor_position_requests_are_found_across_chunk_boundaries() {
     assert_eq!(scanner.scan(b"\x1b[5n\x1b[16n\x1b[6"), 0);
     assert_eq!(scanner.scan(b"x"), 0);
     assert_eq!(CPR_REPLY, b"\x1b[1;1R");
+}
+
+// --- exit events must describe a real exit -----------------------------------------------------
+
+#[test]
+fn an_exit_event_for_a_running_process_is_not_an_exit() {
+    // A wait that returned while the child still runs (STILL_ACTIVE, handle not signalled).
+    let running = ExitProbe {
+        signalled: false,
+        code: STILL_ACTIVE,
+    };
+    assert!(!running.is_exit());
+    let (mut life, c) = machine();
+    assert!(life.process_probed(c.at(10), running).is_empty());
+    assert!(life.process_probed(c.at(20), running).is_empty());
+    assert_eq!(life.spurious_exits(), 2);
+    assert_eq!(life.phase(), Phase::Running);
+    assert!(!life.exited());
+    assert_eq!(life.next_deadline(), None);
+    // The reader ending while the shell still "runs" must not close anything either.
+    assert!(life.reader_eof(c.at(30)).is_empty());
+    assert_eq!(life.phase(), Phase::Running);
+    // The real exit afterwards behaves normally, exactly once.
+    let real = ExitProbe {
+        signalled: true,
+        code: 0,
+    };
+    assert!(real.is_exit());
+    // The reader had already ended, so the close and the report follow the exit at once.
+    assert_eq!(
+        life.process_probed(c.at(40), real),
+        [Action::StartClose, Action::Emit { forced: false }]
+    );
+    assert_eq!(life.phase(), Phase::Done);
+    assert!(life.process_probed(c.at(41), real).is_empty());
+    assert_eq!(life.spurious_exits(), 2);
+}
+
+#[test]
+fn probe_classification() {
+    for (signalled, code, exit) in [
+        (false, STILL_ACTIVE, false),
+        (true, STILL_ACTIVE, true), // a process may really exit with 259
+        (true, 0, true),
+        (false, 0, true),
+        (false, 7, true),
+    ] {
+        assert_eq!(ExitProbe { signalled, code }.is_exit(), exit);
+    }
+}
+
+// --- the input pipe belongs to the session ------------------------------------------------------
+
+/// A writer that records what it received and fails once `fail_after` writes happened.
+struct Pipe {
+    received: Vec<u8>,
+    writes: usize,
+    fail_after: usize,
+}
+impl Write for Pipe {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        if self.writes >= self.fail_after {
+            return Err(io::Error::from(io::ErrorKind::BrokenPipe));
+        }
+        self.writes += 1;
+        self.received.extend_from_slice(bytes);
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+fn pipe(fail_after: usize) -> Pipe {
+    Pipe {
+        received: Vec::new(),
+        writes: 0,
+        fail_after,
+    }
+}
+
+#[test]
+fn input_loop_lives_until_the_session_closes_it_even_if_the_request_sender_is_gone() {
+    let (session, queue) = mpsc::channel::<Message>();
+    // The spawn request owned a clone of the sender; it is dropped long before the session ends.
+    let request = session.clone();
+    request.send(Some(b"echo early\r".to_vec())).unwrap();
+    drop(request);
+    let worker = thread::spawn(move || {
+        let mut target = pipe(usize::MAX);
+        let mut lines = Vec::new();
+        let end = pump(&queue, &mut target, &mut |l| lines.push(l.to_owned()));
+        (end, target.received, lines)
+    });
+    thread::sleep(Duration::from_millis(100));
+    assert!(
+        !worker.is_finished(),
+        "dropping the request ended the input"
+    );
+    session.send(Some(b"dir\r".to_vec())).unwrap();
+    session.send(None).unwrap();
+    let (end, received, lines) = worker.join().unwrap();
+    assert_eq!(end, InputEnd::Closed);
+    assert_eq!(received, b"echo early\rdir\r");
+    assert!(lines.iter().any(|l| l.contains("input write #1: 11 bytes")));
+}
+
+#[test]
+fn input_loop_ends_when_every_sender_is_gone() {
+    let (session, queue) = mpsc::channel::<Message>();
+    session.send(Some(b"a".to_vec())).unwrap();
+    drop(session);
+    let mut target = pipe(usize::MAX);
+    assert_eq!(
+        pump(&queue, &mut target, &mut |_| {}),
+        InputEnd::Disconnected
+    );
+    assert_eq!(target.received, b"a");
+}
+
+#[test]
+fn a_failed_write_keeps_the_pipe_open_and_discards_the_rest() {
+    let (session, queue) = mpsc::channel::<Message>();
+    for chunk in [&b"ok"[..], b"lost", b"more"] {
+        session.send(Some(chunk.to_vec())).unwrap();
+    }
+    let worker = thread::spawn(move || {
+        let mut target = pipe(1);
+        let mut lines = Vec::new();
+        let end = pump(&queue, &mut target, &mut |l| lines.push(l.to_owned()));
+        (end, target, lines)
+    });
+    // The loop must still be there after the failure (it only ends on the marker).
+    thread::sleep(Duration::from_millis(100));
+    assert!(!worker.is_finished(), "a write error ended the input loop");
+    session.send(Some(b"after".to_vec())).unwrap();
+    session.send(None).unwrap();
+    let (end, target, lines) = worker.join().unwrap();
+    assert_eq!(end, InputEnd::Closed);
+    assert_eq!(target.received, b"ok");
+    assert!(lines.iter().any(|l| l.contains("input write failed")));
+    assert!(lines
+        .iter()
+        .any(|l| l.contains("13 bytes of input were discarded")));
+}
+
+#[test]
+fn only_the_first_writes_are_described() {
+    let (session, queue) = mpsc::channel::<Message>();
+    for _ in 0..100 {
+        session.send(Some(b"x".to_vec())).unwrap();
+    }
+    session.send(None).unwrap();
+    let mut target = pipe(usize::MAX);
+    let mut lines = Vec::new();
+    pump(&queue, &mut target, &mut |l| lines.push(l.to_owned()));
+    assert_eq!(target.received.len(), 100);
+    assert_eq!(lines.len(), 40);
+}
+
+#[test]
+fn escaped_bytes_are_readable_and_bounded() {
+    assert_eq!(escape(b"\x1b[?9001h\x1b[I", 64), "\\e[?9001h\\e[I");
+    assert_eq!(escape(b"a\r\n\\\x00\xff", 64), "a\\r\\n\\\\\\x00\\xff");
+    assert_eq!(escape(b"abcdef", 3), "abc...(+3)");
 }
