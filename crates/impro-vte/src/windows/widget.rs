@@ -467,7 +467,9 @@ impl Terminal {
         self.imp()
             .screen
             .borrow()
-            .selection()
+            .term
+            .selection
+            .as_ref()
             .is_some_and(|s| !s.is_empty())
     }
     pub fn pty(&self) -> Option<Pty> {
@@ -659,7 +661,12 @@ impl Terminal {
         let (events, cwd_changed, selection_changed, cursor_changed, damage) = {
             let mut screen = self.imp().screen.borrow_mut();
             let old = screen.cwd().map(str::to_owned);
-            let selected = screen.selection();
+            let selected = screen
+                .term
+                .selection
+                .as_ref()
+                .and_then(|s| s.to_range(&screen.term))
+                .map(|s| (s.start, s.end, s.is_block));
             let old_cursor = (
                 screen.mode().contains(TermMode::SHOW_CURSOR),
                 screen.term.cursor_style(),
@@ -668,7 +675,13 @@ impl Terminal {
             if self.scroll_on_output() {
                 screen.bottom();
             }
-            let changed = selected != screen.selection();
+            let changed = selected
+                != screen
+                    .term
+                    .selection
+                    .as_ref()
+                    .and_then(|s| s.to_range(&screen.term))
+                    .map(|s| (s.start, s.end, s.is_block));
             let damage = match screen.term.damage() {
                 emu::term::TermDamage::Full => None,
                 emu::term::TermDamage::Partial(lines) => Some(lines.collect::<Vec<_>>()),
@@ -1438,6 +1451,9 @@ impl Terminal {
             if let Some(w) = self.window() {
                 w.set_cursor(gdk::Cursor::from_name(&self.display(), "none").as_ref());
             }
+        }
+        if self.has_selection() {
+            self.unselect_all();
         }
         self.feed_child(bytes);
         let text = String::from_utf8_lossy(bytes);
