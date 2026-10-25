@@ -38,16 +38,18 @@
 
 pub mod assets;
 pub mod diff;
-#[cfg(unix)]
 pub mod gitviews;
-// Windows host stand-in; the `stub-backend` feature compiles it everywhere as `stub` for tests.
-#[cfg(any(windows, feature = "stub-backend"))]
-#[path = "gitviews_windows.rs"]
-pub mod stub;
 #[cfg(windows)]
-pub use stub as gitviews;
+mod gitviews_windows;
+#[cfg(any(windows, test))]
+mod windows_policy;
+// Portable notice host retained for explicit stub tests.
 pub mod log;
 pub mod palette;
+mod protocol;
+#[cfg(feature = "stub-backend")]
+#[path = "notice.rs"]
+pub mod stub;
 mod types;
 pub use gitviews::{CommitView, GitGraphView, GraphSettings, PaintTimings, SyntaxAdapter};
 
