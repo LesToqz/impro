@@ -38,9 +38,14 @@
 
 pub mod assets;
 pub mod diff;
+#[cfg(unix)]
+pub mod gitviews;
+#[cfg(windows)]
+#[path = "gitviews_windows.rs"]
 pub mod gitviews;
 pub mod log;
 pub mod palette;
+mod types;
 pub use gitviews::{CommitView, GitGraphView, GraphSettings, PaintTimings, SyntaxAdapter};
 
 /// No native CSS is needed: both pages own their styles.

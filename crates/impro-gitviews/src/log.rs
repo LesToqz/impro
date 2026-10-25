@@ -3,7 +3,7 @@ use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
@@ -45,7 +45,7 @@ fn run_with<T: Send + 'static>(
     parse: impl FnOnce(&mut dyn Read) -> std::io::Result<T> + Send + 'static,
 ) -> Result<(T, bool), GitError> {
     let mut child = ChildGuard(
-        Command::new("git")
+        impro_core::process::command("git")
             .args(["--no-pager", "-c", "core.quotepath=off", "-C"])
             .arg(root)
             .args(args)
@@ -108,13 +108,18 @@ fn run_with<T: Send + 'static>(
             )
             .unwrap_or_else(|e| e.into_inner());
         if !*finished {
-            // std has no timed wait or clonable Child kill handle. On Unix, kill(1)
-            // interrupts wait without polling or unsafe platform calls.
-            let _ = Command::new("/bin/kill")
-                .args(["-KILL", &pid])
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status();
+            // std has no timed wait or clonable Child kill handle. kill(1) (taskkill on
+            // Windows, with /T for git's helper processes) interrupts wait without polling
+            // or unsafe platform calls.
+            #[cfg(unix)]
+            let mut kill = impro_core::process::command("/bin/kill");
+            #[cfg(unix)]
+            kill.args(["-KILL", &pid]);
+            #[cfg(windows)]
+            let mut kill = impro_core::process::command("taskkill");
+            #[cfg(windows)]
+            kill.args(["/F", "/T", "/PID", &pid]);
+            let _ = kill.stdout(Stdio::null()).stderr(Stdio::null()).status();
         }
     });
     let status = child.wait();
