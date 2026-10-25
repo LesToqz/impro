@@ -1,5 +1,7 @@
 //! Portable WebView2 diagnostics: HRESULT/URI/enum formatting and the per-host timeline.
 //! No native objects here, so every format is unit-tested on every platform.
+// Off Windows this module is compiled for its tests only; the host calls the rest.
+#![cfg_attr(not(windows), allow(dead_code))]
 use std::time::{Duration, Instant};
 
 /// Longest URI printed anywhere in diagnostics.
