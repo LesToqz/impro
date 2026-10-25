@@ -419,7 +419,10 @@ mod tests {
     }
     #[test]
     fn short_years_are_zero_padded_like_strftime() {
-        let ancient = LocalTime { year: 987, ..SAMPLE };
+        let ancient = LocalTime {
+            year: 987,
+            ..SAMPLE
+        };
         assert_eq!(ancient.format("%Y"), "0987");
     }
     #[cfg(unix)]

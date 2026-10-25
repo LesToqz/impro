@@ -4,7 +4,7 @@
 //! (the roaming profile), falling back to `%USERPROFILE%\AppData\Roaming`. The lookups
 //! take an environment getter so both rules are unit-testable on any host.
 use std::ffi::OsString;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn non_empty(get: &impl Fn(&str) -> Option<OsString>, key: &str) -> Option<OsString> {
     get(key).filter(|v| !v.is_empty())
@@ -69,13 +69,14 @@ pub fn config_root() -> PathBuf {
 
 /// Expands a leading `~` / `~/…` (and `~\…` on Windows) with [`home_dir`]; any other
 /// input, or a missing home directory, is returned unchanged.
-pub fn expand_tilde(path: &std::path::Path) -> PathBuf {
-    let Some(home) = home_dir() else {
+pub fn expand_tilde(path: &Path) -> PathBuf {
+    expand_tilde_with(home_dir(), path)
+}
+
+fn expand_tilde_with(home: Option<PathBuf>, path: &Path) -> PathBuf {
+    let Some(home) = home else {
         return path.to_path_buf();
     };
-    if path == std::path::Path::new("~") {
-        return home;
-    }
     match path.strip_prefix("~") {
         Ok(rest) => home.join(rest),
         Err(_) => path.to_path_buf(),
@@ -106,7 +107,10 @@ mod tests {
 
     #[test]
     fn windows_prefers_appdata_then_userprofile() {
-        let env = getter(&[("APPDATA", "C:/Users/a/AppData/Roaming"), ("USERPROFILE", "C:/u")]);
+        let env = getter(&[
+            ("APPDATA", "C:/Users/a/AppData/Roaming"),
+            ("USERPROFILE", "C:/u"),
+        ]);
         assert_eq!(
             windows_config_root(&env),
             PathBuf::from("C:/Users/a/AppData/Roaming")
@@ -125,13 +129,33 @@ mod tests {
     #[test]
     fn windows_home_falls_back_to_home() {
         let env = getter(&[("USERPROFILE", ""), ("HOME", "C:/msys/home/a")]);
-        assert_eq!(windows_home_dir(&env), Some(PathBuf::from("C:/msys/home/a")));
+        assert_eq!(
+            windows_home_dir(&env),
+            Some(PathBuf::from("C:/msys/home/a"))
+        );
         assert_eq!(windows_home_dir(&getter(&[])), None);
     }
 
     #[test]
     fn unix_home_is_taken_verbatim() {
-        assert_eq!(unix_home_dir(&getter(&[("HOME", "")])), Some(PathBuf::new()));
+        assert_eq!(
+            unix_home_dir(&getter(&[("HOME", "")])),
+            Some(PathBuf::new())
+        );
         assert_eq!(unix_home_dir(&getter(&[])), None);
+    }
+
+    #[test]
+    fn tilde_expands_only_as_a_whole_leading_component() {
+        let home = Some(PathBuf::from("/h"));
+        let expand = |p: &str| expand_tilde_with(home.clone(), Path::new(p));
+        assert_eq!(expand("~"), PathBuf::from("/h"));
+        assert_eq!(expand("~/a/b"), PathBuf::from("/h/a/b"));
+        assert_eq!(expand("~other/a"), PathBuf::from("~other/a"));
+        assert_eq!(expand("/a/~"), PathBuf::from("/a/~"));
+        assert_eq!(
+            expand_tilde_with(None, Path::new("~/a")),
+            PathBuf::from("~/a")
+        );
     }
 }
