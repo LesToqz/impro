@@ -21,9 +21,17 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
     } else {
         gio::ApplicationFlags::FLAGS_NONE
     };
+    timing("application-new", started);
     let app = gtk::Application::new(Some(identity::APP_ID), flags);
     timing("application", started);
     app.connect_startup(move |_| timing("gtk-startup", started));
+    // Split "application" .. "gtk-startup": registering the application is where
+    // GLib/GIO set up the platform backend. Timing runs only; a failure here
+    // is left to run_with_args to report as before.
+    if timing_enabled() {
+        let _ = app.register(gio::Cancellable::NONE);
+        timing("application-register", started);
+    }
     let failed = Rc::new(Cell::new(false));
     let preferences = Rc::new(RefCell::new(preferences));
     let activation_failed = failed.clone();
@@ -126,11 +134,39 @@ fn install_screenshot_helper_when(
 
 pub fn capture_window(window: &impl IsA<gtk::Widget>, path: &Path) -> Result<(), String> {
     let window = window.as_ref();
+    // The Windows GDK backend returns a blank buffer from GdkWindow::pixbuf, so
+    // render the widget tree offscreen. An unallocated top level keeps the old path.
+    #[cfg(windows)]
+    if window.is_mapped() && window.allocated_width() > 1 && window.allocated_height() > 1 {
+        return capture_offscreen(window, path);
+    }
     let native = window.window().ok_or("window has no native surface")?;
     let pixbuf = native
         .pixbuf(0, 0, window.allocated_width(), window.allocated_height())
         .ok_or("cannot read the window surface")?;
     pixbuf.savev(path, "png", &[]).map_err(|e| e.to_string())
+}
+
+#[cfg(windows)]
+fn capture_offscreen(window: &gtk::Widget, path: &Path) -> Result<(), String> {
+    let scale = window.scale_factor().max(1);
+    let (w, h) = (window.allocated_width(), window.allocated_height());
+    let (pw, ph) = (w * scale, h * scale);
+    let surface = gtk::cairo::ImageSurface::create(gtk::cairo::Format::ARgb32, pw, ph)
+        .map_err(|e| e.to_string())?;
+    surface.set_device_scale(f64::from(scale), f64::from(scale));
+    {
+        let cr = gtk::cairo::Context::new(&surface).map_err(|e| e.to_string())?;
+        window.draw(&cr);
+    }
+    surface.flush();
+    let pixbuf = gdk::pixbuf_get_from_surface(&surface, 0, 0, pw, ph)
+        .ok_or("cannot convert the surface to a pixbuf")?;
+    pixbuf.savev(path, "png", &[]).map_err(|e| e.to_string())
+}
+
+fn timing_enabled() -> bool {
+    std::env::var_os("IMPRO_QA_TIMING").is_some()
 }
 
 fn timing(phase: &str, started: Instant) {
