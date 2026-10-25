@@ -8,6 +8,8 @@ fn extraction_matches_unix_selection_viewport_and_ranges() {
     gtk::init().unwrap();
     for bytes in [
         "abc",
+        "abcdef",
+        "\x1b[?7labcdefg",
         "a\tb",
         "ab界cdef\r\nnext",
         "first\r\nsecond\r\nthird\r\nfourth\r\nfifth",
@@ -34,6 +36,7 @@ fn extraction_matches_unix_selection_viewport_and_ranges() {
         }
         let mut screen = Screen::new(t.column_count() as usize, t.row_count() as usize, 10_000);
         screen.feed(bytes.as_bytes());
+        assert_eq!(screen.cursor(), t.cursor_position(), "cursor: {bytes:?}");
         t.select_all();
         screen.select_all();
         let native = t.text_selected(Format::Text).unwrap().to_string();
@@ -59,10 +62,16 @@ fn extraction_matches_unix_selection_viewport_and_ranges() {
             );
         }
         t.reset(false, false);
-        eprintln!(
-            "reset retained native {:?} cursor {:?}",
-            t.text_format(Format::Text),
-            t.cursor_position()
+        screen.reset(false, false);
+        assert_eq!(
+            screen.viewport_text(),
+            t.text_format(Format::Text).unwrap().as_str(),
+            "reset viewport: {bytes:?}"
+        );
+        assert_eq!(
+            screen.cursor(),
+            t.cursor_position(),
+            "reset cursor: {bytes:?}"
         );
         unsafe {
             window.destroy();

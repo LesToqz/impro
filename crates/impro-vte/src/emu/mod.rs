@@ -195,6 +195,7 @@ impl Screen {
         }
         let columns = self.columns();
         let rows = self.rows();
+        let pending_wrap = self.term.grid().cursor.input_needs_wrap;
         let origin = self.tracking.origin;
         let tabs = if !clear_tabstops {
             Some(self.tracking.tabs.clone())
@@ -215,6 +216,7 @@ impl Screen {
             let point = active.cursor.point;
             active.cursor = grid::Cursor {
                 point,
+                input_needs_wrap: pending_wrap,
                 ..Default::default()
             };
             active.saved_cursor = Default::default();
@@ -233,13 +235,19 @@ impl Screen {
             self.term.goto(point.line.0, point.column.0);
             self.tracking.tabs = tabs;
         }
+        self.term.grid_mut().cursor.input_needs_wrap = pending_wrap && !clear_history;
         self.processor = ansi::Processor::new();
         self.metadata.x10 = false;
     }
     pub fn cursor(&self) -> (i64, i64) {
         let p = self.term.grid().cursor.point;
         (
-            p.column.0 as i64,
+            p.column.0 as i64
+                + if self.term.grid().cursor.input_needs_wrap {
+                    1
+                } else {
+                    0
+                },
             p.line.0 as i64
                 + if self.mode().contains(TermMode::ALT_SCREEN) {
                     0
@@ -356,7 +364,13 @@ impl Screen {
                 self.columns()
             };
             let begin = result.len();
-            let mut tab_mode = false;
+            let mut tab_mode = (0..left)
+                .rev()
+                .find_map(|col| {
+                    let c = line[Column(col)].c;
+                    (c != ' ').then_some(c)
+                })
+                .is_some_and(|c| c == '\t');
             for col in left..right {
                 let cell = &line[Column(col)];
                 if tab_mode {
