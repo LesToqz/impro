@@ -77,6 +77,122 @@ pub(crate) fn physical_size(width: i32, height: i32, scale: i32) -> (i32, i32) {
     )
 }
 
+/// What the controller's single `NavigateToString` call may navigate to.
+///
+/// The WebView2 runtime does not navigate to `about:blank` for `NavigateToString`; it
+/// issues a `data:text/html...` navigation (the page's own origin is `about:blank`).
+/// Older documentation and the first host revision assumed `about:blank` here, which
+/// cancelled the document itself. Both spellings are accepted, but only for the one
+/// navigation the host armed; everything else is cancelled.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum NavigationVerdict {
+    /// The armed document navigation: let it run.
+    Document,
+    /// A harmless blank page while the document is still pending (not the document).
+    Blank,
+    Cancel(&'static str),
+}
+
+fn has_scheme(uri: &str, scheme: &str) -> bool {
+    uri.get(..scheme.len())
+        .is_some_and(|head| head.eq_ignore_ascii_case(scheme))
+}
+
+fn navigation_verdict(armed: bool, uri: &str, redirected: bool) -> NavigationVerdict {
+    if !armed {
+        return NavigationVerdict::Cancel("no document navigation is pending");
+    }
+    if redirected {
+        return NavigationVerdict::Cancel("redirected navigation");
+    }
+    if has_scheme(uri, "data:text/html") {
+        NavigationVerdict::Document
+    } else if uri.eq_ignore_ascii_case("about:blank") {
+        NavigationVerdict::Blank
+    } else {
+        NavigationVerdict::Cancel("unexpected navigation target")
+    }
+}
+
+/// How a `NavigationCompleted` event must be treated.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Completion {
+    DocumentLoaded,
+    DocumentFailed,
+    /// Completion of a navigation this host cancelled on purpose.
+    PolicyCancelled,
+    /// Success or cancellation of something that is not the document.
+    Unrelated,
+    /// A non-cancel failure of a navigation the host never saw start.
+    UnknownFailure,
+}
+
+/// Navigation bookkeeping for one controller: one armed document navigation, identified
+/// by its navigation id, and the ids this host cancelled.
+#[derive(Default)]
+pub(crate) struct Navigations {
+    armed: bool,
+    document: Option<u64>,
+    cancelled: Vec<u64>,
+}
+impl Navigations {
+    const CANCELLED_KEPT: usize = 64;
+    /// Called right before `NavigateToString`.
+    pub(crate) fn arm(&mut self) {
+        *self = Self {
+            armed: true,
+            ..Self::default()
+        };
+    }
+    /// The page said `ready`: no further document navigation may be accepted.
+    pub(crate) fn disarm(&mut self) {
+        self.armed = false;
+    }
+    pub(crate) fn document(&self) -> Option<u64> {
+        self.document
+    }
+    pub(crate) fn starting(&mut self, id: u64, uri: &str, redirected: bool) -> NavigationVerdict {
+        let verdict = navigation_verdict(self.armed, uri, redirected);
+        match verdict {
+            NavigationVerdict::Document => {
+                self.armed = false;
+                self.document = Some(id);
+            }
+            NavigationVerdict::Blank => {}
+            NavigationVerdict::Cancel(_) => {
+                if self.cancelled.len() == Self::CANCELLED_KEPT {
+                    self.cancelled.remove(0);
+                }
+                self.cancelled.push(id);
+            }
+        }
+        verdict
+    }
+    pub(crate) fn completed(&self, id: u64, success: bool, canceled_status: bool) -> Completion {
+        if self.document == Some(id) {
+            if success {
+                Completion::DocumentLoaded
+            } else {
+                Completion::DocumentFailed
+            }
+        } else if self.cancelled.contains(&id) {
+            Completion::PolicyCancelled
+        } else if success || canceled_status {
+            Completion::Unrelated
+        } else {
+            Completion::UnknownFailure
+        }
+    }
+}
+
+/// External resource policy: only inline schemes may load; everything else gets HTTP 403.
+/// The document navigation itself (`data:`) must never be answered by the filter.
+pub(crate) fn blocks_resource(uri: &str) -> bool {
+    !["data:", "about:", "blob:"]
+        .iter()
+        .any(|scheme| has_scheme(uri, scheme))
+}
+
 /// Win32 virtual key -> GDK key name. Only application shortcuts leave the page.
 pub(crate) fn shortcut(key: u32, ctrl: bool, shift: bool, alt: bool) -> Option<&'static str> {
     if ctrl {
@@ -192,6 +308,161 @@ mod tests {
             "AltGr must stay in the page"
         );
     }
+    #[test]
+    fn only_the_armed_document_navigation_is_allowed() {
+        use NavigationVerdict::*;
+        let data = "data:text/html;charset=utf-8;base64,PGh0bWw+";
+        // (armed, uri, redirected) -> verdict
+        let table = [
+            (true, data, false, Document),
+            (true, "DATA:TEXT/HTML,<p>", false, Document),
+            (true, "about:blank", false, Blank),
+            (true, "ABOUT:BLANK", false, Blank),
+            (true, data, true, Cancel("redirected navigation")),
+            (
+                true,
+                "https://example.invalid/",
+                false,
+                Cancel("unexpected navigation target"),
+            ),
+            (
+                true,
+                "file:///C:/Windows/win.ini",
+                false,
+                Cancel("unexpected navigation target"),
+            ),
+            (
+                true,
+                "data:text/plain,hi",
+                false,
+                Cancel("unexpected navigation target"),
+            ),
+            (
+                true,
+                "javascript:alert(1)",
+                false,
+                Cancel("unexpected navigation target"),
+            ),
+            (
+                true,
+                "about:blank#x",
+                false,
+                Cancel("unexpected navigation target"),
+            ),
+            (true, "", false, Cancel("unexpected navigation target")),
+            (
+                false,
+                data,
+                false,
+                Cancel("no document navigation is pending"),
+            ),
+            (
+                false,
+                "about:blank",
+                false,
+                Cancel("no document navigation is pending"),
+            ),
+        ];
+        for (armed, uri, redirected, expected) in table {
+            assert_eq!(
+                navigation_verdict(armed, uri, redirected),
+                expected,
+                "{uri}"
+            );
+        }
+    }
+
+    #[test]
+    fn exactly_one_data_navigation_is_accepted_per_arming() {
+        let data = "data:text/html;charset=utf-8;base64,PGh0bWw+";
+        let mut n = Navigations::default();
+        assert!(matches!(
+            n.starting(1, data, false),
+            NavigationVerdict::Cancel(_)
+        ));
+        n.arm();
+        // An unrelated blank page neither consumes the arming nor becomes the document.
+        assert_eq!(
+            n.starting(2, "about:blank", false),
+            NavigationVerdict::Blank
+        );
+        assert_eq!(n.document(), None);
+        assert_eq!(n.starting(3, data, false), NavigationVerdict::Document);
+        assert_eq!(n.document(), Some(3));
+        // A second data: navigation (for example from page script) is cancelled.
+        assert!(matches!(
+            n.starting(4, data, false),
+            NavigationVerdict::Cancel(_)
+        ));
+        assert!(matches!(
+            n.starting(5, "about:blank", false),
+            NavigationVerdict::Cancel(_)
+        ));
+        assert_eq!(n.document(), Some(3));
+        // Re-arming (reload) forgets the previous document.
+        n.arm();
+        assert_eq!(n.document(), None);
+        assert_eq!(n.starting(9, data, false), NavigationVerdict::Document);
+        n.disarm();
+        assert!(matches!(
+            n.starting(10, data, false),
+            NavigationVerdict::Cancel(_)
+        ));
+    }
+
+    #[test]
+    fn completion_is_classified_by_navigation_id() {
+        use Completion::*;
+        let data = "data:text/html,x";
+        let mut n = Navigations::default();
+        n.arm();
+        n.starting(1, "https://example.invalid/", false);
+        n.starting(2, data, false);
+        // Our own cancellation never fails the page; the document failing always does.
+        assert_eq!(n.completed(1, false, true), PolicyCancelled);
+        assert_eq!(n.completed(2, false, true), DocumentFailed);
+        assert_eq!(n.completed(2, false, false), DocumentFailed);
+        assert_eq!(n.completed(2, true, false), DocumentLoaded);
+        // Navigations never seen starting: success/cancel is ignored, other failure surfaces.
+        assert_eq!(n.completed(7, true, false), Unrelated);
+        assert_eq!(n.completed(7, false, true), Unrelated);
+        assert_eq!(n.completed(7, false, false), UnknownFailure);
+    }
+
+    #[test]
+    fn cancelled_ids_are_bounded() {
+        let mut n = Navigations::default();
+        for id in 0..200 {
+            n.starting(id, "https://example.invalid/", false);
+        }
+        assert_eq!(n.cancelled.len(), Navigations::CANCELLED_KEPT);
+        assert_eq!(n.completed(199, false, true), Completion::PolicyCancelled);
+        assert_eq!(n.completed(0, false, true), Completion::Unrelated);
+    }
+
+    #[test]
+    fn external_requests_are_blocked_but_inline_loads_pass() {
+        for blocked in [
+            "https://example.invalid/a.js",
+            "http://127.0.0.1:8080/",
+            "ftp://example.invalid/",
+            "file:///C:/secret.txt",
+            "wss://example.invalid/",
+            "ms-appx://x/y",
+            "",
+        ] {
+            assert!(blocks_resource(blocked), "{blocked}");
+        }
+        for inline in [
+            "data:text/html;charset=utf-8;base64,PGh0bWw+",
+            "DATA:image/png;base64,AAAA",
+            "about:blank",
+            "blob:null/1234",
+        ] {
+            assert!(!blocks_resource(inline), "{inline}");
+        }
+    }
+
     #[test]
     fn dpi_bounds_use_physical_pixels_without_double_scaling() {
         assert_eq!(physical_size(800, 600, 1), (800, 600));
