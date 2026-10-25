@@ -177,7 +177,7 @@ function Assert-InstalledLayout([string]$AppDir) {
 
 function Show-Tree([string]$Dir) {
     $files = @(Get-ChildItem -LiteralPath $Dir -Recurse -File -Force)
-    $bytes = ($files | Measure-Object Length -Sum).Sum
+    $bytes = Get-ByteSum $files
     Step ("tree {0}: {1} files, {2:N1} MB, {3} DLLs next to the exe" -f $Dir, $files.Count, ($bytes / 1MB),
           @(Get-ChildItem -LiteralPath $Dir -Filter *.dll -File).Count)
     Get-ChildItem -LiteralPath $Dir -Force | Format-Table Mode, Length, Name -AutoSize | Out-String -Width 200 | Write-Host

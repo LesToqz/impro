@@ -38,5 +38,31 @@ $padded = [byte[]]::new(48 * 2)                    # 10 px wide, stride 48: padd
 $padded[44] = 9
 Assert-Equal ([ImproPixels]::DiffFraction($padded, 48, 10, 2)) 0.0 'row padding is ignored'
 
+# Verdict plumbing: the caller wraps the result in @(...), exactly as smoke.ps1 does.
+$tmp = Join-Path ([IO.Path]::GetTempPath()) ("impro-lab-test-" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $tmp | Out-Null
+try {
+    $none = @(Test-ScreenshotProblems -Path (Join-Path $tmp 'missing.png'))
+    Assert-Equal $none.Count 1 'missing screenshot: exactly one problem'
+    Assert-Equal ($none[0] -is [string]) $true 'the problem is a string, not a nested array'
+    Assert-Equal (($none -join '; ') -like 'no screenshot written to *') $true 'message lists the problem text'
+    $bad = Join-Path $tmp 'bad.png'; Set-Content -LiteralPath $bad -Value 'not a png'
+    $notPng = @(Test-ScreenshotProblems -Path $bad)
+    Assert-Equal $notPng.Count 1 'non-PNG: exactly one problem'
+    Assert-Equal (($notPng -join '; ') -like 'screenshot is not a PNG*') $true 'non-PNG message'
+} finally { Remove-Item -LiteralPath $tmp -Recurse -Force }
+
+# A verdict function that finds nothing wrong must yield an empty array, one or two problems must stay flat.
+function Get-Mock([int]$N) { for ($i = 0; $i -lt $N; $i++) { "p$i" } }
+Assert-Equal @(Get-Mock 0).Count 0 'zero problems pass'
+Assert-Equal @(Get-Mock 1).Count 1 'one problem counts once'
+Assert-Equal (@(Get-Mock 2) -join '; ') 'p0; p1' 'two problems are listed by text'
+
+Assert-Equal (Get-ByteSum @()) 0 'byte sum of an empty list is 0'
+Assert-Equal (Get-ByteSum $null) 0 'byte sum of $null is 0'
+Assert-Equal (Get-ByteSum @([pscustomobject]@{ Name = 'x' })) 0 'byte sum ignores items without Length'
+Assert-Equal (Get-ByteSum @([pscustomobject]@{ Length = 5 }, [pscustomobject]@{ Length = 7 })) 12 'byte sum adds Length'
+Assert-Equal (Get-ByteSum ([pscustomobject]@{ Length = 5 })) 5 'byte sum of one scalar item'
+
 if ($script:failures) { Write-Host "$script:failures failure(s)"; exit 1 }
 Write-Host 'all passed'
