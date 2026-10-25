@@ -30,15 +30,30 @@ fn dump_grids() -> String {
             .join("\n")
     })
 }
-/// Wait (pumping GTK) until every named condition holds; on timeout report which conditions were
-/// still false, the grids and the backend timeline.
+/// Wait (pumping GTK) until every named condition has held. A condition is latched the first time
+/// it is true: events such as "the text reached the grid" and "the child exited" need not hold at
+/// the same instant. On timeout report which conditions never held, the grids and the timeline.
 fn wait_all(label: &str, conditions: &[(&str, &dyn Fn() -> bool)]) {
     let deadline = Instant::now() + Duration::from_secs(30);
-    while !conditions.iter().all(|(_, c)| c()) {
+    let latched: Vec<Cell<bool>> = conditions.iter().map(|_| Cell::new(false)).collect();
+    let all = || {
+        let mut all = true;
+        for ((_, condition), latch) in conditions.iter().zip(&latched) {
+            if !latch.get() && condition() {
+                latch.set(true);
+            }
+            all &= latch.get();
+        }
+        all
+    };
+    while !all() {
         if Instant::now() >= deadline {
             let state = conditions
                 .iter()
-                .map(|(name, c)| format!("  {name}: {}", c()))
+                .zip(&latched)
+                .map(|((name, c), latch)| {
+                    format!("  {name}: ever true: {}, now: {}", latch.get(), c())
+                })
                 .collect::<Vec<_>>()
                 .join("\n");
             panic!(
@@ -74,6 +89,68 @@ fn expect_exit_count(exits: &ExitResults, count: usize) {
         exits.borrow(),
         impro_vte::diag::timeline_text()
     );
+}
+/// Pump GTK for `duration`, running `each` after every iteration.
+fn pump_for(duration: Duration, mut each: impl FnMut()) {
+    let until = Instant::now() + duration;
+    while Instant::now() < until {
+        glib::MainContext::default().iteration(false);
+        each();
+        std::thread::sleep(Duration::from_millis(1));
+    }
+}
+/// Whether the timeline says the child with this id exited.
+fn exit_logged(pid: i32) -> bool {
+    impro_vte::diag::timeline()
+        .iter()
+        .any(|l| l.contains(&format!("pid={pid}]")) && l.contains("process exit observed"))
+}
+/// Latches (on every content change) the first moment `needle` is on the grid.
+fn watch_text(t: &Terminal, needle: &'static str) -> Rc<Cell<bool>> {
+    let seen = Rc::new(Cell::new(false));
+    let flag = seen.clone();
+    t.connect_contents_changed(move |t| {
+        if text(t).contains(needle) {
+            flag.set(true);
+        }
+    });
+    seen
+}
+// Failures that must not hide the stages after them; reported together at the end.
+thread_local! {
+    static SOFT: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+}
+fn soft_fail(message: String) {
+    eprintln!("SOFT FAILURE: {message}");
+    SOFT.with(|soft| soft.borrow_mut().push(message));
+}
+/// An interactive shell must keep running after its start (the exit comes only from the user),
+/// take input, and leave through its own `exit` with that status, closing exactly this terminal.
+fn interactive_shell(argv: &[&str], echo: &[u8], marker: &str, exit: &[u8], status: i32) {
+    let (window, t) = host();
+    let (result, exits) = spawn(&t, argv);
+    let pid = impro_vte::pid_number(*result.borrow().as_ref().unwrap().as_ref().unwrap());
+    assert!(pid > 0);
+    pump_for(Duration::from_secs(2), || {
+        assert!(
+            exits.borrow().is_empty() && !exit_logged(pid),
+            "{argv:?} left by itself within 2 s of its start\n{}\n--- backend timeline ---\n{}",
+            dump_grids(),
+            impro_vte::diag::timeline_text()
+        );
+    });
+    t.feed_child(echo);
+    wait(&format!("{argv:?} takes input"), || {
+        text(&t).contains(marker)
+    });
+    t.feed_child(exit);
+    wait(&format!("{argv:?} exits through its own exit"), || {
+        !exits.borrow().is_empty()
+    });
+    expect_exits(&exits, &[status]);
+    unsafe {
+        window.destroy();
+    }
 }
 fn settle() {
     let until = Instant::now() + Duration::from_millis(300);
@@ -190,17 +267,32 @@ fn windows_terminal_lifecycle_and_widget() {
     // Repeat instant exits to exercise the callback/output/exit ordering race.
     for _ in 0..5 {
         let (window, t) = host();
+        let seen = watch_text(&t, "impro-ok");
         let (_, exits) = spawn(&t, &["cmd.exe", "/d", "/c", "echo impro-ok"]);
         wait_all(
             "echo and exit",
             &[
                 ("output 'impro-ok' reached the grid", &|| {
-                    text(&t).contains("impro-ok")
+                    seen.get() || text(&t).contains("impro-ok")
                 }),
                 ("child-exited emitted", &|| !exits.borrow().is_empty()),
             ],
         );
         expect_exits(&exits, &[0]);
+        if !text(&t).contains("impro-ok") {
+            // The output arrived (latched above) but is gone again: something erased the grid.
+            // The raw chunks in the timeline ('output chunk #n') show whether the console host
+            // sent the erase. Keep going so the later stages still report.
+            soft_fail(format!(
+                "output 'impro-ok' was on the grid and is gone after the exit\n{}\n--- backend timeline ---\n{}",
+                dump_grids(),
+                impro_vte::diag::timeline_text()
+            ));
+            unsafe {
+                window.destroy();
+            }
+            continue;
+        }
         t.select_all();
         assert!(t.has_selection());
         t.copy_clipboard_format(Format::Text);
@@ -224,6 +316,27 @@ fn windows_terminal_lifecycle_and_widget() {
         unsafe {
             window.destroy();
         }
+    }
+    // A shell that is not told to leave keeps running, takes input and leaves with its own status.
+    interactive_shell(
+        &["cmd.exe", "/d", "/q"],
+        b"echo impro-alive\r",
+        "impro-alive",
+        b"exit 5\r",
+        5,
+    );
+    if std::process::Command::new("powershell.exe")
+        .args(["-NoProfile", "-Command", "exit 0"])
+        .status()
+        .is_ok()
+    {
+        interactive_shell(
+            &["powershell.exe", "-NoLogo", "-NoProfile", "-NoExit"],
+            b"Write-Host impro-alive\r",
+            "impro-alive",
+            b"exit 3\r",
+            3,
+        );
     }
     {
         let (window, t) = host();
@@ -343,4 +456,12 @@ fn windows_terminal_lifecycle_and_widget() {
     } else {
         eprintln!("powershell.exe unavailable; PowerShell integration skipped");
     }
+    SOFT.with(|soft| {
+        assert!(
+            soft.borrow().is_empty(),
+            "{} soft failure(s):\n{}",
+            soft.borrow().len(),
+            soft.borrow().join("\n=====\n")
+        );
+    });
 }
