@@ -11,8 +11,10 @@ reproduce it locally, and how to maintain it. The workflows are in
 | CI | `ci.yml` | pull requests, pushes to `main`, manual dispatch |
 | Security | `security.yml` | pull requests, pushes to `main`, weekly (Monday 03:23 UTC), manual dispatch |
 | Nightly | `nightly.yml` | daily 01:41 UTC, manual dispatch |
+| Windows | `windows.yml` | pull requests, pushes to `main`, manual dispatch |
+| Package (Linux) | `package-linux.yml` | pull requests, pushes to `main`, manual dispatch |
 
-All jobs run on `ubuntu-24.04` with read-only token permissions. Dependabot
+All jobs run on `ubuntu-24.04` (the Windows workflow on `windows-2025`, apart from its aggregator) with read-only token permissions. Dependabot
 (`.github/dependabot.yml`) opens weekly update pull requests for Cargo and GitHub
 Actions. A composite action, `.github/actions/setup-linux-gui`, installs the GTK
 development packages, the pinned toolchain and the Cargo cache for the jobs that build.
@@ -52,11 +54,11 @@ needs to expose to branch protection. It depends on `lint`, `msrv`, `test`,
 cancelled.
 
 Also require the Security workflow jobs: `cargo-deny`, `gitleaks`, `workflow-lint`
-and both `codeql` matrix entries. The Nightly workflow is not a merge gate.
+and both `codeql` matrix entries. The Nightly workflow is not a merge gate. For the new workflows see [Windows and packaging](#windows) below.
 
 ## Running everything locally
 
-Install the build packages listed in the [README](../README.md#install-and-run)
+Install the build packages listed in the [README](../README.md#build-from-source-on-linux)
 plus the test tooling. GUI tests need a virtual display and a D-Bus session; the
 scripts below wrap the commands in `xvfb-run -a dbus-run-session --`.
 
@@ -162,6 +164,52 @@ separate target directories with LTO off (relative numbers only), then
 `scripts/ci/ab_perf.py` compares them. It fails when workspace first paint or the
 3,000-node graph draw is more than 20% slower; the other metrics are only reported.
 If the base cannot be built, the job exits with an error.
+
+## Windows
+
+`windows.yml` builds for `x86_64-pc-windows-gnu` with GTK 3 from MSYS2 UCRT64
+(`.github/actions/setup-windows`: MSYS2 install and cache, toolchain and MSRV check,
+Rust cache; `CARGO_HOME` is `D:\cargo-home`, outside the MSYS2 home, so the cache
+finds the registry). The Rust cache is saved only on `main`.
+
+| Job | Required | What |
+| --- | --- | --- |
+| `check` | yes | PowerShell script tests, `cargo check --workspace --all-targets --locked --keep-going`, clippy `-D warnings` |
+| `test` | no (report-only, `continue-on-error`) | Independent report-only steps, each ending in `RESULT <name>: PASS\|FAIL` in the step summary: pure-logic tests (`impro-core`, `impro-gitviews`), `impro-graph` library tests, GUI test targets (informational), WebView2 host test, ConPTY terminal tests |
+| `package` | yes | Release build, bundle, portable zip, installer, checksums; artifact `impro-windows` (30 days) |
+| `smoke` | yes (needs `package`) | Installs and launches the installer build and the zip build, uninstalls; a report-only startup lab step; artifact `windows-smoke` (14 days) |
+| `package-standin`, `smoke-standin` | no (temporary) | Packaging pipeline with a small GTK stand-in instead of `impro.exe`; artifacts `windows-standin`, `windows-standin-smoke` (7 days); removal list in [Packaging](packaging.md#temporary-stand-in-jobs) |
+| `windows-success` | yes | Aggregates `check`, `package` and `smoke`; fails if any is not `success` |
+
+Require `Windows success` in branch protection. The GUI test targets step is expected
+to fail on the hosted runner (GTK cannot initialise without an interactive desktop),
+which is why `test` is report-only. None of the Windows jobs had a confirmed green
+run when this section was written.
+
+### Package (Linux)
+
+`package-linux.yml` (job `deb`, `ubuntu-24.04`, 60 min limit) builds the `.deb`, runs
+lintian, installs, smoke-tests and removes it, and uploads artifact `impro-deb`
+(the `.deb`, `impro_SHA256SUMS`, the lintian report; 30 days). See
+[Packaging](packaging.md#linux-deb).
+
+### Local Windows type-check loop
+
+On Linux, `scripts/windows/check.sh` type-checks the workspace for the Windows target
+without linking or running anything:
+
+```sh
+scripts/windows/check.sh -p impro-core
+scripts/windows/check.sh --workspace --lib --bins
+IMPRO_WIN_CARGO_CMD=clippy scripts/windows/check.sh -p impro-core -- -D warnings
+```
+
+It adds the `x86_64-pc-windows-gnu` rust-std with rustup and uses a sysroot of MSYS2
+UCRT64 headers and pkg-config files fetched by `scripts/windows/fetch-sysroot.sh` into
+`~/.cache/impro-win-sysroot` (override with `IMPRO_WIN_SYSROOT`). The first run
+downloads about 108 MB (61 packages, measured once at 94 s); later runs are offline.
+It proves that the code compiles for the target, not that it works. `IMPRO_SKIP_WIN_RESOURCES=1`
+is exported so `crates/impro/build.rs` skips resource compilation.
 
 ## Security
 

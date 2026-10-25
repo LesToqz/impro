@@ -160,6 +160,27 @@ graph detaches its tick callback. VTE or WebKit may perform their own housekeepi
 Reduce motion, `IMPRO_REDUCE_MOTION=1`, or disabled GTK animations finish new tweens
 immediately. Notice lifetimes use one-shot timers while notices are visible.
 
+## Platform backends
+
+The feature crates are platform-neutral GTK 3 code. Two things differ per platform and
+sit behind seams chosen with `cfg`:
+
+| Concern | Linux | Windows |
+| --- | --- | --- |
+| Terminal (`impro-vte`) | `unix.rs`: safe wrapper over libvte-2.91 (`impro-vte-sys`) | `windows/`: ConPTY pseudo console (`conpty.rs`), a terminal emulator (`emu/`) and a GTK widget (`widget.rs`) behind the same `Terminal`/`Pty` API |
+| Git pages (`impro-gitviews`) | `gitviews.rs`: WebKitGTK hosts | `gitviews_windows.rs`: WebView2 host, with `windows_policy.rs` (navigation policy), `windows_diag.rs` (diagnostics) and `notice.rs` (fallback page when WebView2 is unavailable) |
+
+The page assets, protocol and Git data code are shared. `impro-vte` also has a
+`stub-backend` feature (`stub.rs`) with the same API and no process behind it.
+
+`impro-core` keeps the remaining differences out of the feature crates, without GTK:
+`platform` (per-user directories: XDG on Unix, `%APPDATA%` on Windows), `process`
+(child spawning that behaves the same everywhere, for example no console window for
+children on Windows) and `exec` (executable discovery, including `PATHEXT` on Windows).
+`crates/impro/build.rs` embeds the icon, version info and manifest on Windows and does
+nothing on Linux. Windows setup, packaging and the Linux `.deb` are described in
+[windows.md](windows.md) and [packaging.md](packaging.md).
+
 ## Build and test
 
 ```sh
