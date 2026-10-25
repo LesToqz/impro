@@ -99,6 +99,62 @@ class LoadersCacheTests(unittest.TestCase):
         self.assertNotIn("/tmp/x", out)
 
 
+class ExeNameAndExtraTests(unittest.TestCase):
+    def test_file_name_of_both_spellings(self):
+        for raw in ("C:/Program Files/a b/WebView2Loader.dll", "C:\\Program Files\\a b\\WebView2Loader.dll",
+                    "/tmp/a b/WebView2Loader.dll", "WebView2Loader.dll"):
+            self.assertEqual(bundle.file_name_of(raw), "WebView2Loader.dll", raw)
+
+    def bundle_with(self, root, *extra_args, exe_name="packaging_standin.exe"):
+        stub = root / "objdump"
+        stub.write_text("#!/bin/sh\nexit 0\n")
+        stub.chmod(0o755)
+        exe = root / exe_name
+        exe.write_bytes(b"MZ")
+        prefix = root / "pre fix"
+        prefix.mkdir()
+        out = root / "out"
+        ns = bundle.parse_args(
+            ["--prefix", str(prefix), "--exe", str(exe), "--out", str(out), "--no-tools",
+             "--objdump", str(stub), "--repo-root", str(REPO), *extra_args]
+        )
+        bundle.build_bundle(ns)
+        return out
+
+    def test_exe_name_defaults_to_basename(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = self.bundle_with(Path(d))
+            self.assertTrue((out / "packaging_standin.exe").is_file())
+            self.assertFalse((out / "impro.exe").exists())
+
+    def test_exe_name_override(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = self.bundle_with(Path(d), "--exe-name", "impro.exe")
+            self.assertTrue((out / "impro.exe").is_file())
+            self.assertFalse((out / "packaging_standin.exe").exists())
+            self.assertIn("  impro.exe\n", (out / "bundle-manifest.txt").read_text())
+
+    def test_extra_with_spaces_forward_slashes_and_backslash_names(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            spaced = root / "SDK dir" / "x64"
+            spaced.mkdir(parents=True)
+            (spaced / "WebView2Loader.dll").write_bytes(b"MZ-loader")
+            (spaced / "other helper.dll").write_bytes(b"MZ-helper")
+            # `cygpath -m` spelling: forward slashes (absolute), here with the POSIX temp root.
+            loader = (spaced / "WebView2Loader.dll").as_posix()
+            helper = str(spaced / "other helper.dll")
+            out = self.bundle_with(root, "--exe-name", "impro.exe", "--extra", loader, helper)
+            self.assertEqual((out / "WebView2Loader.dll").read_bytes(), b"MZ-loader")
+            self.assertEqual((out / "other helper.dll").read_bytes(), b"MZ-helper")
+            self.assertIn("  WebView2Loader.dll\n", (out / "bundle-manifest.txt").read_text())
+
+    def test_missing_extra_is_an_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(SystemExit):
+                self.bundle_with(Path(d), "--extra", str(Path(d) / "no such.dll"))
+
+
 @unittest.skipUnless(SYSROOT and HAVE_OBJDUMP, "no full MSYS2 sysroot (scripts/windows/fetch-sysroot.sh --full) or objdump")
 class RealSysrootTests(unittest.TestCase):
     def test_gtk_closure(self):

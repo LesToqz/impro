@@ -17,7 +17,8 @@ param(
     [Parameter(Mandatory)][string]$Version,
     [Parameter(Mandatory)][string]$OutDir,      # PNG, logs (uploaded as artifact)
     [int]$LaunchTimeoutSec = 90,
-    [int]$CommandTimeoutSec = 30
+    [int]$CommandTimeoutSec = 30,
+    [string[]]$RequireFiles = @()               # extra files that must sit next to impro.exe (for example WebView2Loader.dll)
 )
 
 Set-StrictMode -Version Latest
@@ -154,6 +155,29 @@ function Assert-InstalledLayout([string]$AppDir) {
                      'share\icons\Adwaita\index.theme', 'share\icons\hicolor\index.theme', 'licenses') {
         Assert-Path (Join-Path $AppDir $rel) "installed $rel"
     }
+    foreach ($rel in $RequireFiles) { Assert-Path (Join-Path $AppDir $rel) "installed $rel (next to impro.exe)" }
+}
+
+function Show-Tree([string]$Dir) {
+    $files = @(Get-ChildItem -LiteralPath $Dir -Recurse -File -Force)
+    $bytes = ($files | Measure-Object Length -Sum).Sum
+    Step ("tree {0}: {1} files, {2:N1} MB, {3} DLLs next to the exe" -f $Dir, $files.Count, ($bytes / 1MB),
+          @(Get-ChildItem -LiteralPath $Dir -Filter *.dll -File).Count)
+    Get-ChildItem -LiteralPath $Dir -Force | Format-Table Mode, Length, Name -AutoSize | Out-String -Width 200 | Write-Host
+}
+
+function Show-Registry([string]$When) {
+    Write-Host "::group::registry $When"
+    foreach ($key in "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\${AppId}_is1",
+                     'HKCU\Software\Classes\Directory\shell\impro',
+                     'HKCU\Software\Classes\Directory\Background\shell\impro') {
+        Write-Host "> reg query $key /s"
+        $text = (& reg.exe query $key /s 2>&1 | Out-String)
+        Write-Host "  reg exit code $LASTEXITCODE"
+        Write-Host $text
+    }
+    Write-Host ('> user PATH: ' + ((Get-ItemProperty -Path 'HKCU:\Environment' -Name Path -ErrorAction SilentlyContinue).Path))
+    Write-Host '::endgroup::'
 }
 
 function Wait-Gone([scriptblock]$Gone, [string]$What, [int]$TimeoutSec = 60) {
@@ -200,6 +224,7 @@ function Collect-Evidence {
         Get-ChildItem -LiteralPath $script:AppDir -Filter *.dll | Measure-Object | ForEach-Object { Write-Host "app dir holds $($_.Count) DLLs" }
     }
     Write-Host '::endgroup::'
+    if ($Mode -eq 'installer') { Show-Registry 'at failure' }
 }
 
 $failed = $false
@@ -217,6 +242,8 @@ try {
         Step "installer exit code $($p.ExitCode)"
         if ($p.ExitCode -ne 0) { Fail "installer exited $($p.ExitCode), see install.log" }
         $script:AppDir = $dir
+        Show-Tree $dir
+        Show-Registry 'after install'
         Assert-InstalledLayout $dir
         Assert-Path $UninstallKey 'uninstall registry key'
         Assert-Path (Join-Path ([Environment]::GetFolderPath('Programs')) 'impro.lnk') 'Start menu shortcut'
@@ -236,6 +263,7 @@ try {
         $p = Start-Process -FilePath $uninstaller.FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/LOG=$ulog") -PassThru -Wait
         Step "uninstaller exit code $($p.ExitCode)"
         Wait-Gone { -not (Test-Path -LiteralPath $dir) } 'install dir'
+        Show-Registry 'after uninstall'
         Wait-Gone { -not (Test-Path -LiteralPath $UninstallKey) } 'uninstall registry key'
         Wait-Gone { -not (Test-Path 'HKCU:\Software\Classes\Directory\shell\impro') } 'folder context-menu key'
         Wait-Gone { -not (Test-Path 'HKCU:\Software\Classes\Directory\Background\shell\impro') } 'background context-menu key'
