@@ -444,10 +444,17 @@ impl Terminal {
                     });
                 }
                 Output::Exited(status) => {
-                    let session = t.imp().session.borrow_mut().take();
-                    drop(session);
+                    let diag = t.imp().session.borrow_mut().take().map(|s| s.diag.clone());
+                    let log = |message: &str| {
+                        if let Some(diag) = &diag {
+                            diag.log(format_args!("{message} (status {status})"));
+                        }
+                    };
                     if !t.imp().exited.replace(true) && !t.imp().closed.get() {
+                        log("child-exited emitted");
                         t.emit_by_name::<()>("child-exited", &[&status]);
+                    } else {
+                        log("child-exited suppressed (widget closed or repeated)");
                     }
                     return glib::ControlFlow::Break;
                 }
