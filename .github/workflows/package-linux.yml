@@ -1,0 +1,94 @@
+name: Package (Linux)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # One pinned stable toolchain, bumped deliberately (keep in step with ci.yml).
+  RUST_VERSION: "1.99.1"
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  deb:
+    name: Debian package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-linux-gui
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: ""
+          gui: "true"
+          nextest: "false"
+          cache-key: release
+      - name: Release build
+        run: cargo build --release --locked -p impro
+      - name: Build the package
+        run: scripts/package/build-deb.sh target/release/impro --out dist
+      - name: Inspect the package
+        run: |
+          for deb in dist/impro_*.deb; do
+            dpkg-deb --info "$deb"
+            dpkg-deb --contents "$deb"
+          done
+      - name: Lintian
+        run: |
+          sudo apt-get install -y --no-install-recommends lintian
+          mkdir -p lintian
+          # Errors fail the job; warnings and info are kept in the report.
+          lintian --info --display-info --tag-display-limit 0 --fail-on error \
+            dist/impro_*.deb | tee lintian/lintian-report.txt
+      - name: Install the package
+        run: sudo apt-get install -y ./dist/impro_*.deb
+      - name: Check the installed files
+        run: |
+          impro --version
+          desktop-file-validate /usr/share/applications/impro.desktop
+          dpkg -L impro
+          for size in 16 24 32 48 64 128 256 512; do
+            test -f "/usr/share/icons/hicolor/${size}x${size}/apps/impro.png"
+          done
+          test -f /usr/share/icons/hicolor/scalable/apps/impro.svg
+          test -f /usr/share/doc/impro/copyright
+          dpkg -L impro | grep -v '^/\.$' | sort > "$RUNNER_TEMP/impro-files.txt"
+      - name: Smoke test the installed application
+        env:
+          IMPRO_SMOKE_OUTPUT_DIR: ${{ runner.temp }}/smoke
+        run: scripts/ci/smoke.sh /usr/bin/impro
+      - name: Remove the package
+        run: |
+          sudo apt-get remove -y impro
+          left=0
+          while IFS= read -r path; do
+            if [[ -f $path || -L $path ]]; then
+              echo "left behind: $path"
+              left=1
+            fi
+          done < "$RUNNER_TEMP/impro-files.txt"
+          exit "$left"
+      - name: Checksum
+        run: cd dist && sha256sum impro_*.deb | tee impro_SHA256SUMS
+      - name: Upload the package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: impro-deb
+          path: |
+            dist/impro_*.deb
+            dist/impro_SHA256SUMS
+            lintian/lintian-report.txt
+          retention-days: 30
+          if-no-files-found: error

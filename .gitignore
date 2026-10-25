@@ -7,3 +7,4 @@ CLAUDE-CEO.md
 target/
 *.pyc
 __pycache__/
+dist/
