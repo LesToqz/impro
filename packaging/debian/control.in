@@ -1,0 +1,14 @@
+Package: impro
+Version: @VERSION@
+Architecture: @ARCH@
+Maintainer: LesToqz <214641162+LesToqz@users.noreply.github.com>
+Installed-Size: @INSTALLED_SIZE@
+Depends: @DEPENDS@
+Recommends: git
+Section: devel
+Priority: optional
+Homepage: https://github.com/LesToqz/impro
+Description: IDE with explorer, editor, live Markdown notes and terminal docks
+ impro is a GTK3 desktop IDE written in Rust. It combines a project
+ explorer, a code editor, live Markdown notes, VTE terminal docks, a git
+ graph with commit pages and a graph view of linked notes.
