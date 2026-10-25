@@ -38,8 +38,8 @@ function Get-DirSnapshot {
     $lines = @("$Dir :")
     foreach ($e in Get-ChildItem -LiteralPath $Dir -Force -ErrorAction SilentlyContinue | Sort-Object Name) {
         $files = if ($e.PSIsContainer) { @(Get-ChildItem -LiteralPath $e.FullName -Recurse -File -Force -ErrorAction SilentlyContinue) } else { @($e) }
-        $bytes = ($files | Measure-Object Length -Sum).Sum
-        $lines += ('  {0,-40} {1,10:N0} bytes {2,6} files' -f $e.Name, $(if ($bytes) { $bytes } else { 0 }), $files.Count)
+        $bytes = Get-ByteSum $files
+        $lines += ('  {0,-40} {1,10:N0} bytes {2,6} files' -f $e.Name, $bytes, $files.Count)
     }
     $lines
 }
@@ -106,6 +106,8 @@ function Invoke-Launch {
 }
 
 $rows = @()
+$before = $null
+$after = $null
 $setupExit = $null
 $dir = Join-Path $Work 'install dir'
 try {

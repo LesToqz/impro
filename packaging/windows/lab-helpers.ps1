@@ -65,16 +65,17 @@ function Get-ImageStats {
 }
 
 function Test-ScreenshotProblems {
-    # Returns a list of problems (empty = fine) and logs the numbers. A decoded-pixel check is the verdict;
-    # the byte-size floor is only a hint (logged as a warning, never fails on its own).
+    # Emits one string per problem (nothing = fine) and logs the numbers; callers wrap the call in @(...).
+    # Never `return , array`: wrapped in @() that nests the array and an empty one then looks like one problem.
+    # A decoded-pixel check is the verdict; the byte-size floor is only a hint (a warning, never a failure).
     param([Parameter(Mandatory)][string]$Path, [double]$MinDiffFraction = 0.01, [int]$SizeHint = 5000)
     $problems = [System.Collections.Generic.List[string]]::new()
     if (-not (Test-Path -LiteralPath $Path) -or (Get-Item -LiteralPath $Path).Length -eq 0) {
-        $problems.Add("no screenshot written to $Path"); return , $problems.ToArray()
+        $problems.Add("no screenshot written to $Path"); return $problems.ToArray()
     }
     $bytes = [IO.File]::ReadAllBytes($Path)
     $sig = ($bytes[0..([Math]::Min(7, $bytes.Length - 1))] | ForEach-Object { $_.ToString('x2') }) -join ''
-    if ($sig -ne '89504e470d0a1a0a') { $problems.Add("screenshot is not a PNG (magic $sig)"); return , $problems.ToArray() }
+    if ($sig -ne '89504e470d0a1a0a') { $problems.Add("screenshot is not a PNG (magic $sig)"); return $problems.ToArray() }
     try {
         $s = Get-ImageStats -Path $Path
         Write-Host ("[smoke] screenshot {0}: {1} bytes, {2}x{3}, {4:P2} of pixels differ from the top-left pixel" -f (Split-Path $Path -Leaf), $bytes.Length, $s.Width, $s.Height, $s.DiffFraction)
@@ -85,7 +86,15 @@ function Test-ScreenshotProblems {
         $problems.Add("cannot decode screenshot with System.Drawing: $($_.Exception.Message)")
     }
     if ($bytes.Length -lt $SizeHint) { Write-Host "::warning::screenshot is only $($bytes.Length) bytes (hint: may be blank)" }
-    , $problems.ToArray()
+    $problems.ToArray()
+}
+
+function Get-ByteSum {
+    # Total of the Length property over the items; 0 for no items or items without a Length (strict-mode safe).
+    param([AllowNull()][object[]]$Items)
+    $sum = [long]0
+    foreach ($i in @($Items)) { if ($null -ne $i -and $i.PSObject.Properties['Length']) { $sum += [long]$i.Length } }
+    $sum
 }
 
 function Limit-Lines {
