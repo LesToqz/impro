@@ -202,7 +202,13 @@ pub fn trash(path: impl AsRef<Path>, project_root: Option<&Path>) -> Result<Path
     let unavailable =
         || FsOpError::TrashUnavailable(format!("Trash is unavailable for: {}", target.display()));
     // pFrom is a list of NUL-separated paths ended by an extra NUL; `wide` gave one NUL.
+    // The shell rejects forward slashes, so normalise them.
     let mut from = wide(&target).map_err(|_| unavailable())?;
+    for unit in &mut from {
+        if *unit == u16::from(b'/') {
+            *unit = u16::from(b'\\');
+        }
+    }
     from.push(0);
     let mut operation: SHFILEOPSTRUCTW = unsafe { std::mem::zeroed() };
     operation.wFunc = FO_DELETE;

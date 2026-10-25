@@ -311,12 +311,16 @@ pub fn isolated(name: &str, body: impl FnOnce(&Path)) {
     );
 }
 pub fn executable(path: &Path, contents: &str) {
-    use std::os::unix::fs::PermissionsExt;
     fs::write(path, contents).unwrap();
-    fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap();
+    }
 }
 
 pub fn showcase(path: &Path) -> GitRepo {
+    #[cfg(unix)]
     use std::os::unix::fs::PermissionsExt;
     let mut r = GitRepo::new(path);
     r.commit(&[("app.py",Some("#!/usr/bin/env python3\n\"\"\"A small demo application.\n\nThe graph shows the story behind each change.\n\"\"\"\n\ndef greet(name):\n    return f\"Hello, {name}\"\n\n# context line 0\n# context line 1\n# context line 2\n# context line 3\n# context line 4\n# context line 5\n# context line 6\n# context line 7\n# context line 8\n# context line 9\n# context line 10\n# context line 11\n# context line 12\n# context line 13\n# context line 14\n# context line 15\n# context line 16\n# context line 17\n# context line 18\n# context line 19\n# context line 20\n# context line 21\n# context line 22\n# context line 23\n\ndef main():\n    print(greet(\"world\"))\n\nmain()\n".as_bytes())),("README.md",Some("# Acme workspace\n\nA graph demo.\n".as_bytes())),("obsolete.txt",Some("Remove this after the migration.\n".as_bytes())),("empty.txt",Some("".as_bytes())),("docs/Привет мир.md",Some("# Привет, мир 🌍\n".as_bytes())),("no-newline.txt",Some("last line".as_bytes())),("windows.txt",Some(&[102,105,114,115,116,13,10,115,101,99,111,110,100,13,10])),("public/icon.png",Some(&[137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1])),("package.json",Some("{\"name\": \"acme\", \"version\": \"0.1.0\"}\n".as_bytes()))],"Create workspace");
@@ -353,6 +357,7 @@ pub fn showcase(path: &Path) -> GitRepo {
         &["feature/auth", "feature/api"],
         "Merge pull request #42 from acme/feature/auth",
     );
+    #[cfg(unix)]
     std::fs::set_permissions(
         r.path.join("app.py"),
         std::fs::Permissions::from_mode(0o755),

@@ -9,8 +9,10 @@
 # Examples:
 #   scripts/windows/check.sh -p impro-core
 #   scripts/windows/check.sh --workspace --lib --bins
+#   IMPRO_WIN_CARGO_CMD=clippy scripts/windows/check.sh -p impro-core -- -D warnings
 #
 # Environment:
+#   IMPRO_WIN_CARGO_CMD      cargo subcommand to run instead of `check` (e.g. `clippy`).
 #   IMPRO_WIN_SYSROOT        sysroot cache base (see fetch-sysroot.sh).
 #   IMPRO_SKIP_WIN_RESOURCES exported as 1: build scripts that need a real Windows
 #                            toolchain (resource compiler, icon embedding, manifest
@@ -42,4 +44,4 @@ export PKG_CONFIG_PATH="$pcdirs"
 export PKG_CONFIG_LIBDIR="$pcdirs"
 export IMPRO_SKIP_WIN_RESOURCES=1
 
-exec cargo check --target "$target" "$@"
+exec cargo "${IMPRO_WIN_CARGO_CMD:-check}" --target "$target" "$@"

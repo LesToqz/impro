@@ -1,5 +1,7 @@
 use impro_core::fsops::*;
-use std::{fs, os::unix::fs::symlink, path::Path};
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
+use std::{fs, path::Path};
 #[test]
 fn test_validate_name() {
     for n in ["ok", ".hidden", "a b", "λ.py"] {
@@ -31,6 +33,7 @@ fn test_create_errors() {
         .to_string()
         .starts_with("Not found"));
 }
+#[cfg(unix)]
 #[test]
 fn test_rename_file_folder_and_symlink() {
     let d = tempfile::tempdir().unwrap();
@@ -50,6 +53,7 @@ fn test_rename_file_folder_and_symlink() {
         .unwrap()
         .is_symlink());
 }
+#[cfg(unix)]
 #[test]
 fn test_rename_errors_and_no_overwrite() {
     let d = tempfile::tempdir().unwrap();
@@ -95,6 +99,7 @@ fn test_delete_protected_roots() {
             .contains("root"));
     }
 }
+#[cfg(unix)]
 #[test]
 fn test_delete_symlinks_without_following() {
     let d = tempfile::tempdir().unwrap();
@@ -112,6 +117,7 @@ fn test_delete_symlinks_without_following() {
     }
     assert!(target.join("keep").is_file());
 }
+#[cfg(unix)]
 #[test]
 fn test_trash_files_folders_and_symlinks() {
     let d = tempfile::tempdir().unwrap();
@@ -134,12 +140,14 @@ fn test_trash_files_folders_and_symlinks() {
     );
     assert!(destination.join("files/link").is_symlink());
 }
+#[cfg(unix)]
 #[test]
 fn test_trash_protects_roots() {
     assert!(trash("/", None).is_err());
     let d = tempfile::tempdir().unwrap();
     assert!(trash(d.path(), Some(d.path())).is_err());
 }
+#[cfg(unix)]
 #[test]
 fn test_unavailable_trash_never_deletes() {
     let d = tempfile::tempdir().unwrap();
