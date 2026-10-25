@@ -2,13 +2,13 @@
 """Assemble the self-contained Windows tree of impro (stdlib only).
 
     bundle.py --prefix /ucrt64 --exe target/release/impro.exe --out dist/impro \
-              [--extra WebView2Loader.dll ...] [--repo-root .]
+              [--exe-name impro.exe] [--extra WebView2Loader.dll ...] [--repo-root .]
 
 The output tree is flat for the executable and its DLLs (GLib/GTK derive their
 prefix from the directory of their own DLL, so `share/` and `lib/` next to
 `impro.exe` are found without environment variables or a wrapper):
 
-    impro.exe, *.dll
+    impro.exe, *.dll               (the executable is installed as --exe-name)
     share/glib-2.0/schemas/        (compiled)
     lib/gdk-pixbuf-2.0/2.10.0/loaders/*.dll + loaders.cache
     share/icons/Adwaita, share/icons/hicolor
@@ -134,6 +134,11 @@ def check_size(total: int, limit: int = MAX_BUNDLE_BYTES) -> None:
         raise SystemExit(f"bundle is {total / 1e6:.1f} MB, over the {limit / 1e6:.0f} MB limit")
 
 
+def file_name_of(path: str) -> str:
+    """Last component of a path in either spelling (`C:/a b/x.dll`, `C:\\a\\x.dll`, POSIX)."""
+    return re.split(r"[\\/]", path.rstrip("\\/"))[-1]
+
+
 def log(msg: str) -> None:
     print(f"bundle: {msg}", flush=True)
 
@@ -187,7 +192,8 @@ def build_bundle(args: argparse.Namespace) -> Path:
         shutil.rmtree(out)
     out.mkdir(parents=True)
 
-    shutil.copy2(exe, out / "impro.exe")
+    exe_name = args.exe_name or file_name_of(args.exe)
+    shutil.copy2(exe, out / exe_name)
     extras = [Path(e) for e in args.extra]
     for e in extras:
         if not e.is_file():
@@ -203,7 +209,7 @@ def build_bundle(args: argparse.Namespace) -> Path:
     for dll in sorted(closure.values()):
         shutil.copy2(dll, out / Path(dll).name)
     for e in extras:
-        shutil.copy2(e, out / e.name)
+        shutil.copy2(e, out / file_name_of(str(e)))
     log(f"{len(closure)} DLLs bundled from the import closure")
 
     unresolved = set()
@@ -271,6 +277,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--prefix", required=True, help="MSYS2 UCRT64 prefix (contains bin/, lib/, share/)")
     ap.add_argument("--exe", required=True, help="path of impro.exe")
+    ap.add_argument("--exe-name", default=None, help="file name of the executable in the bundle (default: basename of --exe)")
     ap.add_argument("--out", required=True, help="output directory (recreated)")
     ap.add_argument("--extra", nargs="*", default=[], help="extra DLLs/files copied next to impro.exe")
     ap.add_argument("--repo-root", default=str(Path(__file__).resolve().parents[2]))

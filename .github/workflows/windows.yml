@@ -46,10 +46,10 @@ jobs:
           save-cache: ${{ github.ref == 'refs/heads/main' }}
       - name: Cargo check
         shell: msys2 {0}
-        run: cargo check --workspace --all-targets --locked
+        run: cargo check --workspace --all-targets --locked --keep-going
       - name: Clippy
         shell: msys2 {0}
-        run: cargo clippy --workspace --locked -- -D warnings
+        run: cargo clippy --workspace --locked --keep-going -- -D warnings
 
   # ---------------------------------------------------------------- test
   # Report-only until promoted: failures here do not fail the workflow.
@@ -69,11 +69,21 @@ jobs:
           save-cache: ${{ github.ref == 'refs/heads/main' }}
       - name: Logic crates
         shell: msys2 {0}
-        run: cargo test --locked -p impro-core -p impro-graph -p impro-gitviews
+        run: cargo test --locked --no-fail-fast -p impro-core -p impro-graph -p impro-gitviews
       - name: GUI crates (report only)
         continue-on-error: true
         shell: msys2 {0}
         run: cargo test --locked --workspace --no-fail-fast
+      - name: WebView2 host test (report only)
+        continue-on-error: true
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          cargo test --locked -p impro-gitviews --test windows_webview --no-run
+          # The test executable lives in target/debug/deps; the loader is not copied there.
+          loader=$(scripts/package/windows/find-webview2-loader.sh target/debug/build)
+          PATH="$(cygpath -u "$(dirname "$loader")"):$PATH"
+          cargo test --locked -p impro-gitviews --test windows_webview -- --nocapture
 
   # ------------------------------------------------------------- package
   package:
@@ -109,14 +119,14 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
-          ls -l target/release/impro.exe
-          python packaging/windows/bundle.py \
-            --prefix "$(cygpath -m "$MINGW_PREFIX")" \
-            --exe target/release/impro.exe \
-            --out dist/impro
-          mkdir -p dist/out
-          scripts/package/windows/imports-report.sh dist/impro dist/out/imports-report.txt
-          cp dist/impro/bundle-manifest.txt dist/out/bundle-manifest.txt
+          # webview2-com-sys links the loader dynamically: it must sit next to impro.exe.
+          loader=$(scripts/package/windows/find-webview2-loader.sh target/release/build)
+          scripts/package/windows/bundle.sh target/release/impro.exe impro.exe dist/impro dist/out "$loader"
+
+      - name: Bundle diagnostics (on failure)
+        if: failure()
+        shell: msys2 {0}
+        run: scripts/package/windows/print-diagnostics.sh dist/out
 
       - name: Portable zip
         shell: msys2 {0}
@@ -128,34 +138,7 @@ jobs:
         shell: pwsh
         env:
           VERSION: ${{ steps.version.outputs.version }}
-          INNO_CHOCO_VERSION: "6.7.1"
-        run: |
-          $ErrorActionPreference = 'Stop'
-          function Find-Iscc {
-            $candidates = @(
-              (Get-Command ISCC.exe -ErrorAction SilentlyContinue | ForEach-Object Source),
-              "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-              "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
-              "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
-            )
-            $candidates | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Select-Object -First 1
-          }
-          $iscc = Find-Iscc
-          if (-not $iscc) {
-            Write-Host "ISCC.exe not on the image, installing innosetup $env:INNO_CHOCO_VERSION with Chocolatey"
-            choco install innosetup --version $env:INNO_CHOCO_VERSION --no-progress -y
-            $iscc = Find-Iscc
-          }
-          if (-not $iscc) { throw 'ISCC.exe not found after installation' }
-          Write-Host "ISCC: $iscc"
-          $root = (Get-Location).Path
-          $bundle = Join-Path $root 'dist\impro'
-          $out = Join-Path $root 'dist\out'
-          & $iscc "/DMyAppVersion=$env:VERSION" "/DMyBundleDir=$bundle" "/DMyOutputDir=$out" 'packaging\windows\impro.iss'
-          if ($LASTEXITCODE -ne 0) { throw "ISCC exited with $LASTEXITCODE" }
-          $setup = Join-Path $out "impro-$env:VERSION-x64-setup.exe"
-          if (-not (Test-Path -LiteralPath $setup)) { throw "installer not produced: $setup" }
-          Get-ChildItem -LiteralPath $out | Format-Table Name, Length | Out-String | Write-Host
+        run: scripts/package/windows/build-installer.ps1 -Version $env:VERSION -BundleDir dist\impro -OutDir dist\out
 
       - name: Checksums
         shell: msys2 {0}
@@ -195,11 +178,126 @@ jobs:
         run: >-
           ./packaging/windows/smoke.ps1 -Mode installer
           -Artifacts "$env:RUNNER_TEMP\pkg" -Version $env:VERSION
-          -OutDir "$env:RUNNER_TEMP\smoke"
+          -OutDir "$env:RUNNER_TEMP\smoke" -RequireFiles WebView2Loader.dll
       - name: Portable zip
         shell: pwsh
         env:
           VERSION: ${{ needs.package.outputs.version }}
+        run: >-
+          ./packaging/windows/smoke.ps1 -Mode portable
+          -Artifacts "$env:RUNNER_TEMP\pkg" -Version $env:VERSION
+          -OutDir "$env:RUNNER_TEMP\smoke" -RequireFiles WebView2Loader.dll
+      - name: Upload screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-smoke
+          path: ${{ runner.temp }}\smoke\*
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # ------------------------------------------------- package-standin
+  # TEMPORARY scaffolding (see packaging/windows/README.md, "Packaging stand-in"):
+  # runs the whole packaging pipeline with crates/impro-ui/examples/packaging_standin.rs
+  # installed as impro.exe, until the real binary builds on Windows. Never part of
+  # windows-success; artifacts are named windows-standin*, not the product names.
+  package-standin:
+    name: Package (stand-in, temporary)
+    runs-on: windows-2025
+    continue-on-error: true
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-windows
+        with:
+          cache-key: standin
+          msrv: ${{ env.MSRV }}
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Read workspace version
+        id: version
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          version=$(scripts/package/windows/workspace-version.sh .)
+          echo "impro version: $version"
+          echo "version=$version" >> "$(cygpath -u "$GITHUB_OUTPUT")"
+
+      - name: Build stand-in executable
+        shell: msys2 {0}
+        run: cargo build --release --locked -p impro-ui --example packaging_standin
+
+      - name: Bundle GTK runtime
+        shell: msys2 {0}
+        run: scripts/package/windows/bundle.sh target/release/examples/packaging_standin.exe impro.exe dist/impro dist/out
+
+      - name: Bundle diagnostics (on failure)
+        if: failure()
+        shell: msys2 {0}
+        run: scripts/package/windows/print-diagnostics.sh dist/out
+
+      - name: Portable zip
+        shell: msys2 {0}
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: scripts/package/windows/make-portable-zip.sh dist/impro "$VERSION" dist/out
+
+      - name: Installer (Inno Setup)
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: scripts/package/windows/build-installer.ps1 -Version $env:VERSION -BundleDir dist\impro -OutDir dist\out
+
+      - name: Checksums
+        shell: msys2 {0}
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          scripts/package/windows/write-checksums.sh dist/out "$VERSION"
+          cat dist/out/SHA256SUMS.txt
+
+      - name: Upload packages
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-standin
+          path: dist/out/*
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # --------------------------------------------------- smoke-standin
+  # TEMPORARY scaffolding, see package-standin.
+  smoke-standin:
+    name: Smoke test (stand-in, temporary)
+    needs: package-standin
+    runs-on: windows-2025
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: windows-standin
+          path: ${{ runner.temp }}\pkg
+      - name: Installer, installed app, uninstaller
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.package-standin.outputs.version }}
+        run: >-
+          ./packaging/windows/smoke.ps1 -Mode installer
+          -Artifacts "$env:RUNNER_TEMP\pkg" -Version $env:VERSION
+          -OutDir "$env:RUNNER_TEMP\smoke"
+      - name: Portable zip
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.package-standin.outputs.version }}
         run: >-
           ./packaging/windows/smoke.ps1 -Mode portable
           -Artifacts "$env:RUNNER_TEMP\pkg" -Version $env:VERSION
@@ -208,9 +306,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: windows-smoke
+          name: windows-standin-smoke
           path: ${{ runner.temp }}\smoke\*
-          retention-days: 14
+          retention-days: 7
           if-no-files-found: ignore
 
   # ---------------------------------------------------- windows-success
