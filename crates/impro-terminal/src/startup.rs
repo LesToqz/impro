@@ -254,11 +254,9 @@ impl Startup {
                 state.cleanup();
                 match result {
                     Ok(pid) => {
-                        pane.pid.set(Some(pid.0));
+                        pane.pid.set(Some(crate::panel::pid_number(pid)));
                         if pane.is_closed() || state.cancelled.get() {
-                            unsafe {
-                                libc::kill(pid.0, libc::SIGHUP);
-                            }
+                            crate::panel::hangup_pid(crate::panel::pid_number(pid));
                             pane.pid.set(None);
                             return;
                         }

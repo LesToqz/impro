@@ -38,9 +38,17 @@
 
 pub mod assets;
 pub mod diff;
+#[cfg(unix)]
 pub mod gitviews;
+// Windows host stand-in; the `stub-backend` feature compiles it everywhere as `stub` for tests.
+#[cfg(any(windows, feature = "stub-backend"))]
+#[path = "gitviews_windows.rs"]
+pub mod stub;
+#[cfg(windows)]
+pub use stub as gitviews;
 pub mod log;
 pub mod palette;
+mod types;
 pub use gitviews::{CommitView, GitGraphView, GraphSettings, PaintTimings, SyntaxAdapter};
 
 /// No native CSS is needed: both pages own their styles.

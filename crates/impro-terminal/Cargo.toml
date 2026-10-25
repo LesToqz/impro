@@ -19,4 +19,6 @@ serde_json.workspace = true
 [dev-dependencies]
 gdk-pixbuf.workspace = true
 tempfile.workspace = true
+
+[target.'cfg(unix)'.dev-dependencies]
 webkit2gtk.workspace = true

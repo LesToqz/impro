@@ -293,6 +293,7 @@ impl ResizeGate {
                     g.answered(t);
                 }
             }));
+            #[cfg(unix)]
             if let Some(pty) = terminal.pty() {
                 let weak = Rc::downgrade(&answer);
                 let source = glib::source::unix_fd_add_local(

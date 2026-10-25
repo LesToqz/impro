@@ -146,6 +146,7 @@ fn test_empty_commit_and_empty_file() {
     assert_eq!(d["files"], json!([]));
     assert_eq!(d["stats"], json!({"files":0,"additions":0,"deletions":0}));
 }
+#[cfg(unix)]
 #[test]
 fn test_statuses_renames_copies_typechange_mode_binary_and_delete() {
     use std::os::unix::fs::{symlink, PermissionsExt};

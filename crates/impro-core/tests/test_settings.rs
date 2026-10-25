@@ -1,6 +1,6 @@
 use impro_core::settings::*;
 use serde_json::{json, Value};
-use std::{fs, os::unix::fs::PermissionsExt};
+use std::fs;
 fn store() -> (tempfile::TempDir, Store) {
     let d = tempfile::tempdir().unwrap();
     let s = Store::new(d.path().join("impro/settings.json"));
@@ -20,10 +20,14 @@ fn test_round_trip_private_and_unknown_keys() {
     assert_eq!(s.get_value("theme").unwrap(), "nord");
     assert_eq!(s.load()["unrelated"], json!({"size":12}));
     assert_eq!(s.load()["unicode"], "λ");
-    assert_eq!(
-        fs::metadata(s.path()).unwrap().permissions().mode() & 0o777,
-        0o600
-    );
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        assert_eq!(
+            fs::metadata(s.path()).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+    }
 }
 #[test]
 fn test_invalid_files() {

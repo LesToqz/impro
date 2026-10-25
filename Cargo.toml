@@ -32,6 +32,7 @@ gobject-sys = "~0.18.0"
 gio-sys = "~0.18.1"
 pango-sys = "~0.18.0"
 tempfile = "3"
+windows-sys = "0.61"
 impro-core = { path = "crates/impro-core" }
 impro-ui = { path = "crates/impro-ui" }
 impro-vte = { path = "crates/impro-vte" }

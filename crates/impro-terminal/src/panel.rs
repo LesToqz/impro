@@ -19,7 +19,14 @@ pub const ANIMATION_MS: u32 = 220;
 pub const SCROLLBACK_RANGE: (i64, i64) = (1000, 100000);
 type Factory = Rc<dyn Fn() -> gtk::Widget>;
 
+/// Shell used when `SHELL` (Unix) is unset or not executable.
+#[cfg(unix)]
+pub const DEFAULT_SHELL: &str = "/bin/bash";
+#[cfg(windows)]
+pub const DEFAULT_SHELL: &str = "cmd.exe";
+
 /// Resolve the executable shell. Call on a worker when GTK's loop is running.
+#[cfg(unix)]
 pub fn pick_shell() -> PathBuf {
     use std::os::unix::fs::PermissionsExt;
     let shell = std::env::var_os("SHELL").map(PathBuf::from);
@@ -28,35 +35,81 @@ pub fn pick_shell() -> PathBuf {
             p.metadata()
                 .is_ok_and(|m| m.is_file() && m.permissions().mode() & 0o111 != 0)
         })
-        .unwrap_or_else(|| "/bin/bash".into())
+        .unwrap_or_else(|| DEFAULT_SHELL.into())
 }
-/// Existing searchable directory, falling back to the home directory then `/`.
-/// Filesystem checks belong on a worker thread.
-pub fn safe_cwd(path: impl AsRef<Path>) -> PathBuf {
-    use std::os::unix::ffi::OsStrExt;
-    for p in [
-        path.as_ref().to_path_buf(),
-        std::env::var_os("HOME")
-            .map(PathBuf::from)
-            .unwrap_or_default(),
-        PathBuf::from("/"),
-    ] {
-        if p.is_dir() {
-            if let Ok(c) = std::ffi::CString::new(p.as_os_str().as_bytes()) {
-                if unsafe { libc::access(c.as_ptr(), libc::X_OK) } == 0 {
-                    return if p.is_absolute() {
-                        p
-                    } else {
-                        std::env::current_dir()
-                            .unwrap_or_else(|_| "/".into())
-                            .join(p)
-                    };
-                }
-            }
-        }
-    }
+/// Resolve the shell. Windows has no execute bit: take an existing `SHELL` or `ComSpec`.
+/// TODO(terminal task): prefer PowerShell / a user-configured shell once a real backend exists.
+#[cfg(windows)]
+pub fn pick_shell() -> PathBuf {
+    ["SHELL", "ComSpec"]
+        .into_iter()
+        .filter_map(std::env::var_os)
+        .map(PathBuf::from)
+        .find(|p| p.is_file())
+        .unwrap_or_else(|| DEFAULT_SHELL.into())
+}
+/// The filesystem root used as the last-resort working directory.
+#[cfg(unix)]
+fn fs_root() -> PathBuf {
     "/".into()
 }
+#[cfg(windows)]
+fn fs_root() -> PathBuf {
+    let drive = std::env::var("SystemDrive").unwrap_or_else(|_| "C:".into());
+    PathBuf::from(format!("{drive}\\"))
+}
+/// Whether a directory can be entered (`access(X_OK)` on Unix, listable on Windows).
+#[cfg(unix)]
+fn is_searchable(path: &Path) -> bool {
+    use std::os::unix::ffi::OsStrExt;
+    std::ffi::CString::new(path.as_os_str().as_bytes())
+        .is_ok_and(|c| unsafe { libc::access(c.as_ptr(), libc::X_OK) } == 0)
+}
+#[cfg(windows)]
+fn is_searchable(path: &Path) -> bool {
+    std::fs::read_dir(path).is_ok()
+}
+/// Existing searchable directory, falling back to the home directory then the root.
+/// Filesystem checks belong on a worker thread.
+pub fn safe_cwd(path: impl AsRef<Path>) -> PathBuf {
+    for p in [
+        path.as_ref().to_path_buf(),
+        impro_core::platform::home_dir().unwrap_or_default(),
+        fs_root(),
+    ] {
+        if p.is_dir() && is_searchable(&p) {
+            return if p.is_absolute() {
+                p
+            } else {
+                std::env::current_dir()
+                    .unwrap_or_else(|_| fs_root())
+                    .join(p)
+            };
+        }
+    }
+    fs_root()
+}
+/// The numeric process id kept for a spawned child. On Windows glib hands out a process
+/// `HANDLE`, whose significant bits fit in 32.
+#[cfg(unix)]
+pub(crate) fn pid_number(pid: glib::Pid) -> i32 {
+    pid.0
+}
+#[cfg(windows)]
+pub(crate) fn pid_number(pid: glib::Pid) -> i32 {
+    pid.0 as usize as i32
+}
+/// Ask a child to hang up (`SIGHUP`).
+/// TODO(terminal task): Windows needs the pseudo-console handle, not a process id; until a
+/// real backend exists nothing is ever spawned there, so this is a deliberate no-op.
+#[cfg(unix)]
+pub(crate) fn hangup_pid(pid: i32) {
+    unsafe {
+        libc::kill(pid, libc::SIGHUP);
+    }
+}
+#[cfg(windows)]
+pub(crate) fn hangup_pid(_pid: i32) {}
 
 // Reserve admission before constructing widgets that can emit user signals.
 struct Admission<'a> {
@@ -124,9 +177,7 @@ impl Pane {
     }
     fn hangup(&self) {
         if let Some(pid) = self.pid.take() {
-            unsafe {
-                libc::kill(pid, libc::SIGHUP);
-            }
+            hangup_pid(pid);
         }
     }
     fn shutdown(&self) {
@@ -587,7 +638,7 @@ impl TerminalPanel {
         let admission = Admission::new(self, None);
         let shell = self.imp().shell.borrow().clone();
         let label_shell = if shell.is_empty() {
-            std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".into())
+            std::env::var("SHELL").unwrap_or_else(|_| DEFAULT_SHELL.into())
         } else {
             shell.clone()
         };
