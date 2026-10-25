@@ -295,6 +295,17 @@ fn trim_eol(value: &str) -> &str {
     #[cfg(not(windows))]
     value.trim_end_matches('\n')
 }
+/// Git prints its top level with forward slashes on Windows (`D:/work/repo`). The hosts,
+/// explorer and editor all use native paths, and the fallback root above is native, so
+/// `repo.root` is returned natively too. Unix paths are never touched: `\` is a valid
+/// file name character there.
+fn native_root(top: &str, windows: bool) -> String {
+    if windows {
+        top.replace('/', "\\")
+    } else {
+        top.to_owned()
+    }
+}
 fn text(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).into_owned()
 }
@@ -453,7 +464,12 @@ pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
             false,
             false
         ));
-        r["repo"]["root"] = json!(clean(top.as_bytes(), None, false, true));
+        r["repo"]["root"] = json!(clean(
+            native_root(&top, cfg!(windows)).as_bytes(),
+            None,
+            false,
+            true
+        ));
         let branch = match run(
             root,
             &["symbolic-ref", "--quiet", "--short", "HEAD"],
@@ -579,4 +595,24 @@ pub fn collect_graph(root: &Path, limit: Option<i64>) -> Value {
         result["error"] = json!(e.0);
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::native_root;
+
+    #[test]
+    fn windows_roots_use_native_separators_and_unix_roots_are_untouched() {
+        assert_eq!(native_root("D:/a/b/8900-3", true), r"D:\a\b\8900-3");
+        assert_eq!(
+            native_root("//server/share/repo", true),
+            r"\\server\share\repo"
+        );
+        assert_eq!(
+            native_root(r"D:\already\native", true),
+            r"D:\already\native"
+        );
+        assert_eq!(native_root("/tmp/repo", false), "/tmp/repo");
+        assert_eq!(native_root(r"/tmp/we\ird/repo", false), r"/tmp/we\ird/repo");
+    }
 }

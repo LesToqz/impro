@@ -95,7 +95,7 @@ fn core_script(name: &str) {
         .arg("--test")
         .arg(path)
         .output()
-        .expect("Node for page core tests");
+        .expect("`node` was not found on PATH: install Node.js 18+ and make sure its directory is on PATH (CI: add a setup-node step before running these tests)");
     assert!(
         output.status.success(),
         "{}\n{}",
