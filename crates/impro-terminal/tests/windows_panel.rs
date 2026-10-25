@@ -42,17 +42,40 @@ fn split_resize_close_and_input() {
                 .contains("impro-dock-ok")
         })
     });
+    let previous_grids = panel
+        .panes()
+        .iter()
+        .map(|p| {
+            let t = p.terminal.as_ref().unwrap();
+            (t.column_count(), t.row_count())
+        })
+        .collect::<Vec<_>>();
     window.resize(1300, 750);
     wait("resized grids", || {
-        panel.panes().iter().all(|p| {
+        panel.panes().iter().zip(&previous_grids).all(|(p, old)| {
             let t = p.terminal.as_ref().unwrap();
-            t.pty().is_some_and(|pty| {
-                pty.size().unwrap() == (t.column_count() as i32, t.row_count() as i32)
-            })
+            (t.column_count(), t.row_count()) != *old
+                && t.pty().is_some_and(|pty| {
+                    pty.size().unwrap() == (t.column_count() as i32, t.row_count() as i32)
+                })
         })
     });
     panel.close_current();
     wait("one pane remains", || panel.panes().len() == 1);
+    panel.panes()[0]
+        .terminal
+        .as_ref()
+        .unwrap()
+        .feed_child(b"echo impro-survivor-ok\r");
+    wait("surviving pane input", || {
+        panel.panes()[0]
+            .terminal
+            .as_ref()
+            .unwrap()
+            .text_format(impro_vte::Format::Text)
+            .unwrap_or_default()
+            .contains("impro-survivor-ok")
+    });
     unsafe {
         window.destroy();
     }

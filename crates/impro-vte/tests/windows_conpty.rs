@@ -147,6 +147,7 @@ fn windows_terminal_lifecycle_and_widget() {
     {
         let (window, t) = host();
         let (result, exits) = spawn(&t, &["cmd.exe", "/d", "/q"]);
+        let previous_grid = (t.column_count(), t.row_count());
         window.resize(1040, 600);
         wait("resize reaches ConPTY", || {
             t.pty().is_some_and(|p| {
@@ -179,12 +180,13 @@ fn windows_terminal_lifecycle_and_widget() {
                 "cmd.exe",
                 "/d",
                 "/c",
-                "for /L %i in (1,1,2000) do @echo impro-line-%i",
+                "for /L %i in (1,1,20000) do @echo impro-line-%i",
             ],
         );
+        beat.set(0);
         wait("bulk output drains", || !exits.borrow().is_empty());
         source.remove();
-        assert!(text(&t).contains("impro-line-2000"));
+        assert!(text(&t).contains("impro-line-20000"));
         assert!(
             t.vadjustment().unwrap().upper() > t.row_count() as f64,
             "scrollback did not grow"
