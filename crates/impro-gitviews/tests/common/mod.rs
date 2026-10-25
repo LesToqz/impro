@@ -1,3 +1,4 @@
+#![cfg(unix)]
 #![allow(dead_code)]
 use gtk::prelude::*;
 use javascriptcore::ValueExt;

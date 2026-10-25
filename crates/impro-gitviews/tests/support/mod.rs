@@ -9,8 +9,8 @@ static NEXT: AtomicUsize = AtomicUsize::new(0);
 pub struct Temp(pub PathBuf);
 impl Temp {
     pub fn new() -> Self {
-        let p = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("target/test-repos")
+        let p = std::env::temp_dir()
+            .join("impro-gitviews-test-repos")
             .join(format!(
                 "{}-{}",
                 std::process::id(),

@@ -1,4 +1,6 @@
 //! GTK/WebKit hosts. All Git commands, lexing and large JSON encoding run in workers.
+#[cfg(windows)]
+use crate::gitviews_windows::WebView;
 use crate::{assets, diff, log, palette};
 use gio::prelude::*;
 use gtk::prelude::*;
@@ -6,6 +8,7 @@ use impro_core::{
     settings,
     themes::{Theme, UiColors},
 };
+#[cfg(unix)]
 use javascriptcore::ValueExt;
 use serde_json::{json, Value};
 use std::{
@@ -19,6 +22,7 @@ use std::{
     },
     time::{Duration, Instant},
 };
+#[cfg(unix)]
 use webkit2gtk::{
     CacheModel, HardwareAccelerationPolicy, LoadEvent, NavigationPolicyDecision,
     NavigationPolicyDecisionExt, NavigationType, PolicyDecisionExt, PolicyDecisionType,
@@ -55,6 +59,7 @@ struct ContextRequest {
 struct Inner {
     widget: gtk::Box,
     web: WebView,
+    #[cfg(unix)]
     manager: UserContentManager,
     api: &'static str,
     kind: Kind,
@@ -70,7 +75,7 @@ struct Inner {
     generation: Cell<u64>,
     running: Cell<bool>,
     dirty: Cell<bool>,
-    queue: RefCell<Vec<String>>,
+    queue: RefCell<crate::protocol::ScriptQueue>,
     last: RefCell<Option<Arc<Value>>>,
     last_script: RefCell<Option<String>>,
     graph_settings: RefCell<GraphSettings>,
@@ -84,6 +89,7 @@ struct Inner {
     sender: glib::Sender<Update>,
     cancelled: Arc<AtomicBool>,
     cancellable: gio::Cancellable,
+    #[cfg(unix)]
     message_handler: RefCell<Option<glib::SignalHandlerId>>,
     focus_window: RefCell<Option<(glib::WeakRef<gtk::Window>, glib::SignalHandlerId)>>,
     contexts: RefCell<VecDeque<ContextRequest>>,
@@ -101,50 +107,60 @@ impl Inner {
         let widget = gtk::Box::new(gtk::Orientation::Vertical, 0);
         widget.set_hexpand(true);
         widget.set_vexpand(true);
+        #[cfg(unix)]
         let manager = UserContentManager::new();
-        let prefs = webkit2gtk::Settings::new();
-        prefs.set_enable_developer_extras(false);
-        prefs.set_enable_write_console_messages_to_stdout(false);
-        prefs.set_javascript_can_open_windows_automatically(false);
-        prefs.set_hardware_acceleration_policy(HardwareAccelerationPolicy::Never);
-        prefs.set_enable_page_cache(false);
-        prefs.set_enable_html5_database(false);
-        prefs.set_enable_html5_local_storage(false);
-        prefs.set_enable_dns_prefetching(false);
-        prefs.set_enable_webgl(false);
-        prefs.set_enable_webaudio(false);
-        prefs.set_enable_media(false);
-        prefs.set_enable_media_stream(false);
-        let related = PAGES.with(|views| {
-            views
-                .borrow()
-                .iter()
-                .filter_map(Weak::upgrade)
-                .find(|v| !v.closed.get())
-        });
-        let web = if let Some(other) = related {
-            WebView::builder()
-                .related_view(&other.web)
-                .settings(&prefs)
-                .user_content_manager(&manager)
-                .build()
-        } else {
-            let context = WebContext::new_ephemeral();
-            context.set_cache_model(CacheModel::DocumentViewer);
-            WebView::builder()
-                .web_context(&context)
-                .settings(&prefs)
-                .user_content_manager(&manager)
-                .build()
+        #[cfg(unix)]
+        let web = {
+            let prefs = webkit2gtk::Settings::new();
+            prefs.set_enable_developer_extras(false);
+            prefs.set_enable_write_console_messages_to_stdout(false);
+            prefs.set_javascript_can_open_windows_automatically(false);
+            prefs.set_hardware_acceleration_policy(HardwareAccelerationPolicy::Never);
+            prefs.set_enable_page_cache(false);
+            prefs.set_enable_html5_database(false);
+            prefs.set_enable_html5_local_storage(false);
+            prefs.set_enable_dns_prefetching(false);
+            prefs.set_enable_webgl(false);
+            prefs.set_enable_webaudio(false);
+            prefs.set_enable_media(false);
+            prefs.set_enable_media_stream(false);
+            let related = PAGES.with(|views| {
+                views
+                    .borrow()
+                    .iter()
+                    .filter_map(Weak::upgrade)
+                    .find(|v| !v.closed.get())
+            });
+            if let Some(other) = related {
+                WebView::builder()
+                    .related_view(&other.web)
+                    .settings(&prefs)
+                    .user_content_manager(&manager)
+                    .build()
+            } else {
+                let context = WebContext::new_ephemeral();
+                context.set_cache_model(CacheModel::DocumentViewer);
+                WebView::builder()
+                    .web_context(&context)
+                    .settings(&prefs)
+                    .user_content_manager(&manager)
+                    .build()
+            }
         };
-        web.set_hexpand(true);
-        web.set_vexpand(true);
-        widget.pack_start(&web, true, true, 0);
+        #[cfg(windows)]
+        let web = WebView::new(&widget);
+        #[cfg(unix)]
+        {
+            web.set_hexpand(true);
+            web.set_vexpand(true);
+            widget.pack_start(&web, true, true, 0);
+        }
         #[allow(deprecated)]
         let (sender, receiver) = glib::MainContext::channel(glib::Priority::DEFAULT);
         let this = Rc::new(Self {
             widget,
             web,
+            #[cfg(unix)]
             manager,
             api: if kind == Kind::Graph {
                 "ImproGit"
@@ -164,7 +180,7 @@ impl Inner {
             generation: Cell::new(0),
             running: Cell::new(false),
             dirty: Cell::new(true),
-            queue: RefCell::new(Vec::new()),
+            queue: RefCell::new(crate::protocol::ScriptQueue::default()),
             last: RefCell::new(None),
             last_script: RefCell::new(None),
             graph_settings: RefCell::new(GraphSettings::default()),
@@ -178,6 +194,7 @@ impl Inner {
             sender,
             cancelled: Arc::new(AtomicBool::new(false)),
             cancellable: gio::Cancellable::new(),
+            #[cfg(unix)]
             message_handler: RefCell::new(None),
             focus_window: RefCell::new(None),
             contexts: RefCell::new(VecDeque::new()),
@@ -205,20 +222,44 @@ impl Inner {
             v.retain(|w| w.strong_count() > 0);
             v.push(Rc::downgrade(&this));
         });
-        let weak = Rc::downgrade(&this);
-        let handler = this
-            .manager
-            .connect_script_message_received(Some("impro"), move |_, r| {
-                if let (Some(s), Some(v)) = (weak.upgrade(), r.js_value()) {
-                    if let Some(raw) = v.to_json(0) {
-                        if let Ok(v) = serde_json::from_str::<Value>(&raw) {
-                            s.message(v);
+        #[cfg(unix)]
+        {
+            let weak = Rc::downgrade(&this);
+            let handler =
+                this.manager
+                    .connect_script_message_received(Some("impro"), move |_, r| {
+                        if let (Some(s), Some(v)) = (weak.upgrade(), r.js_value()) {
+                            if let Some(raw) = v.to_json(0) {
+                                if let Some(v) = crate::protocol::parse_message(&raw) {
+                                    s.message(v);
+                                }
+                            }
                         }
-                    }
+                    });
+            *this.message_handler.borrow_mut() = Some(handler);
+            this.manager.register_script_message_handler("impro");
+        }
+        #[cfg(windows)]
+        {
+            let weak = Rc::downgrade(&this);
+            this.web.connect_message(move |v| {
+                if let Some(s) = weak.upgrade() {
+                    s.message(v);
                 }
             });
-        *this.message_handler.borrow_mut() = Some(handler);
-        this.manager.register_script_message_handler("impro");
+            let weak = Rc::downgrade(&this);
+            this.web.connect_error(move |error| {
+                if let Some(s) = weak.upgrade() {
+                    s.error(error);
+                }
+            });
+            let weak = Rc::downgrade(&this);
+            this.web.connect_reload(move || {
+                if let Some(s) = weak.upgrade() {
+                    s.prepare_reload();
+                }
+            });
+        }
         this.state("loading", "");
         this.call("pause", &[]);
         this.web.load_html(
@@ -264,72 +305,75 @@ impl Inner {
                 s.watch_focus();
             }
         });
-        self.web.connect_context_menu(|_, _, _, _| true);
-        self.web.connect_create(|_, _| None);
-        let weak = Rc::downgrade(self);
-        self.web.connect_decide_policy(move |_, decision, kind| {
-            if kind == PolicyDecisionType::NewWindowAction {
-                decision.ignore();
-                return true;
-            }
-            if kind == PolicyDecisionType::NavigationAction {
-                if let Some(nav) = decision.dynamic_cast_ref::<NavigationPolicyDecision>() {
-                    if let Some(action) = nav.navigation_action() {
-                        let uri = action.request().and_then(|r| r.uri());
-                        if action.navigation_type() == NavigationType::Reload {
-                            decision.ignore();
-                            let weak = weak.clone();
-                            glib::idle_add_local_once(move || {
-                                if let Some(s) = weak.upgrade() {
-                                    if !s.closed.get() {
-                                        s.prepare_reload();
-                                        s.web.load_html(
-                                            &if s.kind == Kind::Graph {
-                                                assets::graph_html()
-                                            } else {
-                                                assets::commit_html()
-                                            },
-                                            Some("about:blank"),
-                                        );
+        #[cfg(unix)]
+        {
+            self.web.connect_context_menu(|_, _, _, _| true);
+            self.web.connect_create(|_, _| None);
+            let weak = Rc::downgrade(self);
+            self.web.connect_decide_policy(move |_, decision, kind| {
+                if kind == PolicyDecisionType::NewWindowAction {
+                    decision.ignore();
+                    return true;
+                }
+                if kind == PolicyDecisionType::NavigationAction {
+                    if let Some(nav) = decision.dynamic_cast_ref::<NavigationPolicyDecision>() {
+                        if let Some(action) = nav.navigation_action() {
+                            let uri = action.request().and_then(|r| r.uri());
+                            if action.navigation_type() == NavigationType::Reload {
+                                decision.ignore();
+                                let weak = weak.clone();
+                                glib::idle_add_local_once(move || {
+                                    if let Some(s) = weak.upgrade() {
+                                        if !s.closed.get() {
+                                            s.prepare_reload();
+                                            s.web.load_html(
+                                                &if s.kind == Kind::Graph {
+                                                    assets::graph_html()
+                                                } else {
+                                                    assets::commit_html()
+                                                },
+                                                Some("about:blank"),
+                                            );
+                                        }
                                     }
-                                }
-                            });
-                            return true;
-                        }
-                        if uri.as_deref() != Some("about:blank")
-                            || weak.upgrade().is_none_or(|s| s.ready.get())
-                        {
-                            decision.ignore();
-                            return true;
+                                });
+                                return true;
+                            }
+                            if uri.as_deref() != Some("about:blank")
+                                || weak.upgrade().is_none_or(|s| s.ready.get())
+                            {
+                                decision.ignore();
+                                return true;
+                            }
                         }
                     }
                 }
-            }
-            false
-        });
-        let weak = Rc::downgrade(self);
-        self.web.connect_load_changed(move |_, event| {
-            if event == LoadEvent::Started {
+                false
+            });
+            let weak = Rc::downgrade(self);
+            self.web.connect_load_changed(move |_, event| {
+                if event == LoadEvent::Started {
+                    if let Some(s) = weak.upgrade() {
+                        if s.ready.get() {
+                            s.prepare_reload();
+                        }
+                    }
+                }
+            });
+            let weak = Rc::downgrade(self);
+            self.web.connect_load_failed(move |_, _, _, error| {
                 if let Some(s) = weak.upgrade() {
-                    if s.ready.get() {
-                        s.prepare_reload();
-                    }
+                    s.error(error.message());
                 }
-            }
-        });
-        let weak = Rc::downgrade(self);
-        self.web.connect_load_failed(move |_, _, _, error| {
-            if let Some(s) = weak.upgrade() {
-                s.error(error.message());
-            }
-            false
-        });
-        let weak = Rc::downgrade(self);
-        self.web.connect_web_process_terminated(move |_, reason| {
-            if let Some(s) = weak.upgrade() {
-                s.error(&format!("Git web process stopped: {reason:?}"));
-            }
-        });
+                false
+            });
+            let weak = Rc::downgrade(self);
+            self.web.connect_web_process_terminated(move |_, reason| {
+                if let Some(s) = weak.upgrade() {
+                    s.error(&format!("Git web process stopped: {reason:?}"));
+                }
+            });
+        }
     }
     fn prepare_reload(self: &Rc<Self>) {
         self.ready.set(false);
@@ -366,12 +410,24 @@ impl Inner {
             return;
         }
         let weak = Rc::downgrade(self);
+        #[cfg(unix)]
         self.web
             .evaluate_javascript(script, None, None, Some(&self.cancellable), move |r| {
                 if let (Some(s), Err(e)) = (weak.upgrade(), r) {
                     s.error(e.message());
                 }
             });
+        #[cfg(windows)]
+        {
+            let generation = self.generation.get();
+            self.web.evaluate_script(script, move |result| {
+                if let (Some(s), Err(e)) = (weak.upgrade(), result) {
+                    if !s.closed.get() && s.generation.get() == generation {
+                        s.error(&e);
+                    }
+                }
+            });
+        }
     }
     fn post_script(self: &Rc<Self>, script: String) {
         if self.closed.get() {
@@ -432,10 +488,9 @@ impl Inner {
         match v["type"].as_str().unwrap_or("") {
             "ready" => {
                 if !self.ready.replace(true) {
-                    let queue = std::mem::take(&mut *self.queue.borrow_mut());
                     let active = self.widget.is_mapped();
-                    let lifecycle = if active { "resume" } else { "pause" };
-                    self.evaluate(&format!("window.__improActive={active};if(typeof window.{}.{lifecycle}==='function')window.{}.{lifecycle}();\n{}",self.api,self.api,queue.join("\n")));
+                    let script = self.queue.borrow_mut().ready_script(self.api, active);
+                    self.evaluate(&script);
                     if self.kind == Kind::Commit && self.dirty.get() {
                         self.start();
                     }
@@ -825,6 +880,7 @@ impl Inner {
         }
         self.cancelled.store(true, Ordering::Relaxed);
         self.cancellable.cancel();
+        #[cfg(unix)]
         if let Some(handler) = self.message_handler.borrow_mut().take() {
             self.manager.disconnect(handler);
         }
@@ -851,20 +907,25 @@ impl Inner {
         self.last.borrow_mut().take();
         self.last_script.borrow_mut().take();
         self.theme.borrow_mut().take();
-        self.manager.unregister_script_message_handler("impro");
-        self.web.stop_loading();
-        let siblings = PAGES.with(|v| {
-            v.borrow()
-                .iter()
-                .filter_map(Weak::upgrade)
-                .any(|v| !v.closed.get())
-        });
-        if !siblings {
-            self.web.terminate_web_process();
-        }
-        // All callbacks hold weak state and shutdown has invalidated every entry point.
-        unsafe {
-            self.web.destroy();
+        #[cfg(windows)]
+        self.web.shutdown();
+        #[cfg(unix)]
+        {
+            self.manager.unregister_script_message_handler("impro");
+            self.web.stop_loading();
+            let siblings = PAGES.with(|v| {
+                v.borrow()
+                    .iter()
+                    .filter_map(Weak::upgrade)
+                    .any(|v| !v.closed.get())
+            });
+            if !siblings {
+                self.web.terminate_web_process();
+            }
+            // All callbacks hold weak state and shutdown has invalidated every entry point.
+            unsafe {
+                self.web.destroy();
+            }
         }
     }
 }
