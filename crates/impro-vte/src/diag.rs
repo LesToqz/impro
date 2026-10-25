@@ -49,6 +49,26 @@ fn label(now: Instant) -> String {
     )
 }
 
+/// Printable form of `bytes` for the timeline: escapes as `\e`, `\r`, `\n`, `\xNN`, at most `max`
+/// bytes followed by the count of the omitted rest.
+pub fn escape(bytes: &[u8], max: usize) -> String {
+    let mut out = String::new();
+    for &b in &bytes[..bytes.len().min(max)] {
+        match b {
+            0x1b => out.push_str("\\e"),
+            b'\r' => out.push_str("\\r"),
+            b'\n' => out.push_str("\\n"),
+            b'\\' => out.push_str("\\\\"),
+            0x20..=0x7e => out.push(b as char),
+            _ => out.push_str(&format!("\\x{b:02x}")),
+        }
+    }
+    if bytes.len() > max {
+        out.push_str(&format!("...(+{})", bytes.len() - max));
+    }
+    out
+}
+
 /// Per-session logger.
 #[derive(Clone, Debug)]
 pub struct Diag(Arc<Inner>);
