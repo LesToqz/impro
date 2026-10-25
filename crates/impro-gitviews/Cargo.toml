@@ -15,5 +15,9 @@ impro-core.workspace = true
 webkit2gtk = { workspace = true, features = ["v2_40"] }
 javascriptcore = { package = "javascriptcore-rs", version = "1.1" }
 
+[features]
+# Compile the Windows stub host on every platform (as `impro_gitviews::stub`) so it can be tested.
+stub-backend = []
+
 [dev-dependencies]
 tempfile.workspace = true

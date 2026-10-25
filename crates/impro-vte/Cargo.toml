@@ -12,4 +12,10 @@ gio.workspace = true
 pango.workspace = true
 libc.workspace = true
 bitflags.workspace = true
+
+[target.'cfg(unix)'.dependencies]
 impro-vte-sys = { path = "sys" }
+
+[features]
+# Compile the Windows stub backend on every platform (as `impro_vte::stub`) so it can be tested.
+stub-backend = []

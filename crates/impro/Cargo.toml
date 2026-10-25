@@ -8,7 +8,6 @@ license.workspace = true
 gtk.workspace = true
 glib.workspace = true
 gio.workspace = true
-webkit2gtk.workspace = true
 impro-vte.workspace = true
 gdk.workspace = true
 impro-core.workspace = true
@@ -23,6 +22,11 @@ impro-terminal = { path = "../impro-terminal" }
 impro-graph = { path = "../impro-graph" }
 serde_json.workspace = true
 
+[target.'cfg(unix)'.dependencies]
+webkit2gtk.workspace = true
+
 [dev-dependencies]
-javascriptcore = { package = "javascriptcore-rs", version = "1.1" }
 tempfile.workspace = true
+
+[target.'cfg(unix)'.dev-dependencies]
+javascriptcore = { package = "javascriptcore-rs", version = "1.1" }

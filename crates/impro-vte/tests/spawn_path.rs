@@ -1,3 +1,4 @@
+#![cfg(unix)]
 use gtk::prelude::*;
 use impro_vte::{Format, Terminal};
 use std::{

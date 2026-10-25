@@ -1,4 +1,5 @@
 //! Minimal GTK3 VTE ABI, sharing the workspace's gtk-rs 0.18 types.
+#![cfg(unix)]
 #![allow(non_camel_case_types)]
 use libc::{c_char, c_int, c_uint, c_void};
 #[repr(C)]
