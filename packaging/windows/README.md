@@ -7,6 +7,7 @@ Target `x86_64-pc-windows-gnu`, GTK3 and Rust from MSYS2 UCRT64.
 | `bundle.py` | Builds the self-contained tree (exe, DLL import closure, GLib schemas, gdk-pixbuf loaders + cache, icons, licences, `bundle-manifest.txt`). Stdlib only. |
 | `impro.iss` | Inno Setup 6 script. Per-user by default, tasks for desktop icon, Explorer context menu and PATH (all off by default). |
 | `smoke.ps1` | Installs/unzips the packages, tests the installed app, uninstalls and checks nothing is left. |
+| `smoke-args.ps1`, `test_smoke_args.ps1` | Argument quoting for the Inno installer/uninstaller (a value with a space must be quoted by hand for `Start-Process`) and its plain-assert test, run in the `check` job. |
 | `test_bundle.py`, `test_iss.py` | Unit tests. The real-DLL tests need a full sysroot (`scripts/windows/fetch-sysroot.sh --full`) and `objdump`. |
 
 Run the tests: `python3 -m unittest discover -s packaging/windows -p 'test_*.py' -v`

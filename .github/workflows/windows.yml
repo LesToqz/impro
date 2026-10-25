@@ -44,6 +44,16 @@ jobs:
           cache-key: check
           msrv: ${{ env.MSRV }}
           save-cache: ${{ github.ref == 'refs/heads/main' }}
+      - name: PowerShell script tests
+        shell: pwsh
+        run: |
+          foreach ($f in (git ls-files '*.ps1')) {
+            $tokens = $null; $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f).Path, [ref]$tokens, [ref]$errors)
+            $errors | ForEach-Object { Write-Host "::error file=$f::$_" }
+            if ($errors) { exit 1 }
+          }
+          ./packaging/windows/test_smoke_args.ps1
       - name: Cargo check
         shell: msys2 {0}
         run: cargo check --workspace --all-targets --locked --keep-going
@@ -69,16 +79,23 @@ jobs:
           save-cache: ${{ github.ref == 'refs/heads/main' }}
       - name: Logic crates
         shell: msys2 {0}
-        run: cargo test --locked --no-fail-fast -p impro-core -p impro-graph -p impro-gitviews
+        run: |
+          set -euo pipefail
+          source scripts/package/windows/use-git-for-windows.sh
+          cargo test --locked --no-fail-fast -p impro-core -p impro-graph -p impro-gitviews
       - name: GUI crates (report only)
         continue-on-error: true
         shell: msys2 {0}
-        run: cargo test --locked --workspace --no-fail-fast
+        run: |
+          set -euo pipefail
+          source scripts/package/windows/use-git-for-windows.sh
+          cargo test --locked --workspace --no-fail-fast
       - name: WebView2 host test (report only)
         continue-on-error: true
         shell: msys2 {0}
         run: |
           set -euo pipefail
+          source scripts/package/windows/use-git-for-windows.sh
           cargo test --locked -p impro-gitviews --test windows_webview --no-run
           # The test executable lives in target/debug/deps; the loader is not copied there.
           loader=$(scripts/package/windows/find-webview2-loader.sh target/debug/build)
