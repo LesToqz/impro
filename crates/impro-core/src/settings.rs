@@ -111,16 +111,8 @@ pub fn normalize(key: &str, value: &Value) -> Result<Value, UnknownSetting> {
         .unwrap_or_else(|| default.clone()))
 }
 pub fn settings_path() -> PathBuf {
-    let root = std::env::var_os("XDG_CONFIG_HOME")
-        .filter(|s| !s.is_empty())
-        .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            std::env::var_os("HOME")
-                .map(PathBuf::from)
-                .unwrap_or_else(|| PathBuf::from("."))
-                .join(".config")
-        });
-    root.join(identity::CONFIG_DIR)
+    crate::platform::config_root()
+        .join(identity::CONFIG_DIR)
         .join(identity::SETTINGS_FILE)
 }
 /// Explicit-path store supports isolated tests and avoids mutating process environment.

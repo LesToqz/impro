@@ -544,6 +544,7 @@ dependencies = [
  "tempfile",
  "unicode-casefold",
  "unicode-general-category",
+ "windows-sys",
 ]
 
 [[package]]
