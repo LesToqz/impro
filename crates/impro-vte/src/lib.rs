@@ -16,4 +16,8 @@ mod windows;
 pub use windows::*;
 
 #[cfg(any(windows, feature = "emulator"))]
+pub mod diag;
+#[cfg(any(windows, feature = "emulator"))]
 pub mod emu;
+#[cfg(any(windows, feature = "emulator"))]
+pub mod lifecycle;

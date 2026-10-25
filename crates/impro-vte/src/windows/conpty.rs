@@ -1,5 +1,9 @@
 //! ConPTY ownership and blocking I/O. No Win32 call here executes on GTK's thread.
-use crate::emu::quoting::command_line;
+use crate::{
+    diag::Diag,
+    emu::quoting::command_line,
+    lifecycle::{Action, CprScanner, Lifecycle, Phase, Timing, CPR_REPLY},
+};
 use std::{
     collections::{BTreeMap, HashMap},
     ffi::{c_void, OsStr},
@@ -16,13 +20,13 @@ use std::{
         atomic::{AtomicBool, AtomicI32, AtomicUsize, Ordering},
         mpsc, Arc, Mutex, OnceLock, Weak,
     },
-    thread,
+    thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
 use windows_sys::{
     core::HRESULT,
     Win32::{
-        Foundation::{DuplicateHandle, DUPLICATE_SAME_ACCESS, HANDLE, WAIT_OBJECT_0},
+        Foundation::{DuplicateHandle, DUPLICATE_SAME_ACCESS, HANDLE},
         System::{
             Console::{COORD, HPCON},
             LibraryLoader::{GetModuleHandleW, GetProcAddress},
@@ -176,11 +180,16 @@ enum Control {
     Resize,
     Stop,
     ChildExit,
+    /// The reader obtained or delivered output (extends the quiet period after the exit).
+    Output,
+    ReaderEof,
+    CloseReturned,
 }
 #[derive(Debug)]
 pub struct Session {
     pub process: OwnedHandle,
     pub pid: u32,
+    pub diag: Diag,
     pub unread: AtomicUsize,
     pub columns: AtomicI32,
     pub rows: AtomicI32,
@@ -235,8 +244,74 @@ pub struct Request {
     pub flags: glib::SpawnFlags,
 }
 
+fn exit_code(process: HANDLE) -> u32 {
+    let mut status = 1;
+    unsafe {
+        GetExitCodeProcess(process, &mut status);
+    }
+    status
+}
+/// `ClosePseudoConsole` may block until the output buffered in the pipe was read and conhost's
+/// shutdown requests were answered, so it only ever runs on a thread that is not the reader.
+fn close_console(console: Console, diag: &Diag) {
+    diag.log(format_args!("ClosePseudoConsole called"));
+    let started = Instant::now();
+    drop(console);
+    diag.log(format_args!(
+        "ClosePseudoConsole returned after {} ms",
+        started.elapsed().as_millis()
+    ));
+}
+/// Failed start: close the console off-thread while the reader keeps draining, give up on a stuck
+/// reader after the lifecycle timeouts, and never block the caller indefinitely.
+fn abort_start(
+    console: Console,
+    reader: JoinHandle<()>,
+    drain: &AtomicBool,
+    closing: &AtomicBool,
+    diag: &Diag,
+) {
+    let timing = Timing::default();
+    drain.store(true, Ordering::Release);
+    closing.store(true, Ordering::Release);
+    let task = diag.clone();
+    let closer = thread::spawn(move || close_console(console, &task));
+    let started = Instant::now();
+    while !reader.is_finished() {
+        let waited = started.elapsed();
+        if waited >= timing.close_timeout + timing.abandon {
+            diag.log(format_args!("reader abandoned after failed start"));
+            return;
+        }
+        if waited >= timing.close_timeout {
+            unsafe {
+                CancelSynchronousIo(reader.as_raw_handle());
+            }
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+    let _ = reader.join();
+    if closer.is_finished() {
+        let _ = closer.join();
+    }
+}
+
 #[allow(deprecated)]
 pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<Session>> {
+    let diag = Diag::new();
+    diag.log(format_args!(
+        "spawn requested argv={:?} size={}x{}",
+        request.argv, request.columns, request.rows
+    ));
+    let result = start(request, output, &diag);
+    if let Err(error) = &result {
+        diag.log(format_args!("spawn failed: {error}"));
+    }
+    result
+}
+
+#[allow(deprecated)]
+fn start(request: Request, output: glib::Sender<Output>, diag: &Diag) -> io::Result<Arc<Session>> {
     use gio::prelude::*;
     let start = Instant::now();
     let cancelled = || {
@@ -257,6 +332,8 @@ pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<S
     let (input_read, input_write) = pipe()?;
     let (output_read, output_write) = pipe()?;
     let mut hpc = 0;
+    // No PSEUDOCONSOLE_* flags: PSEUDOCONSOLE_INHERIT_CURSOR would make conhost wait for a
+    // cursor-position reply at startup.
     let result = unsafe {
         (api.create)(
             COORD {
@@ -276,57 +353,82 @@ pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<S
         )));
     }
     let console = Console { handle: hpc, api };
+    let (control_tx, control_rx) = mpsc::channel::<Control>();
+    let (input_tx, input_rx) = mpsc::channel::<Option<Vec<u8>>>();
     // Start draining before CreateProcess/ClosePseudoConsole: closing can itself
     // write a final frame, even on the process-creation failure path.
     let drain = Arc::new(AtomicBool::new(false));
-    let drain_reader = drain.clone();
+    // Set once the console is being closed: the reader then answers conhost's shutdown
+    // cursor-position request itself, independent of the main thread and the widget.
+    let closing = Arc::new(AtomicBool::new(false));
     let (attach_tx, attach_rx) = mpsc::channel::<Weak<Session>>();
-    let reader_output = output.clone();
-    let reader = thread::spawn(move || {
-        let mut reader = File::from(output_read);
-        let mut buffer = [0u8; 2048];
-        let session = attach_rx.recv().ok();
-        loop {
-            match reader.read(&mut buffer) {
-                Ok(0) | Err(_) => break,
-                Ok(n) => {
-                    let session = session.as_ref().and_then(Weak::upgrade);
-                    if drain_reader.load(Ordering::Acquire)
-                        || session
-                            .as_ref()
-                            .is_none_or(|s| s.stopping.load(Ordering::Acquire))
-                    {
-                        continue;
-                    }
-                    let session = session.unwrap();
-                    session.unread.fetch_add(n, Ordering::AcqRel);
-                    let (ack, wait) = mpsc::channel();
-                    if reader_output
-                        .send(Output::Data(
-                            Packet {
-                                bytes: buffer[..n].to_vec(),
-                                session: session.clone(),
-                            },
-                            ack,
-                        ))
-                        .is_err()
-                    {
-                        continue;
-                    }
-                    while matches!(
-                        wait.recv_timeout(Duration::from_millis(50)),
-                        Err(mpsc::RecvTimeoutError::Timeout)
-                    ) {
-                        if drain_reader.load(Ordering::Acquire)
-                            || session.stopping.load(Ordering::Acquire)
-                        {
-                            break;
-                        }
+    let reader = {
+        let (drain, closing, diag) = (drain.clone(), closing.clone(), diag.clone());
+        let (control, input, output) = (control_tx.clone(), input_tx.clone(), output.clone());
+        thread::spawn(move || {
+            let mut reader = File::from(output_read);
+            let mut buffer = [0u8; 2048];
+            let mut cpr = CprScanner::default();
+            let mut total = 0usize;
+            // Attached lazily so the pipe is drained while the process is still being created.
+            let mut attached: Option<Option<Weak<Session>>> = None;
+            let end = loop {
+                let n = match reader.read(&mut buffer) {
+                    Ok(0) => break "end of file".to_owned(),
+                    Err(error) => break format!("read failed: {error}"),
+                    Ok(n) => n,
+                };
+                if total == 0 {
+                    diag.log(format_args!("first output byte ({n} bytes)"));
+                }
+                total += n;
+                let _ = control.send(Control::Output);
+                if cpr.scan(&buffer[..n]) > 0 && closing.load(Ordering::Acquire) {
+                    diag.log(format_args!(
+                        "cursor-position request answered by the reader"
+                    ));
+                    let _ = input.send(Some(CPR_REPLY.to_vec()));
+                }
+                let session = attached
+                    .get_or_insert_with(|| attach_rx.recv().ok())
+                    .as_ref()
+                    .and_then(Weak::upgrade);
+                if drain.load(Ordering::Acquire)
+                    || session
+                        .as_ref()
+                        .is_none_or(|s| s.stopping.load(Ordering::Acquire))
+                {
+                    continue;
+                }
+                let session = session.unwrap();
+                session.unread.fetch_add(n, Ordering::AcqRel);
+                let (ack, wait) = mpsc::channel();
+                if output
+                    .send(Output::Data(
+                        Packet {
+                            bytes: buffer[..n].to_vec(),
+                            session: session.clone(),
+                        },
+                        ack,
+                    ))
+                    .is_err()
+                {
+                    continue;
+                }
+                while matches!(
+                    wait.recv_timeout(Duration::from_millis(50)),
+                    Err(mpsc::RecvTimeoutError::Timeout)
+                ) {
+                    if drain.load(Ordering::Acquire) || session.stopping.load(Ordering::Acquire) {
+                        break;
                     }
                 }
-            }
-        }
-    });
+                let _ = control.send(Control::Output);
+            };
+            diag.log(format_args!("reader EOF ({end}; {total} bytes read)"));
+            let _ = control.send(Control::ReaderEof);
+        })
+    };
     let created = (|| {
         let mut attributes = Attributes::new(hpc)?;
         let mut info: STARTUPINFOEXW = unsafe { mem::zeroed() };
@@ -405,12 +507,12 @@ pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<S
         Ok(value) => value,
         Err(error) => {
             drop(attach_tx);
-            drain.store(true, Ordering::Release);
-            drop(console);
-            let _ = reader.join();
+            abort_start(console, reader, &drain, &closing, diag);
             return Err(error);
         }
     };
+    diag.set_pid(pid);
+    diag.log(format_args!("process created"));
     let duplicates = duplicate(process.as_raw_handle())
         .and_then(|monitor| Ok((duplicate(monitor.as_raw_handle())?, monitor)));
     let (wait_handle, monitor_process) = match duplicates {
@@ -420,22 +522,23 @@ pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<S
             unsafe {
                 TerminateProcess(process.as_raw_handle(), 1);
             }
+            drop(attach_tx);
+            abort_start(console, reader, &drain, &closing, diag);
             return Err(error);
         }
     };
-    let (control_tx, control_rx) = mpsc::channel();
-    let (input_tx, input_rx) = mpsc::channel::<Option<Vec<u8>>>();
     let session = Arc::new(Session {
         process,
         pid,
+        diag: diag.clone(),
         unread: AtomicUsize::new(0),
         columns: AtomicI32::new(request.columns),
         rows: AtomicI32::new(request.rows),
         requested_columns: AtomicI32::new(request.columns),
         requested_rows: AtomicI32::new(request.rows),
         stopping: AtomicBool::new(false),
-        input: input_tx,
-        control: control_tx,
+        input: input_tx.clone(),
+        control: control_tx.clone(),
     });
     sessions()
         .lock()
@@ -451,22 +554,35 @@ pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<S
     });
     let state = Arc::downgrade(&session);
     // A dedicated waiter wakes the controller on child exit; idle terminals poll nothing.
-    let done = session.control.clone();
     thread::spawn(move || {
         unsafe {
             WaitForSingleObject(wait_handle.as_raw_handle(), INFINITE);
         }
-        let _ = done.send(Control::ChildExit);
+        let _ = control_tx.send(Control::ChildExit);
     });
     let (activate_tx, activate_rx) = mpsc::channel();
     let controller_output = output.clone();
+    let controller_diag = diag.clone();
+    let controller_session = session.control.clone();
     thread::spawn(move || {
+        let diag = controller_diag;
         let advertised = activate_rx.recv().unwrap_or(false);
         let mut console = Some(console);
-        while let Ok(control) = control_rx.recv() {
-            match control {
-                Control::Resize => {
-                    if let Some(s) = state.upgrade() {
+        let mut closer: Option<JoinHandle<()>> = None;
+        let mut life = Lifecycle::new(Timing::default());
+        loop {
+            let event = match life.next_deadline() {
+                Some(deadline) => {
+                    control_rx.recv_timeout(deadline.saturating_duration_since(Instant::now()))
+                }
+                None => control_rx
+                    .recv()
+                    .map_err(|_| mpsc::RecvTimeoutError::Disconnected),
+            };
+            let now = Instant::now();
+            let actions = match event {
+                Ok(Control::Resize) => {
+                    if let (Some(s), Some(c)) = (state.upgrade(), console.as_ref()) {
                         let columns = s.requested_columns.load(Ordering::Acquire);
                         let rows = s.requested_rows.load(Ordering::Acquire);
                         if (columns, rows)
@@ -477,7 +593,7 @@ pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<S
                         {
                             let result = unsafe {
                                 (api.resize)(
-                                    hpc,
+                                    c.handle,
                                     COORD {
                                         X: columns as i16,
                                         Y: rows as i16,
@@ -490,48 +606,104 @@ pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<S
                             }
                         }
                     }
+                    Vec::new()
                 }
-                Control::Stop | Control::ChildExit => break,
+                Ok(Control::Stop) => {
+                    diag.log(format_args!("stop requested (widget closed or hang-up)"));
+                    drain.store(true, Ordering::Release);
+                    life.stop(now)
+                }
+                Ok(Control::ChildExit) => {
+                    diag.log(format_args!(
+                        "process exit observed (exit code {})",
+                        exit_code(monitor_process.as_raw_handle())
+                    ));
+                    life.process_exited(now)
+                }
+                Ok(Control::Output) => {
+                    life.output(now);
+                    Vec::new()
+                }
+                Ok(Control::ReaderEof) => life.reader_eof(now),
+                Ok(Control::CloseReturned) => life.close_returned_at(now),
+                Err(mpsc::RecvTimeoutError::Timeout) => life.poll(now),
+                Err(mpsc::RecvTimeoutError::Disconnected) => break,
+            };
+            for action in actions {
+                match action {
+                    Action::StartClose => {
+                        diag.log(format_args!("drain started; closing the pseudo console"));
+                        closing.store(true, Ordering::Release);
+                        if let Some(console) = console.take() {
+                            let (task, done) = (diag.clone(), controller_session.clone());
+                            closer = Some(thread::spawn(move || {
+                                close_console(console, &task);
+                                let _ = done.send(Control::CloseReturned);
+                            }));
+                        }
+                    }
+                    Action::Terminate => {
+                        diag.log(format_args!("grace period over; terminating the child"));
+                        unsafe {
+                            TerminateProcess(monitor_process.as_raw_handle(), 1);
+                        }
+                    }
+                    Action::CancelRead => {
+                        diag.log(format_args!(
+                            "reader did not reach EOF; cancelling its read"
+                        ));
+                        drain.store(true, Ordering::Release);
+                        unsafe {
+                            CancelSynchronousIo(reader.as_raw_handle());
+                        }
+                    }
+                    Action::Emit { forced } => {
+                        let status = exit_code(monitor_process.as_raw_handle());
+                        sessions().lock().unwrap().remove(&pid);
+                        diag.log(format_args!(
+                            "child-exited posted (status {status}{})",
+                            if forced { ", reader abandoned" } else { "" }
+                        ));
+                        if advertised {
+                            let _ = controller_output.send(Output::Exited(status as i32));
+                        }
+                    }
+                }
+            }
+            if life.phase() == Phase::Done {
+                break;
             }
         }
-        if state
-            .upgrade()
-            .is_none_or(|s| s.stopping.load(Ordering::Acquire))
-        {
-            drain.store(true, Ordering::Release);
-        }
-        // Older Windows versions can block inside ClosePseudoConsole. Start close
-        // independently so the process grace period is still enforced.
-        let console = console.take();
-        let (closing, started) = mpsc::channel();
-        let closer = thread::spawn(move || {
-            let _ = closing.send(());
-            drop(console);
-        });
-        let _ = started.recv();
-        unsafe {
-            if WaitForSingleObject(monitor_process.as_raw_handle(), 250) != WAIT_OBJECT_0 {
-                TerminateProcess(monitor_process.as_raw_handle(), 1);
-                WaitForSingleObject(monitor_process.as_raw_handle(), INFINITE);
-            }
-            CancelSynchronousIo(writer.as_raw_handle());
-        }
-        // Disconnect input even if external Pty references outlive the widget.
-        // The writer may be idle in recv, so its queue also receives a closing marker.
-        if let Some(s) = state.upgrade() {
-            let _ = s.input.send(None);
-        }
-        let _ = writer.join();
-        let _ = reader.join();
-        let _ = closer.join();
-        let mut status = 1;
-        unsafe {
-            GetExitCodeProcess(monitor_process.as_raw_handle(), &mut status);
-        }
+        // Release: disconnect input even if external Pty references outlive the widget. The
+        // writer may be idle in recv, so its queue also receives a closing marker.
         sessions().lock().unwrap().remove(&pid);
-        if advertised {
-            let _ = controller_output.send(Output::Exited(status as i32));
+        let _ = input_tx.send(None);
+        let waited = Instant::now();
+        while !writer.is_finished() && waited.elapsed() < Duration::from_secs(2) {
+            unsafe {
+                CancelSynchronousIo(writer.as_raw_handle());
+            }
+            thread::sleep(Duration::from_millis(10));
         }
+        if writer.is_finished() {
+            let _ = writer.join();
+        }
+        let waited = Instant::now();
+        while !reader.is_finished() && waited.elapsed() < Duration::from_millis(500) {
+            thread::sleep(Duration::from_millis(5));
+        }
+        let reader_joined = reader.is_finished();
+        if reader_joined {
+            let _ = reader.join();
+        }
+        let close_joined = closer.is_some() && life.close_returned();
+        if let (Some(closer), true) = (closer, close_joined) {
+            let _ = closer.join();
+        }
+        diag.log(format_args!(
+            "resources released (reader joined: {reader_joined}, close returned: {})",
+            life.close_returned()
+        ));
     });
     if cancelled() {
         session.stop();

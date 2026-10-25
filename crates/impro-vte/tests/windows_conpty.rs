@@ -8,13 +8,85 @@ use std::{
     time::{Duration, Instant},
 };
 
-fn wait(label: &str, condition: impl Fn() -> bool) {
+thread_local! {
+    /// Terminals created by this test, dumped when a wait times out.
+    static HOSTED: RefCell<Vec<Terminal>> = const { RefCell::new(Vec::new()) };
+}
+fn dump_grids() -> String {
+    HOSTED.with(|hosted| {
+        hosted
+            .borrow()
+            .iter()
+            .enumerate()
+            .map(|(i, t)| {
+                format!(
+                    "--- terminal {i} ({}x{}) ---\n{}",
+                    t.column_count(),
+                    t.row_count(),
+                    t.text_format(Format::Text).unwrap_or_default().trim_end()
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    })
+}
+/// Wait (pumping GTK) until every named condition holds; on timeout report which conditions were
+/// still false, the grids and the backend timeline.
+fn wait_all(label: &str, conditions: &[(&str, &dyn Fn() -> bool)]) {
     let deadline = Instant::now() + Duration::from_secs(30);
-    while !condition() {
-        assert!(Instant::now() < deadline, "ConPTY timeout: {label}");
+    while !conditions.iter().all(|(_, c)| c()) {
+        if Instant::now() >= deadline {
+            let state = conditions
+                .iter()
+                .map(|(name, c)| format!("  {name}: {}", c()))
+                .collect::<Vec<_>>()
+                .join("\n");
+            panic!(
+                "ConPTY timeout: {label}\nconditions:\n{state}\n{}\n--- backend timeline ---\n{}",
+                dump_grids(),
+                impro_vte::diag::timeline_text()
+            );
+        }
         glib::MainContext::default().iteration(false);
         std::thread::sleep(Duration::from_millis(1));
     }
+}
+fn wait(label: &str, condition: impl Fn() -> bool) {
+    wait_all(label, &[("condition", &condition)]);
+}
+/// `child-exited` must arrive exactly once: pump a little longer and compare.
+fn expect_exits(exits: &ExitResults, expected: &[i32]) {
+    settle();
+    assert_eq!(
+        *exits.borrow(),
+        expected,
+        "unexpected child-exited sequence\n--- backend timeline ---\n{}",
+        impro_vte::diag::timeline_text()
+    );
+}
+/// Exactly `count` exits, whatever the status (a hung-up shell has a platform-defined one).
+fn expect_exit_count(exits: &ExitResults, count: usize) {
+    settle();
+    assert_eq!(
+        exits.borrow().len(),
+        count,
+        "unexpected child-exited count: {:?}\n--- backend timeline ---\n{}",
+        exits.borrow(),
+        impro_vte::diag::timeline_text()
+    );
+}
+fn settle() {
+    let until = Instant::now() + Duration::from_millis(300);
+    while Instant::now() < until {
+        glib::MainContext::default().iteration(false);
+        std::thread::sleep(Duration::from_millis(1));
+    }
+}
+fn released() -> usize {
+    impro_vte::diag::timeline()
+        .iter()
+        .filter(|l| l.contains("resources released"))
+        .count()
 }
 fn text(t: &Terminal) -> String {
     t.text_format(Format::Text).unwrap_or_default().to_string()
@@ -27,6 +99,7 @@ fn host() -> (gtk::Window, Terminal) {
     window.add(&t);
     window.show_all();
     wait("terminal map", || t.is_mapped());
+    HOSTED.with(|hosted| hosted.borrow_mut().push(t.clone()));
     (window, t)
 }
 type SpawnResult = Rc<RefCell<Option<Result<glib::Pid, glib::Error>>>>;
@@ -56,6 +129,8 @@ fn spawn(t: &Terminal, argv: &[&str]) -> (SpawnResult, ExitResults) {
 }
 #[test]
 fn windows_terminal_lifecycle_and_widget() {
+    // Print the backend timeline (one line per lifecycle event) to stderr and keep it for failures.
+    std::env::set_var("IMPRO_TERM_DIAG", "1");
     gtk::init().expect("Windows GTK display must be available");
     {
         let (window, t) = host();
@@ -116,10 +191,16 @@ fn windows_terminal_lifecycle_and_widget() {
     for _ in 0..5 {
         let (window, t) = host();
         let (_, exits) = spawn(&t, &["cmd.exe", "/d", "/c", "echo impro-ok"]);
-        wait("echo and exit", || {
-            text(&t).contains("impro-ok") && !exits.borrow().is_empty()
-        });
-        assert_eq!(*exits.borrow(), [0]);
+        wait_all(
+            "echo and exit",
+            &[
+                ("output 'impro-ok' reached the grid", &|| {
+                    text(&t).contains("impro-ok")
+                }),
+                ("child-exited emitted", &|| !exits.borrow().is_empty()),
+            ],
+        );
+        expect_exits(&exits, &[0]);
         t.select_all();
         assert!(t.has_selection());
         t.copy_clipboard_format(Format::Text);
@@ -139,7 +220,7 @@ fn windows_terminal_lifecycle_and_widget() {
         let (window, t) = host();
         let (_, exits) = spawn(&t, &["cmd.exe", "/d", "/c", "exit 7"]);
         wait("exit status", || !exits.borrow().is_empty());
-        assert_eq!(*exits.borrow(), [7]);
+        expect_exits(&exits, &[7]);
         unsafe {
             window.destroy();
         }
@@ -149,21 +230,44 @@ fn windows_terminal_lifecycle_and_widget() {
         let (result, exits) = spawn(&t, &["cmd.exe", "/d", "/q"]);
         let previous_grid = (t.column_count(), t.row_count());
         window.resize(1040, 600);
-        wait("resize reaches ConPTY", || {
-            t.pty().is_some_and(|p| {
-                p.size().unwrap() == (t.column_count() as i32, t.row_count() as i32)
-            }) && (t.column_count(), t.row_count()) != previous_grid
-        });
+        wait_all(
+            "resize reaches ConPTY",
+            &[
+                ("grid changed", &|| {
+                    (t.column_count(), t.row_count()) != previous_grid
+                }),
+                ("ConPTY size acknowledged", &|| {
+                    t.pty().is_some_and(|p| {
+                        p.size().unwrap() == (t.column_count() as i32, t.row_count() as i32)
+                    })
+                }),
+            ],
+        );
         t.feed_child(b"echo %IMPRO_CONPTY_TEST%\r");
         wait("environment and input", || text(&t).contains("alive"));
         let pid = impro_vte::pid_number(*result.borrow().as_ref().unwrap().as_ref().unwrap());
         assert!(pid > 0);
         impro_vte::hangup_pid(pid);
         wait("hangup closes child", || !exits.borrow().is_empty());
-        assert_eq!(exits.borrow().len(), 1);
+        expect_exit_count(&exits, 1);
         unsafe {
             window.destroy();
         }
+    }
+    {
+        // Widget closed while the child runs: the session must be terminated and released.
+        let before = released();
+        let (window, t) = host();
+        let (_, exits) = spawn(&t, &["cmd.exe", "/d", "/q"]);
+        wait("cmd prompt", || !text(&t).trim().is_empty());
+        unsafe {
+            window.destroy();
+        }
+        wait("closed widget releases its session", || released() > before);
+        assert!(
+            exits.borrow().is_empty(),
+            "closed widget must not emit child-exited"
+        );
     }
     {
         let (window, t) = host();
@@ -221,10 +325,16 @@ fn windows_terminal_lifecycle_and_widget() {
                 "Write-Host \"$([char]27)[38;2;255;0;0mimpro-red$([char]27)[0m\"; exit 0",
             ],
         );
-        wait("PowerShell ANSI output", || {
-            !exits.borrow().is_empty() && text(&t).contains("impro-red")
-        });
-        assert_eq!(*exits.borrow(), [0]);
+        wait_all(
+            "PowerShell ANSI output",
+            &[
+                ("child-exited emitted", &|| !exits.borrow().is_empty()),
+                ("output 'impro-red' reached the grid", &|| {
+                    text(&t).contains("impro-red")
+                }),
+            ],
+        );
+        expect_exits(&exits, &[0]);
         assert!(!text(&t).contains("[31m"));
         assert!(t.text_format(Format::Html).unwrap().contains("#ff0000"));
         unsafe {
