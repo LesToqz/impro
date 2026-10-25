@@ -411,8 +411,18 @@ pub fn spawn(request: Request, output: glib::Sender<Output>) -> io::Result<Arc<S
             return Err(error);
         }
     };
-    let monitor_process = duplicate(process.as_raw_handle())?;
-    let wait_handle = duplicate(monitor_process.as_raw_handle())?;
+    let duplicates = duplicate(process.as_raw_handle())
+        .and_then(|monitor| Ok((duplicate(monitor.as_raw_handle())?, monitor)));
+    let (wait_handle, monitor_process) = match duplicates {
+        Ok(handles) => handles,
+        Err(error) => {
+            // The child exists but nothing will supervise it: do not leave it running.
+            unsafe {
+                TerminateProcess(process.as_raw_handle(), 1);
+            }
+            return Err(error);
+        }
+    };
     let (control_tx, control_rx) = mpsc::channel();
     let (input_tx, input_rx) = mpsc::channel::<Option<Vec<u8>>>();
     let session = Arc::new(Session {

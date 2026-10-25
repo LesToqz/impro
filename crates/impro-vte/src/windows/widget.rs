@@ -388,7 +388,7 @@ impl Terminal {
                             Ok(pid)
                         })
                         .map_err(|message| {
-                            t.feed(message.as_bytes());
+                            t.feed(format!("{message}\r\n").as_bytes());
                             glib::Error::new(gio::IOErrorEnum::Failed, &message)
                         })
                         .and_then(|r| r);
@@ -415,7 +415,9 @@ impl Terminal {
                         let length = packet.as_ref().expect("pending output").bytes.len();
                         while consumed < length {
                             let end = (consumed + 256).min(length);
-                            t.feed(&packet.as_ref().expect("pending output").bytes[consumed..end]);
+                            t.feed_data(
+                                &packet.as_ref().expect("pending output").bytes[consumed..end],
+                            );
                             consumed = end;
                             if start.elapsed() >= Duration::from_millis(2) || t.imp().closed.get() {
                                 break;
@@ -703,6 +705,12 @@ impl Terminal {
         None
     }
     pub fn feed(&self, data: &[u8]) {
+        self.feed_data(data);
+        self.emit_by_name::<()>("contents-changed", &[]);
+    }
+    /// Parse display bytes. Output dispatch emits `contents-changed` once per
+    /// consumed packet itself instead of once per parser slice.
+    fn feed_data(&self, data: &[u8]) {
         let (events, cwd_changed, selection_changed, cursor_changed, damage) = {
             let mut screen = self.imp().screen.borrow_mut();
             let old = screen.cwd().map(str::to_owned);
@@ -809,7 +817,6 @@ impl Terminal {
         if selection_changed {
             self.emit_by_name::<()>("selection-changed", &[]);
         }
-        self.emit_by_name::<()>("contents-changed", &[]);
     }
     pub fn feed_child(&self, data: &[u8]) {
         let session = self.imp().session.borrow().clone();
@@ -1751,9 +1758,11 @@ impl Terminal {
                 fg = colors.cursor_foreground;
                 bg = colors.cursor;
             }
-            color(cr, &bg);
-            cr.rectangle(x, y, width, ch);
-            let _ = cr.fill();
+            if bg != colors.background {
+                color(cr, &bg);
+                cr.rectangle(x, y, width, ch);
+                let _ = cr.fill();
+            }
             if !cell.flags.contains(Flags::HIDDEN) && cell.c != ' ' {
                 glyph.clear();
                 glyph.push(cell.c);
