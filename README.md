@@ -1,3 +1,5 @@
+<p align="center"><img src="packaging/icons/impro-mark.svg" alt="impro logo" width="128"></p>
+
 # impro
 
 [![CI](https://github.com/LesToqz/impro/actions/workflows/ci.yml/badge.svg)](https://github.com/LesToqz/impro/actions/workflows/ci.yml)
@@ -46,8 +48,9 @@ bash packaging/install.sh
 bash packaging/install.sh --uninstall
 ```
 
-Installation builds release and copies three files under `~/.local`: `bin/impro`,
-`share/applications/impro.desktop`, and `share/icons/hicolor/scalable/apps/impro.svg`.
+Installation builds release and copies these files under `~/.local`: `bin/impro`,
+`share/applications/impro.desktop`, `share/icons/hicolor/scalable/apps/impro.svg` and
+`share/icons/hicolor/<N>x<N>/apps/impro.png` (N = 16, 24, 32, 48, 64, 128, 256, 512).
 Ensure `~/.local/bin` is on PATH. Uninstall removes those files, preserves settings
 and documents, and can be repeated. Installation also supports a prebuilt binary:
 

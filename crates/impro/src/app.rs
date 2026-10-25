@@ -59,6 +59,7 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
                 },
             );
         }
+        crate::app_icon::install_after_first_paint(window);
         window.show_all();
         timing("shown", started);
         window.present();

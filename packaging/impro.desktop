@@ -7,3 +7,5 @@ Terminal=false
 Type=Application
 Categories=Development;IDE;TextEditor;
 StartupWMClass=dev.impro.impro
+Keywords=editor;ide;terminal;markdown;notes;git;
+StartupNotify=true
