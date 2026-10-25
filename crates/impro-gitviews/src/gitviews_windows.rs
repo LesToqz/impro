@@ -8,7 +8,16 @@ use std::{
     rc::{Rc, Weak},
     time::Duration,
 };
-use webview2_com::{Microsoft::Web::WebView2::Win32::*, *};
+use webview2_com::{
+    AcceleratorKeyPressedEventHandler, AddScriptToExecuteOnDocumentCreatedCompletedHandler,
+    CoTaskMemPWSTR, CoreWebView2EnvironmentOptions, CreateCoreWebView2ControllerCompletedHandler,
+    CreateCoreWebView2EnvironmentCompletedHandler, DownloadStartingEventHandler,
+    ExecuteScriptCompletedHandler, FocusChangedEventHandler, Microsoft::Web::WebView2::Win32::*,
+    MoveFocusRequestedEventHandler, NavigationCompletedEventHandler,
+    NavigationStartingEventHandler, NewWindowRequestedEventHandler,
+    PermissionRequestedEventHandler, ProcessFailedEventHandler, WebMessageReceivedEventHandler,
+    WebResourceRequestedEventHandler,
+};
 use windows::{
     core::{Interface, PCWSTR, PWSTR},
     Win32::{
@@ -86,6 +95,12 @@ mod surface {
             let state = self.state.borrow().upgrade();
             if let Some(state) = state {
                 state.detach();
+                if !state.closed.get() && !state.failed.get() {
+                    let reload = state.reload.borrow().clone();
+                    if let Some(reload) = reload {
+                        reload();
+                    }
+                }
             }
             self.parent_unrealize();
         }
@@ -121,9 +136,9 @@ mod surface {
     impl DrawingAreaImpl for NativeSurface {}
 }
 glib::wrapper! {
-    struct NativeSurface(ObjectSubclass<surface::NativeSurface>)
+    pub struct NativeSurface(ObjectSubclass<surface::NativeSurface>)
         @extends gtk::DrawingArea, gtk::Widget,
-        @implements gtk::Buildable, gtk::atk::ImplementorIface;
+        @implements gtk::Buildable;
 }
 
 struct Session {
@@ -162,6 +177,7 @@ struct State {
     message: RefCell<Option<Message>>,
     error: RefCell<Option<Error>>,
     reload: RefCell<Option<Reload>>,
+    focused: RefCell<Option<Reload>>,
     epoch: Cell<u64>,
     starting: Cell<bool>,
     closed: Cell<bool>,
@@ -196,6 +212,7 @@ impl WebView {
             message: RefCell::new(None),
             error: RefCell::new(None),
             reload: RefCell::new(None),
+            focused: RefCell::new(None),
             epoch: Cell::new(0),
             starting: Cell::new(false),
             closed: Cell::new(false),
@@ -208,6 +225,19 @@ impl WebView {
             notice: RefCell::new(None),
         });
         *state.surface.imp().state.borrow_mut() = Rc::downgrade(&state);
+        let weak = Rc::downgrade(&state);
+        state.surface.connect_draw(move |_, context| {
+            if let Some(s) = weak.upgrade() {
+                let color = s.background.get();
+                context.set_source_rgb(
+                    f64::from(color.R) / 255.,
+                    f64::from(color.G) / 255.,
+                    f64::from(color.B) / 255.,
+                );
+                let _ = context.paint();
+            }
+            glib::Propagation::Proceed
+        });
         let weak = Rc::downgrade(&state);
         state.surface.connect_focus_in_event(move |_, _| {
             if let Some(s) = weak.upgrade() {
@@ -252,6 +282,9 @@ impl WebView {
     pub(crate) fn connect_reload(&self, callback: impl Fn() + 'static) {
         *self.0.reload.borrow_mut() = Some(Rc::new(callback));
     }
+    pub(crate) fn connect_focused(&self, callback: impl Fn() + 'static) {
+        *self.0.focused.borrow_mut() = Some(Rc::new(callback));
+    }
     pub(crate) fn load_html(&self, html: &str, _: Option<&str>) {
         *self.0.html.borrow_mut() = html.into();
         // Creation starts from realize, after the native parent HWND exists.
@@ -263,7 +296,11 @@ impl WebView {
         self.0.surface.show();
     }
     pub fn grab_focus(&self) {
+        self.0.syncing_focus.set(true);
         self.0.surface.grab_focus();
+        self.0.syncing_focus.set(false);
+        self.0
+            .move_focus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
     }
     pub(crate) fn set_background_color(&self, color: &gdk::RGBA) {
         let color = COREWEBVIEW2_COLOR {
@@ -273,6 +310,7 @@ impl WebView {
             B: (color.blue() * 255.).round() as u8,
         };
         self.0.background.set(color);
+        self.0.surface.queue_draw();
         if let Some(session) = self.0.session() {
             unsafe {
                 if let Ok(controller) = session.controller.cast::<ICoreWebView2Controller2>() {
@@ -310,7 +348,7 @@ impl WebView {
                 .web
                 .ExecuteScript(PCWSTR(script.as_ptr()), &completion)
         } {
-            self.0.report(&format!("WebView2 ExecuteScript: {e}"));
+            let _ = unsafe { completion.Invoke(e.code(), PCWSTR::null()) };
         }
     }
     /// Fallback reason for runner diagnostics, or `None` while the page is available.
@@ -365,6 +403,10 @@ impl State {
         self.message.borrow_mut().take();
         self.error.borrow_mut().take();
         self.reload.borrow_mut().take();
+        self.focused.borrow_mut().take();
+        unsafe {
+            self.surface.destroy();
+        }
     }
     fn fallback(self: &Rc<Self>, text: &str) {
         if self.closed.get() || self.failed.replace(true) {
@@ -384,9 +426,9 @@ impl State {
             if let Some(container) = s.container.upgrade() {
                 let label = gtk::Label::new(None);
                 let reason = s.notice.borrow().clone().unwrap_or_default();
-                label.set_text(&format!(
-                    "Git pages require Microsoft Edge WebView2 (Evergreen runtime).\n{reason}\n{}",
-                    policy::RUNTIME_DOWNLOAD
+                label.set_markup(&format!(
+                    "Git pages require Microsoft Edge WebView2 (Evergreen runtime).\n{}\n<a href=\"{}\">Download Microsoft Edge WebView2</a>",
+                    glib::markup_escape_text(&reason), policy::RUNTIME_DOWNLOAD
                 ));
                 label.set_halign(gtk::Align::Center);
                 label.set_valign(gtk::Align::Center);
@@ -467,8 +509,8 @@ impl State {
                 let Some(s) = weak.upgrade().filter(|s| s.current(epoch)) else {
                     return Ok(());
                 };
-                let result = result
-                    .and_then(|_| environment.ok_or_else(|| windows::core::Error::from_win32()));
+                let result =
+                    result.and_then(|_| environment.ok_or_else(windows::core::Error::from_win32));
                 match result {
                     Ok(environment) => {
                         *s.environment.borrow_mut() = Some(environment.clone());
@@ -567,6 +609,7 @@ impl State {
             settings.SetIsBuiltInErrorPageEnabled(prefs.error_page)?;
             settings.SetIsWebMessageEnabled(true)?;
             settings.SetAreHostObjectsAllowed(false)?;
+            settings.SetAreDefaultScriptDialogsEnabled(false)?;
             settings
                 .cast::<ICoreWebView2Settings3>()?
                 .SetAreBrowserAcceleratorKeysEnabled(prefs.browser_accelerators)?;
@@ -585,10 +628,9 @@ impl State {
                 .cast::<ICoreWebView2Controller2>()?
                 .SetDefaultBackgroundColor(self.background.get())?;
             // Bounds are physical pixels; Chromium follows monitor DPI for CSS pixels.
-            session
-                .controller
-                .cast::<ICoreWebView2Controller3>()?
-                .SetBoundsMode(COREWEBVIEW2_BOUNDS_MODE_USE_RAW_PIXELS)?;
+            let controller3 = session.controller.cast::<ICoreWebView2Controller3>()?;
+            controller3.SetBoundsMode(COREWEBVIEW2_BOUNDS_MODE_USE_RAW_PIXELS)?;
+            controller3.SetShouldDetectMonitorScaleChanges(true)?;
         }
         event!(
             session.web,
@@ -628,6 +670,17 @@ impl State {
                     s.navigation_allowed.replace(false) && uri.to_string() == "about:blank";
                 unsafe {
                     args.SetCancel(!allowed)?;
+                }
+            }
+        );
+        event!(
+            session.web,
+            add_FrameNavigationStarting,
+            remove_FrameNavigationStarting,
+            NavigationStartingEventHandler,
+            |_s, args| {
+                unsafe {
+                    args.SetCancel(true)?;
                 }
             }
         );
@@ -754,6 +807,10 @@ impl State {
                 s.syncing_focus.set(true);
                 s.surface.grab_focus();
                 s.syncing_focus.set(false);
+                let focused = s.focused.borrow().clone();
+                if let Some(focused) = focused {
+                    focused();
+                }
             }
             Ok(())
         }));
@@ -935,12 +992,15 @@ impl State {
                 let raw = &mut *(raw as *mut gdk::ffi::GdkEventKey);
                 raw.window = native.to_glib_full();
                 raw.send_event = 1;
-                raw.time = gdk::CURRENT_TIME;
+                raw.time = gdk::ffi::GDK_CURRENT_TIME as u32;
                 raw.state = modifiers.into_glib();
                 raw.keyval = gdk::keys::Key::from_name(name).into_glib();
                 raw.hardware_keycode = key as u16;
             }
-            window.event(&event);
+            let handled = window.event(&event);
+            if !handled && name == "Escape" {
+                WebView(s).evaluate_script("(document.activeElement || document.body).dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));", |_| {});
+            }
         });
         Ok(())
     }

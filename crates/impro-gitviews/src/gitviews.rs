@@ -254,6 +254,14 @@ impl Inner {
                 }
             });
             let weak = Rc::downgrade(&this);
+            this.web.connect_focused(move || {
+                if let Some(s) = weak.upgrade() {
+                    if s.kind == Kind::Graph {
+                        s.debounce();
+                    }
+                }
+            });
+            let weak = Rc::downgrade(&this);
             this.web.connect_reload(move || {
                 if let Some(s) = weak.upgrade() {
                     s.prepare_reload();

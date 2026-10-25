@@ -1,10 +1,7 @@
-//! Windows stand-in for the WebKit hosts: same public items, a notice instead of a page.
+//! Notice-only host retained for the explicit `stub-backend` test feature.
 //!
-//! WebKitGTK does not exist on Windows. Every method keeps its Unix signature except
-//! `webview()`, which is omitted because its `webkit2gtk::WebView` return type cannot exist
-//! here. Nothing ever loads or fires: `connect_open_commit`, `connect_error` and
-//! `connect_open_file` callbacks are accepted and never invoked. A later task replaces
-//! this module with a real renderer.
+//! Settings and validation mirror the live hosts; callbacks other than
+//! `root_changed` are accepted without a renderer.
 use crate::types;
 use gtk::prelude::*;
 use impro_core::{

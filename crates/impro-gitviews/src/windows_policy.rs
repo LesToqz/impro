@@ -10,7 +10,7 @@ pub(crate) const BRIDGE: &str = r#"(() => {
     Object.freeze({impro: Object.freeze({postMessage: post})})}), configurable: false});
   window.addEventListener('error', e => post({type:'error', message:e.message || 'Git page error'}));
   window.addEventListener('unhandledrejection', e => post({type:'error', message:String(e.reason)}));
-  for (const key of ['localStorage', 'sessionStorage', 'indexedDB', 'openDatabase']) {
+  for (const key of ['localStorage', 'sessionStorage', 'indexedDB', 'openDatabase', 'AudioContext', 'webkitAudioContext', 'RTCPeerConnection']) {
     try { Object.defineProperty(window, key, {get: () => undefined}); } catch (_) {}
   }
   window.open = () => null;
@@ -18,7 +18,7 @@ pub(crate) const BRIDGE: &str = r#"(() => {
 
 // No network, media, WebGL, background services, or persistent page cache is needed.
 // Storage APIs are disabled by BRIDGE; requests are also blocked by the host.
-pub(crate) const BROWSER_ARGUMENTS: &str = "--disable-features=msEdgeSidebarV2,BackForwardCache,WebPayments,AutofillServerCommunication --disable-background-networking --disable-component-update --disable-domain-reliability --disable-sync --disable-webgl --disable-accelerated-2d-canvas --autoplay-policy=user-gesture-required --no-pings";
+pub(crate) const BROWSER_ARGUMENTS: &str = "--disable-features=msEdgeSidebarV2,BackForwardCache,WebPayments,AutofillServerCommunication --dns-prefetch-disable --disable-background-networking --disable-component-update --disable-domain-reliability --disable-sync --disable-webgl --disable-accelerated-2d-canvas --autoplay-policy=user-gesture-required --no-pings";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct Settings {
