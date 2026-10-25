@@ -31,7 +31,10 @@ pub const MAX_FILE_SIZE: usize = 1024 * 1024;
 pub const MAX_PREVIEW: usize = 200;
 
 pub fn is_skip_dir(name: &str) -> bool {
-    SKIP_DIRS.contains(&name)
+    #[cfg(unix)]
+    return SKIP_DIRS.contains(&name);
+    #[cfg(windows)]
+    return SKIP_DIRS.iter().any(|skip| skip.eq_ignore_ascii_case(name));
 }
 
 /// [`SKIP_DIRS`] in alphabetical order (the settings page lists them that way).

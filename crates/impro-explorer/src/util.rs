@@ -219,7 +219,9 @@ pub fn decode_path(text: &str) -> std::path::PathBuf {
     {
         let units: Option<Vec<_>> = hex
             .as_bytes()
-            .chunks_exact(4)
+            .as_chunks::<4>()
+            .0
+            .iter()
             .map(|chunk| u16::from_str_radix(std::str::from_utf8(chunk).ok()?, 16).ok())
             .collect();
         if let Some(units) = units {

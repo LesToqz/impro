@@ -1,11 +1,14 @@
 //! Real repositories exercise porcelain parsing without importing GTK.
 use impro_explorer::gitstatus::*;
 use std::collections::HashMap;
+#[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Mutex, MutexGuard};
-use std::time::{Duration, Instant};
+use std::time::Duration;
+#[cfg(unix)]
+use std::time::Instant;
 
 /// Tests swap `PATH`, so every test that runs Git takes this lock.
 static ENV: Mutex<()> = Mutex::new(());
@@ -262,12 +265,14 @@ fn test_partial_porcelain_record_is_discarded() {
     assert_eq!(result.files, map(&[(&r.p("complete"), Status::NEW)]));
 }
 
+#[cfg(unix)]
 fn fake_git(dir: &Path, script: &str) {
     let executable = dir.join("git");
     std::fs::write(&executable, script).unwrap();
     std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o755)).unwrap();
 }
 
+#[cfg(unix)]
 fn with_path<T>(dir: &Path, body: impl FnOnce() -> T) -> T {
     let saved = std::env::var_os("PATH");
     std::env::set_var("PATH", dir);
@@ -280,6 +285,7 @@ fn with_path<T>(dir: &Path, body: impl FnOnce() -> T) -> T {
 }
 
 #[test]
+#[cfg(unix)]
 fn test_real_subprocess_timeout_and_output_bound() {
     let r = Repo::new();
     let binaries = tempfile::tempdir().unwrap();
@@ -324,6 +330,7 @@ fn test_real_subprocess_timeout_and_output_bound() {
 }
 
 #[test]
+#[cfg(unix)]
 fn test_cancellation_stops_a_running_scan() {
     let r = Repo::new();
     let binaries = tempfile::tempdir().unwrap();
@@ -343,6 +350,7 @@ fn test_cancellation_stops_a_running_scan() {
 }
 
 #[test]
+#[cfg(unix)]
 fn test_commands_use_readonly_environment_and_list_args() {
     let r = Repo::new();
     let binaries = tempfile::tempdir().unwrap();

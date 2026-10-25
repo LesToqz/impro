@@ -172,7 +172,8 @@ fn scenarios() -> Vec<(&'static str, String, &'static str, &'static str)> {
 
 fn run_scenario(name: &str) -> (Option<i32>, String, String) {
     let exe = std::env::current_exe().expect("test binary");
-    let output = Command::new(exe)
+    let mut command = Command::new(exe);
+    command
         .args([
             "--ignored",
             "--exact",
@@ -181,10 +182,10 @@ fn run_scenario(name: &str) -> (Option<i32>, String, String) {
             "--test-threads=1",
         ])
         .env("IMPRO_HIT_SCENARIO", name)
-        .env("GDK_BACKEND", "x11")
-        .env_remove("WAYLAND_DISPLAY")
-        .output()
-        .expect("spawn child");
+        .env_remove("WAYLAND_DISPLAY");
+    #[cfg(unix)]
+    command.env("GDK_BACKEND", "x11");
+    let output = command.output().expect("spawn child");
     (
         output.status.code(),
         String::from_utf8_lossy(&output.stdout).into_owned(),

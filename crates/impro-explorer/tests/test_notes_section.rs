@@ -307,6 +307,7 @@ fn test_vertical_layout_default_size_and_minimums() {
 }
 
 #[test]
+#[cfg(unix)]
 fn test_real_divider_drag_and_height_remembered_across_collapse_and_hide() {
     run(|| {
         let Some(xtest) = XTest::open() else {

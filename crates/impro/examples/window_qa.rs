@@ -1,12 +1,19 @@
 //! Process-isolated Git integration and full-window performance/visual harness.
+#[cfg(unix)]
 #[path = "../tests/common/mod.rs"]
 mod common;
+#[cfg(unix)]
 #[path = "parity/scenes.rs"]
 mod scenes;
+#[cfg(unix)]
 use common::*;
+#[cfg(unix)]
 use gtk::prelude::*;
+#[cfg(unix)]
 use javascriptcore::ValueExt;
+#[cfg(unix)]
 use serde_json::{json, Value};
+#[cfg(unix)]
 use std::{
     cell::RefCell,
     path::Path,
@@ -14,8 +21,10 @@ use std::{
     rc::Rc,
     time::{Duration, Instant},
 };
+#[cfg(unix)]
 use webkit2gtk::WebViewExt;
 
+#[cfg(unix)]
 fn git(root: &Path, args: &[&str]) -> String {
     let output = Command::new("git")
         .arg("-C")
@@ -31,6 +40,7 @@ fn git(root: &Path, args: &[&str]) -> String {
     );
     String::from_utf8(output.stdout).unwrap().trim().into()
 }
+#[cfg(unix)]
 fn js(web: &webkit2gtk::WebView, script: &str) -> Value {
     let output = Rc::new(RefCell::new(None));
     let result = output.clone();
@@ -45,6 +55,7 @@ fn js(web: &webkit2gtk::WebView, script: &str) -> Value {
     let value = output.borrow_mut().take().unwrap().unwrap();
     value
 }
+#[cfg(unix)]
 fn main() {
     gtk::init().expect("X11 display");
     let mode = std::env::args().nth(1).unwrap_or_else(|| "git".into());
@@ -354,6 +365,7 @@ fn main() {
     assert!(h.w.graph_views().is_empty());
     println!("scenario-ok {mode}");
 }
+#[cfg(unix)]
 fn capture() {
     let root = std::env::args_os()
         .nth(2)
@@ -418,6 +430,7 @@ fn capture() {
         w.window.destroy();
     }
 }
+#[cfg(unix)]
 fn cpu_ticks() -> u64 {
     let stat = std::fs::read_to_string("/proc/self/stat").unwrap();
     let fields: Vec<_> = stat
@@ -428,6 +441,7 @@ fn cpu_ticks() -> u64 {
         .collect();
     fields[11].parse::<u64>().unwrap() + fields[12].parse::<u64>().unwrap()
 }
+#[cfg(unix)]
 fn performance() {
     let h = Harness::new();
     let tab = h.open("first.rs", "fn main() {}\n");
@@ -539,6 +553,7 @@ fn performance() {
     );
 }
 
+#[cfg(unix)]
 fn controls() {
     let h = Harness::new();
     let root = std::env::var_os("IMPRO_QA_CONTROLS_DIR").map(std::path::PathBuf::from);
@@ -581,6 +596,7 @@ fn controls() {
     println!("scenario-ok controls");
 }
 
+#[cfg(unix)]
 fn descendants(pid: u32) -> Vec<u32> {
     let children =
         std::fs::read_to_string(format!("/proc/{pid}/task/{pid}/children")).unwrap_or_default();
@@ -594,3 +610,6 @@ fn descendants(pid: u32) -> Vec<u32> {
     }
     result
 }
+
+#[cfg(not(unix))]
+fn main() {}

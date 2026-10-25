@@ -43,7 +43,14 @@ fn parse_args(args: impl IntoIterator<Item = OsString>, cwd: &Path) -> Result<Co
     let raw = folder
         .map(PathBuf::from)
         .unwrap_or_else(|| cwd.to_path_buf());
-    let expanded = impro_core::platform::expand_tilde(&raw);
+    resolve_folder(&raw, cwd, impro_core::platform::expand_tilde)
+}
+fn resolve_folder(
+    raw: &Path,
+    cwd: &Path,
+    expand: impl FnOnce(&Path) -> PathBuf,
+) -> Result<Command, String> {
+    let expanded = expand(raw);
     let full = if expanded.is_absolute() {
         expanded
     } else {
@@ -86,11 +93,89 @@ pub fn run() -> glib::ExitCode {
         Ok(Command::Run(root)) => app::run(root, started),
     }
 }
+/// Release GUI executables have no console by default. Inherited redirected
+/// handles are already usable: AttachConsole can replace them, so save and restore
+/// each valid handle if the other stream needs attachment. Never allocate a new
+/// console when launched by Explorer.
+fn attach_console() {
+    #[cfg(windows)]
+    unsafe {
+        use windows_sys::Win32::{
+            Foundation::INVALID_HANDLE_VALUE,
+            System::Console::{
+                AttachConsole, GetStdHandle, SetStdHandle, ATTACH_PARENT_PROCESS, STD_ERROR_HANDLE,
+                STD_OUTPUT_HANDLE,
+            },
+        };
+        let output = GetStdHandle(STD_OUTPUT_HANDLE);
+        let error = GetStdHandle(STD_ERROR_HANDLE);
+        let valid = |handle: windows_sys::Win32::Foundation::HANDLE| {
+            !handle.is_null() && handle != INVALID_HANDLE_VALUE
+        };
+        // SAFETY: only process-owned standard handles and the documented parent
+        // process constant are used; no handle is closed or dereferenced here.
+        if (!valid(output) || !valid(error)) && AttachConsole(ATTACH_PARENT_PROCESS) != 0 {
+            if valid(output) {
+                SetStdHandle(STD_OUTPUT_HANDLE, output);
+            }
+            if valid(error) {
+                SetStdHandle(STD_ERROR_HANDLE, error);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     fn args(values: &[&str]) -> Vec<OsString> {
         values.iter().map(OsString::from).collect()
+    }
+    #[test]
+    fn injected_expansion_preserves_windows_path_arguments() {
+        let dir = tempfile::tempdir().unwrap();
+        let expected = dir.path().canonicalize().unwrap();
+        for raw in [
+            r"C:\Users\x\proj",
+            "C:/Users/x/proj",
+            r"\\server\share\proj",
+            r"~\proj",
+            "~/proj",
+        ] {
+            let result = resolve_folder(Path::new(raw), dir.path(), |seen| {
+                assert_eq!(seen.as_os_str(), std::ffi::OsStr::new(raw));
+                dir.path().to_path_buf()
+            })
+            .unwrap();
+            assert_eq!(result, Command::Run(expected.clone()));
+        }
+    }
+    #[cfg(windows)]
+    #[test]
+    fn windows_absolute_roots_and_tilde_components() {
+        for raw in [
+            r"C:\Users\x\proj",
+            "C:/Users/x/proj",
+            r"\\server\share\proj",
+        ] {
+            assert!(Path::new(raw).is_absolute());
+            assert_eq!(
+                impro_core::platform::expand_tilde(Path::new(raw)),
+                Path::new(raw)
+            );
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let forward = dir.path().to_string_lossy().replace('\\', "/");
+        assert!(matches!(
+            parse_args(args(&[&forward]), dir.path()),
+            Ok(Command::Run(_))
+        ));
+        if let Some(home) = impro_core::platform::home_dir() {
+            assert_eq!(
+                impro_core::platform::expand_tilde(Path::new(r"~\proj")),
+                home.join("proj")
+            );
+        }
     }
     #[test]
     fn test_optional_folder_and_default() {
@@ -126,37 +211,5 @@ mod tests {
             parse_args(args(&["/tmp", "extra"]), Path::new("/")).unwrap_err(),
             "unrecognized arguments: extra"
         );
-    }
-}
-
-/// Release GUI executables have no console by default. Inherited redirected
-/// handles are already usable: AttachConsole can replace them, so save and restore
-/// each valid handle if the other stream needs attachment. Never allocate a new
-/// console when launched by Explorer.
-fn attach_console() {
-    #[cfg(windows)]
-    unsafe {
-        use windows_sys::Win32::{
-            Foundation::INVALID_HANDLE_VALUE,
-            System::Console::{
-                AttachConsole, GetStdHandle, SetStdHandle, ATTACH_PARENT_PROCESS, STD_ERROR_HANDLE,
-                STD_OUTPUT_HANDLE,
-            },
-        };
-        let output = GetStdHandle(STD_OUTPUT_HANDLE);
-        let error = GetStdHandle(STD_ERROR_HANDLE);
-        let valid = |handle: windows_sys::Win32::Foundation::HANDLE| {
-            !handle.is_null() && handle != INVALID_HANDLE_VALUE
-        };
-        // SAFETY: only process-owned standard handles and the documented parent
-        // process constant are used; no handle is closed or dereferenced here.
-        if (!valid(output) || !valid(error)) && AttachConsole(ATTACH_PARENT_PROCESS) != 0 {
-            if valid(output) {
-                SetStdHandle(STD_OUTPUT_HANDLE, output);
-            }
-            if valid(error) {
-                SetStdHandle(STD_ERROR_HANDLE, error);
-            }
-        }
     }
 }

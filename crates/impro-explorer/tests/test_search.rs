@@ -71,6 +71,7 @@ fn test_skips_directories_and_sorts_relative_paths() {
 }
 
 #[test]
+#[cfg(unix)]
 fn test_skips_large_binary_invalid_utf8_and_symlinks() {
     let f = Files::new();
     let good = f.write("good", "yes");

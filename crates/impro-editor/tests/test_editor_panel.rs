@@ -1,9 +1,11 @@
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 mod common;
 use common::*;
 use gdk::keys::constants as k;
 use gtk::prelude::*;
 use impro_editor::*;
-use std::{cell::RefCell, fs, os::unix::fs::PermissionsExt, rc::Rc};
+use std::{cell::RefCell, fs, rc::Rc};
 #[test]
 fn test_reject_binary_and_invalid_utf8() {
     let d = tempfile::tempdir().unwrap();
@@ -27,6 +29,7 @@ fn test_size_limit() {
     assert!(read_file(&p).unwrap_err().to_string().contains("5 MB"));
 }
 #[test]
+#[cfg(unix)]
 fn test_crlf_round_trip_and_mode() {
     let d = tempfile::tempdir().unwrap();
     let p = d.path().join("file");
@@ -40,6 +43,7 @@ fn test_crlf_round_trip_and_mode() {
     assert_eq!(fs::metadata(p).unwrap().permissions().mode() & 0o777, 0o751);
 }
 #[test]
+#[cfg(unix)]
 fn test_reject_nonregular_without_blocking() {
     let d = tempfile::tempdir().unwrap();
     let p = d.path().join("fifo");
@@ -596,6 +600,7 @@ fn test_settings_apply_to_existing_and_future_tabs() {
     });
 }
 #[test]
+#[cfg(unix)]
 fn test_symlink_atomic_save_preserves_link() {
     use std::os::unix::fs::symlink;
     let d = tempfile::tempdir().unwrap();
@@ -608,6 +613,7 @@ fn test_symlink_atomic_save_preserves_link() {
     assert_eq!(fs::read_to_string(target).unwrap(), "after");
 }
 #[test]
+#[cfg(unix)]
 fn test_non_utf8_path_signals_round_trip() {
     run(|| {
         use std::os::unix::ffi::OsStringExt;
@@ -632,6 +638,7 @@ fn test_non_utf8_path_signals_round_trip() {
     });
 }
 #[test]
+#[cfg(unix)]
 fn test_symlink_markdown_uses_resolved_project_boundary() {
     run(|| {
         use std::os::unix::fs::symlink;

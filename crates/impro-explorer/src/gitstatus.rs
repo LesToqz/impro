@@ -472,3 +472,48 @@ pub fn run(
     }
     Ok(Output { data, truncated })
 }
+
+#[cfg(all(test, windows))]
+mod windows_tests {
+    use super::*;
+    #[test]
+    fn git_utf8_paths_and_crlf_are_decoded() {
+        assert_eq!(
+            git_path("C:/日本語/project".as_bytes()),
+            PathBuf::from("C:\\日本語\\project")
+        );
+        assert_eq!(trim_newline(b"C:/repo\r\n"), b"C:/repo");
+        assert_eq!(
+            git_path(b"//server/share/repo"),
+            PathBuf::from(r"\\server\share\repo")
+        );
+    }
+    #[test]
+    fn reader_honors_expired_deadline_and_cancellation() {
+        let dir = tempfile::tempdir().unwrap();
+        let error = run(
+            dir.path(),
+            &["--version"],
+            Instant::now(),
+            None,
+            MAX_OUTPUT,
+            None,
+        )
+        .unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::TimedOut);
+        let cancel = CancelToken::new();
+        cancel.cancel();
+        let started = Instant::now();
+        let error = run(
+            dir.path(),
+            &["--version"],
+            started + TIMEOUT,
+            None,
+            MAX_OUTPUT,
+            Some(&cancel),
+        )
+        .unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::Interrupted);
+        assert!(started.elapsed() < Duration::from_secs(1));
+    }
+}

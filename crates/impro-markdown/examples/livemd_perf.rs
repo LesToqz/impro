@@ -1,8 +1,12 @@
 //! Criterion-free timings of the live renderer with real GTK draws. Run optimized
 //! under Xvfb: `cargo run --release -p impro-markdown --example livemd_perf`.
+#[cfg(unix)]
 use gtk::prelude::*;
+#[cfg(unix)]
 use impro_editor::{EditorPanel, Response};
+#[cfg(unix)]
 use impro_markdown::livemd;
+#[cfg(unix)]
 use std::{
     cell::{Cell, RefCell},
     path::Path,
@@ -10,11 +14,13 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[cfg(unix)]
 fn pump() {
     while gtk::events_pending() {
         gtk::main_iteration_do(false);
     }
 }
+#[cfg(unix)]
 fn until(f: impl Fn() -> bool) {
     let end = Instant::now() + Duration::from_secs(120);
     while !f() {
@@ -24,12 +30,14 @@ fn until(f: impl Fn() -> bool) {
     }
     pump();
 }
+#[cfg(unix)]
 fn ms(d: Duration) -> f64 {
     d.as_secs_f64() * 1000.0
 }
 
 /// A mixed note of about `bytes`: headings, prose with inline spans, lists,
 /// tasks, quotes, code, rules, links and small tables.
+#[cfg(unix)]
 fn mixed_note(bytes: usize) -> String {
     let mut out = String::with_capacity(bytes + 1024);
     let mut n = 0;
@@ -51,6 +59,7 @@ fn mixed_note(bytes: usize) -> String {
     }
     out
 }
+#[cfg(unix)]
 fn table_note(bytes: usize) -> String {
     let mut out = String::new();
     let mut n = 0;
@@ -70,10 +79,12 @@ fn table_note(bytes: usize) -> String {
     out
 }
 
+#[cfg(unix)]
 struct Run {
     panel: EditorPanel,
     window: gtk::Window,
 }
+#[cfg(unix)]
 fn new_run() -> Run {
     impro_ui::init();
     impro_editor::init();
@@ -89,6 +100,7 @@ fn new_run() -> Run {
     Run { panel, window }
 }
 
+#[cfg(unix)]
 fn open_and_measure(run: &Run, path: &Path, label: &str) -> impro_markdown::livemd::LiveMarkdown {
     let begin = Instant::now();
     let first = Rc::new(Cell::new(None));
@@ -140,6 +152,7 @@ fn open_and_measure(run: &Run, path: &Path, label: &str) -> impro_markdown::live
     live
 }
 
+#[cfg(unix)]
 fn typing(run: &Run, label: &str) {
     let tab = run.panel.current_tab().unwrap();
     let adjustment = tab.source_scroll.vadjustment();
@@ -198,6 +211,7 @@ fn typing(run: &Run, label: &str) {
     );
 }
 
+#[cfg(unix)]
 fn scroll_sweep(run: &Run, label: &str) {
     let tab = run.panel.current_tab().unwrap();
     let frames = Rc::new(Cell::new(0usize));
@@ -229,6 +243,7 @@ fn scroll_sweep(run: &Run, label: &str) {
     );
 }
 
+#[cfg(unix)]
 fn idle_cpu(label: &str, view: &gtk::TextView) {
     let settle = Instant::now();
     while settle.elapsed() < Duration::from_millis(400) {
@@ -253,6 +268,7 @@ fn idle_cpu(label: &str, view: &gtk::TextView) {
         (cpu_time() - cpu) / wall.elapsed().as_secs_f64() * 100.0
     );
 }
+#[cfg(unix)]
 fn cpu_time() -> f64 {
     let mut value = libc::timespec {
         tv_sec: 0,
@@ -262,6 +278,7 @@ fn cpu_time() -> f64 {
     value.tv_sec as f64 + value.tv_nsec as f64 / 1e9
 }
 
+#[cfg(unix)]
 fn main() {
     let dir = tempfile::tempdir().unwrap();
     let notes = dir.path().join(".impro/Notes");
@@ -381,3 +398,6 @@ fn main() {
     unsafe { run.window.destroy() };
     pump();
 }
+
+#[cfg(not(unix))]
+fn main() {}

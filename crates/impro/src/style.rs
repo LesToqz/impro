@@ -23,5 +23,14 @@ pub fn init() {
         impro_gitviews::init();
         impro_settings_ui::init();
         impro_markdown::init();
+        // Registered after feature CSS; user font overrides are appended later
+        // by apply_theme and retain precedence over these Windows defaults.
+        #[cfg(windows)]
+        impro_ui::register_css("zz.windows-fonts", |_| {
+            "* { font-family: \"Segoe UI\"; }\n\
+             .impro-editor textview, .impro-editor textview text { \
+             font-family: \"Cascadia Mono\", \"Consolas\", \"Courier New\", monospace; }\n"
+                .into()
+        });
     });
 }

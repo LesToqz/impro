@@ -75,6 +75,15 @@ pub fn atomic_write(path: impl AsRef<Path>, text: &str, ending: &str) -> io::Res
         Err(error) if error.kind() == io::ErrorKind::NotFound => None,
         Err(error) => return Err(error),
     };
+    // MoveFileExW cannot replace a read-only destination. Leave it untouched,
+    // rather than clearing the user's read-only attribute to force a save.
+    #[cfg(windows)]
+    if permissions.as_ref().is_some_and(fs::Permissions::readonly) {
+        return Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "File is read-only",
+        ));
+    }
     let mut temp = tempfile::Builder::new()
         .prefix(".impro-")
         .tempfile_in(parent)?;
@@ -86,12 +95,14 @@ pub fn atomic_write(path: impl AsRef<Path>, text: &str, ending: &str) -> io::Res
     #[cfg(unix)]
     temp.as_file()
         .set_permissions(fs::Permissions::from_mode(mode))?;
+    temp.as_file().sync_all()?;
+    let _saved = temp.persist(&target).map_err(|e| e.error)?;
+    // tempfile clears FILE_ATTRIBUTE_TEMPORARY while persisting on Windows;
+    // apply the preserved permissions afterwards so they are not overwritten.
     #[cfg(windows)]
     if let Some(permissions) = permissions {
-        temp.as_file().set_permissions(permissions)?;
+        _saved.set_permissions(permissions)?;
     }
-    temp.as_file().sync_all()?;
-    temp.persist(&target).map_err(|e| e.error)?;
     // Opening directories as files for fsync is a Unix operation. persist uses
     // MoveFileExW(REPLACE_EXISTING) on Windows and replaces an existing file.
     #[cfg(unix)]
@@ -112,7 +123,10 @@ fn resolve_target(path: &Path) -> io::Result<PathBuf> {
             }
             Err(e)
                 if e.kind() == io::ErrorKind::InvalidInput
-                    || e.kind() == io::ErrorKind::NotFound =>
+                    || e.kind() == io::ErrorKind::NotFound
+                    // Windows read_link reports ERROR_NOT_A_REPARSE_POINT for
+                    // ordinary files, rather than Unix's InvalidInput.
+                    || (cfg!(windows) && e.raw_os_error() == Some(4390)) =>
             {
                 let parent = target.parent().unwrap_or(Path::new("/"));
                 return Ok(parent
@@ -191,6 +205,26 @@ pub fn toggle_comments(text: &str) -> String {
 
 #[cfg(test)]
 mod line_ending_tests {
+    #[cfg(windows)]
+    #[test]
+    fn read_only_save_preserves_original_attribute_and_contents() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("read-only.txt");
+        std::fs::write(&path, "original").unwrap();
+        let mut permissions = path.metadata().unwrap().permissions();
+        permissions.set_readonly(true);
+        std::fs::set_permissions(&path, permissions.clone()).unwrap();
+        let result = super::atomic_write(&path, "replacement", "LF");
+        let still_read_only = path.metadata().unwrap().permissions().readonly();
+        permissions.set_readonly(false);
+        std::fs::set_permissions(&path, permissions).unwrap();
+        assert_eq!(
+            result.unwrap_err().kind(),
+            std::io::ErrorKind::PermissionDenied
+        );
+        assert!(still_read_only);
+        assert_eq!(std::fs::read_to_string(path).unwrap(), "original");
+    }
     #[test]
     fn crlf_is_normalized_for_editing_and_restored_on_atomic_save() {
         let dir = tempfile::tempdir().unwrap();

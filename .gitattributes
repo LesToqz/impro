@@ -6,3 +6,5 @@
 *.gif binary
 *.zip binary
 *.rgba binary
+# Frozen fixture has no newlines; preserve its exact bytes on every platform.
+crates/impro-markdown/tests/fixtures/core.json binary

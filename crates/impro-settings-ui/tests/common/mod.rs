@@ -18,6 +18,7 @@ pub fn run(f: impl FnOnce() + Send + 'static) {
     let worker = GTK.get_or_init(|| {
         let (tx, rx) = mpsc::channel::<Job>();
         std::thread::spawn(move || {
+            #[cfg(unix)]
             std::env::set_var("GDK_BACKEND", "x11");
             gtk::init().expect("Xvfb display");
             impro_ui::init();
