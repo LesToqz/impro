@@ -18,6 +18,7 @@ fn main() {
     let bottom = TerminalPanel::new("/tmp", false, false, 11);
     let right = TerminalPanel::new("/tmp", false, true, 11);
     for panel in [&bottom, &right] {
+        #[cfg(unix)]
         panel.set_shell("/bin/bash");
         panel.apply_theme(impro_core::themes::get_theme(None));
         for _ in 0..2 {

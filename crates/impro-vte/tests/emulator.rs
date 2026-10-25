@@ -133,7 +133,15 @@ fn cursor_sgr_erase_and_utf8_fragmentation() {
     s.feed(b"\x1b[0m\x1b[H\x1b[2Kdone");
     assert!(s.text().starts_with("done"));
     s.feed(b"\x1b[2J");
-    assert!(s.text().trim().is_empty());
+    assert!(s
+        .range(
+            s.history() as i64,
+            0,
+            (s.history() + s.rows() - 1) as i64,
+            19
+        )
+        .trim()
+        .is_empty());
 }
 #[test]
 fn scroll_regions_and_alternate_screen() {
@@ -190,7 +198,7 @@ fn selection_joins_soft_wraps_preserves_hard_lines_and_wide_text() {
     s.select_start(0, 0);
     s.select_update(3, 0);
     assert_eq!(s.selection().as_deref(), Some("ab界"));
-    assert_eq!(s.range(0, 0, 0, 5), "ab界cd\n");
+    assert_eq!(s.range(0, 0, 0, 6), "ab界cd");
     s.term.selection = None;
     assert_eq!(s.selection(), None);
 }
@@ -210,7 +218,7 @@ fn scrollback_resize_and_reset() {
     assert_eq!((s.columns(), s.rows()), (4, 4));
     s.resize(16, 3, false);
     assert_eq!((s.columns(), s.rows()), (16, 3));
-    s.reset(true);
+    s.reset(true, true);
     assert_eq!(s.history(), 0);
     assert!(s.text().trim().is_empty());
 }
@@ -288,4 +296,127 @@ fn mouse_packets() {
         b"\x1b[M !!"
     );
     assert!(emu::mouse(TermMode::empty(), 0, 0, 0, 0, false).is_empty());
+}
+
+#[test]
+fn x10_and_utf8_mouse_and_styled_html() {
+    let mut s = Screen::new(40, 3, 10);
+    s.feed(b"\x1b[?9h");
+    assert!(s.x10_mouse());
+    assert!(s.mode().contains(TermMode::MOUSE_REPORT_CLICK));
+    s.feed(b"\x1b[?1000h");
+    assert!(!s.x10_mouse());
+    s.feed(b"\x1b[?9h\x1b[?9l");
+    assert!(!s.x10_mouse());
+    let packet = emu::mouse(
+        TermMode::MOUSE_REPORT_CLICK | TermMode::UTF8_MOUSE,
+        0,
+        300,
+        0,
+        0,
+        false,
+    );
+    assert_eq!(
+        String::from_utf8(packet).unwrap(),
+        format!("\x1b[M {}!", char::from_u32(333).unwrap())
+    );
+    s.feed(b"\x1b[1;31mred<\x1b[0m");
+    s.select_all();
+    let html = s.html(true, |_, _| (255, 0, 0), false).unwrap();
+    assert!(html.contains("color:#ff0000"));
+    assert!(html.contains("font-weight:bold"));
+    assert!(html.contains("&lt;"));
+}
+
+#[test]
+fn quoting_round_trips_backslash_quote_and_space_combinations() {
+    // Independent decoder of the documented Microsoft argument splitting rules.
+    fn decode(text: &str) -> Vec<String> {
+        let chars = text.chars().collect::<Vec<_>>();
+        let mut cursor = 0;
+        let mut result = Vec::new();
+        while cursor < chars.len() {
+            while cursor < chars.len() && chars[cursor].is_ascii_whitespace() {
+                cursor += 1;
+            }
+            if cursor == chars.len() {
+                break;
+            }
+            let mut word = String::new();
+            let mut quoted = false;
+            while cursor < chars.len() && (quoted || !chars[cursor].is_ascii_whitespace()) {
+                let mut slashes = 0;
+                while cursor < chars.len() && chars[cursor] == '\\' {
+                    slashes += 1;
+                    cursor += 1;
+                }
+                if chars.get(cursor) == Some(&'"') {
+                    word.extend(std::iter::repeat_n('\\', slashes / 2));
+                    if slashes % 2 == 1 {
+                        word.push('"');
+                    } else {
+                        quoted = !quoted;
+                    }
+                    cursor += 1;
+                } else {
+                    word.extend(std::iter::repeat_n('\\', slashes));
+                    if let Some(&c) = chars.get(cursor) {
+                        word.push(c);
+                        cursor += 1;
+                    }
+                }
+            }
+            result.push(word);
+        }
+        result
+    }
+    for a in ["", " ", "\\", "\"", "x", "界", "\t"] {
+        for b in ["", " ", "\\", "\"", "x"] {
+            for c in ["", " ", "\\", "\"", "x"] {
+                let value = format!("{a}{b}{c}");
+                let argv = vec!["program.exe".to_owned(), value];
+                assert_eq!(decode(&emu::quoting::command_line(&argv)), argv);
+            }
+        }
+    }
+}
+#[test]
+fn coordinates_survive_history_eviction_and_wrapped_hyperlinks_have_cells() {
+    let mut s = Screen::new(10, 3, 2);
+    for _ in 0..20 {
+        s.feed(b"line\r\n");
+    }
+    assert_eq!(s.cursor(), (0, 20));
+    assert_eq!(s.range(19, 0, 19, 10), "line");
+    assert_eq!(s.range(0, 0, 0, 10), "");
+    s.feed(b"\x1b[?1049h");
+    assert_eq!(s.cursor(), (0, 2));
+    s.feed(b"\x1b[?1049l");
+    assert_eq!(s.cursor(), (0, 20));
+    let mut s = Screen::new(12, 4, 10);
+    s.feed(b"https://example.org/path");
+    let points = s.hyperlink_points("https://example.org/path");
+    assert_eq!(points.len(), 24);
+    assert!(points.contains(&emu::index::Point::new(Line(1), Column(3))));
+}
+
+#[test]
+fn reset_flags_preserve_content_cursor_and_custom_tabs() {
+    let mut s = Screen::new(16, 4, 100);
+    s.feed(b"\x1b[3g\x1b[1;4H\x1bH\x1b[H\tX");
+    assert_eq!(s.cursor(), (4, 0));
+    let content = s.viewport_text();
+    s.reset(false, false);
+    assert_eq!(s.viewport_text(), content);
+    assert_eq!(s.cursor(), (4, 0));
+    s.feed(b"\x1b[H\tY");
+    assert_eq!(s.cursor(), (4, 0));
+    assert_eq!(s.range(0, 3, 0, 4), "Y");
+    s.reset(true, false);
+    s.feed(b"\x1b[H\tZ");
+    assert_eq!(s.cursor(), (9, 0));
+    assert_eq!(s.range(0, 8, 0, 9), "Z");
+    s.reset(true, true);
+    assert_eq!(s.cursor(), (0, 0));
+    assert!(s.viewport_text().trim().is_empty());
 }

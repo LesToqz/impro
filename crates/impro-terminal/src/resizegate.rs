@@ -288,7 +288,16 @@ impl ResizeGate {
                 written: Cell::new(false),
             });
             let weak = self.downgrade();
+            #[cfg(windows)]
+            let output_answer = Rc::downgrade(&answer);
             *answer.handler.borrow_mut() = Some(terminal.connect_contents_changed(move |t| {
+                // The ConPTY source wakes GTK for each consumed output packet.
+                // unread_bytes includes the packet until consumption is complete;
+                // the following notification releases the answered redraw gate.
+                #[cfg(windows)]
+                if let Some(answer) = output_answer.upgrade() {
+                    answer.written.set(true);
+                }
                 if let Some(g) = weak.upgrade() {
                     g.answered(t);
                 }

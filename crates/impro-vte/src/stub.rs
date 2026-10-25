@@ -13,7 +13,7 @@
 //!   are inherent methods returning `Option<gtk::Adjustment>` (call syntax is unchanged);
 //! * there is no `ffi` re-export.
 //!
-//! A later task replaces this module with a real ConPTY terminal.
+//! Kept as an opt-in compatibility fixture; Windows uses the ConPTY backend.
 use crate::{CursorBlinkMode, CursorShape, Format};
 use glib::prelude::*;
 use glib::subclass::prelude::*;
