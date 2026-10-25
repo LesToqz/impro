@@ -206,6 +206,8 @@ pub fn toggle_comments(text: &str) -> String {
 #[cfg(test)]
 mod line_ending_tests {
     #[cfg(windows)]
+    // The lint targets Unix world-writable files; on Windows this only clears the read-only attribute.
+    #[allow(clippy::permissions_set_readonly_false)]
     #[test]
     fn read_only_save_preserves_original_attribute_and_contents() {
         let dir = tempfile::tempdir().unwrap();
