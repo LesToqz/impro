@@ -349,6 +349,9 @@ impl ExplorerPanel {
         tree.set_margin_top(4);
         tree.set_margin_bottom(24);
         let column = gtk::TreeViewColumn::new();
+        // Folder glyphs fill the whole icon cell (file glyphs are narrower), so without
+        // spacing a folder's name touched its icon.
+        column.set_spacing(4);
         let icon = crate::icons::IconCell::new();
         util::pack(&column, &icon, false);
         // Preserve model icon names (also used to identify directories), but render their
