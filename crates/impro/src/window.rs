@@ -139,8 +139,13 @@ impl MainWindow {
         let docked = crate::win::policy::docked_titlebar();
         let titlebar = if docked {
             // The native caption is outside the client area, so the docked bar takes its height
-            // from the workspace; grow the window by it to keep the workspace at 1200x750.
-            window.set_default_size(1200, 750 + impro_chrome::HEADER_HEIGHT);
+            // from the workspace; grow the window by it to keep the workspace at 1200x750, but
+            // never past what the screen can show next to the native frame.
+            let (width, height) = crate::win::policy::fit_default_size(
+                (1200, 750 + impro_chrome::HEADER_HEIGHT),
+                crate::win::primary_work_area(),
+            );
+            window.set_default_size(width, height);
             TitleBar::new_docked(&menu_bar)
         } else {
             TitleBar::new(&menu_bar)

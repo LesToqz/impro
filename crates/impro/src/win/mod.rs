@@ -38,6 +38,14 @@ pub fn refresh_frame(window: &gtk::ApplicationWindow) {
     let _ = window;
 }
 
+/// Usable size (taskbar excluded) of the primary monitor in GTK's logical pixels, `None` when the
+/// display cannot say. Feeds `policy::fit_default_size`.
+pub fn primary_work_area() -> Option<(i32, i32)> {
+    use gdk::prelude::MonitorExt;
+    let area = gdk::Display::default()?.primary_monitor()?.workarea();
+    Some((area.width(), area.height()))
+}
+
 /// `AppsUseLightTheme` of the current user: `Some(true)` when apps should be light.
 pub fn system_apps_use_light_theme() -> Option<bool> {
     #[cfg(windows)]
