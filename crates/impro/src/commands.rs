@@ -187,6 +187,7 @@ impl MainWindow {
             ));
             menu.append(&item);
         }
+        self.build_open_recent(&file);
         for (label, action, keys) in [
             (
                 "View: Terminal on Right",
@@ -275,6 +276,41 @@ impl MainWindow {
                 },
             );
         }
+    }
+    /// File → Open Recent, right after "Open Folder…": the recent folders other than the
+    /// current one, newest first, rebuilt whenever the File menu opens.
+    fn build_open_recent(&self, file: &gtk::Menu) {
+        let item = gtk::MenuItem::with_label("Open Recent");
+        let submenu = gtk::Menu::new();
+        item.set_submenu(Some(&submenu));
+        file.insert(&item, 2);
+        let weak = self.weak();
+        let refresh = move |_: &gtk::Menu| {
+            let Some(this) = weak.upgrade().map(Self) else {
+                return;
+            };
+            for child in submenu.children() {
+                submenu.remove(&child);
+            }
+            let home = impro_core::platform::home_dir();
+            let recent = crate::launch::recent_excluding(&this.root());
+            for path in &recent {
+                let shown = crate::launch::display_path(path, home.as_deref(), cfg!(windows));
+                let entry = gtk::MenuItem::with_label(&shown);
+                let weak = weak.clone();
+                let path = path.clone();
+                entry.connect_activate(move |_| {
+                    if let Some(this) = weak.upgrade().map(Self) {
+                        this.set_root(&path);
+                    }
+                });
+                submenu.append(&entry);
+            }
+            submenu.show_all();
+            item.set_sensitive(!recent.is_empty());
+        };
+        refresh(file);
+        file.connect_show(refresh);
     }
     pub fn commands(&self) -> Vec<Command> {
         self.commands

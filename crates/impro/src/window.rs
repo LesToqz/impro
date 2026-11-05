@@ -664,6 +664,7 @@ impl MainWindow {
         self.close_commit_tabs();
         self.switcher_epoch.set(self.switcher_epoch.get() + 1);
         *self.root.borrow_mut() = root.clone();
+        crate::launch::note_folder(&root);
         self.recent.borrow_mut().clear();
         self.editor.set_root(Some(&root));
         self.explorer.set_root(&root);
@@ -689,26 +690,26 @@ impl MainWindow {
     }
     pub fn open_folder(&self) {
         self.restore_terminal_fullscreen();
-        let dialog = gtk::FileChooserDialog::new(
+        // Native chooser: the system folder picker on Windows, the portal or GTK elsewhere.
+        let dialog = gtk::FileChooserNative::new(
             Some("Open Folder"),
             Some(&self.window),
             gtk::FileChooserAction::SelectFolder,
+            Some("Open"),
+            Some("Cancel"),
         );
-        dialog.add_buttons(&[
-            ("Cancel", gtk::ResponseType::Cancel),
-            ("Open", gtk::ResponseType::Ok),
-        ]);
+        dialog.set_modal(true);
         dialog.set_current_folder(self.root());
+        // A native dialog is not owned by a window: keep it alive until it answers.
+        let alive = Rc::new(RefCell::new(Some(dialog.clone())));
         let weak = self.weak();
         dialog.connect_response(move |dialog, response| {
-            if response == gtk::ResponseType::Ok {
+            if response == gtk::ResponseType::Accept {
                 if let (Some(this), Some(path)) = (weak.upgrade().map(Self), dialog.filename()) {
                     this.set_root(path);
                 }
             }
-            unsafe {
-                dialog.destroy();
-            }
+            alive.borrow_mut().take();
         });
         dialog.show();
     }

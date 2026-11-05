@@ -314,6 +314,19 @@ impl EditorPanel {
     pub fn stack(&self) -> gtk::Stack {
         self.widgets().stack.clone()
     }
+    /// Replace the page shown while no tab is open (a one-line label by default).
+    /// The widget itself is shown; its children are the caller's to show.
+    pub fn set_empty_widget(&self, widget: &impl IsA<gtk::Widget>) {
+        let stack = self.stack();
+        let showing_editor = stack.visible_child_name().as_deref() == Some("editor");
+        if let Some(old) = stack.child_by_name("empty") {
+            stack.remove(&old);
+        }
+        stack.add_named(widget, "empty");
+        widget.as_ref().show();
+        // Removing the visible page lets the stack pick another one; restore the choice.
+        stack.set_visible_child_name(if showing_editor { "editor" } else { "empty" });
+    }
     pub fn overlay(&self) -> gtk::Overlay {
         self.widgets().overlay.clone()
     }
