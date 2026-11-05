@@ -38,8 +38,11 @@ $png = [Convert]::FromBase64String('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ("impro-shot-test-" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $tmp | Out-Null
 try {
-    [IO.File]::WriteAllBytes((Join-Path $tmp 'b-second.png'), $png)
-    [IO.File]::WriteAllBytes((Join-Path $tmp 'a-first.png'), $png)
+    # Only desktop-window.png and ONE first-paint*.png are printed; the others get a "skipped" line.
+    [IO.File]::WriteAllBytes((Join-Path $tmp 'desktop-window.png'), $png)
+    [IO.File]::WriteAllBytes((Join-Path $tmp 'first-paint-installer-warm.png'), $png)
+    [IO.File]::WriteAllBytes((Join-Path $tmp 'first-paint-installer-cold.png'), $png)
+    [IO.File]::WriteAllBytes((Join-Path $tmp 'b-other.png'), $png)
     Set-Content -LiteralPath (Join-Path $tmp 'notes.txt') -Value 'not a screenshot'
     $printScript = Join-Path $PSScriptRoot 'print-screenshots.ps1'
     $out = @(& $printScript -Directory $tmp *>&1 | ForEach-Object { "$_" })
@@ -47,14 +50,31 @@ try {
     $logLines = @($text -split "`r?`n")
     $begins = @($logLines | Where-Object { $_ -like '-----BEGIN IMPRO-SCREENSHOT *-----' })
     $ends = @($logLines | Where-Object { $_ -like '-----END IMPRO-SCREENSHOT *-----' })
-    Assert-Equal $begins.Count 2 'one BEGIN line per PNG, the text file is ignored'
-    Assert-Equal $ends.Count 2 'one END line per PNG'
-    Assert-Equal $begins[0] '-----BEGIN IMPRO-SCREENSHOT a-first.png-----' 'files are printed in name order'
-    $start = [Array]::IndexOf($logLines, $begins[0])
+    Assert-Equal $begins.Count 2 'two blocks: the window and one first-paint, the text file is ignored'
+    Assert-Equal $ends.Count 2 'one END line per BEGIN line'
+    $firstBegin = $begins[0]
+    $secondBegin = $begins[1]
+    Assert-Equal $firstBegin '-----BEGIN IMPRO-SCREENSHOT desktop-window.png-----' 'the real window comes first (name order)'
+    Assert-Equal $secondBegin '-----BEGIN IMPRO-SCREENSHOT first-paint-installer-cold.png-----' 'the first first-paint file in name order'
+    $start = [Array]::IndexOf($logLines, $firstBegin)
     $stop = [Array]::IndexOf($logLines, $ends[0])
     $body = ($logLines[($start + 1)..($stop - 1)]) -join ''
     Assert-Equal ([Convert]::ToBase64String($png)) $body 'the printed body decodes to the file bytes'
-    Assert-Equal ($text -match 'printed 2 of 2 file') $true 'summary line'
+    Assert-Equal ($text -match '\[screenshots\] skipped b-other\.png \(70 bytes\)') $true 'an unselected file gets a skipped line with its size'
+    Assert-Equal ($text -match '\[screenshots\] skipped first-paint-installer-warm\.png \(70 bytes\)') $true 'the second first-paint file is skipped'
+    Assert-Equal ($text -match 'printed 2 of 4 file') $true 'summary line'
+
+    # A file whose base64 would exceed the cap is skipped, not printed (random bytes: not a decodable image, so the
+    # original is considered, and 100000 bytes are about 133 KB of base64).
+    $oversizeDir = Join-Path $tmp 'oversize'
+    New-Item -ItemType Directory -Path $oversizeDir | Out-Null
+    $noise = [byte[]]::new(100000)
+    [Random]::new(3).NextBytes($noise)
+    [IO.File]::WriteAllBytes((Join-Path $oversizeDir 'desktop-window.png'), $noise)
+    $capText = @(& $printScript -Directory $oversizeDir *>&1 | ForEach-Object { "$_" }) -join "`n"
+    Assert-Equal ($capText -match '-----BEGIN IMPRO-SCREENSHOT') $false 'an oversized file is not printed'
+    Assert-Equal ($capText -match '\[screenshots\] skipped desktop-window\.png \(100000 bytes on disk') $true 'an oversized file gets a skipped line'
+    Assert-Equal ($capText -match 'printed 0 of 1 file') $true 'summary line of the oversize case'
 
     $missing = @(& $printScript -Directory (Join-Path $tmp 'nope') *>&1 | ForEach-Object { "$_" }) -join "`n"
     Assert-Equal ($missing -match 'no such directory') $true 'a missing directory is a warning, not a failure'
@@ -85,8 +105,17 @@ try {
                 Assert-Equal $img.Height 550 'the aspect ratio is kept'
             } finally { $img.Dispose() }
         } finally { $ms.Dispose() }
-        $same = Get-ScreenshotLogBytes -Path (Join-Path $tmp 'a-first.png') -MaxWidth 1100 -ScaleAboveBytes (250KB)
+        $same = Get-ScreenshotLogBytes -Path (Join-Path $tmp 'desktop-window.png') -MaxWidth 1100 -ScaleAboveBytes (250KB)
         Assert-Equal $same.Length $png.Length 'a small file is printed unchanged'
+        # print-screenshots.ps1 always downscales first (-ScaleAboveBytes 0): a 1-pixel image is not wider than the limit.
+        $always = Get-ScreenshotLogBytes -Path (Join-Path $tmp 'desktop-window.png') -MaxWidth 700 -ScaleAboveBytes 0
+        Assert-Equal $always.Length $png.Length 'an image narrower than the limit keeps its bytes'
+        $wide700 = Get-ScreenshotLogBytes -Path $wide -MaxWidth 700 -ScaleAboveBytes 0
+        $ms7 = [System.IO.MemoryStream]::new($wide700)
+        try {
+            $img7 = [System.Drawing.Image]::FromStream($ms7)
+            try { Assert-Equal $img7.Width 700 'the default limit of print-screenshots.ps1 is 700 px' } finally { $img7.Dispose() }
+        } finally { $ms7.Dispose() }
     }
 } finally { Remove-Item -LiteralPath $tmp -Recurse -Force }
 

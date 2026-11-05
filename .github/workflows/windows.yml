@@ -57,7 +57,9 @@ jobs:
             if ($errors) { exit 1 }
           }
           ./packaging/windows/test_smoke_args.ps1
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           ./packaging/windows/test_lab_helpers.ps1
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Cargo check
         shell: msys2 {0}
         run: cargo check --workspace --all-targets --locked --keep-going
@@ -70,12 +72,19 @@ jobs:
         shell: pwsh
         run: |
           python -I -B -m unittest discover -s packaging/windows -p "test_iss.py" -v
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python -I -B -m unittest discover -s packaging/windows -p "test_window_probe.py" -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python -I -B scripts/ci/test_extract_log_screenshots.py
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Screenshot log helper test (PowerShell)
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Screenshot log and window probe helper tests (PowerShell)
         shell: pwsh
-        run: ./packaging/windows/test_screenshot_log.ps1
+        run: |
+          # Each script ends with `exit 1` on a failed assert; without the checks a later success would hide it.
+          ./packaging/windows/test_screenshot_log.ps1
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          ./packaging/windows/test_window_probe.ps1
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
   # ---------------------------------------------------------------- test
   # Report-only until promoted: failures here do not fail the workflow.

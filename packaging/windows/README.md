@@ -8,7 +8,8 @@ Target `x86_64-pc-windows-gnu`, GTK3 and Rust from MSYS2 UCRT64.
 | `impro.iss` | Inno Setup 6 script. Per-user by default; registers the integration described in "Windows integration" below. |
 | `smoke.ps1` | Installs/unzips the packages, asserts the integration, tests the installed app (and captures its real window), uninstalls and checks nothing is left. |
 | `window-capture.ps1` | Best-effort capture of the real top-level window of the running app, native frame included (used by `smoke.ps1`). |
-| `print-screenshots.ps1`, `screenshot-log.ps1`, `test_screenshot_log.ps1` | Print every PNG of a directory into the job log as base64 between marker lines, its helpers and their test. See "Screenshots in the job log". |
+| `window-probe.ps1`, `probe-vectors.json`, `test_window_probe.ps1`, `test_window_probe.py` | The window probe (`[window-probe] key=value` lines about the real window and a few pixels of its capture), the shared test vectors of its pure helpers and the tests. See "Window probe". |
+| `print-screenshots.ps1`, `screenshot-log.ps1`, `test_screenshot_log.ps1` | Print `desktop-window.png` and one `first-paint*.png` (capped at 700 px width and 60 KB of base64) into the job log between marker lines, its helpers and their test. See "Screenshots in the job log". |
 | `smoke-args.ps1`, `test_smoke_args.ps1` | Argument quoting for the Inno installer/uninstaller (a value with a space must be quoted by hand for `Start-Process`) and its plain-assert test, run in the `check` job. |
 | `lab-helpers.ps1`, `test_lab_helpers.ps1` | Pure helpers (timing-line parser, Markdown table, decode-based blank-screenshot check, line limiter) shared by `smoke.ps1` and `startup-lab.ps1`, plus their test (run in the `check` job). |
 | `startup-lab.ps1` | TEMPORARY startup experiment, see "Startup lab" below. |
@@ -74,6 +75,44 @@ reading it back needs COM interop); App Paths; the Applications key (open comman
 context-menu keys with their command lines; the user `PATH`; and the uninstall entry (name, version, publisher, help link,
 install location). `test_iss.py` checks that every registry key `smoke.ps1` names is written by `impro.iss`.
 
+## Window probe (facts about the real window)
+
+Right after the desktop capture, while the window still exists, `smoke.ps1` (installer mode) calls `Write-WindowProbe`
+(`window-probe.ps1`). It prints small structured facts, one per line, so that they can be read straight from the job log:
+
+```
+[window-probe] key=value
+```
+
+Best effort: each fact is read in its own `try`/`catch` and a failure is printed as `key=error(<message>)`; the probe never
+fails the step. Search the log for `[window-probe]`.
+
+| Keys | Meaning |
+| --- | --- |
+| `os_version`, `os_build`, `os_build_ubr`, `os_display_version`, `os_product` | Windows version and build number. |
+| `hwnd`, `pid`, `process_path`, `title`, `class` | The window found by the capture (the largest visible unowned window of an `impro` process): handle, process id, `GetWindowText`, window class name. |
+| `style`, `exstyle` | `GWL_STYLE` / `GWL_EXSTYLE` as `0x%08X`. |
+| `ws_caption`, `ws_thickframe`, `ws_sysmenu`, `ws_minimizebox`, `ws_maximizebox`, `ws_visible` | `true`/`false` for the style bits (`ws_caption` needs both `WS_BORDER` and `WS_DLGFRAME`). No `ws_caption` means client-side decorations. |
+| `window_rect`, `window_size`, `client_size`, `client_origin_screen` | `GetWindowRect` as `left,top,right,bottom`; sizes as `WxH` in device pixels; the client origin on the screen. |
+| `dwm_frame_bounds`, `dwm_frame_size`, `dwm_frame_hr` | `DWMWA_EXTENDED_FRAME_BOUNDS` (the visible frame, the rectangle of the capture) with its HRESULT. |
+| `nonclient_top_px` | Client origin minus visible frame top: caption plus top border. |
+| `dpi_window`, `dpi_source`, `dpi_scale` | `GetDpiForWindow` (fallback `GetDeviceCaps(LOGPIXELSX)`), where it came from, DPI/96. |
+| `dpi_awareness_window`, `dpi_per_monitor_v2_window`, `dpi_awareness_process`, `dpi_awareness_process_hr` | `unaware`, `system_aware` or `per_monitor_aware` with the raw value, from `GetAwarenessFromDpiAwarenessContext` and `GetProcessDpiAwareness`. |
+| `dwm_immersive_dark_mode`, `dwm_window_corner_preference`, `dwm_border_color`, `dwm_caption_color`, `dwm_text_color` | `DwmGetWindowAttribute` read-backs (20, 33, 34, 35, 36), each followed by `<key>_hr` with the HRESULT. Colours are `#RRGGBB` (a COLORREF is `0x00BBGGRR`); `0xFFFFFFFF` is "default" and `0xFFFFFFFE` "none". Corner preference is `2(round)` style. `n/a` when the HRESULT is a failure (older Windows). |
+| `app_user_model_id`, `app_user_model_id_hr`, `app_user_model_id_vartype`, `app_user_model_id_matches` | `System.AppUserModel.ID` from the window's property store (`SHGetPropertyStoreForWindow`) and whether it equals `dev.impro.impro`. The property store shows a per-window ID; a process-level ID (`SetCurrentProcessExplicitAppUserModelID`) may read back `(empty)`. |
+| `wm_geticon_small`, `wm_geticon_big`, `wm_geticon_small2` (+ `_nonzero`), `class_icon_big`, `class_icon_small` | `WM_GETICON` answers (an `HICON` or 0) and the window class icons. |
+| `caption_height_px`, `caption_height_source` | Title bar height in device pixels: `client_origin`, `rect_difference`, or `default` (16 px at 96 DPI, scaled) when the window has no `WS_CAPTION`. |
+| `bitmap_size`, `pixel(<name>)`, `pixel_pos(<name>)` | Size of the capture and the colour (`#RRGGBB`) and position of a few pixels of it. Offsets are in device pixels at 96 DPI, scaled by DPI/96; `x` and `y` are bitmap coordinates. |
+| `done` | Printed last; its absence means the probe stopped early (a `::warning::` says why). |
+
+Pixel names: `caption_center` (x = width/2, y = caption/2), `below_caption_x60` and `below_caption_center` (6 px below
+the caption, the docked bar), `sidebar_body` (x = 150, y = caption + 120), `editor_center` (centre of the area under the
+caption) and `bottom_right` (12 px in from the corner). A position outside the bitmap prints `n/a(outside the bitmap)`.
+
+The pure helpers (COLORREF to `#RRGGBB`, style bits, DPI scaling of offsets, caption height, probe points, line format) are
+tested without Windows: `test_window_probe.ps1` (in the `check` job) runs them against `probe-vectors.json`, and
+`test_window_probe.py` checks the same vectors against an independent Python implementation and pins the Win32 constants.
+
 ## Screenshots in the job log
 
 The dev machine can read a job log but cannot download artifacts, so the `smoke` job prints its screenshots into the log
@@ -85,11 +124,16 @@ The dev machine can read a job log but cannot download artifacts, so the `smoke`
 -----END IMPRO-SCREENSHOT <file name>-----
 ```
 
-`print-screenshots.ps1 -Directory DIR` does this for every `*.png` of a directory; a file larger than 250 KB is first
-downscaled to at most 1100 px width. The files are `first-paint-<mode>-<cold|warm>.png` (the offscreen GTK capture,
-`IMPRO_QA_SCREENSHOT`, content only) and `desktop-window.png`: `smoke.ps1` starts the installed app on a folder without the
-QA variables, waits for its main window, brings it to the front and copies that rectangle off the screen with the native
-caption and frame (`Graphics.CopyFromScreen`, DWM frame bounds, DPI aware). `PrintWindow` is the fallback, written as
+`print-screenshots.ps1 -Directory DIR` keeps the log small: only `desktop-window.png` and ONE `first-paint*.png` (the first
+in name order, normally the cold installer launch) are considered. Each is downscaled to at most 700 px width (`-MaxWidth`)
+and skipped when its base64 text would still exceed 60 KB (`-MaxBase64KB`). Every other PNG gets one line,
+`[screenshots] skipped <name> (<size>)`. The structured facts of the window probe (next section) are the primary evidence;
+the base64 blocks are a bonus for whoever can decode them.
+
+The files are `first-paint-<mode>-<cold|warm>.png` (the offscreen GTK capture, `IMPRO_QA_SCREENSHOT`, content only) and
+`desktop-window.png`: `smoke.ps1` starts the installed app on a folder without the QA variables, waits for its main
+window, brings it to the front and copies that rectangle off the screen with the native caption and frame
+(`Graphics.CopyFromScreen`, DWM frame bounds, DPI aware). `PrintWindow` is the fallback, written as
 `desktop-window-printwindow.png` when the screen copy stays blank. If no window appears the step only logs a warning.
 
 To get the files back from a saved log (any OS, standard library only):

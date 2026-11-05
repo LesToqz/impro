@@ -147,12 +147,15 @@ function Save-DesktopWindowScreenshot {
     # Starts the app on a folder WITHOUT the QA variables (so it stays open), waits until its main window exists,
     # captures that window with its native frame into $Path and stops the app. $true when a non-blank PNG was
     # written. Never throws; problems are logged as warnings.
+    # $AfterCapture (optional) runs while the window still exists, right after the capture, as
+    # `& $AfterCapture <hwnd> <png path>`; smoke.ps1 uses it for the window probe. Its failure is only a warning.
     param(
         [Parameter(Mandatory)][string]$Exe,
         [Parameter(Mandatory)][string]$Folder,
         [Parameter(Mandatory)][string]$Path,
         [hashtable]$EnvVars = @{},
-        [int]$WindowTimeoutSec = 60
+        [int]$WindowTimeoutSec = 60,
+        [scriptblock]$AfterCapture = $null
     )
     $started = $null
     $ok = $false
@@ -206,6 +209,10 @@ function Save-DesktopWindowScreenshot {
                 } catch {
                     Write-Host "::warning::desktop capture: PrintWindow fallback failed: $($_.Exception.Message)"
                 }
+            }
+            if ($null -ne $AfterCapture) {
+                try { $null = & $AfterCapture $hwnd $Path }
+                catch { Write-Host "::warning::desktop capture: the after-capture step failed: $($_.Exception.Message)" }
             }
         }
     } catch {
