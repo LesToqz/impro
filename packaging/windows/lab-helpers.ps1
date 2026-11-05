@@ -102,3 +102,63 @@ function Limit-Lines {
     param([AllowEmptyString()][string]$Text, [Parameter(Mandatory)][int]$Count)
     (($Text -split "`r?`n") | Select-Object -First $Count) -join "`n"
 }
+
+function Get-LongPathName {
+    # The long form of an existing path (8.3 names such as RUNNER~1 expanded). The input itself when the path does
+    # not exist, on systems without kernel32, or when the helper cannot be compiled: comparing two spellings of one
+    # path then degrades to a plain string comparison instead of failing.
+    param([Parameter(Mandatory)][string]$Path)
+    if (-not ('ImproPaths' -as [type])) {
+        try {
+            Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public static class ImproPaths {
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, EntryPoint = "GetLongPathNameW")]
+    private static extern uint GetLongPathName(string shortPath, StringBuilder longPath, uint bufferLength);
+    public static string LongPath(string path) {
+        try {
+            StringBuilder sb = new StringBuilder(1024);
+            uint n = GetLongPathName(path, sb, (uint)sb.Capacity);
+            if (n > 0 && n < (uint)sb.Capacity) return sb.ToString();
+        } catch (Exception) { }
+        return path;
+    }
+}
+'@
+        } catch { return $Path }
+    }
+    [ImproPaths]::LongPath($Path)
+}
+
+function ConvertTo-ComparablePath {
+    # Normal form for comparing two spellings of one path: long names, backslashes, no trailing separator, lower case.
+    param([AllowEmptyString()][AllowNull()][string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { return '' }
+    $p = Get-LongPathName ($Path.Trim().Trim('"'))
+    $p.Replace('/', '\').TrimEnd('\').ToLowerInvariant()
+}
+
+function Test-SamePath {
+    # $true when both strings name the same path (case, slash direction, trailing slash and 8.3 names are ignored).
+    # Two empty strings are not "the same path".
+    param([AllowEmptyString()][AllowNull()][string]$Left, [AllowEmptyString()][AllowNull()][string]$Right)
+    $l = ConvertTo-ComparablePath $Left
+    $r = ConvertTo-ComparablePath $Right
+    ($l -ne '') -and ($l -ceq $r)
+}
+
+function Test-ByteSequence {
+    # $true when Needle occurs anywhere in Haystack, at any alignment (a UTF-16 string inside a binary file).
+    param([byte[]]$Haystack, [byte[]]$Needle)
+    if ($Needle.Length -eq 0 -or $Haystack.Length -lt $Needle.Length) { return $false }
+    $last = $Haystack.Length - $Needle.Length
+    for ($i = 0; $i -le $last; $i++) {
+        if ($Haystack[$i] -ne $Needle[0]) { continue }
+        $j = 1
+        while ($j -lt $Needle.Length -and $Haystack[$i + $j] -eq $Needle[$j]) { $j++ }
+        if ($j -eq $Needle.Length) { return $true }
+    }
+    $false
+}
