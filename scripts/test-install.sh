@@ -70,7 +70,11 @@ assert root.findtext('id') == 'dev.impro.impro'
 assert root.findtext('name') == 'impro'
 assert root.findtext('summary') and root.find('description') is not None
 assert root.findtext('metadata_license') == 'MIT'
-assert root.findtext('project_license') == 'MIT'
+# The code is MIT; bundled icon assets add their own licences (THIRD_PARTY_NOTICES.md).
+assert root.findtext('project_license').split(' AND ')[0] == 'MIT'
+notices = open(sys.argv[2].replace('Cargo.toml', 'THIRD_PARTY_NOTICES.md')).read()
+for spdx, name in (('CC-BY-SA-4.0', 'Yaru'), ('LGPL-3.0-or-later', 'libpanel')):
+    assert name in notices and spdx in root.findtext('project_license'), (spdx, name)
 launchable = root.find("launchable[@type='desktop-id']")
 assert launchable is not None and launchable.text == 'impro.desktop'
 assert root.findtext('provides/binary') == 'impro'

@@ -8,7 +8,9 @@
 <component type="desktop-application">
   <id>dev.impro.impro</id>
   <metadata_license>MIT</metadata_license>
-  <project_license>MIT</project_license>
+  <!-- The code is MIT; the binary also embeds Yaru (CC-BY-SA-4.0) and libpanel
+       (LGPL-3.0-or-later) icons, see THIRD_PARTY_NOTICES.md. -->
+  <project_license>MIT AND CC-BY-SA-4.0 AND LGPL-3.0-or-later</project_license>
   <name>impro</name>
   <summary>IDE with live Markdown notes and a terminal</summary>
   <developer id="io.github.lestoqz">
