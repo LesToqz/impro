@@ -64,5 +64,24 @@ Assert-Equal (Get-ByteSum @([pscustomobject]@{ Name = 'x' })) 0 'byte sum ignore
 Assert-Equal (Get-ByteSum @([pscustomobject]@{ Length = 5 }, [pscustomobject]@{ Length = 7 })) 12 'byte sum adds Length'
 Assert-Equal (Get-ByteSum ([pscustomobject]@{ Length = 5 })) 5 'byte sum of one scalar item'
 
+# Path comparison used by the installer checks of smoke.ps1 (8.3 expansion only happens on Windows; the rest is text).
+Assert-Equal (Test-SamePath 'C:\Users\X\app' 'c:/users/x/APP/') $true 'same path: case, slash direction and trailing separator are ignored'
+Assert-Equal (Test-SamePath '"C:\a b\c.exe"' 'C:\a b\c.exe') $true 'surrounding quotes are ignored'
+Assert-Equal (Test-SamePath 'C:\a' 'C:\b') $false 'different paths'
+Assert-Equal (Test-SamePath '' '') $false 'two empty strings are not the same path'
+Assert-Equal (Test-SamePath $null 'C:\a') $false 'null against a path'
+Assert-Equal (ConvertTo-ComparablePath 'C:/Dir/') 'c:\dir' 'comparable form'
+
+# Byte search used to look for the AppUserModelID inside a .lnk file.
+$hay = [byte[]](0, 1, 2, 3, 4, 5)
+Assert-Equal (Test-ByteSequence $hay ([byte[]](3, 4))) $true 'sequence in the middle'
+Assert-Equal (Test-ByteSequence $hay ([byte[]](5, 6))) $false 'sequence running past the end'
+Assert-Equal (Test-ByteSequence $hay ([byte[]](5))) $true 'one byte at the end'
+Assert-Equal (Test-ByteSequence $hay ([byte[]]@())) $false 'empty needle'
+$utf16 = [Text.Encoding]::Unicode.GetBytes('dev.impro.impro')
+$padded = [byte[]](@(1) + $utf16 + @(9, 9))   # starts at an odd offset on purpose
+Assert-Equal (Test-ByteSequence $padded $utf16) $true 'UTF-16 text found at an odd offset'
+Assert-Equal (Test-ByteSequence $padded ([Text.Encoding]::Unicode.GetBytes('dev.impro.other'))) $false 'other text not found'
+
 if ($script:failures) { Write-Host "$script:failures failure(s)"; exit 1 }
 Write-Host 'all passed'

@@ -149,6 +149,11 @@ try {
     if ($uninstaller) {
         $p = Start-Process -FilePath $uninstaller.FullName -ArgumentList (New-InnoArgumentList -Log (Join-Path $OutDir 'lab-uninstall.log')) -PassThru -Wait
         Step "uninstaller exit code $($p.ExitCode)"
+        # The uninstaller relaunches itself from %TEMP%, so -Wait returns early. The install used the task defaults
+        # of impro.iss (PATH entry, context menus): let it finish before the next step of the job starts.
+        $deadline = (Get-Date).AddSeconds(60)
+        while ((Test-Path -LiteralPath $dir) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 1 }
+        Start-Sleep -Seconds 3
     }
 }
 

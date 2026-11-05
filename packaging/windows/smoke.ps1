@@ -3,12 +3,28 @@
   Smoke test of the packaged impro for Windows (PowerShell 7).
 
 .DESCRIPTION
-  -Mode installer : silently install the setup exe, assert files/registry, test the INSTALLED app,
-                    silently uninstall and assert everything is gone.
+  -Mode installer : two rounds.
+                    1. "Next, Next, Finish": a silent install WITHOUT /TASKS (the task defaults of impro.iss), the
+                       integration is asserted, the same setup runs again over it (upgrade in place: still one PATH
+                       entry), then one silent uninstall must remove everything. A failure here is reported at the
+                       end so that round 2 still produces its evidence.
+                    2. A silent install with every task (/TASKS=desktopicon,contextmenu,filecontextmenu,addtopath),
+                       the same assertions plus the desktop shortcut, the tests of the INSTALLED app, then a silent
+                       uninstall: all files, shortcuts, registry keys and the PATH entry are gone, while a marker in
+                       %APPDATA%\impro survives (the uninstaller never touches user settings).
+                    Integration asserted after an install: Start menu shortcut (target = installed impro.exe,
+                    working directory = user profile, AppUserModelID), App Paths key, Software\Classes\Applications
+                    (open command and SupportedTypes), the folder / folder-background / file context-menu keys, the
+                    user PATH, and the uninstall entry (name, version, publisher, help link).
   -Mode portable  : unzip the portable zip and test the app from there.
 
   The app test mirrors scripts/ci/smoke.sh: --version, --help, invalid folder (exit 2), then a GUI
-  launch that writes a first-paint PNG (IMPRO_QA_SCREENSHOT) and exits 0, time-boxed.
+  launch that writes a first-paint PNG (IMPRO_QA_SCREENSHOT) and exits 0, time-boxed. In installer mode a last
+  launch WITHOUT the QA variables stays open until the real top-level window exists and is captured with its native
+  frame into <OutDir>\desktop-window.png (best effort, never fails the run; see window-capture.ps1).
+
+  Silent installer flags used (see smoke-args.ps1): /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /DIR="..."
+  /LOG="..." and, for round 2 only, /TASKS=...; the uninstaller gets /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /LOG="...".
 #>
 [CmdletBinding()]
 param(
@@ -26,10 +42,24 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'smoke-args.ps1')
 . (Join-Path $PSScriptRoot 'lab-helpers.ps1')
+. (Join-Path $PSScriptRoot 'window-capture.ps1')
 
 $AppId = '{084215CE-9F22-4B49-9F5F-65835332B838}'
 $UninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\${AppId}_is1"
+$UninstallSubKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' + $AppId + '_is1'
 $ExpectedUsage = 'usage: impro [-h] [--version] [folder]'
+
+# What impro.iss registers (all under HKCU for the per-user install the smoke test performs). packaging/windows/
+# test_iss.py checks that every key named here is written by the script.
+$FolderMenuSubKey = 'Software\Classes\Directory\shell\impro'
+$BackgroundMenuSubKey = 'Software\Classes\Directory\Background\shell\impro'
+$FileMenuSubKey = 'Software\Classes\*\shell\impro'
+$AppPathsSubKey = 'Software\Microsoft\Windows\CurrentVersion\App Paths\impro.exe'
+$ApplicationsSubKey = 'Software\Classes\Applications\impro.exe'
+$ExpectedAppUserModelId = 'dev.impro.impro'   # impro_core::identity::APP_ID, set on the process by the app
+$StartMenuLnk = Join-Path ([Environment]::GetFolderPath('Programs')) 'impro.lnk'
+$DesktopLnk = Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) 'impro.lnk'
+$script:Deferred = @()
 
 $Artifacts = (Resolve-Path -LiteralPath $Artifacts).Path
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
@@ -164,6 +194,12 @@ function Test-App([string]$AppDir) {
         if ($all -match $bad) { Fail "runtime data problem in app output: matched '$bad'" }
     }
     if ($all -match 'WARNING') { Write-Host '::warning::app printed warnings, see the uploaded launch logs' }
+
+    # Best effort, after every verdict above: the real desktop window with its native frame (the first-paint PNG
+    # holds only the GTK content). Installer mode only; never fails the run.
+    if ($Mode -eq 'installer') {
+        $null = Save-DesktopWindowScreenshot -Exe $exe -Folder $folder -Path (Join-Path $OutDir 'desktop-window.png') -EnvVars $envs
+    }
 }
 
 function Assert-InstalledLayout([string]$AppDir) {
@@ -173,6 +209,217 @@ function Assert-InstalledLayout([string]$AppDir) {
         Assert-Path (Join-Path $AppDir $rel) "installed $rel"
     }
     foreach ($rel in $RequireFiles) { Assert-Path (Join-Path $AppDir $rel) "installed $rel (next to impro.exe)" }
+}
+
+# --- the integration impro.iss registers ------------------------------------------------------------------
+# Registry values are read through .NET: the registry provider of PowerShell would treat the * in
+# Software\Classes\*\shell as a wildcard.
+
+function Test-UserRegKey([string]$SubKey) {
+    $k = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($SubKey)
+    if ($null -eq $k) { return $false }
+    $k.Dispose()
+    $true
+}
+
+function Get-UserRegValue([string]$SubKey, [string]$Name) {
+    # The value ('' = the default value), or $null when the key or the value is missing. %VARS% stay unexpanded.
+    $k = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($SubKey)
+    if ($null -eq $k) { return $null }
+    try { return $k.GetValue($Name, $null, [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames) }
+    finally { $k.Dispose() }
+}
+
+function Assert-UserKey([string]$SubKey, [string]$What) {
+    if (-not (Test-UserRegKey $SubKey)) { Fail "missing $What : HKCU\$SubKey" }
+    Pass "$What present"
+}
+
+function Assert-Missing([string]$Path, [string]$What) {
+    if (Test-Path -LiteralPath $Path) { Fail "unexpected $What : $Path" }
+    Pass "$What absent"
+}
+
+function Assert-OpenCommand([string]$SubKey, [string]$ExpectedArg, [string]$What, [string]$Exe) {
+    # The default value of the key must be: "<installed impro.exe>" "<ExpectedArg>"
+    $cmd = [string](Get-UserRegValue $SubKey '')
+    $m = [regex]::Match($cmd, '^"(?<exe>[^"]+)" "(?<arg>[^"]+)"$')
+    if (-not $m.Success) { Fail "$What has an unexpected command line : $cmd" }
+    if (-not (Test-SamePath $m.Groups['exe'].Value $Exe)) { Fail "$What runs '$($m.Groups['exe'].Value)', expected '$Exe'" }
+    if ($m.Groups['arg'].Value -cne $ExpectedArg) { Fail "$What passes '$($m.Groups['arg'].Value)', expected '$ExpectedArg'" }
+    Pass "$What runs the installed impro.exe with $ExpectedArg"
+}
+
+function Get-ShortcutInfo([string]$LnkPath) {
+    $shell = New-Object -ComObject WScript.Shell
+    try {
+        $lnk = $shell.CreateShortcut($LnkPath)
+        [pscustomobject]@{
+            Target = [string]$lnk.TargetPath
+            WorkingDirectory = [string]$lnk.WorkingDirectory
+            Icon = [string]$lnk.IconLocation
+        }
+    } finally { [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($shell) }
+}
+
+function Assert-Shortcut([string]$LnkPath, [string]$Exe, [string]$What) {
+    Assert-Path $LnkPath $What
+    $info = Get-ShortcutInfo $LnkPath
+    Step ("{0} : target='{1}' workingDirectory='{2}' icon='{3}'" -f $What, $info.Target, $info.WorkingDirectory, $info.Icon)
+    if (-not (Test-SamePath $info.Target $Exe)) { Fail "$What targets '$($info.Target)', expected the installed '$Exe'" }
+    Pass "$What targets the installed impro.exe"
+    if (-not (Test-SamePath $info.WorkingDirectory $env:USERPROFILE)) {
+        Fail "$What starts in '$($info.WorkingDirectory)', expected the user profile '$env:USERPROFILE'"
+    }
+    Pass "$What starts in the user profile"
+    # The AppUserModelID sits in the property store of the .lnk as UTF-16 text. This is a plausibility check on
+    # the file bytes (no public API reads it back without a COM interop), so a miss is only a warning.
+    $bytes = [IO.File]::ReadAllBytes($LnkPath)
+    if (Test-ByteSequence $bytes ([Text.Encoding]::Unicode.GetBytes($ExpectedAppUserModelId))) {
+        Pass "$What carries the AppUserModelID $ExpectedAppUserModelId"
+    } else {
+        Write-Host "::warning::$What : AppUserModelID $ExpectedAppUserModelId not found in the .lnk bytes"
+    }
+}
+
+function Get-UserPathEntries {
+    # The entries of the user PATH as stored (unexpanded), without empty items. Callers wrap the call in @(...).
+    $k = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment')
+    if ($null -eq $k) { return @() }
+    try { $raw = [string]$k.GetValue('Path', '', [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames) }
+    finally { $k.Dispose() }
+    @($raw -split ';' | Where-Object { $_ -ne '' })
+}
+
+function Assert-UserPathCount([string]$Dir, [int]$Expected) {
+    $hits = @(@(Get-UserPathEntries) | Where-Object { Test-SamePath $_ $Dir })
+    if ($hits.Count -ne $Expected) { Fail "install dir is on the user PATH $($hits.Count) time(s), expected $Expected" }
+    if ($Expected -eq 0) { Pass 'install dir is not on the user PATH' } else { Pass "install dir is on the user PATH exactly $Expected time(s)" }
+}
+
+function Assert-UninstallEntry([string]$Dir) {
+    # What Settings > Apps shows: name, version, publisher, links, install location.
+    $name = [string](Get-UserRegValue $UninstallSubKey 'DisplayName')
+    $ver = [string](Get-UserRegValue $UninstallSubKey 'DisplayVersion')
+    $pub = [string](Get-UserRegValue $UninstallSubKey 'Publisher')
+    $help = [string](Get-UserRegValue $UninstallSubKey 'HelpLink')
+    $loc = [string](Get-UserRegValue $UninstallSubKey 'InstallLocation')
+    Step "uninstall entry: DisplayName='$name' DisplayVersion='$ver' Publisher='$pub' HelpLink='$help' InstallLocation='$loc'"
+    if ($name -notlike 'impro*') { Fail "uninstall entry DisplayName is '$name'" }
+    if ($ver -ne $Version) { Fail "uninstall entry DisplayVersion is '$ver', expected $Version" }
+    if (-not $pub.Trim()) { Fail 'uninstall entry has no Publisher' }
+    if ($help -notlike 'https://*') { Fail "uninstall entry HelpLink is '$help'" }
+    if (-not (Test-SamePath $loc $Dir)) { Fail "uninstall entry InstallLocation is '$loc', expected '$Dir'" }
+    Pass 'uninstall entry shows name, version, publisher, help link and install location'
+}
+
+function Assert-Integration {
+    # Everything an install must have registered with the tasks that are on by default (folder and file context
+    # menus, PATH) plus the desktop shortcut when $Desktop.
+    param([Parameter(Mandatory)][string]$Dir, [Parameter(Mandatory)][bool]$Desktop)
+    $exe = Join-Path $Dir 'impro.exe'
+    Assert-Path $UninstallKey 'uninstall registry key'
+    Assert-UninstallEntry $Dir
+    Assert-Shortcut $StartMenuLnk $exe 'Start menu shortcut'
+    if ($Desktop) {
+        Assert-Shortcut $DesktopLnk $exe 'desktop shortcut'
+    } else {
+        Assert-Missing $DesktopLnk 'desktop shortcut (the task is off by default)'
+    }
+
+    Assert-UserKey $AppPathsSubKey 'App Paths key'
+    if (-not (Test-SamePath ([string](Get-UserRegValue $AppPathsSubKey '')) $exe)) { Fail 'App Paths default value is not the installed impro.exe' }
+    if (-not (Test-SamePath ([string](Get-UserRegValue $AppPathsSubKey 'Path')) $Dir)) { Fail 'App Paths "Path" value is not the install directory' }
+    Pass 'App Paths points at the installed impro.exe and its directory'
+
+    Assert-UserKey $ApplicationsSubKey 'Applications\impro.exe key (Open with)'
+    if ([string](Get-UserRegValue $ApplicationsSubKey 'FriendlyAppName') -ne 'impro') { Fail 'Applications\impro.exe has no FriendlyAppName "impro"' }
+    Assert-OpenCommand "$ApplicationsSubKey\shell\open\command" '%1' 'Open with command' $exe
+    foreach ($ext in '.txt', '.md', '.rs', '.json', '.py') {
+        if ($null -eq (Get-UserRegValue "$ApplicationsSubKey\SupportedTypes" $ext)) { Fail "SupportedTypes lacks $ext" }
+    }
+    Pass 'Open with lists impro for common text and source files (SupportedTypes)'
+
+    Assert-OpenCommand "$FolderMenuSubKey\command" '%1' 'folder context menu' $exe
+    Assert-OpenCommand "$BackgroundMenuSubKey\command" '%V' 'folder background context menu' $exe
+    Assert-OpenCommand "$FileMenuSubKey\command" '%1' 'file context menu' $exe
+    if ([string](Get-UserRegValue $FileMenuSubKey '') -ne 'Open with impro') { Fail 'file context menu entry is not "Open with impro"' }
+    Assert-UserPathCount $Dir 1
+}
+
+function Assert-IntegrationGone {
+    # After an uninstall: the directory, the uninstall entry, every key, both shortcuts and the PATH entry are gone.
+    param([Parameter(Mandatory)][string]$Dir)
+    Wait-Gone { -not (Test-Path -LiteralPath $Dir) } 'install dir'
+    Show-Registry 'after uninstall'
+    Wait-Gone { -not (Test-Path -LiteralPath $UninstallKey) } 'uninstall registry key'
+    foreach ($sub in $FolderMenuSubKey, $BackgroundMenuSubKey, $FileMenuSubKey, $AppPathsSubKey, $ApplicationsSubKey) {
+        Wait-Gone { -not (Test-UserRegKey $sub) } "registry key HKCU\$sub"
+    }
+    Wait-Gone { -not (Test-Path -LiteralPath $StartMenuLnk) } 'Start menu shortcut'
+    Wait-Gone { -not (Test-Path -LiteralPath $DesktopLnk) } 'desktop shortcut'
+    # The PATH entry is removed in the very last uninstall step, after the directory: poll for it.
+    Wait-Gone { @(@(Get-UserPathEntries) | Where-Object { Test-SamePath $_ $Dir }).Count -eq 0 } 'install dir entry on the user PATH'
+}
+
+function Invoke-Install {
+    param([Parameter(Mandatory)][string]$Setup, [Parameter(Mandatory)][string]$Dir, [string]$Tasks, [Parameter(Mandatory)][string]$LogName)
+    $setupArgs = New-InnoArgumentList -Dir $Dir -Log (Join-Path $OutDir $LogName) -Tasks $Tasks
+    Step "installing: $Setup $($setupArgs -join ' ')"
+    $p = Start-Process -FilePath $Setup -ArgumentList $setupArgs -PassThru -Wait
+    Step "installer exit code $($p.ExitCode)"
+    if ($p.ExitCode -ne 0) { Fail "installer exited $($p.ExitCode), see $LogName" }
+}
+
+function Invoke-Uninstall {
+    # Runs the uninstaller found in an install directory and waits until the directory is gone (the uninstaller
+    # relaunches itself from %TEMP%, so -Wait returns early). $false when there is no uninstaller to run.
+    param([Parameter(Mandatory)][string]$Dir, [Parameter(Mandatory)][string]$LogName, [int]$TimeoutSec = 60)
+    $uninstaller = $null
+    if (Test-Path -LiteralPath $Dir) {
+        $uninstaller = Get-ChildItem -LiteralPath $Dir -Filter 'unins*.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+    }
+    if (-not $uninstaller) { return $false }
+    Step "uninstalling with $($uninstaller.Name)"
+    $p = Start-Process -FilePath $uninstaller.FullName -ArgumentList (New-InnoArgumentList -Log (Join-Path $OutDir $LogName)) -PassThru -Wait
+    Step "uninstaller exit code $($p.ExitCode)"
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    while ((Test-Path -LiteralPath $Dir) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 1 }
+    $true
+}
+
+function Invoke-Deferred([string]$Name, [scriptblock]$Body) {
+    # Runs a group of checks whose failure must not hide the checks after it: the message is kept and the run
+    # fails at the end.
+    try { & $Body }
+    catch {
+        $msg = "$Name : $($_.Exception.Message)"
+        Write-Host "::error::smoke ($Mode) deferred failure, $msg"
+        Write-Host ($_ | Out-String)
+        $script:Deferred += $msg
+    }
+}
+
+function Test-DefaultInstallRoundTrip([string]$Setup) {
+    # What a user gets by clicking through the wizard: no /TASKS, so the task defaults of impro.iss apply.
+    $dir = Join-Path $Work 'default install'
+    $script:AppDir = $dir
+    try {
+        Invoke-Install -Setup $Setup -Dir $dir -Tasks '' -LogName 'install-default.log'
+        Show-Registry 'after default install'
+        Assert-InstalledLayout $dir
+        Assert-Integration -Dir $dir -Desktop $false
+        # Same version over itself, same directory: an upgrade in place must not add a second PATH entry.
+        Invoke-Install -Setup $Setup -Dir $dir -Tasks '' -LogName 'install-default-again.log'
+        Assert-Integration -Dir $dir -Desktop $false
+        Pass 'upgrade in place keeps a single PATH entry and all registrations'
+    } finally {
+        # Whatever happened above, leave nothing behind for round 2.
+        try { [void](Invoke-Uninstall -Dir $dir -LogName 'uninstall-default.log') }
+        catch { Write-Host "::warning::cleanup of the default install failed: $($_.Exception.Message)" }
+    }
+    # Only reached when the try block succeeded (otherwise its exception propagates after the finally block).
+    Assert-IntegrationGone -Dir $dir
 }
 
 function Show-Tree([string]$Dir) {
@@ -187,7 +434,10 @@ function Show-Registry([string]$When) {
     Write-Host "::group::registry $When"
     foreach ($key in "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\${AppId}_is1",
                      'HKCU\Software\Classes\Directory\shell\impro',
-                     'HKCU\Software\Classes\Directory\Background\shell\impro') {
+                     'HKCU\Software\Classes\Directory\Background\shell\impro',
+                     'HKCU\Software\Classes\*\shell\impro',
+                     'HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\impro.exe',
+                     'HKCU\Software\Classes\Applications\impro.exe') {
         Write-Host "> reg query $key /s"
         $text = (& reg.exe query $key /s 2>&1 | Out-String)
         Write-Host "  reg exit code $LASTEXITCODE"
@@ -250,44 +500,33 @@ try {
     if ($Mode -eq 'installer') {
         $setup = Join-Path $Artifacts "impro-$Version-x64-setup.exe"
         Assert-Path $setup 'setup exe'
+
+        # Round 1: the defaults of the wizard, installed twice (upgrade in place), removed once. Deferred, so that a
+        # problem here is reported at the end and round 2 (the installed-app tests) still runs.
+        Invoke-Deferred 'default tasks, upgrade in place, uninstall' { Test-DefaultInstallRoundTrip $setup }
+
+        # Round 2: every task, then the tests of the installed app.
         $dir = Join-Path $Work 'install dir'
-        $log = Join-Path $OutDir 'install.log'
-        $setupArgs = New-InnoArgumentList -Dir $dir -Log $log -Tasks 'desktopicon,contextmenu,addtopath'
-        Step "installing: $setup $($setupArgs -join ' ')"
-        $p = Start-Process -FilePath $setup -ArgumentList $setupArgs -PassThru -Wait
-        Step "installer exit code $($p.ExitCode)"
-        if ($p.ExitCode -ne 0) { Fail "installer exited $($p.ExitCode), see install.log" }
+        Invoke-Install -Setup $setup -Dir $dir -Tasks 'desktopicon,contextmenu,filecontextmenu,addtopath' -LogName 'install.log'
         $script:AppDir = $dir
         Show-Tree $dir
         Show-Registry 'after install'
         Assert-InstalledLayout $dir
-        Assert-Path $UninstallKey 'uninstall registry key'
-        Assert-Path (Join-Path ([Environment]::GetFolderPath('Programs')) 'impro.lnk') 'Start menu shortcut'
-        Assert-Path (Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) 'impro.lnk') 'desktop shortcut'
-        Assert-Path 'HKCU:\Software\Classes\Directory\shell\impro\command' 'folder context-menu entry'
-        Assert-Path 'HKCU:\Software\Classes\Directory\Background\shell\impro\command' 'background context-menu entry'
-        $userPath = (Get-ItemProperty -Path 'HKCU:\Environment' -Name Path).Path
-        if (($userPath -split ';') -notcontains $dir) { Fail "install dir missing from the user PATH" }
-        Pass 'install dir is on the user PATH'
+        Assert-Integration -Dir $dir -Desktop $true
 
         Test-App $dir
 
-        $uninstaller = Get-ChildItem -LiteralPath $dir -Filter 'unins*.exe' | Select-Object -First 1
-        if (-not $uninstaller) { Fail 'uninstaller not found in install dir' }
-        Step "uninstalling with $($uninstaller.Name)"
-        $ulog = Join-Path $OutDir 'uninstall.log'
-        $p = Start-Process -FilePath $uninstaller.FullName -ArgumentList (New-InnoArgumentList -Log $ulog) -PassThru -Wait
-        Step "uninstaller exit code $($p.ExitCode)"
-        Wait-Gone { -not (Test-Path -LiteralPath $dir) } 'install dir'
-        Show-Registry 'after uninstall'
-        Wait-Gone { -not (Test-Path -LiteralPath $UninstallKey) } 'uninstall registry key'
-        Wait-Gone { -not (Test-Path 'HKCU:\Software\Classes\Directory\shell\impro') } 'folder context-menu key'
-        Wait-Gone { -not (Test-Path 'HKCU:\Software\Classes\Directory\Background\shell\impro') } 'background context-menu key'
-        Wait-Gone { -not (Test-Path (Join-Path ([Environment]::GetFolderPath('Programs')) 'impro.lnk')) } 'Start menu shortcut'
-        Wait-Gone { -not (Test-Path (Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) 'impro.lnk')) } 'desktop shortcut'
-        $userPath = (Get-ItemProperty -Path 'HKCU:\Environment' -Name Path).Path
-        if (($userPath -split ';') -contains $dir) { Fail 'install dir still on the user PATH after uninstall' }
-        Pass 'install dir removed from the user PATH'
+        # Settings under %APPDATA%\impro belong to the user: the uninstaller must leave them alone.
+        $userData = Join-Path $env:APPDATA 'impro'
+        $marker = Join-Path $userData 'uninstall-smoke-marker.txt'
+        New-Item -ItemType Directory -Force -Path $userData | Out-Null
+        Set-Content -LiteralPath $marker -Value 'the uninstaller must not delete this'
+
+        if (-not (Invoke-Uninstall -Dir $dir -LogName 'uninstall.log')) { Fail 'uninstaller not found in install dir' }
+        Assert-IntegrationGone -Dir $dir
+        Assert-Path $marker 'settings folder %APPDATA%\impro (left alone by the uninstaller)'
+        Remove-Item -LiteralPath $marker -Force
+        if (@(Get-ChildItem -LiteralPath $userData -Force).Count -eq 0) { Remove-Item -LiteralPath $userData -Force }
     } else {
         $zip = Join-Path $Artifacts "impro-$Version-x64-portable.zip"
         Assert-Path $zip 'portable zip'
@@ -298,6 +537,7 @@ try {
         Assert-InstalledLayout $exe.DirectoryName
         Test-App $exe.DirectoryName
     }
+    if ($script:Deferred.Count -gt 0) { Fail ("deferred check(s) failed: " + ($script:Deferred -join ' | ')) }
     Step 'ALL PASSED'
 } catch {
     $failed = $true
