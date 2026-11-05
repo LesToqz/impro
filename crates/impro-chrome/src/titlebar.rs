@@ -1,4 +1,9 @@
 //! Compact native header with request signals and silent toggle synchronization.
+//!
+//! Two placements share one widget and one stylesheet: the default client-side header bar
+//! (`TitleBar::new`, installed with `Window::set_titlebar`, owns the window buttons and the centred
+//! title) and the docked bar (`TitleBar::new_docked`, an ordinary widget packed at the top of the
+//! window content, for platforms where the window manager supplies the caption).
 use glib::subclass::prelude::*;
 use gtk::{prelude::*, subclass::prelude::*};
 use std::{cell::OnceCell, sync::OnceLock};
@@ -77,6 +82,7 @@ pub struct Controls {
     explorer: gtk::ToggleButton,
     handlers: [glib::SignalHandlerId; 3],
     title: gtk::Label,
+    docked: bool,
 }
 glib::wrapper! {pub struct TitleBar(ObjectSubclass<imp::TitleBar>) @extends gtk::HeaderBar,gtk::Container,gtk::Widget, @implements gtk::Buildable;}
 fn glyph(button: &impl IsA<gtk::Button>, names: &[&str], fallback: &str) {
@@ -146,11 +152,25 @@ fn fade_glyph(
 impl TitleBar {
     /// Menus are supplied by the window so actions and accelerators remain centralized.
     pub fn new(menu_bar: &gtk::MenuBar) -> Self {
+        Self::build(menu_bar, false)
+    }
+    /// The same bar for a window that keeps its native caption: no close/minimize/maximize
+    /// buttons and no centred title (the caption shows the title). Do not pass it to
+    /// `Window::set_titlebar`; pack it above the window content instead.
+    pub fn new_docked(menu_bar: &gtk::MenuBar) -> Self {
+        Self::build(menu_bar, true)
+    }
+    fn build(menu_bar: &gtk::MenuBar, docked: bool) -> Self {
         let this: Self = glib::Object::new();
         this.style_context().add_class("impro-titlebar");
+        if docked {
+            this.style_context().add_class("impro-titlebar-docked");
+        }
         this.set_spacing(0);
-        this.set_show_close_button(true);
-        this.set_decoration_layout(Some(":minimize,maximize,close"));
+        if !docked {
+            this.set_show_close_button(true);
+            this.set_decoration_layout(Some(":minimize,maximize,close"));
+        }
         menu_bar.set_valign(gtk::Align::Center);
         this.pack_start(menu_bar);
         let make = |names: &[&str], fallback, tooltip, accessible, signal: &'static str| {
@@ -179,7 +199,9 @@ impl TitleBar {
         this.pack_start(&explorer);
         let title = gtk::Label::new(Some("impro"));
         title.style_context().add_class("impro-title");
-        this.set_custom_title(Some(&title));
+        if !docked {
+            this.set_custom_title(Some(&title));
+        }
         let settings = gtk::Button::new();
         glyph(
             &settings,
@@ -227,6 +249,7 @@ impl TitleBar {
             explorer,
             handlers: [dh, bh, eh],
             title,
+            docked,
         });
         this
     }
@@ -245,8 +268,13 @@ impl TitleBar {
     pub fn explorer_button(&self) -> gtk::ToggleButton {
         self.controls().explorer.clone()
     }
+    /// The centred title label. A docked bar keeps it unparented: the native caption shows the title.
     pub fn title_label(&self) -> gtk::Label {
         self.controls().title.clone()
+    }
+    /// True for a bar built with `new_docked`.
+    pub fn is_docked(&self) -> bool {
+        self.controls().docked
     }
     fn sync(&self, b: &gtk::ToggleButton, index: usize, active: bool) {
         let h = &self.controls().handlers[index];
