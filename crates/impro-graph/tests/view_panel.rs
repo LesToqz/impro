@@ -28,7 +28,7 @@ fn sections_are_in_the_documented_order_with_the_default_collapse_state() {
             titles,
             [
                 "Project scope",
-                "Colour rules",
+                "Color rules",
                 "Visual detail",
                 "Layout tuning"
             ]

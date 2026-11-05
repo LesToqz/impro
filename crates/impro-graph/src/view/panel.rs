@@ -38,7 +38,7 @@ type OnChange = Rc<dyn Fn(Change)>;
 /// `(section id, persisted collapse key, title)` in panel order.
 pub const SECTIONS: [(&str, &str, &str); 4] = [
     ("filters", "collapse-filter", "Project scope"),
-    ("groups", "collapse-color-groups", "Colour rules"),
+    ("groups", "collapse-color-groups", "Color rules"),
     ("display", "collapse-display", "Visual detail"),
     ("forces", "collapse-forces", "Layout tuning"),
 ];
@@ -373,7 +373,7 @@ impl Panel {
         // groups
         let groups = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let groups_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        let add_rule = gtk::Button::with_label("Add colour rule");
+        let add_rule = gtk::Button::with_label("Add color rule");
         class(&add_rule, "impro-graph-button");
         class(&add_rule, "impro-graph-add");
         groups.pack_start(&groups_box, false, false, 0);
@@ -423,7 +423,7 @@ impl Panel {
         for (key, text, f) in [
             (
                 "centerStrength",
-                "Pull toward centre",
+                "Pull toward center",
                 fmt2 as fn(f64) -> String,
             ),
             ("repelStrength", "Space between files", fmt1),
@@ -954,17 +954,17 @@ impl Panel {
         entry.set_width_chars(1);
         class(&entry, "impro-graph-entry");
         if let Some(a) = entry.accessible() {
-            a.set_name("Colour rule query");
+            a.set_name("Color rule query");
         }
         entry.set_text(&rule.query);
         let (r, g, b, a) = rule.color.rgba();
         let color = Rc::new(Cell::new(Rgba::from_u8(r, g, b, a as f32)));
         let swatch = swatch_button(color.clone());
-        swatch.set_tooltip_text(Some("Choose a rule colour"));
+        swatch.set_tooltip_text(Some("Choose a rule color"));
         if let Some(a) = swatch.accessible() {
-            a.set_name("Rule colour");
+            a.set_name("Rule color");
         }
-        let remove = icons::icon_button(Icon::Close, "Remove colour rule", 14);
+        let remove = icons::icon_button(Icon::Close, "Remove color rule", 14);
         class(&row, "impro-graph-small");
         row.pack_start(&entry, true, true, 0);
         row.pack_start(&swatch, false, false, 0);
@@ -1012,14 +1012,14 @@ impl Panel {
         }
         let custom = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         class(&custom, "impro-graph-custom");
-        custom.pack_start(&label("Pick a colour", "impro-graph-custom"), true, true, 0);
+        custom.pack_start(&label("Pick a color", "impro-graph-custom"), true, true, 0);
         let chooser = gtk::ColorButton::new();
         chooser.set_use_alpha(false);
         if let Some(c) = self.parts.rows.borrow().get(index).map(|r| r.color.get()) {
             chooser.set_rgba(&gdk::RGBA::new(c.r as f64, c.g as f64, c.b as f64, 1.0));
         }
         if let Some(a) = chooser.accessible() {
-            a.set_name("Choose any rule colour");
+            a.set_name("Choose any rule color");
         }
         let p = self.clone();
         chooser.connect_color_set(move |c| {
