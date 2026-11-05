@@ -52,6 +52,7 @@ pub fn run(launch: Launch, started: Instant) -> glib::ExitCode {
         }
         timing("activate", started);
         let owner = MainWindow::with_values(app, &launch.root, preferences.borrow().clone());
+        timing("window-shell", started);
         crate::welcome::install(&owner);
         timing("window-built", started);
         let window = &owner.window;

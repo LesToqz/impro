@@ -318,6 +318,95 @@ fn test_startup_files_open_in_argument_order_with_the_first_selected() {
 }
 
 #[test]
+fn test_file_menu_lists_recent_folders_after_open_folder() {
+    run(|| {
+        let tmp = tempfile::tempdir().unwrap();
+        let list = dirs(tmp.path(), &["first", "second"]);
+        let (h, _page) = setup(&[]);
+        let file_item = h.w.menu_bar.children()[0]
+            .clone()
+            .downcast::<gtk::MenuItem>()
+            .unwrap();
+        let file = file_item
+            .submenu()
+            .unwrap()
+            .downcast::<gtk::Menu>()
+            .unwrap();
+        let label = |widget: &gtk::Widget| {
+            widget
+                .downcast_ref::<gtk::MenuItem>()
+                .and_then(|item| item.label())
+                .map(|text| text.to_string())
+                .unwrap_or_default()
+        };
+        let items = file.children();
+        let names: Vec<String> = items.iter().map(label).collect();
+        assert_eq!(
+            &names[..3],
+            ["Quick Switcher…", "Open Folder…", "Open Recent"]
+        );
+        let recent = items[2].clone().downcast::<gtk::MenuItem>().unwrap();
+        assert!(!recent.is_sensitive(), "nothing to reopen yet");
+        let mut state = State::default();
+        state.record(&list[1]);
+        state.record(&list[0]);
+        launch::seed(state);
+        // The File menu refreshes its recent list every time it opens.
+        file.emit_by_name::<()>("show", &[]);
+        assert!(recent.is_sensitive());
+        let submenu = recent.submenu().unwrap().downcast::<gtk::Menu>().unwrap();
+        let entries = submenu.children();
+        let shown: Vec<String> = entries.iter().map(label).collect();
+        assert_eq!(
+            shown,
+            [list[0].display().to_string(), list[1].display().to_string()]
+        );
+        entries[1]
+            .clone()
+            .downcast::<gtk::MenuItem>()
+            .unwrap()
+            .activate();
+        poll(|| h.w.root() == list[1]);
+        // The folder just opened is not offered again.
+        file.emit_by_name::<()>("show", &[]);
+        let shown: Vec<String> = submenu.children().iter().map(label).collect();
+        assert_eq!(shown, [list[0].display().to_string()]);
+    });
+}
+
+#[test]
+fn test_open_recent_command_picks_from_the_other_recent_folders() {
+    run(|| {
+        let tmp = tempfile::tempdir().unwrap();
+        let list = dirs(tmp.path(), &["north", "south"]);
+        let (h, _page) = setup(&[&list[0], &list[1]]);
+        h.command("File: Open Recent");
+        let prompt =
+            h.w.overlay
+                .prompt()
+                .expect("the recent-folder prompt opens");
+        poll(|| prompt.items().len() == 2);
+        let labels: Vec<String> = prompt.items().iter().map(|i| i.label.clone()).collect();
+        assert_eq!(labels, ["north", "south"]);
+        prompt.set_query("sou");
+        poll(|| prompt.items().len() == 1);
+        prompt.select(0);
+        prompt.choose(gdk::ModifierType::empty());
+        poll(|| h.w.root() == list[1]);
+        assert!(h.w.overlay.prompt().is_none());
+    });
+}
+
+#[test]
+fn test_open_recent_command_with_nothing_to_reopen_only_says_so() {
+    run(|| {
+        let (h, _page) = setup(&[]);
+        h.command("File: Open Recent");
+        assert!(h.w.overlay.prompt().is_none());
+    });
+}
+
+#[test]
 fn test_recent_section_is_hidden_when_empty_and_capped_when_long() {
     run(|| {
         let tmp = tempfile::tempdir().unwrap();

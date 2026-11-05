@@ -333,7 +333,7 @@ fn draw_mark(cr: &gtk::cairo::Context, width: f64, height: f64) -> Result<(), gt
     cr.translate(-x, -y);
     cr.scale(MARK_SCALE, MARK_SCALE);
     trace(cr, MARK_DOT);
-    cr.set_source(&gradient(
+    cr.set_source(gradient(
         (214.0, 224.0, 321.0, 56.0),
         &[
             (0.0, 0x4258f5, 1.0),
@@ -345,7 +345,7 @@ fn draw_mark(cr: &gtk::cairo::Context, width: f64, height: f64) -> Result<(), gt
     trace(cr, MARK_BODY);
     cr.clip();
     cr.rectangle(150.0, 190.0, 230.0, 320.0);
-    cr.set_source(&gradient(
+    cr.set_source(gradient(
         (0.0, 268.0, 0.0, 470.0),
         &[
             (0.0, 0x1f2db4, 1.0),
@@ -356,7 +356,7 @@ fn draw_mark(cr: &gtk::cairo::Context, width: f64, height: f64) -> Result<(), gt
     ))?;
     cr.fill()?;
     trace(cr, MARK_SHADE);
-    cr.set_source(&gradient(
+    cr.set_source(gradient(
         (250.0, 300.0, 191.0, 405.0),
         &[
             (0.0, 0x1426b0, 1.0),
@@ -366,7 +366,7 @@ fn draw_mark(cr: &gtk::cairo::Context, width: f64, height: f64) -> Result<(), gt
     ))?;
     cr.fill()?;
     trace(cr, MARK_LIGHT);
-    cr.set_source(&gradient(
+    cr.set_source(gradient(
         (286.0, 325.0, 346.0, 212.0),
         &[(0.0, 0x7c70f7, 1.0), (1.0, 0xa273f8, 1.0)],
     ))?;
