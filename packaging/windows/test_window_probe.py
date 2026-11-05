@@ -439,6 +439,54 @@ class WorkflowStructure(unittest.TestCase):
             self.assertTrue(needle in README, f"README does not mention {needle}")
 
 
+class OutputStream(unittest.TestCase):
+    """Two ways a PowerShell function can print more than the line a test (or the job log) expects: a value that leaks
+    into the success stream, and state that outlives the script that set it (the CI step runs several test scripts in
+    ONE PowerShell process: print-screenshots.ps1 left a global log file path behind, the temp directory was deleted,
+    and the next script's first Write-ProbeLine printed a second line, the warning about the stale path)."""
+
+    SOURCES = {p.name: p.read_text(encoding="utf-8").replace("\r\n", "\n") for p in HERE.glob("*.ps1")}
+
+    def test_statements_that_return_a_value_do_not_leak(self):
+        leaking = re.compile(
+            r"^\s*(?:New-Item\b|\[(?:System\.)?IO\.Directory\]::CreateDirectory\(|\$\w+\.Append\(|Start-Process\b.*-PassThru|Copy-Item\b.*-PassThru)"
+        )
+        absorbed = re.compile(r"\|\s*Out-Null|\[void\]|\$null\s*=|^\s*\$\w+\s*=")
+        offenders = []
+        for name, text in self.SOURCES.items():
+            for number, line in enumerate(text.splitlines(), 1):
+                code = line.split(" #")[0]
+                if leaking.search(code) and not absorbed.search(code):
+                    offenders.append(f"{name}:{number}: {line.strip()}")
+        self.assertEqual(offenders, [], "add | Out-Null, [void] or $null = (or assign the value)")
+
+    def test_no_collections_whose_add_returns_a_value(self):
+        for name, text in self.SOURCES.items():
+            code = "\n".join(l.split(" #")[0] for l in text.splitlines())
+            self.assertNotRegex(code, r"ArrayList|HashSet\[|System\.Collections\.Hashtable\]::|Collections\.Generic\.HashSet", name)
+
+    def test_a_script_that_sets_the_log_file_restores_it(self):
+        text = self.SOURCES["print-screenshots.ps1"]
+        self.assertIn("$previousLog = Get-ProbeLogFile", text)
+        self.assertRegex(text, r"(?s)\} finally \{\n\s+Set-ProbeLogFile \$previousLog\n\s*\}")
+        # Every other script that sets the log file to a path is smoke.ps1, which runs in its own process.
+        setters = [n for n, t in self.SOURCES.items()
+                   if re.search(r"Set-ProbeLogFile\s+(?!'')(?!\$previousLog\b)\S", re.sub(r"function Set-ProbeLogFile.*", "", t)) and not n.startswith("test_")]
+        self.assertEqual(sorted(setters), ["print-screenshots.ps1", "smoke.ps1"])
+
+    def test_tests_start_from_a_known_log_file_state(self):
+        text = self.SOURCES["test_window_probe.ps1"]
+        first_use = min(text.index("Write-ProbeLine"), text.index("Write-LogLine"))
+        self.assertLess(text.index("Set-ProbeLogFile ''"), first_use, "reset the global before the first line is written")
+
+    def test_a_stale_log_file_is_reported_once(self):
+        log = self.SOURCES["probe-log.ps1"]
+        body = re.search(r"(?s)function Write-LogLine \{.*", log).group(0)
+        self.assertIn("-ErrorAction Stop", body, "Add-Content must throw, whatever the caller's preference")
+        self.assertIn("$global:ImproProbeLogFile = ''", body, "a failing target is switched off after its warning")
+        self.assertIn("function Get-ProbeLogFile", log)
+
+
 class ArrayIdiom(unittest.TestCase):
     """@(f) around a function that returns `, $array` is an array holding the array: -contains then finds nothing and an
     empty result looks like one item. That printed no screenshot at all once. A function that returns with a leading

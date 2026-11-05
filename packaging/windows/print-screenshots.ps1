@@ -41,35 +41,41 @@ if (-not (Test-Path -LiteralPath $Directory -PathType Container)) {
     exit 0
 }
 # The `[screenshots] ...` status lines (not the base64) are also appended to window-probe.txt, which smoke.ps1 started.
+# The target is a global that would outlive this script when it runs inside another PowerShell process (the tests
+# do that, and delete the directory afterwards), so the previous value is put back in the finally block.
+$previousLog = Get-ProbeLogFile
 Set-ProbeLogFile (Join-Path $Directory 'window-probe.txt')
-
-$files = @(Get-ChildItem -LiteralPath $Directory -Filter '*.png' -File -Recurse:$Recurse | Sort-Object -Property FullName)
-Write-LogLine "[screenshots] $($files.Count) PNG file(s) in $Directory"
-$wanted = @(Select-ScreenshotNames -Names @($files | ForEach-Object { $_.Name }))
-$capChars = [long]$MaxBase64KB * 1024
-$printedNames = @{}
-$printed = 0
-foreach ($f in $files) {
-    $nameKey = $f.Name.ToLowerInvariant()
-    if (($wanted -notcontains $f.Name) -or $printedNames.ContainsKey($nameKey)) {
-        Write-LogLine ('[screenshots] skipped {0} ({1} bytes)' -f $f.Name, $f.Length)
-        continue
-    }
-    try {
-        $bytes = Get-ScreenshotLogBytes -Path $f.FullName -MaxWidth $MaxWidth -ScaleAboveBytes 0
-        $chars = Get-Base64Length -ByteCount $bytes.Length
-        if ($chars -gt $capChars) {
-            Write-LogLine ('[screenshots] skipped {0} ({1} bytes on disk, {2} bytes at most {3} px wide, base64 {4} chars is over the {5} limit)' -f $f.Name, $f.Length, $bytes.Length, $MaxWidth, $chars, $capChars)
+try {
+    $files = @(Get-ChildItem -LiteralPath $Directory -Filter '*.png' -File -Recurse:$Recurse | Sort-Object -Property FullName)
+    Write-LogLine "[screenshots] $($files.Count) PNG file(s) in $Directory"
+    $wanted = @(Select-ScreenshotNames -Names @($files | ForEach-Object { $_.Name }))
+    $capChars = [long]$MaxBase64KB * 1024
+    $printedNames = @{}
+    $printed = 0
+    foreach ($f in $files) {
+        $nameKey = $f.Name.ToLowerInvariant()
+        if (($wanted -notcontains $f.Name) -or $printedNames.ContainsKey($nameKey)) {
+            Write-LogLine ('[screenshots] skipped {0} ({1} bytes)' -f $f.Name, $f.Length)
             continue
         }
-        $block = Format-ScreenshotLogBlock -Name $f.Name -Bytes $bytes
-        Write-LogLine ('[screenshots] {0}: {1} bytes on disk, {2} bytes printed' -f $f.Name, $f.Length, $bytes.Length)
-        Write-Host ($block -join "`n")
-        $printedNames[$nameKey] = $true
-        $printed++
-    } catch {
-        Write-LogLine "::warning::print-screenshots: skipped $($f.Name): $($_.Exception.Message)"
+        try {
+            $bytes = Get-ScreenshotLogBytes -Path $f.FullName -MaxWidth $MaxWidth -ScaleAboveBytes 0
+            $chars = Get-Base64Length -ByteCount $bytes.Length
+            if ($chars -gt $capChars) {
+                Write-LogLine ('[screenshots] skipped {0} ({1} bytes on disk, {2} bytes at most {3} px wide, base64 {4} chars is over the {5} limit)' -f $f.Name, $f.Length, $bytes.Length, $MaxWidth, $chars, $capChars)
+                continue
+            }
+            $block = Format-ScreenshotLogBlock -Name $f.Name -Bytes $bytes
+            Write-LogLine ('[screenshots] {0}: {1} bytes on disk, {2} bytes printed' -f $f.Name, $f.Length, $bytes.Length)
+            Write-Host ($block -join "`n")
+            $printedNames[$nameKey] = $true
+            $printed++
+        } catch {
+            Write-LogLine "::warning::print-screenshots: skipped $($f.Name): $($_.Exception.Message)"
+        }
     }
+    Write-LogLine "[screenshots] printed $printed of $($files.Count) file(s)"
+} finally {
+    Set-ProbeLogFile $previousLog
 }
-Write-LogLine "[screenshots] printed $printed of $($files.Count) file(s)"
 exit 0
