@@ -204,3 +204,33 @@ Fixes:
   exercised by CI. The array-nesting diagnosis rests on the repository's own earlier pwsh reproduction (`reports/windows/win-smoke-verdict.md`:
   `@(f)` around `, $array` gave `Count=1 join=System.String[]`), and on reading the code path: with the fix the test's four PNGs produce
   two blocks and two skipped lines.
+
+## Addendum 3: "Write-ProbeLine prints one line" saw two (CI #20)
+
+Cause (state leak, not an output-stream leak): the log file target of `probe-log.ps1` is a global variable. The `check` step runs
+`test_screenshot_log.ps1` and then `test_window_probe.ps1` in ONE PowerShell process. `print-screenshots.ps1`, run by the first
+test, called `Set-ProbeLogFile <temp dir>\window-probe.txt` and never restored it; the test then deleted that directory. In the
+second script the first `Write-ProbeLine` wrote its line and `Write-LogLine` then failed to append to the vanished path and printed
+the `::warning::cannot append ...` line: two captured items, the first being the correct line (hence "prints the formatted line"
+passed). It was invisible before because the step used to stop at the first failing script. The real smoke job is not affected
+(`print-screenshots.ps1` runs as its own step, and the probe lines are not duplicated).
+
+Fixes:
+- `print-screenshots.ps1` remembers `Get-ProbeLogFile` and restores it in a `finally` block (also on errors).
+- `Write-LogLine` appends with `-ErrorAction Stop`; a target that cannot be written is reported once and switched off, so a stale
+  path can never add a warning to every later line. New `Get-ProbeLogFile`.
+- `test_window_probe.ps1` starts with `Set-ProbeLogFile ''` (tests must not depend on what ran before in the process) and has a
+  regression for the stale path (line + one warning, then just the line, target cleared). `test_screenshot_log.ps1` asserts that
+  `print-screenshots.ps1` leaves no target behind.
+
+Output-stream audit of everything I added (`probe-log.ps1`, `window-probe.ps1`, `window-capture.ps1`, `print-probe-summary.ps1`,
+`print-screenshots.ps1`, `screenshot-log.ps1`, the new functions of `smoke.ps1` and `lab-helpers.ps1`, the tests): no function leaks
+a value; only `Write-Host`/`Write-LogLine` print, the P/Invoke wrappers are void, `List[string].Add` is void, `$printed++` is a
+statement, `Start-Process -PassThru`, `New-Item` and `Add-Type` results are assigned or piped to `Out-Null`.
+
+Python guards (`test_window_probe.py`, class `OutputStream`): a source scan that fails on `New-Item`, `CreateDirectory(`,
+`$sb.Append(`, `Start-Process ... -PassThru` or `Copy-Item ... -PassThru` used as bare statements (not assigned, `[void]`,
+`$null =` or `| Out-Null`); no `ArrayList` / `HashSet` (their `Add` returns a value); a script that sets the log file to a path
+must restore it in a `finally` (only `print-screenshots.ps1` and `smoke.ps1` may set it); the tests reset the global before the first
+line; `Write-LogLine` keeps `-ErrorAction Stop` and the once-only switch-off. 94 Python tests OK; mutations of each guard caught.
+Not run: PowerShell (the fix and the new PowerShell tests are first exercised by CI).

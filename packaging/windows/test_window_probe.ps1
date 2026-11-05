@@ -14,6 +14,12 @@ function Assert-Equal($Actual, $Expected, [string]$What) {
     else { Write-Host "FAIL $What`n  expected: $Expected`n  actual:   $Actual"; $script:failures++ }
 }
 
+# The log file target is a global variable. CI runs the test scripts one after the other in ONE PowerShell process,
+# so a script that ran before (print-screenshots.ps1 inside test_screenshot_log.ps1) may have left a stale path behind:
+# start from a known state.
+Set-ProbeLogFile ''
+Assert-Equal (Get-ProbeLogFile) '' 'the log file is switched off at the start of the test'
+
 $vectors = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'probe-vectors.json') -Raw | ConvertFrom-Json
 
 foreach ($case in @($vectors.colorref)) {
@@ -119,10 +125,20 @@ try {
     $hostLine = $hostLines[0]
     $firstFileLine = $fileLines[0]
     Assert-Equal $hostLine $firstFileLine 'the host line equals the file line'
+    Assert-Equal (Get-ProbeLogFile) $logFile 'Get-ProbeLogFile returns the current target'
     Set-ProbeLogFile ''
     Write-LogLine 'not in the file' 6>&1 | Out-Null
     $afterOff = @(Get-Content -LiteralPath $logFile)
     Assert-Equal $afterOff.Count 3 'switching the file off stops the copy'
+
+    # A stale target (its directory is gone, as after a test cleaned up) gives the line plus ONE warning, then it is off:
+    # this is what made "Write-ProbeLine prints one line" see two lines when an earlier script left its path behind.
+    Set-ProbeLogFile (Join-Path (Join-Path $logTmp 'no-such-directory') 'window-probe.txt')
+    $stale = @(Write-LogLine 'first' 6>&1 | ForEach-Object { "$_" })
+    Assert-Equal $stale.Count 2 'an unwritable log file: the line and one warning'
+    $staleAgain = @(Write-LogLine 'second' 6>&1 | ForEach-Object { "$_" })
+    Assert-Equal $staleAgain.Count 1 'after the warning the log file is off: just the line'
+    Assert-Equal (Get-ProbeLogFile) '' 'a failing log file is switched off'
 } finally {
     Set-ProbeLogFile ''
     Remove-Item -LiteralPath $logTmp -Recurse -Force

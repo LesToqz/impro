@@ -91,7 +91,9 @@ fails the step. Search the log for `[window-probe]`.
 The job log of the `smoke` job is long and can only be read from its end, so `smoke.ps1` also writes every
 `[window-probe]` line and the desktop capture status lines (`[smoke] desktop capture ...`) to `<OutDir>\window-probe.txt`
 (exactly the text written to the host, see `probe-log.ps1`; `print-screenshots.ps1` appends its `[screenshots]` lines to the
-same file). The LAST step of the `smoke` job, `Window probe summary` (`print-probe-summary.ps1`, `if: always()`,
+same file). The file target is a global variable (`Set-ProbeLogFile` / `Get-ProbeLogFile`): a script that sets it for a
+while must restore the old value, because the test step of the `check` job runs several scripts in one PowerShell process
+(a stale path made the next script print an extra warning line); an unwritable target is reported once and then switched off. The LAST step of the `smoke` job, `Window probe summary` (`print-probe-summary.ps1`, `if: always()`,
 `continue-on-error: true`), prints the names and sizes of the files in the smoke output directory and then the file between
 
 ```

@@ -76,6 +76,10 @@ try {
     Assert-Equal ($statusText -match '\[screenshots\] printed 2 of 4 file') $true 'window-probe.txt has the summary line'
     Assert-Equal ($statusText -match '\[screenshots\] skipped b-other\.png') $true 'window-probe.txt has the skipped lines'
     Assert-Equal ($statusText -match 'BEGIN IMPRO-SCREENSHOT') $false 'the base64 blocks are not copied into window-probe.txt'
+    # The log file is a global: print-screenshots.ps1 must put the previous value back, because the next test script of the
+    # CI step runs in this same process after this directory is deleted (a stale path printed an extra warning line).
+    $leftoverLog = Get-Variable -Name ImproProbeLogFile -Scope Global -ValueOnly -ErrorAction SilentlyContinue
+    Assert-Equal ([bool]$leftoverLog) $false 'print-screenshots.ps1 leaves no log file target behind'
 
     # A file whose base64 would exceed the cap is skipped, not printed (random bytes: not a decodable image, so the
     # original is considered, and 100000 bytes are about 133 KB of base64).
