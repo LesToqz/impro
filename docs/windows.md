@@ -95,10 +95,11 @@ and `bundle-manifest.txt`. The layout and the reason it is flat are in
   folders and files, which is what the Explorer entries use.
 - **Open Folder** is the system folder picker.
 
-The default window is 1200 x 790 pixels of client area; on a screen whose usable area
-(taskbar excluded) cannot hold it next to the native frame it shrinks to fit, but not
-below 640 x 420. (The runner's 1024 x 768 screen showed the unfitted window running off
-the bottom edge, which is what this fixes.)
+The default window is 1200 x 790 pixels of client area and is not yet fitted to the
+screen: on the runner's 1024 x 768 display the probe showed it running off the bottom
+edge, and Windows does not shrink it. An attempt to fit it to the monitor's usable area
+left the installed application's first paint blank on that runner and was reverted; see
+[Known limitations](#known-limitations).
 
 Not yet verified: Windows 10 (the dark caption and its fallback attribute), Snap
 Layouts and the system menu in use, taskbar grouping through the AppUserModelID (the
@@ -157,6 +158,11 @@ See [Architecture](ARCHITECTURE.md#platform-backends) for the seams.
 ## Known limitations
 
 - The installer and `impro.exe` are unsigned.
+- The default window (1200 x 790 client pixels) can be taller or wider than a small or
+  heavily scaled screen. Fitting it to the usable area of the primary monitor is not
+  done; the first attempt (`gdk::Monitor::workarea` at window construction) made the
+  first paint blank in the CI smoke test and was reverted. Maximise the window, or
+  resize it from the native frame, on such a screen.
 - Several shortcuts use Ctrl+Alt (Graph view Ctrl+Alt+G, Git graph Ctrl+Alt+H, the
   right dock Ctrl+Alt+`). On keyboard layouts where AltGr produces characters,
   Windows reports AltGr as Ctrl+Alt, so these can collide with typing. They have not
