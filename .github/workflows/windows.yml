@@ -7,7 +7,9 @@ name: Windows
 on:
   pull_request:
   push:
-    branches: [main]
+    # claude/**: pushes to the polish branches run the Windows pipeline too, so that its screenshots (printed into
+    # the "Print screenshots to the log" step of the smoke job) are available without opening a pull request.
+    branches: [main, "claude/**"]
   workflow_dispatch:
 
 permissions:
@@ -15,7 +17,8 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # A newer push to the same pull request or claude/** branch replaces the run in progress; main keeps its runs.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/claude/') }}
 
 env:
   # Minimum supported Rust version (README and workspace manifest). The Rust
@@ -61,6 +64,18 @@ jobs:
       - name: Clippy
         shell: msys2 {0}
         run: cargo clippy --workspace --locked --keep-going -- -D warnings
+      # After the Rust steps so that a failure here never hides their results. The installer script cannot be
+      # compiled before the package job, so test_iss.py is the early check of its directives, flags and constants.
+      - name: Packaging script tests (Python)
+        shell: pwsh
+        run: |
+          python -I -B -m unittest discover -s packaging/windows -p "test_iss.py" -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -I -B scripts/ci/test_extract_log_screenshots.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Screenshot log helper test (PowerShell)
+        shell: pwsh
+        run: ./packaging/windows/test_screenshot_log.ps1
 
   # ---------------------------------------------------------------- test
   # Report-only until promoted: failures here do not fail the workflow.
@@ -263,6 +278,13 @@ jobs:
           ./packaging/windows/startup-lab.ps1
           -Artifacts "$env:RUNNER_TEMP\pkg" -Version $env:VERSION
           -OutDir "$env:RUNNER_TEMP\smoke\lab"
+      # The dev machine reads job logs but cannot download artifacts: every PNG of the smoke output is printed
+      # as base64 between BEGIN/END marker lines (scripts/ci/extract_log_screenshots.py restores the files).
+      - name: Print screenshots to the log
+        if: always()
+        continue-on-error: true
+        shell: pwsh
+        run: ./packaging/windows/print-screenshots.ps1 -Directory "$env:RUNNER_TEMP\smoke"
       - name: Upload screenshots and logs
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

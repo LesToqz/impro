@@ -20,8 +20,8 @@ sys.path.insert(0, str(HERE))
 import bundle  # noqa: E402
 from test_bundle import REPO, SYSROOT, HAVE_OBJDUMP  # noqa: E402
 
-ISS = (HERE / "impro.iss").read_text(encoding="utf-8")
-SMOKE = (HERE / "smoke.ps1").read_text(encoding="utf-8")
+ISS = (HERE / "impro.iss").read_text(encoding="utf-8").replace("\r\n", "\n")
+SMOKE = (HERE / "smoke.ps1").read_text(encoding="utf-8").replace("\r\n", "\n")
 
 
 def section(name):
@@ -227,7 +227,7 @@ class SetupSection(unittest.TestCase):
             "UninstallDisplayName": "{#MyAppName}",
             "VersionInfoProductName": "{#MyAppName}",
             "VersionInfoVersion": "{#MyAppVersion}",
-            "MinVersion": "10.0.17763",
+            "MinVersion": "10.0",
         }.items():
             self.assertEqual(self.keys.get(k), v, k)
         for k in ("AppPublisher", "AppPublisherURL", "AppSupportURL", "AppUpdatesURL", "VersionInfoCompany",
@@ -468,6 +468,9 @@ class Code(unittest.TestCase):
         self.assertIn("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", self.code)
         # Duplicate-free upgrades: the add is skipped when the directory is already an entry.
         self.assertRegex(self.bare, r"(?s)function NeedsAddPath.*?Pos\(.*?\)\s*=\s*0")
+        # Removal touches the value only when the directory is an entry and the value exists.
+        self.assertRegex(self.bare, r"(?s)procedure RemoveFromPath.*?if not RegQueryStringValue.*?then\s+Exit;"
+                                    r".*?if P = 0 then\s+Exit;.*?RegWriteExpandStringValue")
 
     def test_webview2_note(self):
         self.assertEqual(self.code.count(WEBVIEW2_GUID), 2, "machine (WOW6432Node) and per-user key")
@@ -499,11 +502,17 @@ class SmokeContract(unittest.TestCase):
         found = 0
         for f in ("smoke.ps1", "startup-lab.ps1"):
             text = (HERE / f).read_text(encoding="utf-8")
-            for value in re.findall(r"-Tasks '([^']*)'", text):
+            for value in re.findall(r"-Tasks '([^']*)'", text):  # an empty value means "no /TASKS flag": the defaults
                 found += 1
                 for t in filter(None, value.split(",")):
                     self.assertIn(t.lstrip("!"), names, f"{f}: /TASKS names {t}")
         self.assertGreaterEqual(found, 1)
+
+    def test_smoke_exercises_the_defaults_and_every_task(self):
+        values = re.findall(r"-Tasks '([^']*)'", SMOKE)
+        self.assertIn("", values, "round 1 installs without /TASKS (the task defaults)")
+        full = [set(v.split(",")) for v in values if v]
+        self.assertEqual(full, [set(tasks_by_name())], "round 2 must select every task of the script, once")
 
     def test_registry_keys_asserted_by_smoke_are_written_by_the_installer(self):
         subkeys = {e["Subkey"] for e in entries("Registry")}

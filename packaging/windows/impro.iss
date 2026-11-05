@@ -58,8 +58,8 @@ VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} Setup
 VersionInfoProductName={#MyAppName}
 VersionInfoCopyright={#MyAppCopyright}
-; Windows 10 1809 or newer, the same floor as the documentation.
-MinVersion=10.0.17763
+; Windows 10 or newer (the documented floor is 1809; only major.minor is enforced, the plain form of the directive).
+MinVersion=10.0
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes

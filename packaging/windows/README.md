@@ -5,14 +5,104 @@ Target `x86_64-pc-windows-gnu`, GTK3 and Rust from MSYS2 UCRT64.
 | File | Purpose |
 | --- | --- |
 | `bundle.py` | Builds the self-contained tree (exe, DLL import closure, GLib schemas, gdk-pixbuf loaders + cache, icons, licences, `bundle-manifest.txt`). Stdlib only. |
-| `impro.iss` | Inno Setup 6 script. Per-user by default, tasks for desktop icon, Explorer context menu and PATH (all off by default). |
-| `smoke.ps1` | Installs/unzips the packages, tests the installed app, uninstalls and checks nothing is left. |
+| `impro.iss` | Inno Setup 6 script. Per-user by default; registers the integration described in "Windows integration" below. |
+| `smoke.ps1` | Installs/unzips the packages, asserts the integration, tests the installed app (and captures its real window), uninstalls and checks nothing is left. |
+| `window-capture.ps1` | Best-effort capture of the real top-level window of the running app, native frame included (used by `smoke.ps1`). |
+| `print-screenshots.ps1`, `screenshot-log.ps1`, `test_screenshot_log.ps1` | Print every PNG of a directory into the job log as base64 between marker lines, its helpers and their test. See "Screenshots in the job log". |
 | `smoke-args.ps1`, `test_smoke_args.ps1` | Argument quoting for the Inno installer/uninstaller (a value with a space must be quoted by hand for `Start-Process`) and its plain-assert test, run in the `check` job. |
 | `lab-helpers.ps1`, `test_lab_helpers.ps1` | Pure helpers (timing-line parser, Markdown table, decode-based blank-screenshot check, line limiter) shared by `smoke.ps1` and `startup-lab.ps1`, plus their test (run in the `check` job). |
 | `startup-lab.ps1` | TEMPORARY startup experiment, see "Startup lab" below. |
-| `test_bundle.py`, `test_iss.py` | Unit tests. The real-DLL tests need a full sysroot (`scripts/windows/fetch-sysroot.sh --full`) and `objdump`. |
+| `test_bundle.py`, `test_iss.py` | Unit tests. `test_iss.py` is a static check of `impro.iss` (directive, parameter and flag names, `{constants}`, balanced Pascal blocks, Check functions, every registration listed below, and the contract with `smoke.ps1`); it also runs in the `check` job. The real-DLL tests need a full sysroot (`scripts/windows/fetch-sysroot.sh --full`) and `objdump`. |
 
 Run the tests: `python3 -m unittest discover -s packaging/windows -p 'test_*.py' -v`
+
+## Windows integration (installer)
+
+`impro.iss` makes impro behave like other Windows software. Per-user is the default (`PrivilegesRequired=lowest`, no
+administrator rights); the first wizard page can switch to "all users", in which case `HKA` means `HKLM`. The script can
+only be compiled in CI (Inno Setup 6, `scripts/package/windows/build-installer.ps1`).
+
+| Registration | When | Details |
+| --- | --- | --- |
+| Start Menu shortcut `impro` | always | Starts in the user profile folder (`WorkingDir: {%USERPROFILE}`): the app treats a start from there as an "ambient launch" and reopens the last folder, so the install directory must not be the working directory. Carries the `AppUserModelID` `dev.impro.impro` (equal to `impro_core::identity::APP_ID`, which the app sets on its process) so that pinning and taskbar grouping agree. |
+| Desktop shortcut | task `desktopicon`, **off** by default | Same working directory and AppUserModelID. |
+| "Open folder in impro" | task `contextmenu`, **on** | `Software\Classes\Directory\shell\impro` (folders, argument `%1`) and `Directory\Background\shell\impro` (folder background, `%V`). |
+| "Open with impro" | task `filecontextmenu`, **on** | `Software\Classes\*\shell\impro` on every file, argument `%1`. On Windows 11 the entries are under "Show more options", like those of other classic applications. |
+| `PATH` | task `addtopath`, **on** | Per-user installs edit `HKCU\Environment`, all-users installs the system environment. The directory is added only when it is not already an entry (an upgrade in place never duplicates it) and removed by the uninstaller (`CurUninstallStepChanged`, step `usPostUninstall`). |
+| App Paths | always | `Software\Microsoft\Windows\CurrentVersion\App Paths\impro.exe` (default value = full path, `Path` = install directory): `Win+R` then `impro` works even without a `PATH` entry. |
+| "Open with" list | always | `Software\Classes\Applications\impro.exe` with `FriendlyAppName`, `shell\open\command` and `SupportedTypes` for common text and source extensions. This only offers impro in the "Open with" dialog. impro is **never** registered as a default handler: no extension key, `UserChoice`, `Capabilities` or `RegisteredApplications` entry is written (`test_iss.py` enforces it). |
+| Uninstall entry | always | Name, version, publisher, support and update links (Settings, Apps). |
+| Finish page notes | wizard only | The Git for Windows note (no `git.exe` on `PATH`) and a WebView2 note when the Evergreen runtime is missing (`pv` value under `EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}` in `HKLM\SOFTWARE\WOW6432Node` or `HKCU`; absent or `0.0.0.0` counts as missing). The notes only extend the label; nothing can block the installation. |
+
+Behaviour of the installer itself: one `AppId` for every version (a newer setup upgrades in place), `SetupMutex` (one
+setup at a time), `CloseApplications=yes` with `CloseApplicationsFilter=impro.exe` (a running impro is closed through
+the Restart Manager before files are replaced or removed), `UsePreviousTasks=yes` (an upgrade starts from the tasks
+chosen last time), `MinVersion=10.0` (Windows 10 or newer; the documented 1809 floor is not enforced), version resources (`VersionInfo*`) and the Apps &
+features metadata. The launch checkbox of the finish page starts impro in the profile folder, without elevation.
+
+The uninstaller removes exactly what the installer wrote. It leaves the user's settings in `%APPDATA%\impro` untouched on
+purpose, so that a reinstall finds them; `smoke.ps1` asserts that. A shortcut working directory is expanded at install
+time, so in an all-users install performed through another administrator account it is that account's profile; the
+per-user default is unaffected.
+
+Silent installation (all standard Inno Setup switches):
+
+```
+impro-<version>-x64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /DIR="C:\Tools\impro" /LOG="setup.log"
+```
+
+Without `/TASKS` the defaults above apply (folder and file context menus and `PATH` on, desktop icon off).
+`/TASKS=desktopicon,contextmenu,filecontextmenu,addtopath` selects exactly the listed tasks, `/MERGETASKS="desktopicon"`
+adds to the defaults and `/MERGETASKS="!addtopath"` removes one of them. `/ALLUSERS` installs for all users (needs
+administrator rights).
+
+## Smoke test of the installer
+
+`smoke.ps1 -Mode installer` runs two rounds (both silent, per user):
+
+1. **Defaults** (no `/TASKS`, what a user gets by clicking Next): asserts the integration, runs the same setup again over
+   the install (upgrade in place: still exactly one `PATH` entry, all registrations intact), uninstalls once and asserts that
+   everything is gone. A failure here is collected and reported at the end, so round 2 still produces its evidence.
+2. **All tasks** (`/TASKS=desktopicon,contextmenu,filecontextmenu,addtopath`): the same assertions plus the desktop shortcut,
+   then the tests of the installed app (`--version`, `--help`, bad folder, two launches with the first-paint PNG, and the
+   real window capture), then the uninstall: files, both shortcuts, the uninstall key, the context-menu, App Paths and
+   Applications keys and the `PATH` entry must be gone, while a marker file in `%APPDATA%\impro` must still exist.
+
+Asserted after an install: the Start Menu shortcut targets the installed `impro.exe` and its `WorkingDirectory` equals the
+user profile (read through `WScript.Shell`); the `AppUserModelID` is found in the `.lnk` bytes (a warning if not, because
+reading it back needs COM interop); App Paths; the Applications key (open command, `SupportedTypes`); the three
+context-menu keys with their command lines; the user `PATH`; and the uninstall entry (name, version, publisher, help link,
+install location). `test_iss.py` checks that every registry key `smoke.ps1` names is written by `impro.iss`.
+
+## Screenshots in the job log
+
+The dev machine can read a job log but cannot download artifacts, so the `smoke` job prints its screenshots into the log
+(step "Print screenshots to the log", `if: always()`, `continue-on-error: true`):
+
+```
+-----BEGIN IMPRO-SCREENSHOT <file name>-----
+<base64, 100 columns>
+-----END IMPRO-SCREENSHOT <file name>-----
+```
+
+`print-screenshots.ps1 -Directory DIR` does this for every `*.png` of a directory; a file larger than 250 KB is first
+downscaled to at most 1100 px width. The files are `first-paint-<mode>-<cold|warm>.png` (the offscreen GTK capture,
+`IMPRO_QA_SCREENSHOT`, content only) and `desktop-window.png`: `smoke.ps1` starts the installed app on a folder without the
+QA variables, waits for its main window, brings it to the front and copies that rectangle off the screen with the native
+caption and frame (`Graphics.CopyFromScreen`, DWM frame bounds, DPI aware). `PrintWindow` is the fallback, written as
+`desktop-window-printwindow.png` when the screen copy stays blank. If no window appears the step only logs a warning.
+
+To get the files back from a saved log (any OS, standard library only):
+
+```
+gh run view <run-id> --job <job-id> --log > job.log      # or save the raw log from the web page
+python3 -I scripts/ci/extract_log_screenshots.py -o screenshots job.log
+```
+
+The extractor ignores the timestamp prefix, `\r`, a BOM, ANSI colours and the `job<TAB>step<TAB>` columns of `gh`, checks
+the PNG magic bytes (and the chunk CRCs, as a warning) and never writes outside the output directory. Its tests:
+`python3 -I scripts/ci/test_extract_log_screenshots.py`. The `windows.yml` workflow also runs on pushes to `claude/**`
+branches, so the screenshots are available without opening a pull request.
 
 Bundle layout (flat for the exe and DLLs, because GLib/GTK derive their prefix from the directory of
 their own DLL; no environment variables and no wrapper are needed):

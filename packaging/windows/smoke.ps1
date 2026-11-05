@@ -245,8 +245,10 @@ function Assert-OpenCommand([string]$SubKey, [string]$ExpectedArg, [string]$What
     $cmd = [string](Get-UserRegValue $SubKey '')
     $m = [regex]::Match($cmd, '^"(?<exe>[^"]+)" "(?<arg>[^"]+)"$')
     if (-not $m.Success) { Fail "$What has an unexpected command line : $cmd" }
-    if (-not (Test-SamePath $m.Groups['exe'].Value $Exe)) { Fail "$What runs '$($m.Groups['exe'].Value)', expected '$Exe'" }
-    if ($m.Groups['arg'].Value -cne $ExpectedArg) { Fail "$What passes '$($m.Groups['arg'].Value)', expected '$ExpectedArg'" }
+    $cmdExe = $m.Groups['exe'].Value
+    $cmdArg = $m.Groups['arg'].Value
+    if (-not (Test-SamePath $cmdExe $Exe)) { Fail "$What runs '$cmdExe', expected '$Exe'" }
+    if ($cmdArg -cne $ExpectedArg) { Fail "$What passes '$cmdArg', expected '$ExpectedArg'" }
     Pass "$What runs the installed impro.exe with $ExpectedArg"
 }
 
@@ -265,11 +267,14 @@ function Get-ShortcutInfo([string]$LnkPath) {
 function Assert-Shortcut([string]$LnkPath, [string]$Exe, [string]$What) {
     Assert-Path $LnkPath $What
     $info = Get-ShortcutInfo $LnkPath
-    Step ("{0} : target='{1}' workingDirectory='{2}' icon='{3}'" -f $What, $info.Target, $info.WorkingDirectory, $info.Icon)
-    if (-not (Test-SamePath $info.Target $Exe)) { Fail "$What targets '$($info.Target)', expected the installed '$Exe'" }
+    $target = $info.Target
+    $startIn = $info.WorkingDirectory
+    $profileDir = $env:USERPROFILE
+    Step ("{0} : target='{1}' workingDirectory='{2}' icon='{3}'" -f $What, $target, $startIn, $info.Icon)
+    if (-not (Test-SamePath $target $Exe)) { Fail "$What targets '$target', expected the installed '$Exe'" }
     Pass "$What targets the installed impro.exe"
-    if (-not (Test-SamePath $info.WorkingDirectory $env:USERPROFILE)) {
-        Fail "$What starts in '$($info.WorkingDirectory)', expected the user profile '$env:USERPROFILE'"
+    if (-not (Test-SamePath $startIn $profileDir)) {
+        Fail "$What starts in '$startIn', expected the user profile '$profileDir'"
     }
     Pass "$What starts in the user profile"
     # The AppUserModelID sits in the property store of the .lnk as UTF-16 text. This is a plausibility check on
