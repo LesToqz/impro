@@ -8,6 +8,7 @@ mod preferences;
 mod startup_icons;
 pub mod style;
 mod views;
+pub mod win;
 mod window;
 pub use commands::accel_text;
 pub use views::DiffHighlighter;

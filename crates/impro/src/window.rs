@@ -1,6 +1,6 @@
 use gtk::prelude::*;
 use impro_chrome::{Command, CommandPalette, OverlayHost, QuickSwitcher, TitleBar};
-use impro_core::{identity, notes, settings, themes};
+use impro_core::{notes, settings, themes};
 use impro_editor::{EditorPanel, EditorTab};
 use impro_explorer::ExplorerPanel;
 use impro_gitviews::{CommitView, GitGraphView};
@@ -108,7 +108,8 @@ impl MainWindow {
         trace("style");
         let root = root.as_ref().to_path_buf();
         let window = gtk::ApplicationWindow::new(app);
-        window.set_title(identity::WINDOW_TITLE);
+        window.set_title(&crate::win::policy::window_title(&root));
+        crate::win::install_frame(&window);
         window.set_default_size(1200, 750);
         trace("window");
         let explorer = ExplorerPanel::new(&root);
@@ -133,12 +134,29 @@ impl MainWindow {
         sidebar.pack2(&dock, true, false);
         sidebar.set_position(300);
         let menu_bar = gtk::MenuBar::new();
-        let titlebar = TitleBar::new(&menu_bar);
-        window.set_titlebar(Some(&titlebar));
+        // Docked (Windows): the native caption stays and the bar sits above the overlay host, so
+        // overlays keep the geometry they have under the client-side header bar.
+        let docked = crate::win::policy::docked_titlebar();
+        let titlebar = if docked {
+            // The native caption is outside the client area, so the docked bar takes its height
+            // from the workspace; grow the window by it to keep the workspace at 1200x750.
+            window.set_default_size(1200, 750 + impro_chrome::HEADER_HEIGHT);
+            TitleBar::new_docked(&menu_bar)
+        } else {
+            TitleBar::new(&menu_bar)
+        };
         let layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
         layout.pack_start(&sidebar, true, true, 0);
         let overlay = OverlayHost::new(Some(layout.upcast_ref()));
-        window.add(overlay.widget());
+        if docked {
+            let frame = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            frame.pack_start(&titlebar, false, false, 0);
+            frame.pack_start(overlay.widget(), true, true, 0);
+            window.add(&frame);
+        } else {
+            window.set_titlebar(Some(&titlebar));
+            window.add(overlay.widget());
+        }
         let this = Self(Rc::new(WindowWidgets {
             window,
             explorer,
@@ -239,7 +257,8 @@ impl MainWindow {
             }
             glib::Propagation::Proceed
         });
-        this.window.set_title(identity::WINDOW_TITLE);
+        this.window
+            .set_title(&crate::win::policy::window_title(&this.root()));
         this
     }
 
@@ -685,7 +704,8 @@ impl MainWindow {
             switcher.set_files(Vec::new(), Vec::new());
         }
         self.sync_note_toolbars();
-        self.window.set_title(identity::WINDOW_TITLE);
+        self.window
+            .set_title(&crate::win::policy::window_title(&root));
     }
     pub fn open_folder(&self) {
         self.restore_terminal_fullscreen();

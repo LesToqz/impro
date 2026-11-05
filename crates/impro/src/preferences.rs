@@ -6,12 +6,38 @@ use serde_json::{Map, Value};
 
 /// Read the startup snapshot once, including the opaque graph preferences.
 pub(crate) fn load_values() -> settings::Values {
-    let mut stored = settings::load();
+    startup_values(
+        settings::load(),
+        crate::win::system_apps_use_light_theme(),
+        crate::win::system_client_area_animations(),
+    )
+}
+
+/// Saved settings over the defaults. On Windows a theme or reduce-motion choice the user never
+/// saved follows the system colour mode and animation setting instead; nothing is written back,
+/// so the system keeps deciding until the user picks a value. Off Windows both inputs are `None`.
+fn startup_values(
+    mut stored: settings::Values,
+    apps_use_light: Option<bool>,
+    client_area_animations: Option<bool>,
+) -> settings::Values {
+    let saved = |key: &str| stored.get(key).is_some_and(|value| !value.is_null());
+    let system_theme =
+        crate::win::policy::initial_theme(saved("theme"), apps_use_light, themes::themes())
+            .map(str::to_owned);
+    let system_reduce_motion =
+        crate::win::policy::initial_reduce_motion(saved("reduce_motion"), client_area_animations);
     let mut values = settings::defaults().clone();
     for (key, value) in &mut values {
         if let Some(saved) = stored.remove(key) {
             *value = saved;
         }
+    }
+    if let Some(id) = system_theme {
+        values.insert("theme".into(), id.into());
+    }
+    if let Some(flag) = system_reduce_motion {
+        values.insert("reduce_motion".into(), flag.into());
     }
     values.insert(
         "graph".into(),
@@ -302,6 +328,7 @@ impl MainWindow {
             return;
         }
         self.apply_widget_theme();
+        crate::win::refresh_frame(&self.window);
     }
     pub(crate) fn apply_widget_theme(&self) {
         let values = self.values();
@@ -358,5 +385,77 @@ impl MainWindow {
             dialog.set_values(&values);
         }
         impro_settings_ui::save_value_async("graph", normalized);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn stored(pairs: &[(&str, Value)]) -> settings::Values {
+        pairs
+            .iter()
+            .map(|(key, value)| (key.to_string(), value.clone()))
+            .collect()
+    }
+
+    #[test]
+    fn without_system_hints_defaults_and_saved_values_are_unchanged() {
+        let defaults = settings::defaults();
+        let values = startup_values(stored(&[]), None, None);
+        assert_eq!(values["theme"], defaults["theme"]);
+        assert_eq!(values["reduce_motion"], defaults["reduce_motion"]);
+        let saved = stored(&[("theme", json!("nord")), ("reduce_motion", json!(true))]);
+        let values = startup_values(saved, None, None);
+        assert_eq!(
+            (&values["theme"], &values["reduce_motion"]),
+            (&json!("nord"), &json!(true))
+        );
+        assert_eq!(values["graph"], Value::Null);
+    }
+
+    #[test]
+    fn first_run_takes_the_light_system_theme_and_dark_keeps_the_default() {
+        let light = startup_values(stored(&[]), Some(true), None);
+        assert_eq!(light["theme"], json!("impro-light"));
+        let dark = startup_values(stored(&[]), Some(false), None);
+        assert_eq!(dark["theme"], settings::defaults()["theme"]);
+        // A null entry is not a choice.
+        let null = startup_values(stored(&[("theme", Value::Null)]), Some(true), None);
+        assert_eq!(null["theme"], json!("impro-light"));
+    }
+
+    #[test]
+    fn a_saved_theme_wins_over_the_system() {
+        let values = startup_values(stored(&[("theme", json!("dracula"))]), Some(true), None);
+        assert_eq!(values["theme"], json!("dracula"));
+        let same = startup_values(stored(&[("theme", json!("impro-dark"))]), Some(true), None);
+        assert_eq!(same["theme"], json!("impro-dark"));
+    }
+
+    #[test]
+    fn disabled_system_animations_set_reduce_motion_only_without_a_saved_choice() {
+        let values = startup_values(stored(&[]), None, Some(false));
+        assert_eq!(values["reduce_motion"], json!(true));
+        let enabled = startup_values(stored(&[]), None, Some(true));
+        assert_eq!(
+            enabled["reduce_motion"],
+            settings::defaults()["reduce_motion"]
+        );
+        let explicit = startup_values(
+            stored(&[("reduce_motion", json!(false))]),
+            None,
+            Some(false),
+        );
+        assert_eq!(explicit["reduce_motion"], json!(false));
+    }
+
+    #[test]
+    fn every_system_choice_is_a_valid_setting() {
+        let values = startup_values(stored(&[]), Some(true), Some(false));
+        for key in ["theme", "reduce_motion"] {
+            assert_eq!(settings::normalize(key, &values[key]).unwrap(), values[key]);
+        }
     }
 }
