@@ -29,22 +29,46 @@ On Debian/Ubuntu:
 ```sh
 sudo apt install build-essential pkg-config libgtk-3-dev libvte-2.91-dev libwebkit2gtk-4.1-dev
 cargo build --release -p impro
-cargo run --release -p impro -- [folder]
+cargo run --release -p impro -- [path ...]
 ```
 
 The repository caps parallel compile jobs at 3 to bound memory on small machines;
 `CARGO_BUILD_JOBS=N cargo build --release -p impro` overrides this limit.
 
-`[folder]` denotes an optional directory argument; omit it to open the current
-directory. The executable is `target/release/impro`. For command-line information:
+`[path ...]` denotes optional folders and files; see [Opening projects](#opening-projects).
+The executable is `target/release/impro`. For command-line information:
 
 ```sh
 cargo run --release -p impro -- --version
 cargo run --release -p impro -- --help
 ```
 
-Help begins `usage: impro [-h] [--version] [folder]`. Bad arguments and invalid
-folders exit with status 2; help and version need no display.
+Help begins `usage: impro [-h] [--version] [path ...]`. Bad arguments and paths that
+do not exist exit with status 2; help and version need no display.
+
+## Opening projects
+
+`impro [path ...]` takes folders and files. A folder is the project root (with
+several, the first wins); files open in the editor in argument order, and with no
+folder the first file's parent is the root. `file://` URIs are accepted, so a
+desktop entry can pass `%F` or `%U`. On Linux a launch that names paths opens its
+own window; a plain `impro` still focuses a running one.
+
+With no path, impro opens the current directory, except when the launch is
+*ambient*, meaning nobody chose that directory. Then it reopens the last folder
+you used (falling back to your home directory, or Documents on Windows):
+
+| Platform | The working directory is ambient when it is |
+| --- | --- |
+| Windows | inside impro's install directory, inside the Windows directory, or your user profile (what a Start Menu or desktop shortcut starts in) |
+| Linux | `$HOME` (what a desktop launcher starts in) |
+
+Any other directory, such as a terminal inside a project, is used as is. The last
+folder and the ten most recent folders are kept in `state.json` next to
+`settings.json`. With no file open, the editor shows a start page with Open Folder,
+Quick Switcher, Command Palette, New Note and Settings (each with its shortcut) and
+the recent folders; **File → Open Recent** lists the same folders. Open Folder uses
+the system folder picker.
 
 On Linux, runtime requires GTK3 and VTE 2.91 (native VTE version 0.72 or newer).
 WebKit2GTK 4.1 supplies the Git pages: no WebKit process starts until a Git graph
@@ -61,8 +85,12 @@ bash packaging/install.sh --uninstall
 ```
 
 Installation builds release and copies these files under `~/.local`: `bin/impro`,
-`share/applications/impro.desktop`, `share/icons/hicolor/scalable/apps/impro.svg` and
+`share/applications/impro.desktop`, `share/metainfo/dev.impro.impro.metainfo.xml`,
+`share/icons/hicolor/scalable/apps/impro.svg` and
 `share/icons/hicolor/<N>x<N>/apps/impro.png` (N = 16, 24, 32, 48, 64, 128, 256, 512).
+It then refreshes the desktop database and icon cache when those tools exist, so impro
+appears in software centres and in "Open With" for common text and source files (it is
+never made anyone's default application).
 Ensure `~/.local/bin` is on PATH. Uninstall removes those files, preserves settings
 and documents, and can be repeated. Installation also supports a prebuilt binary:
 
@@ -80,7 +108,11 @@ one adjustable accent colour, rounded tabs, instant hover/selection feedback and
 where something moves (sliding toggles, notices, terminal panes).
 
 One top bar contains File/View menus, the title **impro**, a settings cog and the
-compact window buttons; the right-dock toggle sits beside the cog (Ctrl+Alt+`). The explorer sidebar starts 300 px wide.
+compact window buttons; the right-dock toggle sits beside the cog (Ctrl+Alt+`). On
+Windows the window uses the native title bar and frame instead (caption buttons,
+snapping, system menu, a caption coloured to match the theme), and the same bar of
+menus and toggles sits directly below it, so the content looks the same on both
+systems. The explorer sidebar starts 300 px wide.
 The explorer on the left has a collapsible Notes section below the file tree, with a draggable divider.
 Its Notes header button shows or hides the section; the tree stays visible above it.
 The explorer supports searching (see Search in Files), creating

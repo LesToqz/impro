@@ -1,8 +1,10 @@
 # impro on Windows
 
 impro builds and runs on Windows with the same GTK 3 code base as on Linux. The
-Windows build targets `x86_64-pc-windows-gnu` with GTK 3 from MSYS2 UCRT64. Linux
-behaviour is unchanged.
+Windows build targets `x86_64-pc-windows-gnu` with GTK 3 from MSYS2 UCRT64. The
+content of the window (themes, layout, start page, command-line paths) is shared with
+Linux; the window frame, installer and system integration are Windows-specific, and
+the Linux window frame is unchanged.
 
 **Status:** everything on this page was written against CI results and Linux-side
 checks. Items marked *not yet verified* have not been confirmed on Windows hardware
@@ -38,21 +40,58 @@ and `bundle-manifest.txt`. The layout and the reason it is flat are in
 ## Install, uninstall, portable use
 
 - **Install:** run the setup executable. It installs for the current user (the
-  dialog on the first page can switch to all users). Silent install:
-  `impro-<version>-x64-setup.exe /CURRENTUSER /VERYSILENT /TASKS=desktopicon`.
-- **Optional tasks**, all off by default:
+  dialog on the first page can switch to all users) and adds a Start Menu entry.
+  Silent install with the default tasks:
+  `impro-<version>-x64-setup.exe /CURRENTUSER /VERYSILENT`. Add the desktop icon on
+  top of the defaults with `/MERGETASKS=desktopicon`; `/TASKS=...` instead selects
+  exactly the tasks it lists.
+- **Tasks:**
 
-  | Task | Effect |
-  | --- | --- |
-  | `desktopicon` | Desktop shortcut |
-  | `contextmenu` | "Open folder in impro" in the Explorer context menu |
-  | `addtopath` | Adds the install directory to the user `PATH` |
+  | Task | Default | Effect |
+  | --- | --- | --- |
+  | `desktopicon` | off | Desktop shortcut |
+  | `contextmenu` | on | "Open folder in impro" on folders and folder backgrounds in Explorer |
+  | `filecontextmenu` | on | "Open with impro" on every file in Explorer |
+  | `addtopath` | on | Adds the install directory to the `PATH` (user, or system for an all-users install) |
 
+- **Always registered:** the Start Menu shortcut, which starts in your user profile
+  folder and carries the taskbar identity `dev.impro.impro`; an App Paths entry, so
+  `Win+R`, then `impro` works without a `PATH` entry; and impro in the "Open with"
+  list for common text and source files. impro never becomes the default program for
+  any file type.
 - **Uninstall:** Settings, Apps, or `unins000.exe` in the install directory. The
-  uninstaller removes the files, shortcuts, context-menu keys and the `PATH` entry.
-  Settings under `%APPDATA%\impro` are not touched.
-- **Portable:** unzip and run `impro.exe [folder]`. Settings are stored per user as described under Settings; the font cache is
+  uninstaller removes the files, shortcuts, registry entries above and the `PATH` entry.
+  Settings and recent folders under `%APPDATA%\impro` are not touched.
+- **Portable:** unzip and run `impro.exe [path ...]`. Settings are stored per user as described under Settings; the font cache is
   created by the GTK stack.
+
+## Behaviour as a Windows application
+
+- **Window frame.** The main window uses the native Windows title bar and frame, so
+  the caption buttons, resize borders, snapping, the system menu (`Alt+Space`) and
+  the caption icon are the system's. The bar with the File/View menus and the dock
+  toggles is part of the window content, directly under the caption, with the same
+  styling as on Linux. The caption reads `<folder> - impro`.
+- **Colours.** The caption follows the theme. On Windows 10 (1809 and newer) it is a
+  dark or light caption to match the theme's brightness. On Windows 11 (build 22000
+  and newer) the caption, text and border colours are also set to the theme's bar
+  colours so the caption and the bar form one surface, and the corners are rounded.
+  Anything the running Windows does not support is skipped without an error.
+- **Taskbar.** The process and the shortcuts share the AppUserModelID
+  `dev.impro.impro`, so a pinned shortcut and the running window group together.
+- **First run.** With no `settings.json` yet, impro starts in a light theme when
+  Windows apps use the light mode and in `impro-dark` otherwise. A saved theme is
+  never overridden. Windows' "animation effects" switch turns on Reduce motion unless
+  you set it explicitly.
+- **Starting.** Launched from the Start Menu or a desktop shortcut, impro reopens the
+  last folder you used instead of its own install directory; see
+  [Opening projects](../README.md#opening-projects). `impro.exe [path ...]` accepts
+  folders and files, which is what the Explorer entries use.
+- **Open Folder** is the system folder picker.
+
+Not yet verified on Windows hardware: the caption colours on Windows 10 versus 11,
+Snap Layouts, the caption icon at each DPI scale, the system folder picker and a
+window taller than a short screen (the default window is 790 px high).
 
 The installer is not code-signed. Windows SmartScreen may warn on first run
 ("More info", then "Run anyway"). Compare the file against `SHA256SUMS.txt` first.
@@ -71,12 +110,15 @@ cause is not confirmed in this documentation.
 
 `%APPDATA%\impro\settings.json` (the roaming profile; the fallback is
 `%USERPROFILE%\AppData\Roaming`). On Linux the file is under `XDG_CONFIG_HOME` or
-`~/.config`. The format is identical.
+`~/.config`. The format is identical. The last folder and the recent folders are in
+`state.json` next to it.
 
 ## Where the Windows-specific code lives
 
 | Part | Location |
 | --- | --- |
+| Native window frame (DWM caption colours, taskbar identity, first-run theme and reduce-motion from the system) | `crates/impro/src/win` (pure decisions in `policy.rs`, OS calls in `sys.rs` and `frame.rs`), docked bar in `crates/impro-chrome/src/titlebar.rs` |
+| Launch resolution, recent folders, start page | `crates/impro/src/launch.rs`, `crates/impro/src/welcome.rs` |
 | ConPTY terminal (pseudo console plus a terminal emulator and GTK widget) | `crates/impro-vte/src/windows`, `crates/impro-vte/src/emu` |
 | WebView2 Git pages | `crates/impro-gitviews/src/gitviews_windows.rs` (navigation policy `windows_policy.rs`, diagnostics `windows_diag.rs`) |
 | Executable resources (icon, version info, manifest) | `crates/impro/build.rs`, `crates/impro/windows/` |
@@ -102,6 +144,10 @@ See [Architecture](ARCHITECTURE.md#platform-backends) for the seams.
 ## Known limitations
 
 - The installer and `impro.exe` are unsigned.
+- Several shortcuts use Ctrl+Alt (Graph view Ctrl+Alt+G, Git graph Ctrl+Alt+H, the
+  right dock Ctrl+Alt+`). On keyboard layouts where AltGr produces characters,
+  Windows reports AltGr as Ctrl+Alt, so these can collide with typing. They have not
+  been audited for this yet.
 - No primary-selection clipboard: `copy_primary` and `paste_primary` in the terminal
   are no-ops on Windows. The normal clipboard works.
 - Windows behaviour has been checked mainly through CI and cross type-checking from
@@ -124,5 +170,7 @@ See [Architecture](ARCHITECTURE.md#platform-backends) for the seams.
 | Git graph empty or git features unavailable | Install Git for Windows and restart impro so it sees the new `PATH`. |
 | Terminal opens the wrong shell | Set the shell in the settings, otherwise the order is PowerShell 7, Windows PowerShell, `cmd.exe`. |
 | Slow first start | One-time font cache; later starts are faster (see First launch). |
+| impro opens the wrong folder from a shortcut | A shortcut that starts in your user profile, the install directory or the Windows directory reopens the last folder you used. Start `impro.exe C:\path\to\folder` (or use "Open folder in impro") to choose a folder explicitly. |
+| "Open with impro" does nothing | Needs the build that accepts file arguments (`impro [path ...]`); older builds reject a file path and exit with status 2. |
 | `impro` not found in a console | The `addtopath` task was not selected; open a new console after enabling it, or use the full path. |
 | Nothing printed by `impro --version` in a script | Output is attached to the parent console; when redirecting, check both streams. Not yet verified on all shells. |

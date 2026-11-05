@@ -21,7 +21,9 @@ workspace version (a Debian native package, so the changelog is `changelog.gz`).
 | Path | Notes |
 | --- | --- |
 | `/usr/bin/impro` | 0755 |
-| `/usr/share/applications/impro.desktop` | from `packaging/impro.desktop` |
+| `/usr/share/applications/impro.desktop` | from `packaging/impro.desktop` (`Exec=impro %F`, `MimeType` for common text and source files so impro is offered in "Open With"; never a default handler; `StartupWMClass=impro`, the class GTK really sets) |
+| `/usr/share/metainfo/dev.impro.impro.metainfo.xml` | AppStream data from `packaging/dev.impro.impro.metainfo.xml`; the licence expression lists the bundled icon licences (see `THIRD_PARTY_NOTICES.md`) |
+| `DEBIAN/md5sums` | checksums of the installed files |
 | `/usr/share/icons/hicolor/<N>x<N>/apps/impro.png`, `scalable/apps/impro.svg` | 16 to 512 |
 | `/usr/share/doc/impro/` | `copyright`, `changelog.gz`, `README.md.gz`, `THIRD_PARTY_NOTICES.md` |
 | `/usr/share/man/man1/impro.1.gz` | from `packaging/debian/impro.1` |
@@ -91,7 +93,10 @@ next to the exe with `--extra` (the product job passes `WebView2Loader.dll`, fou
 | Checksums | `scripts/package/windows/write-checksums.sh` (`SHA256SUMS.txt`) |
 
 `impro.iss` installs per user (`PrivilegesRequired=lowest`, overridable in the dialog)
-and defines the tasks `desktopicon`, `contextmenu` and `addtopath`, all off by default.
+and defines the tasks `desktopicon` (off by default), `contextmenu`, `filecontextmenu`
+and `addtopath` (on by default). It also registers the Start Menu shortcut (working
+directory: the user profile; AppUserModelID `dev.impro.impro`), an App Paths entry and
+the "Open with" list entry. The full table is in `packaging/windows/README.md`.
 Release assets: `impro-<version>-x64-setup.exe`, `impro-<version>-x64-portable.zip`,
 `SHA256SUMS.txt`.
 

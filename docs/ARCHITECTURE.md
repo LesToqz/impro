@@ -33,7 +33,10 @@ the crate also contains its native GTK view. No async runtime is used.
 
 | Module in `crates/impro/src` | Responsibility |
 | --- | --- |
-| `main.rs`, `cli.rs` | Argument parsing, logging panic hook and process exit |
+| `main.rs`, `cli.rs` | Argument parsing (`impro [path ...]`), logging panic hook and process exit |
+| `launch.rs` | Pure launch resolution (project root and files from the arguments, "ambient launch" detection) and the `state.json` store of the last and recent folders |
+| `welcome.rs` | Start page shown while no tab is open: actions with their real shortcuts and recent folders, installed through `EditorPanel::set_empty_widget` |
+| `win/` | Window-frame seam. `policy.rs` holds the pure decisions (title, DWM attribute list, first-run theme, reduce motion) and is tested on Linux; `sys.rs` and `frame.rs` make the Windows OS calls and compile to no-ops elsewhere |
 | `lib.rs` | Library exports used by the binary, integration tests and QA examples |
 | `app.rs` | GTK application lifecycle, initial settings snapshot, first-paint capture |
 | `window.rs` | `MainWindow` composition, panel signals, project lifecycle and shutdown |
@@ -113,6 +116,8 @@ roles. Editor highlighting maps syntect scopes to these roles off-thread.
 Filesystem operations return structured errors, protect project/filesystem roots,
 and do not silently replace a failed trash operation with permanent deletion.
 
+The last and recent folders are kept apart from settings in `state.json` next to
+`settings.json` (see `launch.rs`), so the settings schema is untouched.
 Settings resolve to `$XDG_CONFIG_HOME/impro/settings.json`, or
 `~/.config/impro/settings.json`. Defaults, ranges and choices are embedded in
 `crates/impro-core/src/{defaults,limits,choices}.json`. Invalid input falls back
@@ -168,6 +173,7 @@ sit behind seams chosen with `cfg`:
 | Concern | Linux | Windows |
 | --- | --- | --- |
 | Terminal (`impro-vte`) | `unix.rs`: safe wrapper over libvte-2.91 (`impro-vte-sys`) | `windows/`: ConPTY pseudo console (`conpty.rs`), a terminal emulator (`emu/`) and a GTK widget (`widget.rs`) behind the same `Terminal`/`Pty` API |
+| Window frame | CSD `GtkHeaderBar` set with `set_titlebar` (menus, toggles, title and window buttons in one bar) | Native frame; the same bar is docked at the top of the content (`TitleBar::new_docked`, no window buttons, no title) and `win/` colours the caption through DWM |
 | Git pages (`impro-gitviews`) | `gitviews.rs`: WebKitGTK hosts | `gitviews_windows.rs`: WebView2 host, with `windows_policy.rs` (navigation policy), `windows_diag.rs` (diagnostics) and `notice.rs` (fallback page when WebView2 is unavailable) |
 
 The page assets, protocol and Git data code are shared. `impro-vte` also has a
