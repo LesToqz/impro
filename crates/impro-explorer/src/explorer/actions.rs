@@ -327,7 +327,7 @@ impl ExplorerPanel {
             gtk::DialogFlags::MODAL,
             &[
                 ("Cancel", gtk::ResponseType::Cancel),
-                ("OK", gtk::ResponseType::Ok),
+                (name_confirm_label(title), gtk::ResponseType::Ok),
             ],
         );
         dialog.set_default_response(gtk::ResponseType::Ok);
@@ -338,9 +338,18 @@ impl ExplorerPanel {
         entry.set_text(initial);
         entry.set_activates_default(true);
         entry.set_size_request(280, -1);
+        entry.set_placeholder_text(name_placeholder(title));
+        // The error line takes no room (and no gap above the buttons) until there is one.
         let error_label = gtk::Label::new(None);
         error_label.set_xalign(0.0);
         error_label.set_line_wrap(true);
+        error_label.set_max_width_chars(36);
+        error_label.style_context().add_class("impro-dialog-error");
+        error_label.set_no_show_all(true);
+        {
+            let error_label = error_label.clone();
+            entry.connect_changed(move |_| error_label.set_visible(false));
+        }
         content.add(&entry);
         content.add(&error_label);
         dialog.show_all();
@@ -357,8 +366,9 @@ impl ExplorerPanel {
             dialog.set_response_sensitive(gtk::ResponseType::Ok, false);
             let (dialog_weak, label_weak, panel_weak) =
                 (dialog.downgrade(), error_label.downgrade(), weak.clone());
+            let submitted = entry.text().to_string();
             action(
-                entry.text().to_string(),
+                submitted.clone(),
                 Box::new(move |result| {
                     let Some(dialog) = dialog_weak.upgrade() else {
                         return;
@@ -367,7 +377,8 @@ impl ExplorerPanel {
                         Ok(()) => close_dialog(&panel_weak, &dialog),
                         Err(error) => {
                             if let Some(label) = label_weak.upgrade() {
-                                label.set_text(&error.to_string());
+                                label.set_text(&friendly_error(&error.to_string(), &submitted));
+                                label.set_visible(true);
                             }
                             dialog.set_response_sensitive(gtk::ResponseType::Ok, true);
                         }
@@ -429,10 +440,11 @@ impl ExplorerPanel {
         } else {
             format!("Delete \"{name}\"?")
         };
+        let is_folder = std::fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir());
         let mut detail = if trash {
             "You can restore this item from the system trash."
         } else {
-            "Folders and their contents are deleted recursively. This cannot be undone."
+            permanent_detail(is_folder)
         }
         .to_owned();
         if fallback {
@@ -453,10 +465,19 @@ impl ExplorerPanel {
             self.window().as_ref(),
             gtk::DialogFlags::MODAL,
             gtk::MessageType::Warning,
-            gtk::ButtonsType::OkCancel,
+            gtk::ButtonsType::None,
             &request.title,
         );
         dialog.set_secondary_text(Some(&request.detail));
+        // Name the action ("Delete", not "OK"); a permanent delete is styled as destructive
+        // and Cancel stays the default so a stray Enter never removes anything.
+        dialog.style_context().add_class("impro-explorer-confirm");
+        dialog.add_button("Cancel", gtk::ResponseType::Cancel);
+        let confirm = dialog.add_button(removal_label(trash, fallback), gtk::ResponseType::Ok);
+        if !trash {
+            confirm.style_context().add_class("destructive-action");
+        }
+        dialog.set_default_response(gtk::ResponseType::Cancel);
         *self.imp().dialog.borrow_mut() = Some(dialog.clone().upcast());
         let done = RefCell::new(Some(done));
         let weak = self.downgrade();
@@ -685,10 +706,113 @@ impl ExplorerPanel {
     }
 }
 
+/// Text of the button that submits a name dialog titled `title`.
+fn name_confirm_label(title: &str) -> &'static str {
+    if title == "Rename" {
+        "Rename"
+    } else {
+        "Create"
+    }
+}
+
+fn name_placeholder(title: &str) -> Option<&'static str> {
+    match title {
+        "New File" => Some("File name"),
+        "New Folder" => Some("Folder name"),
+        _ => None,
+    }
+}
+
+/// Text of the button that confirms a removal question.
+fn removal_label(trash: bool, fallback: bool) -> &'static str {
+    if trash {
+        "Move to Trash"
+    } else if fallback {
+        "Delete Permanently"
+    } else {
+        "Delete"
+    }
+}
+
+fn permanent_detail(is_folder: bool) -> &'static str {
+    if is_folder {
+        "The folder and everything in it will be deleted. This cannot be undone."
+    } else {
+        "This cannot be undone."
+    }
+}
+
+/// Shorten an error that names the whole path of the file the user just typed
+/// ("Already exists: /home/me/project/a.txt") to what the dialog is about. Other
+/// messages are shown as they are.
+fn friendly_error(message: &str, name: &str) -> String {
+    let named = |prefix: &str| {
+        message
+            .strip_prefix(prefix)
+            .is_some_and(|path| !name.is_empty() && path.ends_with(name))
+    };
+    if named("Already exists: ") {
+        format!("\"{name}\" already exists in this folder.")
+    } else if named("Permission denied: ") {
+        format!("Permission denied for \"{name}\" in this folder.")
+    } else {
+        message.to_owned()
+    }
+}
+
 fn close_dialog(panel: &glib::WeakRef<ExplorerPanel>, dialog: &gtk::Dialog) {
     if let Some(panel) = panel.upgrade() {
         panel.imp().dialog.take();
     }
     // SAFETY: the dialog is modal and owned by the explorer; nothing uses it afterwards.
     unsafe { dialog.destroy() }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn errors_naming_the_typed_file_drop_the_absolute_path() {
+        assert_eq!(
+            friendly_error("Already exists: /home/me/project/a.txt", "a.txt"),
+            "\"a.txt\" already exists in this folder."
+        );
+        assert_eq!(
+            friendly_error("Permission denied: /srv/a.txt", "a.txt"),
+            "Permission denied for \"a.txt\" in this folder."
+        );
+    }
+
+    #[test]
+    fn other_errors_are_shown_unchanged() {
+        for (message, name) in [
+            ("Already exists", "a.txt"),
+            ("Already exists: /home/me/other.txt", "a.txt"),
+            ("Already exists: /home/me/a.txt", ""),
+            ("Cannot modify /x: boom", "x"),
+            ("Invalid name: enter a name without '/' or NUL.", "a/b"),
+        ] {
+            assert_eq!(friendly_error(message, name), message);
+        }
+    }
+
+    #[test]
+    fn dialog_buttons_name_their_action() {
+        assert_eq!(name_confirm_label("Rename"), "Rename");
+        assert_eq!(name_confirm_label("New File"), "Create");
+        assert_eq!(name_confirm_label("New Folder"), "Create");
+        assert_eq!(removal_label(true, false), "Move to Trash");
+        assert_eq!(removal_label(false, true), "Delete Permanently");
+        assert_eq!(removal_label(false, false), "Delete");
+        assert_eq!(name_placeholder("Rename"), None);
+        assert_eq!(name_placeholder("New File"), Some("File name"));
+    }
+
+    #[test]
+    fn only_folders_mention_their_contents() {
+        assert!(permanent_detail(true).contains("everything in it"));
+        assert!(!permanent_detail(false).contains("folder"));
+        assert!(permanent_detail(false).contains("cannot be undone"));
+    }
 }
