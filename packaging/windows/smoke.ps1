@@ -21,7 +21,9 @@
   The app test mirrors scripts/ci/smoke.sh: --version, --help, invalid folder (exit 2), then a GUI
   launch that writes a first-paint PNG (IMPRO_QA_SCREENSHOT) and exits 0, time-boxed. In installer mode a last
   launch WITHOUT the QA variables stays open until the real top-level window exists and is captured with its native
-  frame into <OutDir>\desktop-window.png (best effort, never fails the run; see window-capture.ps1).
+  frame into <OutDir>\desktop-window.png (best effort, never fails the run; see window-capture.ps1), followed by the
+  window probe (`[window-probe] key=value` lines, see window-probe.ps1). Those lines and the capture status lines are
+  also written to <OutDir>\window-probe.txt, which the last step of the smoke job prints (print-probe-summary.ps1).
 
   Silent installer flags used (see smoke-args.ps1): /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /DIR="..."
   /LOG="..." and, for round 2 only, /TASKS=...; the uninstaller gets /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /LOG="...".
@@ -43,6 +45,7 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'smoke-args.ps1')
 . (Join-Path $PSScriptRoot 'lab-helpers.ps1')
+. (Join-Path $PSScriptRoot 'probe-log.ps1')
 . (Join-Path $PSScriptRoot 'window-capture.ps1')
 . (Join-Path $PSScriptRoot 'window-probe.ps1')
 
@@ -65,7 +68,12 @@ $script:Deferred = @()
 $Artifacts = (Resolve-Path -LiteralPath $Artifacts).Path
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 $OutDir = (Resolve-Path -LiteralPath $OutDir).Path
-$Work = Join-Path ([IO.Path]::GetTempPath()) ("impro-smoke-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+# Every `[window-probe]` line and the desktop capture status lines are also kept in <OutDir>\window-probe.txt (the text
+# written to the host), which the last step of the smoke job prints again; see probe-log.ps1.
+$ProbeLog = Join-Path $OutDir 'window-probe.txt'
+Set-ProbeLogFile $ProbeLog
+if ($Mode -eq 'installer') { Remove-Item -LiteralPath $ProbeLog -Force -ErrorAction SilentlyContinue }
+$Work =Join-Path ([IO.Path]::GetTempPath()) ("impro-smoke-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Force -Path $Work | Out-Null
 $script:AppDir = $null
 $script:LastLogs = @()

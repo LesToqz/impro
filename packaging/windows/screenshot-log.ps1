@@ -48,18 +48,22 @@ function Get-Base64Length {
 
 function Select-ScreenshotNames {
     # The files worth printing: desktop-window.png (the real window) and ONE first-paint*.png (the first in name
-    # order, case ignored). Every other name is left out. The result is an array (possibly empty), wrap the call in @(...).
+    # order, case ignored). Every other name is left out. One name per output object (none, one or two); callers wrap
+    # the call in @(...). Do NOT return it with a leading comma: @(f) around a comma-wrapped result is an array holding
+    # the array, and `-contains` then finds nothing (this is what printed no screenshot at all).
+    # The smallest name is found by a plain loop with String.Compare (ordinal, case ignored): no sorting, so no overload resolution on a static array method.
     param([AllowEmptyCollection()][string[]]$Names = @())
-    $sorted = [string[]]@($Names)
-    [Array]::Sort($sorted, [StringComparer]::OrdinalIgnoreCase)
-    $selected = [System.Collections.Generic.List[string]]::new()
-    foreach ($n in $sorted) {
-        if ($n -ieq 'desktop-window.png') { $selected.Add($n); break }
+    $desktop = $null
+    $firstPaint = $null
+    foreach ($n in @($Names)) {
+        if ($n -ieq 'desktop-window.png') {
+            if ($null -eq $desktop -or [string]::Compare($n, $desktop, [StringComparison]::OrdinalIgnoreCase) -lt 0) { $desktop = $n }
+        } elseif ($n -like 'first-paint*.png') {
+            if ($null -eq $firstPaint -or [string]::Compare($n, $firstPaint, [StringComparison]::OrdinalIgnoreCase) -lt 0) { $firstPaint = $n }
+        }
     }
-    foreach ($n in $sorted) {
-        if ($n -like 'first-paint*.png') { $selected.Add($n); break }
-    }
-    , $selected.ToArray()
+    if ($null -ne $desktop) { $desktop }
+    if ($null -ne $firstPaint) { $firstPaint }
 }
 
 function Get-DownscaledPngBytes {

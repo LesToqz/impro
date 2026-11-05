@@ -149,3 +149,58 @@ STATUS: DONE (still nothing compiled or run on Windows; CI is the first run of t
    `scripts/ci/smoke.sh` line 37 and `scripts/test-install.sh` lines 22 and 71 (also `crates/impro/src/cli.rs` on this branch,
    which the coordinator says is already `[path ...]` upstream). Update them with the app change; remove my `-ExpectedUsage`
    arguments from the two `smoke-standin` steps when the stand-in is updated or deleted.
+
+## Addendum 2: CI #18 failure of test_screenshot_log.ps1, probe file, opt-in base64, summary step
+
+### Root cause of "printed NO marker blocks" (my bug)
+
+`Select-ScreenshotNames` returned its result with a leading comma (`, $selected.ToArray()`), and both callers wrapped the call
+in `@(...)` (`print-screenshots.ps1`: `$wanted = @(Select-ScreenshotNames ...)`, `test_window_probe.ps1`: `$got = @(...)`).
+`@(f)` around a comma-wrapped result is an array holding the array, so `$wanted -notcontains $f.Name` was true for every file
+and every PNG was skipped. The repository already documents this exact trap (`lab-helpers.ps1`, `Test-ScreenshotProblems`:
+"Never `return , array` ... wrapped in @() that nests the array") and my own doc comment on the function even told callers to
+wrap it. The real `smoke` job ran the same code, so it also printed no screenshot blocks (and the `check` step stopped at the
+first failing script, so `test_window_probe.ps1` never ran to show the same problem).
+
+Fixes:
+- `Select-ScreenshotNames` now emits one plain string per selected name (no comma) and no longer uses `[Array]::Sort` (a static
+  method with several overloads; I could not rule out an overload-resolution error there, which would also have produced "no
+  blocks"). It keeps the smallest `desktop-window.png` and `first-paint*.png` name with `String.Compare(..., OrdinalIgnoreCase)`.
+- `test_window_probe.py` gained `ArrayIdiom`: it finds every function in `packaging/windows/*.ps1` that returns with a leading
+  comma and fails if any `@(<thatFunction> ...)` exists anywhere, and it pins `Select-ScreenshotNames` as comma-free.
+  `test_window_probe.ps1` asserts that `@(Select-ScreenshotNames ...)` yields plain strings and agrees with `-contains`.
+- `test_screenshot_log.ps1` no longer dies on `$begins[0]`: when no block is printed it prints the whole output of
+  `print-screenshots.ps1` so that the cause is in the log.
+- The other comma-returning functions (`ConvertTo-WrappedBase64`, `Format-ScreenshotLogBlock`, `Get-ScreenshotLogBytes`,
+  `Get-DownscaledPngBytes`, `Get-ProbeSilently`, `New-InnoArgumentList`) are only ever assigned (`$x = f`), never wrapped; the new
+  test enforces it.
+
+### New requirements
+
+- `smoke.ps1` keeps every `[window-probe]` line and the desktop capture status lines (`[smoke] desktop capture ...`, their
+  `::warning::` lines, plus image size and differing-pixel fraction per attempt) in `<OutDir>\window-probe.txt`: the same text
+  that goes to the host, through `Write-LogLine` (`probe-log.ps1`, target in the global `ImproProbeLogFile`, set by
+  `Set-ProbeLogFile`; never throws). `print-screenshots.ps1` appends its `[screenshots]` lines (not the base64) to the same file.
+  The file is recreated at the start of an installer-mode run.
+- `windows.yml`: `workflow_dispatch` has the boolean input `print_screenshots` (default false); the step "Print screenshots to the
+  log" runs only for `always() && github.event_name == 'workflow_dispatch' && inputs.print_screenshots`.
+- New LAST step of the `smoke` job, "Window probe summary" (`if: always()`, `continue-on-error: true`, after the upload):
+  `print-probe-summary.ps1 -Directory "$env:RUNNER_TEMP\smoke"` prints `===== SMOKE OUTPUT FILES =====` with names (relative
+  paths) and sizes, then `window-probe.txt` between `===== WINDOW PROBE SUMMARY BEGIN =====` and `===== WINDOW PROBE SUMMARY END
+  =====`; a missing, empty file or directory gets a clear line inside the same frame. The END marker is the last line printed.
+- Tests: `test_window_probe.py` pins the workflow structure (input type and default, the opt-in condition, the summary step is the
+  last step of `smoke` with `if: always()` and `continue-on-error`, the stand-in job untouched, smoke.ps1 sets the log file before
+  the capture, capture status lines no longer use `Write-Host`, README mentions). `test_window_probe.ps1` runs
+  `print-probe-summary.ps1` on temp directories (file missing, present, empty, directory missing; END marker last; order) and the
+  log-file copy (`Write-LogLine`, `Write-ProbeLine`, `Invoke-ProbeFact` append exactly what they print; switching it off stops the copy).
+
+### Verified here / not verified
+
+- Python: `test_*.py` in `packaging/windows` 89 OK (4 skipped), `scripts/ci/test_extract_log_screenshots.py` 22 OK, mutation checks of
+  the new structure and array tests (comma re-introduced, `@()` wrapper added, opt-in condition removed, default flipped, summary no
+  longer last, a step added after it, `Write-Host` back in the capture script, log file not set): all caught except one mutation
+  that was behaviour-neutral. `windows.yml` loads with PyYAML (input, step order, `if` expressions inspected).
+- NOT run: PowerShell (none available), so the new PowerShell tests and the end-to-end `print-screenshots.ps1` run are first
+  exercised by CI. The array-nesting diagnosis rests on the repository's own earlier pwsh reproduction (`reports/windows/win-smoke-verdict.md`:
+  `@(f)` around `, $array` gave `Count=1 join=System.String[]`), and on reading the code path: with the fix the test's four PNGs produce
+  two blocks and two skipped lines.

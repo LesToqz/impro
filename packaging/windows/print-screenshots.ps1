@@ -33,15 +33,18 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+. (Join-Path $PSScriptRoot 'probe-log.ps1')
 . (Join-Path $PSScriptRoot 'screenshot-log.ps1')
 
 if (-not (Test-Path -LiteralPath $Directory -PathType Container)) {
     Write-Host "::warning::print-screenshots: no such directory: $Directory"
     exit 0
 }
+# The `[screenshots] ...` status lines (not the base64) are also appended to window-probe.txt, which smoke.ps1 started.
+Set-ProbeLogFile (Join-Path $Directory 'window-probe.txt')
 
 $files = @(Get-ChildItem -LiteralPath $Directory -Filter '*.png' -File -Recurse:$Recurse | Sort-Object -Property FullName)
-Write-Host "[screenshots] $($files.Count) PNG file(s) in $Directory"
+Write-LogLine "[screenshots] $($files.Count) PNG file(s) in $Directory"
 $wanted = @(Select-ScreenshotNames -Names @($files | ForEach-Object { $_.Name }))
 $capChars = [long]$MaxBase64KB * 1024
 $printedNames = @{}
@@ -49,24 +52,24 @@ $printed = 0
 foreach ($f in $files) {
     $nameKey = $f.Name.ToLowerInvariant()
     if (($wanted -notcontains $f.Name) -or $printedNames.ContainsKey($nameKey)) {
-        Write-Host ('[screenshots] skipped {0} ({1} bytes)' -f $f.Name, $f.Length)
+        Write-LogLine ('[screenshots] skipped {0} ({1} bytes)' -f $f.Name, $f.Length)
         continue
     }
     try {
         $bytes = Get-ScreenshotLogBytes -Path $f.FullName -MaxWidth $MaxWidth -ScaleAboveBytes 0
         $chars = Get-Base64Length -ByteCount $bytes.Length
         if ($chars -gt $capChars) {
-            Write-Host ('[screenshots] skipped {0} ({1} bytes on disk, {2} bytes at most {3} px wide, base64 {4} chars is over the {5} limit)' -f $f.Name, $f.Length, $bytes.Length, $MaxWidth, $chars, $capChars)
+            Write-LogLine ('[screenshots] skipped {0} ({1} bytes on disk, {2} bytes at most {3} px wide, base64 {4} chars is over the {5} limit)' -f $f.Name, $f.Length, $bytes.Length, $MaxWidth, $chars, $capChars)
             continue
         }
         $block = Format-ScreenshotLogBlock -Name $f.Name -Bytes $bytes
-        Write-Host ('[screenshots] {0}: {1} bytes on disk, {2} bytes printed' -f $f.Name, $f.Length, $bytes.Length)
+        Write-LogLine ('[screenshots] {0}: {1} bytes on disk, {2} bytes printed' -f $f.Name, $f.Length, $bytes.Length)
         Write-Host ($block -join "`n")
         $printedNames[$nameKey] = $true
         $printed++
     } catch {
-        Write-Host "::warning::print-screenshots: skipped $($f.Name): $($_.Exception.Message)"
+        Write-LogLine "::warning::print-screenshots: skipped $($f.Name): $($_.Exception.Message)"
     }
 }
-Write-Host "[screenshots] printed $printed of $($files.Count) file(s)"
+Write-LogLine "[screenshots] printed $printed of $($files.Count) file(s)"
 exit 0

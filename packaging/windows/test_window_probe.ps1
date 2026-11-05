@@ -4,6 +4,7 @@
 # independent implementation. Nothing here needs a window: the Win32 and COM parts are not exercised.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'probe-log.ps1')
 . (Join-Path $PSScriptRoot 'window-probe.ps1')
 . (Join-Path $PSScriptRoot 'screenshot-log.ps1')
 
@@ -100,6 +101,71 @@ Assert-Equal (Get-ProbeSilently -Get { 7 }) 7 'a silent probe gives the value'
 $array = Get-ProbeSilently -Get { [int[]](1, 2, 3, 4) }
 Assert-Equal $array.Count 4 'a silent probe keeps an array an array'
 
+# --- the log file: Write-LogLine writes to the host AND appends the same text to the file set with Set-ProbeLogFile
+$logTmp = Join-Path ([IO.Path]::GetTempPath()) ("impro-probe-log-" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $logTmp | Out-Null
+try {
+    $logFile = Join-Path $logTmp 'window-probe.txt'
+    Set-ProbeLogFile ''
+    $hostOnly = @(Write-LogLine 'only on the host' 6>&1 | ForEach-Object { "$_" })
+    Assert-Equal (Test-Path -LiteralPath $logFile) $false 'without a log file nothing is written'
+    Set-ProbeLogFile $logFile
+    $hostLines = @(Write-LogLine '[smoke] desktop capture: started' 6>&1 | ForEach-Object { "$_" })
+    $probeLines = @(Write-ProbeLine -Key 'pid' -Value '42' 6>&1 | ForEach-Object { "$_" })
+    Invoke-ProbeFact -Key 'boom' -Get { throw 'it broke' } 6>&1 | Out-Null
+    $fileLines = @(Get-Content -LiteralPath $logFile)
+    Assert-Equal $fileLines.Count 3 'every line written with Write-LogLine, Write-ProbeLine or Invoke-ProbeFact is in the file'
+    Assert-Equal ($fileLines -join '|') '[smoke] desktop capture: started|[window-probe] pid=42|[window-probe] boom=error(it broke)' 'the file holds the same text as the host'
+    $hostLine = $hostLines[0]
+    $firstFileLine = $fileLines[0]
+    Assert-Equal $hostLine $firstFileLine 'the host line equals the file line'
+    Set-ProbeLogFile ''
+    Write-LogLine 'not in the file' 6>&1 | Out-Null
+    $afterOff = @(Get-Content -LiteralPath $logFile)
+    Assert-Equal $afterOff.Count 3 'switching the file off stops the copy'
+} finally {
+    Set-ProbeLogFile ''
+    Remove-Item -LiteralPath $logTmp -Recurse -Force
+}
+
+# --- print-probe-summary.ps1: the last step of the smoke job
+$sumTmp = Join-Path ([IO.Path]::GetTempPath()) ("impro-probe-summary-" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path (Join-Path $sumTmp 'lab') | Out-Null
+try {
+    $summaryScript = Join-Path $PSScriptRoot 'print-probe-summary.ps1'
+    [IO.File]::WriteAllBytes((Join-Path $sumTmp 'desktop-window.png'), [byte[]](1, 2, 3, 4, 5))
+    [IO.File]::WriteAllBytes((Join-Path (Join-Path $sumTmp 'lab') 'x.txt'), [byte[]](1, 2))
+    # missing file: a clear line between the markers, and the file list
+    $missingText = (@(& $summaryScript -Directory $sumTmp *>&1 | ForEach-Object { "$_" })) -join "`n"
+    $missingLines = @($missingText -split "`r?`n")
+    Assert-Equal ($missingLines -contains '===== WINDOW PROBE SUMMARY BEGIN =====') $true 'summary: BEGIN marker (file missing)'
+    $lastMissing = $missingLines[$missingLines.Count - 1]
+    Assert-Equal $lastMissing '===== WINDOW PROBE SUMMARY END =====' 'summary: the END marker is the last line (file missing)'
+    Assert-Equal ($missingText -match 'window-probe\.txt is missing') $true 'summary: says that the file is missing'
+    Assert-Equal ($missingText -match '5\s+desktop-window\.png') $true 'summary: lists the files with their sizes'
+    # with the file: its text sits between the markers, in order
+    Set-Content -LiteralPath (Join-Path $sumTmp 'window-probe.txt') -Value @('[window-probe] pid=1', '[window-probe] done=true')
+    $text = (@(& $summaryScript -Directory $sumTmp *>&1 | ForEach-Object { "$_" })) -join "`n"
+    $sumLines = @($text -split "`r?`n")
+    $beginAt = [Array]::IndexOf($sumLines, '===== WINDOW PROBE SUMMARY BEGIN =====')
+    $endAt = [Array]::IndexOf($sumLines, '===== WINDOW PROBE SUMMARY END =====')
+    Assert-Equal ($beginAt -ge 0) $true 'summary: BEGIN marker'
+    Assert-Equal ($endAt -gt $beginAt) $true 'summary: END marker after BEGIN'
+    Assert-Equal ($endAt -eq $sumLines.Count - 1) $true 'summary: the END marker is the last line'
+    $firstProbe = $sumLines[$beginAt + 1]
+    $secondProbe = $sumLines[$beginAt + 2]
+    Assert-Equal $firstProbe '[window-probe] pid=1' 'summary: first probe line right after BEGIN'
+    Assert-Equal $secondProbe '[window-probe] done=true' 'summary: second probe line'
+    Assert-Equal ($text -match '\d+\s+window-probe\.txt') $true 'summary: the probe file is in the listing'
+    # an empty file and a missing directory still give the frame
+    [IO.File]::WriteAllText((Join-Path $sumTmp 'window-probe.txt'), '')
+    $emptyText = (@(& $summaryScript -Directory $sumTmp *>&1 | ForEach-Object { "$_" })) -join "`n"
+    Assert-Equal ($emptyText -match 'exists but is empty') $true 'summary: an empty file is said to be empty'
+    $noDir = (@(& $summaryScript -Directory (Join-Path $sumTmp 'nope') *>&1 | ForEach-Object { "$_" })) -join "`n"
+    Assert-Equal ($noDir -match 'does not exist') $true 'summary: a missing directory is said so'
+    Assert-Equal ($noDir -match '===== WINDOW PROBE SUMMARY END =====') $true 'summary: the frame is complete without the directory'
+} finally { Remove-Item -LiteralPath $sumTmp -Recurse -Force }
+
 # --- helpers of print-screenshots.ps1 (screenshot-log.ps1)
 foreach ($case in @($vectors.base64_length)) {
     Assert-Equal (Get-Base64Length -ByteCount ([long]$case.bytes)) ([long]$case.expect) "base64 length of $($case.bytes) bytes"
@@ -112,6 +178,14 @@ foreach ($case in @($vectors.select_screenshots)) {
     $want = @($case.expect)
     Assert-Equal ($got -join '|') ($want -join '|') "screenshots selected from: $(@($case.names) -join ', ')"
     Assert-Equal $got.Count $want.Count "screenshots selected: count for $(@($case.names).Count) names"
+    foreach ($picked in $got) {
+        # Regression: a comma-wrapped result made @(...) an array holding an array, and -contains found nothing.
+        Assert-Equal ($picked -is [string]) $true "screenshots selected: '$picked' is a plain string, not a nested array"
+    }
+    foreach ($name in @($case.names)) {
+        $inWanted = (@($want) -contains $name)
+        Assert-Equal ($got -contains $name) $inWanted "screenshots selected: -contains agrees for $name"
+    }
 }
 
 if ($script:failures) { Write-Host "$script:failures failure(s)"; exit 1 }
