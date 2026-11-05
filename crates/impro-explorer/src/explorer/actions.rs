@@ -338,7 +338,6 @@ impl ExplorerPanel {
         entry.set_text(initial);
         entry.set_activates_default(true);
         entry.set_size_request(280, -1);
-        entry.set_placeholder_text(name_placeholder(title));
         // The error line takes no room (and no gap above the buttons) until there is one.
         let error_label = gtk::Label::new(None);
         error_label.set_xalign(0.0);
@@ -715,14 +714,6 @@ fn name_confirm_label(title: &str) -> &'static str {
     }
 }
 
-fn name_placeholder(title: &str) -> Option<&'static str> {
-    match title {
-        "New File" => Some("File name"),
-        "New Folder" => Some("Folder name"),
-        _ => None,
-    }
-}
-
 /// Text of the button that confirms a removal question.
 fn removal_label(trash: bool, fallback: bool) -> &'static str {
     if trash {
@@ -805,8 +796,6 @@ mod tests {
         assert_eq!(removal_label(true, false), "Move to Trash");
         assert_eq!(removal_label(false, true), "Delete Permanently");
         assert_eq!(removal_label(false, false), "Delete");
-        assert_eq!(name_placeholder("Rename"), None);
-        assert_eq!(name_placeholder("New File"), Some("File name"));
     }
 
     #[test]
