@@ -47,7 +47,7 @@ $ErrorActionPreference = 'Stop'
 $AppId = '{084215CE-9F22-4B49-9F5F-65835332B838}'
 $UninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\${AppId}_is1"
 $UninstallSubKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' + $AppId + '_is1'
-$ExpectedUsage = 'usage: impro [-h] [--version] [folder]'
+$ExpectedUsage = 'usage: impro [-h] [--version] [path ...]'
 
 # What impro.iss registers (all under HKCU for the per-user install the smoke test performs). packaging/windows/
 # test_iss.py checks that every key named here is written by the script.
