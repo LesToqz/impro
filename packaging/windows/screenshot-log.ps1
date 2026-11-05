@@ -40,6 +40,28 @@ function Format-ScreenshotLogBlock {
     , $lines.ToArray()
 }
 
+function Get-Base64Length {
+    # Characters of the base64 text of a byte count (4 per started group of 3 bytes), without line breaks.
+    param([Parameter(Mandatory)][long]$ByteCount)
+    [long]([Math]::Ceiling($ByteCount / 3.0)) * 4
+}
+
+function Select-ScreenshotNames {
+    # The files worth printing: desktop-window.png (the real window) and ONE first-paint*.png (the first in name
+    # order, case ignored). Every other name is left out. The result is an array (possibly empty), wrap the call in @(...).
+    param([AllowEmptyCollection()][string[]]$Names = @())
+    $sorted = [string[]]@($Names)
+    [Array]::Sort($sorted, [StringComparer]::OrdinalIgnoreCase)
+    $selected = [System.Collections.Generic.List[string]]::new()
+    foreach ($n in $sorted) {
+        if ($n -ieq 'desktop-window.png') { $selected.Add($n); break }
+    }
+    foreach ($n in $sorted) {
+        if ($n -like 'first-paint*.png') { $selected.Add($n); break }
+    }
+    , $selected.ToArray()
+}
+
 function Get-DownscaledPngBytes {
     # PNG bytes of the image scaled to $MaxWidth pixels wide, keeping the aspect ratio. An image that is not wider
     # keeps its file bytes. Needs System.Drawing (Windows).

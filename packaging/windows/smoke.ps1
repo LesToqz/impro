@@ -34,7 +34,8 @@ param(
     [Parameter(Mandatory)][string]$OutDir,      # PNG, logs (uploaded as artifact)
     [int]$LaunchTimeoutSec = 90,
     [int]$CommandTimeoutSec = 30,
-    [string[]]$RequireFiles = @()               # extra files that must sit next to impro.exe (for example WebView2Loader.dll)
+    [string[]]$RequireFiles = @(),              # extra files that must sit next to impro.exe (for example WebView2Loader.dll)
+    [string]$ExpectedUsage = 'usage: impro [-h] [--version] [path ...]'   # first line of `impro --help`
 )
 
 Set-StrictMode -Version Latest
@@ -43,11 +44,11 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'smoke-args.ps1')
 . (Join-Path $PSScriptRoot 'lab-helpers.ps1')
 . (Join-Path $PSScriptRoot 'window-capture.ps1')
+. (Join-Path $PSScriptRoot 'window-probe.ps1')
 
 $AppId = '{084215CE-9F22-4B49-9F5F-65835332B838}'
 $UninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\${AppId}_is1"
 $UninstallSubKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' + $AppId + '_is1'
-$ExpectedUsage = 'usage: impro [-h] [--version] [folder]'
 
 # What impro.iss registers (all under HKCU for the per-user install the smoke test performs). packaging/windows/
 # test_iss.py checks that every key named here is written by the script.
@@ -196,9 +197,12 @@ function Test-App([string]$AppDir) {
     if ($all -match 'WARNING') { Write-Host '::warning::app printed warnings, see the uploaded launch logs' }
 
     # Best effort, after every verdict above: the real desktop window with its native frame (the first-paint PNG
-    # holds only the GTK content). Installer mode only; never fails the run.
+    # holds only the GTK content). Installer mode only; never fails the run. Right after the capture, while the
+    # window still exists, the window probe prints its facts (`[window-probe] key=value`, window-probe.ps1) and
+    # the colours of a few pixels of the capture.
     if ($Mode -eq 'installer') {
-        $null = Save-DesktopWindowScreenshot -Exe $exe -Folder $folder -Path (Join-Path $OutDir 'desktop-window.png') -EnvVars $envs
+        $null = Save-DesktopWindowScreenshot -Exe $exe -Folder $folder -Path (Join-Path $OutDir 'desktop-window.png') -EnvVars $envs `
+            -AfterCapture { param($Window, $Png) Write-WindowProbe -Hwnd $Window -ScreenshotPath $Png -ExpectedAppUserModelId $ExpectedAppUserModelId }
     }
 }
 

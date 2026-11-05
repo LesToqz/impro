@@ -74,3 +74,78 @@ window itself is owned by other agents.
 3. `docs/windows.md` (task table says "all off by default", the silent example `/TASKS=desktopicon` now selects ONLY the desktop
    icon, use `/MERGETASKS=desktopicon`), `docs/ci.md` and the top-level README are for the orchestrator to consolidate.
 4. After the first CI run: fetch the `smoke` job log and run `python3 -I scripts/ci/extract_log_screenshots.py -o shots job.log`.
+
+## Addendum: window probe, capped screenshots, new usage line
+
+STATUS: DONE (still nothing compiled or run on Windows; CI is the first run of the new PowerShell and C#)
+
+### What was added
+
+- **Window probe** (`packaging/windows/window-probe.ps1`, new). `Write-WindowProbe -Hwnd <hwnd> -ScreenshotPath <png>` prints
+  one `[window-probe] key=value` line per fact: process id and path, title (`GetWindowTextW`), class name, `style` and
+  `exstyle` in hex plus `ws_caption`, `ws_thickframe`, `ws_sysmenu`, `ws_minimizebox`, `ws_maximizebox`, `ws_visible` as
+  `true`/`false`; `GetWindowRect`, `GetClientRect`, client origin and the DWM extended frame bounds (with HRESULT);
+  DPI (`GetDpiForWindow`, fallback `GetDeviceCaps`), window and process DPI awareness; the `DwmGetWindowAttribute`
+  read-backs 20, 33, 34, 35, 36 each with `<key>_hr` (colours as `#RRGGBB`, the 0xFFFFFFFF / 0xFFFFFFFE markers raw);
+  the window's `System.AppUserModel.ID` (`SHGetPropertyStoreForWindow`, `{9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3}` pid 5) and
+  whether it equals `dev.impro.impro`; `WM_GETICON` small / big / small2 with `_nonzero` booleans and the class icons; the
+  OS version, build and UBR. Every fact has its own `try`/`catch` (`key=error(<message>)`), the two P/Invoke classes
+  compile independently (a COM mistake cannot take the Win32 facts down), nothing runs at dot-source time, and a final
+  `done=true` line shows that the probe ran to the end. Full key list: README, "Window probe".
+- **Pixel probes** from the `CopyFromScreen` capture of the window (frame included): `bitmap_size`,
+  `caption_height_px` (+ `caption_height_source`: client origin minus visible frame top when the window has `WS_CAPTION`,
+  else window minus client height, else 16 px at 96 DPI) and `pixel(<name>)=#RRGGBB` with `pixel_pos(<name>)` for
+  `caption_center`, `below_caption_x60`, `below_caption_center`, `sidebar_body`, `editor_center`, `bottom_right`. Offsets
+  are device pixels scaled by DPI/96 (half away from zero); positions outside the bitmap print `n/a(outside the bitmap)`.
+- **Wiring.** The window only exists inside `Save-DesktopWindowScreenshot` (it stops the app in its `finally`), so the probe
+  cannot run "after" that function returns. `Save-DesktopWindowScreenshot` therefore takes an optional `-AfterCapture`
+  script block, run right after the capture while the app is still up; `smoke.ps1` passes
+  `{ param($Window, $Png) Write-WindowProbe ... }` in installer mode only. A failing probe is only a warning.
+- **`print-screenshots.ps1` is capped.** Only `desktop-window.png` and ONE `first-paint*.png` (first in name order) are
+  considered; each is downscaled to at most 700 px width and skipped when its base64 would exceed 60 KB. Other files get
+  `[screenshots] skipped <name> (<size>)`. The marker lines and the extractor are unchanged. Defaults: `-MaxWidth 700`,
+  `-MaxBase64KB 60`.
+- **Usage line.** `smoke.ps1` now has `-ExpectedUsage` with the default `usage: impro [-h] [--version] [path ...]`. The
+  temporary stand-in executable still prints `[folder]`, so the two `smoke-standin` steps of `windows.yml` pass that text
+  explicitly; the product `smoke` job uses the default.
+- **CI.** `check` runs `test_window_probe.py` and `test_window_probe.ps1`. While there I fixed a masking problem: several
+  PowerShell test scripts ran one after the other and only the last exit code counted, so an earlier failure was lost; each
+  call is now followed by `if ($LASTEXITCODE) { exit $LASTEXITCODE }` (also for the two existing tests).
+
+### Tests
+
+- `probe-vectors.json`: hand-written expectations for the pure helpers (COLORREF to `#RRGGBB` including the raw markers and
+  -1, signed and unsigned HRESULTs, style bits including `WS_BORDER` alone, DPI scaling of offsets with half-way cases,
+  caption height rules, the six probe points at 96 / 144 DPI and for a bitmap that is too small, DWM value formatting, line
+  format and single-lining, base64 length, which screenshots are selected).
+- `test_window_probe.ps1` (new, runs in `check`) executes the PowerShell functions against the vectors and the fact runners
+  (`error(...)` for a throwing fact). `test_screenshot_log.ps1` now covers the selection, the skipped lines and the size cap.
+- `test_window_probe.py` (new, 28 tests) checks the same vectors against an independent Python implementation, pins the
+  Win32 numbers of the probe (`WS_*`, DWM attribute ids 20/33/34/35/36, `GWL_STYLE`, `WM_GETICON`, `LOGPIXELSX`, per-monitor-v2
+  pseudo handle, property key, IPropertyStore vtable order), requires every probe key to be documented in the README, and
+  checks the wiring (probe after the capture and before the app is stopped, installer mode only, caps, usage line, CI).
+
+### Verified here
+
+- `python3 -I -B -m unittest discover -s packaging/windows -p 'test_*.py'`: 79 tests OK (4 skipped, real sysroot).
+- `python3 -I -B scripts/ci/test_extract_log_screenshots.py`: 22 OK.
+- Mutation check of the new Python tests (14 edits: a wrong `WS_CAPTION`, DWM attribute id, `LOGPIXELSX`, `WM_GETICON`, key
+  id, COM method order, a renamed key, a statement at dot-source level, a lost `-AfterCapture`, the old usage line, both caps,
+  a README key): all caught. The first run missed the README edit because of a bug in my test (`s[0]` of a string); fixed.
+- Bracket/quote balance of every `.ps1` (throwaway checker, not a parser) and `windows.yml` loaded with PyYAML.
+
+### Not verified
+
+- No PowerShell or C# was executed or compiled. New risks, all contained: the two `Add-Type` blocks (a compile error
+  yields `win32_helper=error(...)` / `shell_helper=error(...)` lines, not a failed run), the PROPVARIANT / IPropertyStore
+  interop (sized for 64-bit), `SHGetPropertyStoreForWindow` reading a per-window ID (a process-level ID may show as
+  `(empty)`), `DwmGetWindowAttribute` read-back support for attributes 20 and 33-36 on a given build (the `_hr` lines
+  say), `ConvertFrom-Json` typing in `test_window_probe.ps1`, and strict-mode behaviour of the new functions (read, not run).
+- Whether `CopyFromScreen` shows the window on the runner is unchanged and still unknown; the facts do not depend on it.
+
+### NEEDED (outside my files)
+
+1. `crates/impro-ui/examples/packaging_standin.rs` and the checks below still print or assert `[folder]`:
+   `scripts/ci/smoke.sh` line 37 and `scripts/test-install.sh` lines 22 and 71 (also `crates/impro/src/cli.rs` on this branch,
+   which the coordinator says is already `[path ...]` upstream). Update them with the app change; remove my `-ExpectedUsage`
+   arguments from the two `smoke-standin` steps when the stand-in is updated or deleted.
