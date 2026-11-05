@@ -1,6 +1,6 @@
 use crate::MainWindow;
 use gtk::prelude::*;
-use impro_chrome::{Command, CommandPalette, QuickSwitcher};
+use impro_chrome::{Command, CommandPalette, Prompt, PromptItem, QuickSwitcher};
 use std::path::PathBuf;
 
 /// Human-readable accelerator text shared by the palette and Hotkeys page.
@@ -187,7 +187,13 @@ impl MainWindow {
             ));
             menu.append(&item);
         }
+        self.build_open_recent(&file);
         for (label, action, keys) in [
+            (
+                "File: Open Recent",
+                Self::open_recent_folder as Action,
+                vec![],
+            ),
             (
                 "View: Terminal on Right",
                 Self::toggle_terminal_right as Action,
@@ -275,6 +281,89 @@ impl MainWindow {
                 },
             );
         }
+    }
+    /// File → Open Recent, right after "Open Folder…": the recent folders other than the
+    /// current one, newest first, rebuilt whenever the File menu opens.
+    fn build_open_recent(&self, file: &gtk::Menu) {
+        let item = gtk::MenuItem::with_label("Open Recent");
+        let submenu = gtk::Menu::new();
+        item.set_submenu(Some(&submenu));
+        file.insert(&item, 2);
+        let weak = self.weak();
+        let refresh = move |_: &gtk::Menu| {
+            let Some(this) = weak.upgrade().map(Self) else {
+                return;
+            };
+            for child in submenu.children() {
+                submenu.remove(&child);
+            }
+            let home = impro_core::platform::home_dir();
+            let recent = crate::launch::recent_excluding(&this.root());
+            for path in &recent {
+                let shown = crate::launch::display_path(path, home.as_deref(), cfg!(windows));
+                let entry = gtk::MenuItem::with_label(&shown);
+                let weak = weak.clone();
+                let path = path.clone();
+                entry.connect_activate(move |_| {
+                    if let Some(this) = weak.upgrade().map(Self) {
+                        this.set_root(&path);
+                    }
+                });
+                submenu.append(&entry);
+            }
+            submenu.show_all();
+            item.set_sensitive(!recent.is_empty());
+        };
+        refresh(file);
+        file.connect_show(refresh);
+    }
+    /// Palette counterpart of File → Open Recent: pick one of the other recent folders.
+    pub fn open_recent_folder(&self) {
+        let recent = crate::launch::recent_excluding(&self.root());
+        if recent.is_empty() {
+            self.notify("There are no other recent folders yet.", "info");
+            return;
+        }
+        let home = impro_core::platform::home_dir();
+        let entries: Vec<(PathBuf, String)> = recent
+            .into_iter()
+            .map(|path| {
+                let shown = crate::launch::display_path(&path, home.as_deref(), cfg!(windows));
+                (path, shown)
+            })
+            .collect();
+        let prompt = Prompt::new(
+            move |query| {
+                let query = query.trim().to_lowercase();
+                entries
+                    .iter()
+                    .filter(|(_, shown)| shown.to_lowercase().contains(&query))
+                    .map(|(path, shown)| {
+                        PromptItem {
+                            label: crate::launch::folder_name(path),
+                            detail: shown.clone(),
+                            ..Default::default()
+                        }
+                        .with_data(path.clone())
+                    })
+                    .collect()
+            },
+            "Open a recent folder…",
+        );
+        prompt.set_empty_text("No matching folder");
+        prompt.set_instructions(&[
+            ("↑↓", "to navigate"),
+            ("↵", "to open"),
+            ("esc", "to dismiss"),
+        ]);
+        let weak = self.weak();
+        prompt.connect_chosen(move |item, _| {
+            if let (Some(this), Some(path)) = (weak.upgrade().map(Self), item.data::<PathBuf>()) {
+                this.set_root(path);
+            }
+        });
+        self.restore_terminal_fullscreen();
+        self.overlay.show_prompt(&prompt);
     }
     pub fn commands(&self) -> Vec<Command> {
         self.commands

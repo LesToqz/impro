@@ -19,7 +19,7 @@ if [[ ! -f "$IMPRO_INSTALL_BINARY" ]]; then
     cat > "$IMPRO_INSTALL_BINARY" <<'FIXTURE'
 #!/usr/bin/env bash
 if [[ "${1:-}" == --help ]]; then
-    echo 'usage: impro [-h] [--version] [folder]'
+    echo 'usage: impro [-h] [--version] [path ...]'
 else
     printf '%s\n' "$@"
 fi

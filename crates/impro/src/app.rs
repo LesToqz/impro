@@ -1,5 +1,5 @@
 //! Application lifecycle and a first-paint PNG helper reused by later window tasks.
-use crate::MainWindow;
+use crate::{launch::Launch, MainWindow};
 use gtk::prelude::*;
 use impro_core::identity;
 use std::{
@@ -8,15 +8,20 @@ use std::{
     rc::Rc,
     time::Instant,
 };
-pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
+pub fn run(launch: Launch, started: Instant) -> glib::ExitCode {
     impro_ui::icons::init();
+    // The welcome page's CSS joins the theme build, which happens when the window is made.
+    crate::welcome::init();
+    crate::launch::seed(launch.state.clone());
     // Read preferences before GTK starts dispatching UI events; no startup file IO in callbacks.
     let preferences = crate::preferences::load_values();
     timing("preferences", started);
     let qa_path = std::env::var_os(identity::QA_SCREENSHOT_ENV).map(PathBuf::from);
     // Windows is deployed without a session bus. NON_UNIQUE disables bus-name
-    // ownership and remote activation; each invocation owns its own window.
-    let flags = if cfg!(windows) || qa_path.is_some() {
+    // ownership and remote activation; each invocation owns its own window. On Linux a
+    // plain `impro` focuses the running window, but a launch that names paths must not
+    // lose them to it, so those get their own process.
+    let flags = if cfg!(windows) || qa_path.is_some() || launch.has_paths {
         gio::ApplicationFlags::NON_UNIQUE
     } else {
         gio::ApplicationFlags::FLAGS_NONE
@@ -46,7 +51,9 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
             return;
         }
         timing("activate", started);
-        let owner = MainWindow::with_values(app, &root, preferences.borrow().clone());
+        let owner = MainWindow::with_values(app, &launch.root, preferences.borrow().clone());
+        timing("window-shell", started);
+        crate::welcome::install(&owner);
         timing("window-built", started);
         let window = &owner.window;
         let state = preferences.clone();
@@ -74,14 +81,39 @@ pub fn run(root: PathBuf, started: Instant) -> glib::ExitCode {
         timing("shown", started);
         window.present();
         timing("presented", started);
+        crate::launch::start_background(launch.record_target());
+        open_startup_files(&owner.editor, launch.files.clone());
     });
     let exit = app.run_with_args::<&str>(&[]);
+    crate::launch::flush();
     if failed.get() {
         glib::ExitCode::FAILURE
     } else {
         exit
     }
 }
+/// Open the files named on the command line once the window exists. Loads are chained so
+/// the tabs appear in argument order, and the first file ends up selected.
+pub fn open_startup_files(editor: &impro_editor::EditorPanel, files: Vec<PathBuf>) {
+    fn step(
+        editor: impro_editor::EditorPanel,
+        mut files: std::vec::IntoIter<PathBuf>,
+        first: PathBuf,
+    ) {
+        match files.next() {
+            Some(path) => {
+                let again = editor.clone();
+                editor.open_file_with(path, move |_| step(again, files, first));
+            }
+            None if editor.tab_for_path(&first).is_some() => editor.open_file(first),
+            None => {}
+        }
+    }
+    if let Some(first) = files.first().cloned() {
+        step(editor.clone(), files.into_iter(), first);
+    }
+}
+
 /// Attach before show_all(). Captures the first completed paint, with no fixed sleep/timer.
 /// Later window implementations can reuse this directly.
 pub fn install_screenshot_helper(

@@ -1,18 +1,28 @@
 //! Command-line entry point.
-use crate::app;
+use crate::{
+    app,
+    launch::{self, Targets},
+};
 use std::{
     ffi::OsString,
     path::{Path, PathBuf},
 };
-const USAGE: &str = "usage: impro [-h] [--version] [folder]";
+const USAGE: &str = "usage: impro [-h] [--version] [path ...]";
 #[derive(Debug, PartialEq, Eq)]
 enum Command {
-    Run(PathBuf),
+    Run(Targets),
     Help,
     Version,
 }
 fn parse_args(args: impl IntoIterator<Item = OsString>, cwd: &Path) -> Result<Command, String> {
-    let mut folder = None;
+    parse_args_with(args, cwd, impro_core::platform::expand_tilde)
+}
+fn parse_args_with(
+    args: impl IntoIterator<Item = OsString>,
+    cwd: &Path,
+    expand: impl Fn(&Path) -> PathBuf,
+) -> Result<Command, String> {
+    let mut paths = Vec::new();
     let mut positional = false;
     let mut extra = Vec::new();
     for arg in args {
@@ -31,37 +41,12 @@ fn parse_args(args: impl IntoIterator<Item = OsString>, cwd: &Path) -> Result<Co
                 _ => {}
             }
         }
-        if folder.is_none() {
-            folder = Some(arg);
-        } else {
-            extra.push(arg.to_string_lossy().into_owned());
-        }
+        paths.push(arg);
     }
     if !extra.is_empty() {
         return Err(format!("unrecognized arguments: {}", extra.join(" ")));
     }
-    let raw = folder
-        .map(PathBuf::from)
-        .unwrap_or_else(|| cwd.to_path_buf());
-    resolve_folder(&raw, cwd, impro_core::platform::expand_tilde)
-}
-fn resolve_folder(
-    raw: &Path,
-    cwd: &Path,
-    expand: impl FnOnce(&Path) -> PathBuf,
-) -> Result<Command, String> {
-    let expanded = expand(raw);
-    let full = if expanded.is_absolute() {
-        expanded
-    } else {
-        cwd.join(expanded)
-    };
-    if !full.is_dir() {
-        return Err(format!("not a directory: {}", raw.display()));
-    }
-    full.canonicalize()
-        .map(Command::Run)
-        .map_err(|e| format!("cannot open directory {}: {e}", raw.display()))
+    launch::classify(&paths, cwd, expand).map(Command::Run)
 }
 pub fn run() -> glib::ExitCode {
     let started = std::time::Instant::now();
@@ -82,7 +67,7 @@ pub fn run() -> glib::ExitCode {
         }
         Ok(Command::Help) => {
             attach_console();
-            println!("{USAGE}\n\nimpro desktop IDE\n\npositional arguments:\n  folder\n\noptions:\n  -h, --help   show this help message and exit\n  --version    show the application version and exit");
+            println!("{USAGE}\n\nimpro desktop IDE\n\npositional arguments:\n  path         a folder to open as the project, or files to open in the editor\n\noptions:\n  -h, --help   show this help message and exit\n  --version    show the application version and exit");
             glib::ExitCode::SUCCESS
         }
         Err(error) => {
@@ -90,7 +75,7 @@ pub fn run() -> glib::ExitCode {
             eprintln!("{USAGE}\nimpro: error: {error}");
             glib::ExitCode::from(2)
         }
-        Ok(Command::Run(root)) => app::run(root, started),
+        Ok(Command::Run(targets)) => app::run(launch::prepare(targets, &cwd), started),
     }
 }
 /// Release GUI executables have no console by default. Inherited redirected
@@ -131,10 +116,19 @@ mod tests {
     fn args(values: &[&str]) -> Vec<OsString> {
         values.iter().map(OsString::from).collect()
     }
+    fn dir(path: &Path) -> Targets {
+        Targets {
+            dir: Some(path.canonicalize().unwrap()),
+            files: vec![],
+        }
+    }
     #[test]
-    fn injected_expansion_preserves_windows_path_arguments() {
-        let dir = tempfile::tempdir().unwrap();
-        let expected = dir.path().canonicalize().unwrap();
+    fn usage_names_paths() {
+        assert_eq!(USAGE, "usage: impro [-h] [--version] [path ...]");
+    }
+    #[test]
+    fn injected_expansion_sees_every_path_argument_unchanged() {
+        let tmp = tempfile::tempdir().unwrap();
         for raw in [
             r"C:\Users\x\proj",
             "C:/Users/x/proj",
@@ -142,12 +136,12 @@ mod tests {
             r"~\proj",
             "~/proj",
         ] {
-            let result = resolve_folder(Path::new(raw), dir.path(), |seen| {
+            let result = parse_args_with(args(&[raw]), tmp.path(), |seen| {
                 assert_eq!(seen.as_os_str(), std::ffi::OsStr::new(raw));
-                dir.path().to_path_buf()
+                tmp.path().to_path_buf()
             })
             .unwrap();
-            assert_eq!(result, Command::Run(expected.clone()));
+            assert_eq!(result, Command::Run(dir(tmp.path())));
         }
     }
     #[cfg(windows)]
@@ -164,10 +158,10 @@ mod tests {
                 Path::new(raw)
             );
         }
-        let dir = tempfile::tempdir().unwrap();
-        let forward = dir.path().to_string_lossy().replace('\\', "/");
+        let tmp = tempfile::tempdir().unwrap();
+        let forward = tmp.path().to_string_lossy().replace('\\', "/");
         assert!(matches!(
-            parse_args(args(&[&forward]), dir.path()),
+            parse_args(args(&[&forward]), tmp.path()),
             Ok(Command::Run(_))
         ));
         if let Some(home) = impro_core::platform::home_dir() {
@@ -178,13 +172,54 @@ mod tests {
         }
     }
     #[test]
-    fn test_optional_folder_and_default() {
+    fn test_optional_path_and_default() {
         let cwd = std::env::temp_dir().canonicalize().unwrap();
         assert_eq!(
             parse_args(args(&[]), &cwd).unwrap(),
-            Command::Run(cwd.clone())
+            Command::Run(Targets::default())
         );
-        assert_eq!(parse_args(args(&["."]), &cwd).unwrap(), Command::Run(cwd));
+        assert_eq!(
+            parse_args(args(&["."]), &cwd).unwrap(),
+            Command::Run(dir(&cwd))
+        );
+    }
+    #[test]
+    fn directories_and_files_may_be_mixed() {
+        let tmp = tempfile::tempdir().unwrap();
+        let base = tmp.path().canonicalize().unwrap();
+        std::fs::create_dir(base.join("proj")).unwrap();
+        std::fs::create_dir(base.join("other")).unwrap();
+        std::fs::write(base.join("a.txt"), "a").unwrap();
+        std::fs::write(base.join("proj/b.txt"), "b").unwrap();
+        let got = parse_args(args(&["a.txt", "proj", "proj/b.txt", "other"]), &base).unwrap();
+        assert_eq!(
+            got,
+            Command::Run(Targets {
+                dir: Some(base.join("proj")),
+                files: vec![base.join("a.txt"), base.join("proj/b.txt")],
+            })
+        );
+    }
+    #[test]
+    fn double_dash_makes_dashed_names_paths() {
+        let tmp = tempfile::tempdir().unwrap();
+        let base = tmp.path().canonicalize().unwrap();
+        std::fs::write(base.join("-odd.txt"), "x").unwrap();
+        assert_eq!(
+            parse_args(args(&["--", "-odd.txt"]), &base).unwrap(),
+            Command::Run(Targets {
+                dir: None,
+                files: vec![base.join("-odd.txt")],
+            })
+        );
+        assert_eq!(
+            parse_args(args(&["-odd.txt"]), &base).unwrap_err(),
+            "unrecognized arguments: -odd.txt"
+        );
+        // After `--` even `--version` is a path.
+        assert!(parse_args(args(&["--", "--version"]), &base)
+            .unwrap_err()
+            .starts_with("no such file or directory"));
     }
     #[test]
     fn test_version_and_help_without_display() {
@@ -196,20 +231,33 @@ mod tests {
             parse_args(args(&["-h"]), Path::new("/")).unwrap(),
             Command::Help
         );
+        assert_eq!(
+            parse_args(args(&["--help"]), Path::new("/")).unwrap(),
+            Command::Help
+        );
+        // Help wins even beside a path that does not exist.
+        assert_eq!(
+            parse_args(args(&["/does-not-exist", "--help"]), Path::new("/")).unwrap(),
+            Command::Help
+        );
     }
     #[test]
     fn test_same_argument_errors() {
         assert_eq!(
             parse_args(args(&["/does-not-exist"]), Path::new("/")).unwrap_err(),
-            "not a directory: /does-not-exist"
+            "no such file or directory: /does-not-exist"
         );
         assert_eq!(
             parse_args(args(&["--bad"]), Path::new("/")).unwrap_err(),
             "unrecognized arguments: --bad"
         );
         assert_eq!(
-            parse_args(args(&["/tmp", "extra"]), Path::new("/")).unwrap_err(),
-            "unrecognized arguments: extra"
+            parse_args(args(&["/tmp", "extra-missing"]), Path::new("/")).unwrap_err(),
+            "no such file or directory: extra-missing"
+        );
+        assert_eq!(
+            parse_args(args(&["--bad", "--worse"]), Path::new("/")).unwrap_err(),
+            "unrecognized arguments: --bad --worse"
         );
     }
 }
