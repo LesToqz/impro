@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::Instant;
 
-const USAGE: &str = "usage: impro [-h] [--version] [folder]";
+const USAGE: &str = "usage: impro [-h] [--version] [path ...]";
 
 /// Release GUI executables have no console by default. Attach to the parent's
 /// console only when a standard handle is missing, so redirected pipes keep
@@ -117,7 +117,7 @@ fn run() -> i32 {
         }
         Ok(Command::Help) => {
             attach_console();
-            println!("{USAGE}\n\nimpro packaging stand-in\n\npositional arguments:\n  folder\n\noptions:\n  -h, --help   show this help message and exit\n  --version    show the application version and exit");
+            println!("{USAGE}\n\nimpro packaging stand-in\n\npositional arguments:\n  path         a folder to open as the project, or files to open in the editor\n\noptions:\n  -h, --help   show this help message and exit\n  --version    show the application version and exit");
             0
         }
         Err(error) => {
