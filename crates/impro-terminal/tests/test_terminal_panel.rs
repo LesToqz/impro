@@ -358,7 +358,11 @@ fn test_copy_paste_shortcuts() {
 fn test_context_menu_split_and_kill() {
     run(|| {
         let d = Dock::new(false, 1);
-        let menu = d.panel.context_menu(&d.terminal(0));
+        let terminal = d.terminal(0);
+        let menu = d.panel.context_menu(&terminal);
+        // Attached to the terminal a menu inherits its monospace font.
+        let attached = menu.attach_widget().expect("attached menu");
+        assert_ne!(attached, terminal.clone().upcast::<gtk::Widget>());
         let children = menu.children();
         let labels: Vec<_> = children
             .iter()

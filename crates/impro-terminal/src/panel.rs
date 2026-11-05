@@ -1507,7 +1507,9 @@ impl TerminalPanel {
             });
             menu.append(&item);
         }
-        menu.set_attach_widget(Some(t));
+        // A menu inherits the font of the widget it is attached to; attached to the
+        // terminal it came out in the terminal's monospace font, unlike every other menu.
+        menu.set_attach_widget(Some(self));
         menu.connect_selection_done(|m| unsafe {
             m.destroy();
         });
