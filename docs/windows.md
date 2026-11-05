@@ -7,8 +7,14 @@ Linux; the window frame, installer and system integration are Windows-specific, 
 the Linux window frame is unchanged.
 
 **Status:** everything on this page was written against CI results and Linux-side
-checks. Items marked *not yet verified* have not been confirmed on Windows hardware
-or on a green GitHub runner run at the time of writing.
+checks; nobody has used the installed application on Windows hardware yet. The Windows
+workflow builds, installs and launches the application on a GitHub runner
+(Windows Server 2025, build 26100), and its smoke job reads the real window back (see
+[CI](ci.md#windows-evidence-in-the-job-log)). That run confirmed a native captioned,
+resizable frame (caption, system menu, minimise and maximise boxes), the caption
+`<folder> - impro`, a caption colour equal to the docked bar's colour at the sampled
+points, rounded corners, and a light theme chosen on first run because the runner uses
+Windows' light mode. Items marked *not yet verified* below were not confirmed by it.
 
 ## Supported systems
 
@@ -89,9 +95,16 @@ and `bundle-manifest.txt`. The layout and the reason it is flat are in
   folders and files, which is what the Explorer entries use.
 - **Open Folder** is the system folder picker.
 
-Not yet verified on Windows hardware: the caption colours on Windows 10 versus 11,
-Snap Layouts, the caption icon at each DPI scale, the system folder picker and a
-window taller than a short screen (the default window is 790 px high).
+The default window is 1200 x 790 pixels of client area; on a screen whose usable area
+(taskbar excluded) cannot hold it next to the native frame it shrinks to fit, but not
+below 640 x 420. (The runner's 1024 x 768 screen showed the unfitted window running off
+the bottom edge, which is what this fixes.)
+
+Not yet verified: Windows 10 (the dark caption and its fallback attribute), Snap
+Layouts and the system menu in use, taskbar grouping through the AppUserModelID (the
+probe can only read the per-window property, which is empty by design), the caption icon
+at each DPI scale, mixed-DPI monitors, the system folder picker, and how the installer
+wizard looks.
 
 The installer is not code-signed. Windows SmartScreen may warn on first run
 ("More info", then "Run anyway"). Compare the file against `SHA256SUMS.txt` first.
