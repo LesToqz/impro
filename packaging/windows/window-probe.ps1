@@ -32,7 +32,7 @@ function Format-ProbeLine {
 
 function Write-ProbeLine {
     param([Parameter(Mandatory)][string]$Key, [AllowNull()][AllowEmptyString()][string]$Value = '')
-    Write-Host (Format-ProbeLine -Key $Key -Value $Value)
+    Write-LogLine (Format-ProbeLine -Key $Key -Value $Value)
 }
 
 function ConvertTo-BoolText {
@@ -596,6 +596,6 @@ function Write-WindowProbe {
         }
         Write-ProbeLine 'done' 'true'
     } catch {
-        Write-Host ('::warning::window probe stopped early: ' + (Get-OneLine $_.Exception.Message))
+        Write-LogLine ('::warning::window probe stopped early: ' + (Get-OneLine $_.Exception.Message))
     }
 }

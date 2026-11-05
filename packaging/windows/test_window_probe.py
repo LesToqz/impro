@@ -276,7 +276,7 @@ class ProbeSource(unittest.TestCase):
         self.assertEqual(top_level, [], "window-probe.ps1 may only define functions")
         body = re.search(r"function Write-WindowProbe.*", PROBE, re.S).group(0)
         self.assertTrue(body.rstrip().endswith("}"))
-        self.assertRegex(body, r"(?s)\btry \{.*\} catch \{\s*Write-Host \('::warning::")
+        self.assertRegex(body, r"(?s)\btry \{.*\} catch \{\s*Write-LogLine \('::warning::")
 
     def test_two_helpers_compile_independently(self):
         self.assertEqual(len(re.findall(r"Add-Type -TypeDefinition @'", PROBE)), 2)
@@ -300,7 +300,7 @@ class Wiring(unittest.TestCase):
         call = CAPTURE.index("& $AfterCapture $hwnd $Path")
         self.assertLess(call, CAPTURE.index("} finally {", call), "the app is only stopped in the finally block")
         self.assertLess(CAPTURE.index("Save-ScreenRectangle -X"), call, "the probe reads the capture, so it runs after it")
-        self.assertRegex(CAPTURE[call - 40 : call + 200], r"(?s)try \{.*catch \{ Write-Host \"::warning::")
+        self.assertRegex(CAPTURE[call - 40 : call + 200], r"(?s)try \{.*catch \{ Write-LogLine \"::warning::")
 
     def test_print_screenshots_is_capped(self):
         self.assertRegex(PRINT, r"\[int\]\$MaxWidth = 700\b")
@@ -340,6 +340,134 @@ class Wiring(unittest.TestCase):
         workflow = (HERE.parents[1] / ".github" / "workflows" / "windows.yml").read_text(encoding="utf-8")
         self.assertIn("test_window_probe.ps1", workflow)
         self.assertIn("test_window_probe.py", workflow)
+
+
+def workflow_text():
+    return (HERE.parents[1] / ".github" / "workflows" / "windows.yml").read_text(encoding="utf-8").replace("\r\n", "\n")
+
+
+def job_text(workflow, job):
+    """The text of one job: from `  <job>:` to the next top-level job (or the end)."""
+    m = re.search(rf"^  {re.escape(job)}:\n(.*?)(?=^  [a-z][\w-]*:\n|\Z)", workflow, re.M | re.S)
+    assert m, job
+    return m.group(1)
+
+
+def steps(job):
+    """The steps of a job, in order, as text (a step starts at `      - `)."""
+    body = job[job.index("    steps:\n") + len("    steps:\n"):]
+    return re.split(r"(?m)^      - ", body)[1:]
+
+
+def step_named(job, name):
+    for block in steps(job):
+        if re.match(rf"name: {re.escape(name)}\n", block):
+            return block
+    raise AssertionError(f"no step named {name!r}")
+
+
+class WorkflowStructure(unittest.TestCase):
+    """The smoke job: opt-in base64, the probe summary as the last step, the probe file kept by smoke.ps1."""
+
+    def setUp(self):
+        self.workflow = workflow_text()
+        self.smoke = job_text(self.workflow, "smoke")
+
+    def test_print_screenshots_is_an_input_of_workflow_dispatch_defaulting_to_false(self):
+        m = re.search(r"(?ms)^  workflow_dispatch:\n(.*?)(?=^\S)", self.workflow)
+        self.assertIsNotNone(m)
+        dispatch = m.group(1)
+        self.assertRegex(dispatch, r"(?m)^      print_screenshots:$")
+        self.assertRegex(dispatch, r"(?m)^        type: boolean$")
+        self.assertRegex(dispatch, r"(?m)^        default: false$")
+
+    def test_base64_printing_is_opt_in(self):
+        block = step_named(self.smoke, "Print screenshots to the log")
+        m = re.search(r"(?m)^        if: (.+)$", block)
+        self.assertIsNotNone(m)
+        cond = m.group(1)
+        self.assertIn("always()", cond)
+        self.assertIn("github.event_name == 'workflow_dispatch'", cond)
+        self.assertIn("inputs.print_screenshots", cond)
+        self.assertIn("continue-on-error: true", block)
+        self.assertIn("print-screenshots.ps1", block)
+
+    def test_probe_summary_is_the_last_step_of_the_smoke_job(self):
+        names = [re.match(r"(?:name: (.+)|uses: .+)\n", b).group(1) for b in steps(self.smoke)]
+        self.assertEqual(names[-1], "Window probe summary")
+        self.assertEqual(names.count("Window probe summary"), 1)
+        self.assertLess(names.index("Print screenshots to the log"), names.index("Upload screenshots and logs"))
+        block = step_named(self.smoke, "Window probe summary")
+        self.assertRegex(block, r"(?m)^        if: always\(\)$")
+        self.assertIn("continue-on-error: true", block)
+        self.assertIn("print-probe-summary.ps1", block)
+        self.assertIn('-Directory "$env:RUNNER_TEMP\\smoke"', block)
+
+    def test_summary_and_smoke_use_the_same_directory_and_file(self):
+        summary = read("print-probe-summary.ps1")
+        self.assertIn("[string]$Name = 'window-probe.txt'", summary)
+        self.assertIn("'window-probe.txt'", SMOKE)
+        for marker in ("===== WINDOW PROBE SUMMARY BEGIN =====", "===== WINDOW PROBE SUMMARY END ====="):
+            self.assertIn(marker, summary)
+            self.assertIn(marker, README)
+        self.assertIn("===== SMOKE OUTPUT FILES =====", summary)
+        installer = step_named(self.smoke, "Installer, installed app, uninstaller")
+        self.assertIn('-OutDir "$env:RUNNER_TEMP\\smoke"', installer)
+
+    def test_the_standin_job_is_not_affected(self):
+        standin = job_text(self.workflow, "smoke-standin")
+        self.assertNotIn("print-screenshots.ps1", standin)
+        self.assertNotIn("Window probe summary", standin)
+
+    def test_smoke_keeps_the_probe_lines_in_a_file(self):
+        self.assertIn(". (Join-Path $PSScriptRoot 'probe-log.ps1')", SMOKE)
+        self.assertLess(SMOKE.index("'probe-log.ps1'"), SMOKE.index("'window-capture.ps1'"), "Write-LogLine must exist before it is used")
+        self.assertRegex(SMOKE, r"\$ProbeLog = Join-Path \$OutDir 'window-probe.txt'\nSet-ProbeLogFile \$ProbeLog")
+        # The probe lines and the capture status lines all go through Write-LogLine (host and file).
+        self.assertIn("Write-LogLine (Format-ProbeLine", PROBE)
+        self.assertEqual(re.findall(r"Write-Host", CAPTURE), [], "capture status lines must also reach window-probe.txt")
+        self.assertIn("Set-ProbeLogFile (Join-Path $Directory 'window-probe.txt')", PRINT)
+        self.assertIn("Write-LogLine ('[screenshots] ", PRINT)
+        self.assertIn("Write-Host ($block -join", PRINT, "the base64 itself stays out of the file")
+
+    def test_log_helper_appends_the_text_it_writes_to_the_host(self):
+        log = read("probe-log.ps1")
+        self.assertRegex(log, r"(?s)function Write-LogLine.*Write-Host \$Text.*Add-Content -LiteralPath \$target -Value \$Text")
+
+    def test_readme_documents_the_summary_and_the_opt_in(self):
+        for needle in ("window-probe.txt", "print_screenshots", "Window probe summary", "workflow_dispatch"):
+            self.assertTrue(needle in README, f"README does not mention {needle}")
+
+
+class ArrayIdiom(unittest.TestCase):
+    """@(f) around a function that returns `, $array` is an array holding the array: -contains then finds nothing and an
+    empty result looks like one item. That printed no screenshot at all once. A function that returns with a leading
+    comma must be assigned (`$x = f`), never wrapped in @(...)."""
+
+    def test_comma_returning_functions_are_never_wrapped_in_array_subexpressions(self):
+        sources = {p.name: p.read_text(encoding="utf-8").replace("\r\n", "\n") for p in HERE.glob("*.ps1")}
+        comma_returning = set()
+        for text in sources.values():
+            for m in re.finditer(r"(?ms)^function ([\w-]+) \{(.*?)^\}", text):
+                if re.search(r"(?m)^\s*(?:return )?, ", m.group(2)):
+                    comma_returning.add(m.group(1))
+        self.assertNotIn("Select-ScreenshotNames", comma_returning, "it emits plain names, callers wrap it in @(...)")
+        self.assertIn("Get-ProbeSilently", comma_returning)
+        self.assertIn("ConvertTo-WrappedBase64", comma_returning)
+        offenders = [
+            f"{name}: @({fn} ...)"
+            for name, text in sources.items()
+            for fn in comma_returning
+            if re.search(rf"@\(\s*{re.escape(fn)}\b", text)
+        ]
+        self.assertEqual(offenders, [])
+
+    def test_select_screenshots_function_emits_plain_names(self):
+        body = re.search(r"(?ms)^function Select-ScreenshotNames \{(.*?)^\}", SHOTLOG).group(1)
+        self.assertNotRegex(body, r"(?m)^\s*(?:return )?, ")
+        self.assertIn("if ($null -ne $desktop) { $desktop }", body)
+        self.assertIn("if ($null -ne $firstPaint) { $firstPaint }", body)
+        self.assertNotIn("[Array]::Sort", body, "no overload resolution on a static array method")
 
 
 if __name__ == "__main__":

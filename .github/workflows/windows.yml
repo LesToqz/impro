@@ -7,10 +7,15 @@ name: Windows
 on:
   pull_request:
   push:
-    # claude/**: pushes to the polish branches run the Windows pipeline too, so that its screenshots (printed into
-    # the "Print screenshots to the log" step of the smoke job) are available without opening a pull request.
+    # claude/**: pushes to the polish branches run the Windows pipeline too, so that the window probe summary at the
+    # end of the smoke job log is available without opening a pull request.
     branches: [main, "claude/**"]
   workflow_dispatch:
+    inputs:
+      print_screenshots:
+        description: "Smoke job: also print the desktop-window and one first-paint screenshot into the log as base64 (bulky; scripts/ci/extract_log_screenshots.py restores the PNGs)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -287,10 +292,11 @@ jobs:
           ./packaging/windows/startup-lab.ps1
           -Artifacts "$env:RUNNER_TEMP\pkg" -Version $env:VERSION
           -OutDir "$env:RUNNER_TEMP\smoke\lab"
-      # The dev machine reads job logs but cannot download artifacts: every PNG of the smoke output is printed
-      # as base64 between BEGIN/END marker lines (scripts/ci/extract_log_screenshots.py restores the files).
+      # OPT-IN (workflow_dispatch with print_screenshots = true): the base64 is bulky and buries the rest of the log.
+      # desktop-window.png and one first-paint*.png are printed between BEGIN/END marker lines
+      # (scripts/ci/extract_log_screenshots.py restores the files). The facts about the window are in the last step.
       - name: Print screenshots to the log
-        if: always()
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.print_screenshots
         continue-on-error: true
         shell: pwsh
         run: ./packaging/windows/print-screenshots.ps1 -Directory "$env:RUNNER_TEMP\smoke"
@@ -302,6 +308,14 @@ jobs:
           path: ${{ runner.temp }}\smoke\*
           retention-days: 14
           if-no-files-found: ignore
+      # LAST step of the job, so that the end of the log (the only part that can be read) holds the facts about the
+      # real window: the files of the smoke output with their sizes, then window-probe.txt between
+      # ===== WINDOW PROBE SUMMARY BEGIN/END ===== (a clear line when the file is missing).
+      - name: Window probe summary
+        if: always()
+        continue-on-error: true
+        shell: pwsh
+        run: ./packaging/windows/print-probe-summary.ps1 -Directory "$env:RUNNER_TEMP\smoke"
 
   # ------------------------------------------------- package-standin
   # TEMPORARY scaffolding (see packaging/windows/README.md, "Packaging stand-in"):

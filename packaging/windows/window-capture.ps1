@@ -170,7 +170,7 @@ function Save-DesktopWindowScreenshot {
         foreach ($k in $EnvVars.Keys) { $psi.Environment[$k] = [string]$EnvVars[$k] }
         $started = [System.Diagnostics.Process]::Start($psi)
         $screen = [ImproWindows]::ScreenSize()
-        Write-Host ('[smoke] desktop capture: started pid {0}, screen {1}x{2}' -f $started.Id, $screen[0], $screen[1])
+        Write-LogLine ('[smoke] desktop capture: started pid {0}, screen {1}x{2}' -f $started.Id, $screen[0], $screen[1])
 
         # The window may belong to another impro process than the one started here (an app that hands over to
         # a running instance), so look at every impro process.
@@ -178,26 +178,32 @@ function Save-DesktopWindowScreenshot {
         $deadline = (Get-Date).AddSeconds($WindowTimeoutSec)
         while ((Get-Date) -lt $deadline) {
             $pids = [int[]]@(Get-Process -Name 'impro' -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
-            if ($pids.Count -eq 0) { Write-Host '::warning::desktop capture: the app exited before it showed a window'; break }
+            if ($pids.Count -eq 0) { Write-LogLine '::warning::desktop capture: the app exited before it showed a window'; break }
             $hwnd = [ImproWindows]::FindMainWindow($pids, 300, 200)
             if ($hwnd.ToInt64() -ne 0) { break }
             Start-Sleep -Milliseconds 500
         }
         if ($hwnd.ToInt64() -eq 0) {
-            Write-Host "::warning::desktop capture: no impro window appeared within ${WindowTimeoutSec}s"
+            Write-LogLine "::warning::desktop capture: no impro window appeared within ${WindowTimeoutSec}s"
         } else {
-            Write-Host ("[smoke] desktop capture: window found, title '{0}'" -f [ImproWindows]::Title($hwnd))
+            Write-LogLine ("[smoke] desktop capture: window found, title '{0}'" -f [ImproWindows]::Title($hwnd))
             Start-Sleep -Seconds 3   # let the first paint finish behind the frame
             for ($attempt = 1; $attempt -le 6; $attempt++) {
                 [ImproWindows]::BringToFront($hwnd)
                 Start-Sleep -Milliseconds 700
                 $b = [ImproWindows]::FrameBounds($hwnd)
                 if ($null -eq $b -or $b[2] -le 0 -or $b[3] -le 0) { Start-Sleep -Seconds 1; continue }
-                Write-Host ('[smoke] desktop capture attempt {0}: window at {1},{2} size {3}x{4}' -f $attempt, $b[0], $b[1], $b[2], $b[3])
+                Write-LogLine ('[smoke] desktop capture attempt {0}: window at {1},{2} size {3}x{4}' -f $attempt, $b[0], $b[1], $b[2], $b[3])
                 Save-ScreenRectangle -X $b[0] -Y $b[1] -Width $b[2] -Height $b[3] -Path $Path
+                try {
+                    $stats = Get-ImageStats -Path $Path
+                    Write-LogLine ('[smoke] desktop capture attempt {0}: image {1}x{2}, {3:P2} of the pixels differ from the top-left one' -f $attempt, $stats.Width, $stats.Height, $stats.DiffFraction)
+                } catch {
+                    Write-LogLine "[smoke] desktop capture attempt ${attempt}: cannot decode the image: $($_.Exception.Message)"
+                }
                 $problems = @(Test-ScreenshotProblems -Path $Path)
                 if ($problems.Count -eq 0) { $ok = $true; break }
-                Write-Host ('[smoke] desktop capture attempt {0}: {1}' -f $attempt, ($problems -join '; '))
+                Write-LogLine ('[smoke] desktop capture attempt {0}: {1}' -f $attempt, ($problems -join '; '))
                 Start-Sleep -Seconds 2
             }
             if (-not $ok) {
@@ -205,28 +211,28 @@ function Save-DesktopWindowScreenshot {
                 $alt = Join-Path ([IO.Path]::GetDirectoryName($Path)) ([IO.Path]::GetFileNameWithoutExtension($Path) + '-printwindow.png')
                 try {
                     Save-WindowWithPrintWindow -Hwnd $hwnd -Path $alt
-                    Write-Host "[smoke] desktop capture: PrintWindow fallback written to $alt"
+                    Write-LogLine "[smoke] desktop capture: PrintWindow fallback written to $alt"
                 } catch {
-                    Write-Host "::warning::desktop capture: PrintWindow fallback failed: $($_.Exception.Message)"
+                    Write-LogLine "::warning::desktop capture: PrintWindow fallback failed: $($_.Exception.Message)"
                 }
             }
             if ($null -ne $AfterCapture) {
                 try { $null = & $AfterCapture $hwnd $Path }
-                catch { Write-Host "::warning::desktop capture: the after-capture step failed: $($_.Exception.Message)" }
+                catch { Write-LogLine "::warning::desktop capture: the after-capture step failed: $($_.Exception.Message)" }
             }
         }
     } catch {
-        Write-Host "::warning::desktop window capture failed: $($_.Exception.Message)"
+        Write-LogLine "::warning::desktop window capture failed: $($_.Exception.Message)"
     } finally {
         if ($null -ne $started) {
-            try { $started.Kill($true) } catch { Write-Host "[smoke] desktop capture: kill: $($_.Exception.Message)" }
-            try { [void]$started.WaitForExit(10000) } catch { Write-Host "[smoke] desktop capture: wait: $($_.Exception.Message)" }
+            try { $started.Kill($true) } catch { Write-LogLine "[smoke] desktop capture: kill: $($_.Exception.Message)" }
+            try { [void]$started.WaitForExit(10000) } catch { Write-LogLine "[smoke] desktop capture: wait: $($_.Exception.Message)" }
         }
         foreach ($leftover in @(Get-Process -Name 'impro' -ErrorAction SilentlyContinue)) {
-            try { $leftover.Kill($true) } catch { Write-Host "[smoke] desktop capture: kill: $($_.Exception.Message)" }
+            try { $leftover.Kill($true) } catch { Write-LogLine "[smoke] desktop capture: kill: $($_.Exception.Message)" }
         }
         Start-Sleep -Milliseconds 500
     }
-    if (-not $ok) { Write-Host '::warning::desktop capture: no non-blank window screenshot (see the messages above)' }
+    if (-not $ok) { Write-LogLine '::warning::desktop capture: no non-blank window screenshot (see the messages above)' }
     $ok
 }

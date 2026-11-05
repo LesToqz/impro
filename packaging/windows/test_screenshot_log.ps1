@@ -52,17 +52,30 @@ try {
     $ends = @($logLines | Where-Object { $_ -like '-----END IMPRO-SCREENSHOT *-----' })
     Assert-Equal $begins.Count 2 'two blocks: the window and one first-paint, the text file is ignored'
     Assert-Equal $ends.Count 2 'one END line per BEGIN line'
-    $firstBegin = $begins[0]
-    $secondBegin = $begins[1]
-    Assert-Equal $firstBegin '-----BEGIN IMPRO-SCREENSHOT desktop-window.png-----' 'the real window comes first (name order)'
-    Assert-Equal $secondBegin '-----BEGIN IMPRO-SCREENSHOT first-paint-installer-cold.png-----' 'the first first-paint file in name order'
-    $start = [Array]::IndexOf($logLines, $firstBegin)
-    $stop = [Array]::IndexOf($logLines, $ends[0])
-    $body = ($logLines[($start + 1)..($stop - 1)]) -join ''
-    Assert-Equal ([Convert]::ToBase64String($png)) $body 'the printed body decodes to the file bytes'
+    if ($begins.Count -ge 2 -and $ends.Count -ge 1) {
+        $firstBegin = $begins[0]
+        $secondBegin = $begins[1]
+        Assert-Equal $firstBegin '-----BEGIN IMPRO-SCREENSHOT desktop-window.png-----' 'the real window comes first (name order)'
+        Assert-Equal $secondBegin '-----BEGIN IMPRO-SCREENSHOT first-paint-installer-cold.png-----' 'the first first-paint file in name order'
+        $start = [Array]::IndexOf($logLines, $firstBegin)
+        $stop = [Array]::IndexOf($logLines, $ends[0])
+        $body = ($logLines[($start + 1)..($stop - 1)]) -join ''
+        Assert-Equal ([Convert]::ToBase64String($png)) $body 'the printed body decodes to the file bytes'
+    } else {
+        # No block: show what the script printed (status lines, warnings, errors) so that the cause is in the log.
+        Write-Host "--- output of print-screenshots.ps1:`n$text`n---"
+    }
     Assert-Equal ($text -match '\[screenshots\] skipped b-other\.png \(70 bytes\)') $true 'an unselected file gets a skipped line with its size'
     Assert-Equal ($text -match '\[screenshots\] skipped first-paint-installer-warm\.png \(70 bytes\)') $true 'the second first-paint file is skipped'
     Assert-Equal ($text -match 'printed 2 of 4 file') $true 'summary line'
+
+    # The [screenshots] status lines (not the base64) are also appended to window-probe.txt in the same directory.
+    $statusFile = Join-Path $tmp 'window-probe.txt'
+    Assert-Equal (Test-Path -LiteralPath $statusFile) $true 'the status lines are also written to window-probe.txt'
+    $statusText = Get-Content -LiteralPath $statusFile -Raw
+    Assert-Equal ($statusText -match '\[screenshots\] printed 2 of 4 file') $true 'window-probe.txt has the summary line'
+    Assert-Equal ($statusText -match '\[screenshots\] skipped b-other\.png') $true 'window-probe.txt has the skipped lines'
+    Assert-Equal ($statusText -match 'BEGIN IMPRO-SCREENSHOT') $false 'the base64 blocks are not copied into window-probe.txt'
 
     # A file whose base64 would exceed the cap is skipped, not printed (random bytes: not a decodable image, so the
     # original is considered, and 100000 bytes are about 133 KB of base64).

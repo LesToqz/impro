@@ -8,6 +8,7 @@ Target `x86_64-pc-windows-gnu`, GTK3 and Rust from MSYS2 UCRT64.
 | `impro.iss` | Inno Setup 6 script. Per-user by default; registers the integration described in "Windows integration" below. |
 | `smoke.ps1` | Installs/unzips the packages, asserts the integration, tests the installed app (and captures its real window), uninstalls and checks nothing is left. |
 | `window-capture.ps1` | Best-effort capture of the real top-level window of the running app, native frame included (used by `smoke.ps1`). |
+| `probe-log.ps1`, `print-probe-summary.ps1` | `Write-LogLine` (host plus `window-probe.txt`) and the last step of the `smoke` job, which prints that file framed by `===== WINDOW PROBE SUMMARY BEGIN/END =====`. |
 | `window-probe.ps1`, `probe-vectors.json`, `test_window_probe.ps1`, `test_window_probe.py` | The window probe (`[window-probe] key=value` lines about the real window and a few pixels of its capture), the shared test vectors of its pure helpers and the tests. See "Window probe". |
 | `print-screenshots.ps1`, `screenshot-log.ps1`, `test_screenshot_log.ps1` | Print `desktop-window.png` and one `first-paint*.png` (capped at 700 px width and 60 KB of base64) into the job log between marker lines, its helpers and their test. See "Screenshots in the job log". |
 | `smoke-args.ps1`, `test_smoke_args.ps1` | Argument quoting for the Inno installer/uninstaller (a value with a space must be quoted by hand for `Start-Process`) and its plain-assert test, run in the `check` job. |
@@ -87,6 +88,20 @@ Right after the desktop capture, while the window still exists, `smoke.ps1` (ins
 Best effort: each fact is read in its own `try`/`catch` and a failure is printed as `key=error(<message>)`; the probe never
 fails the step. Search the log for `[window-probe]`.
 
+The job log of the `smoke` job is long and can only be read from its end, so `smoke.ps1` also writes every
+`[window-probe]` line and the desktop capture status lines (`[smoke] desktop capture ...`) to `<OutDir>\window-probe.txt`
+(exactly the text written to the host, see `probe-log.ps1`; `print-screenshots.ps1` appends its `[screenshots]` lines to the
+same file). The LAST step of the `smoke` job, `Window probe summary` (`print-probe-summary.ps1`, `if: always()`,
+`continue-on-error: true`), prints the names and sizes of the files in the smoke output directory and then the file between
+
+```
+===== WINDOW PROBE SUMMARY BEGIN =====
+...
+===== WINDOW PROBE SUMMARY END =====
+```
+
+or a clear "window-probe.txt is missing" line between the same markers. The END marker is the last line of the job log.
+
 | Keys | Meaning |
 | --- | --- |
 | `os_version`, `os_build`, `os_build_ubr`, `os_display_version`, `os_product` | Windows version and build number. |
@@ -115,8 +130,10 @@ tested without Windows: `test_window_probe.ps1` (in the `check` job) runs them a
 
 ## Screenshots in the job log
 
-The dev machine can read a job log but cannot download artifacts, so the `smoke` job prints its screenshots into the log
-(step "Print screenshots to the log", `if: always()`, `continue-on-error: true`):
+The dev machine can read a job log but cannot download artifacts. The base64 is bulky (it buries the rest of the log), so
+the step "Print screenshots to the log" of the `smoke` job is **opt-in**: it runs only for a `workflow_dispatch` run with the
+boolean input `print_screenshots` set to true (default false), with `continue-on-error: true`. The code and the extractor
+stay; the structured facts of the window probe (previous section) are the default evidence. When enabled, the step prints:
 
 ```
 -----BEGIN IMPRO-SCREENSHOT <file name>-----
