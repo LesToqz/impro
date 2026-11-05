@@ -25,6 +25,8 @@
     background: alpha({ui['overlay']}, 0.067); color: {ui['foreground']}; border-radius: 8px; }}
 .impro-explorer treeview.view:focus {{ -gtk-outline-radius: 8px; }}
 .impro-explorer treeview expander {{ color: {ui['muted']}; }}
+.impro-dialog-error {{ color: {ui['danger']}; font-size: 12px; }}
+messagedialog.impro-explorer-confirm button.destructive-action {{ color: {ui['danger']}; }}
 .impro-explorer .impro-notes-header {{ border: 0; padding: 3px 8px; color: {ui['muted']}; }}
 .impro-explorer .impro-notes-header button {{ min-height: 24px; min-width: 24px; padding: 0;
     border: 0; border-radius: 6px; background: transparent; box-shadow: none; color: {ui['muted']}; }}

@@ -3,9 +3,19 @@
 impro \- IDE with explorer, editor, live Markdown notes and terminal docks
 .SH SYNOPSIS
 .B impro
-[\fB\-h\fR] [\fB\-\-version\fR] [\fIfolder\fR]
+[\fB\-h\fR] [\fB\-\-version\fR] [\fIpath\fR ...]
 .SH DESCRIPTION
-Opens the given project folder in the impro window.
+Opens the given paths in the impro window.
+A folder becomes the project shown in the explorer and used by the terminal;
+if several folders are given, the first one is used.
+Files are opened in the editor.
+When only files are given, the folder containing the first file is the project.
+.PP
+Without any path, impro opens the current directory.
+When it is started without arguments from a launcher or from the home
+directory, it reopens the last folder that was used instead.
+.PP
+A \fIfile://\fR URI is accepted wherever a path is.
 .SH OPTIONS
 .TP
 .BR \-h ", " \-\-help
@@ -14,4 +24,4 @@ Print the usage line and exit.
 .B \-\-version
 Print the version and exit.
 .SH EXIT STATUS
-2 if the folder argument is not a directory.
+2 if a path does not exist, cannot be opened, or an option is not recognized.

@@ -111,6 +111,26 @@ fn test_add_button_limit_state() {
     });
 }
 #[test]
+fn test_add_menu_icons_exist_in_the_icon_theme() {
+    run(|| {
+        let theme = gtk::IconTheme::default().expect("default icon theme");
+        if !theme.has_icon("list-add-symbolic") {
+            return; // No desktop icon theme installed; nothing to compare against.
+        }
+        let b = AddButton::new(6);
+        b.set_kinds(&["terminal", "graph", "gitgraph"]);
+        let rows = b.choices().children();
+        assert_eq!(rows.len(), 3);
+        for row in rows {
+            let row = row.downcast::<gtk::ListBoxRow>().unwrap();
+            let line = row.child().unwrap().downcast::<gtk::Box>().unwrap();
+            let image = line.children()[0].clone().downcast::<gtk::Image>().unwrap();
+            let name = image.icon_name().expect("an icon name");
+            assert!(theme.has_icon(&name), "{name} is in no installed theme");
+        }
+    });
+}
+#[test]
 fn test_css_parses_for_every_theme_without_state_transitions() {
     run(|| {
         for theme in impro_core::themes::themes() {

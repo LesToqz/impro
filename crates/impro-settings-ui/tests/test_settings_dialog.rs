@@ -76,6 +76,10 @@ fn test_window_defaults_and_theme_order() {
         let dialog = &fx.dialog;
         assert_eq!(dialog.title().as_deref(), Some("Settings"));
         assert_eq!(dialog.default_size(), (900, 700));
+        assert_eq!(
+            dialog.property::<gtk::WindowPosition>("window-position"),
+            gtk::WindowPosition::CenterOnParent
+        );
         assert_eq!(dialog.size_request(), (600, 400));
         assert_eq!(dialog.theme_id(), settings::get_theme_id());
         let defaults: BTreeMap<String, i32> = settings::default_font_sizes()

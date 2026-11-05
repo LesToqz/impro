@@ -1,11 +1,19 @@
 [Desktop Entry]
+Version=1.5
+Type=Application
 Name=impro
-Comment=Edit project files with an integrated terminal
-Exec=impro
+GenericName=Code Editor
+Comment=Edit projects and Markdown notes with an integrated terminal
+Exec=impro %F
+TryExec=impro
 Icon=impro
 Terminal=false
-Type=Application
 Categories=Development;IDE;TextEditor;
-StartupWMClass=dev.impro.impro
-Keywords=editor;ide;terminal;markdown;notes;git;
+# Offers impro in "Open With" for common text and source files. It does not
+# claim directories and is never registered as anyone's default application.
+MimeType=text/plain;text/markdown;text/rust;text/x-python;application/json;application/toml;application/yaml;application/x-shellscript;text/x-csrc;text/x-chdr;text/x-c++src;text/x-c++hdr;text/x-go;text/x-java;text/x-makefile;text/x-cmake;text/javascript;text/css;text/html;application/xml;
+Keywords=editor;ide;code;terminal;markdown;notes;git;project;
 StartupNotify=true
+# GTK sets WM_CLASS from the program name ("impro", class "Impro"), not from the
+# application id dev.impro.impro (checked with xprop under Xvfb).
+StartupWMClass=impro

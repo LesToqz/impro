@@ -58,6 +58,10 @@ jobs:
         run: |
           impro --version
           desktop-file-validate /usr/share/applications/impro.desktop
+          sudo apt-get install -y --no-install-recommends appstream
+          appstreamcli validate --no-net /usr/share/metainfo/dev.impro.impro.metainfo.xml
+          # The package triggers must have put impro in the MIME cache ("Open With").
+          grep -qx 'text/markdown=impro.desktop;' /usr/share/applications/mimeinfo.cache
           dpkg -L impro
           for size in 16 24 32 48 64 128 256 512; do
             test -f "/usr/share/icons/hicolor/${size}x${size}/apps/impro.png"

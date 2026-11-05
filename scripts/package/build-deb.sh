@@ -124,6 +124,7 @@ fi
 inst() { install -D -m "$1" -- "$2" "$stage/$3"; }
 inst 0755 "$bin" usr/bin/impro
 inst 0644 "$root/packaging/impro.desktop" usr/share/applications/impro.desktop
+inst 0644 "$root/packaging/dev.impro.impro.metainfo.xml" usr/share/metainfo/dev.impro.impro.metainfo.xml
 while IFS= read -r -d '' png; do
     rel=${png#"$root/packaging/icons/"}
     inst 0644 "$png" "usr/share/icons/$rel"
@@ -154,6 +155,10 @@ control=${control//@INSTALLED_SIZE@/$size}
 control=${control//@DEPENDS@/$depends_line}
 printf '%s\n' "$control" > "$stage/DEBIAN/control"
 chmod 0644 "$stage/DEBIAN/control"
+
+# Checksums let debsums verify the installed files (lintian: no-md5sums-control-file).
+(cd "$stage" && find . -type f ! -path './DEBIAN/*' -printf '%P\0' | LC_ALL=C sort -z | xargs -0 md5sum) > "$work/md5sums"
+inst 0644 "$work/md5sums" DEBIAN/md5sums
 
 # ---- Normalise modes and mtimes, then build.
 find "$stage" -type d -exec chmod 0755 {} +

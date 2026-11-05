@@ -513,10 +513,12 @@ impl AddButton {
                 c.destroy();
             }
         }
+        // Icons shared with the settings navigation; `view-list-tree-symbolic` is in no
+        // installed theme and showed GTK's missing-image square beside "Git graph".
         let available = [
             ("terminal", "Terminal", "utilities-terminal-symbolic"),
-            ("graph", "Graph view", "network-workgroup-symbolic"),
-            ("gitgraph", "Git graph", "view-list-tree-symbolic"),
+            ("graph", "Graph view", "view-grid-symbolic"),
+            ("gitgraph", "Git graph", "view-list-symbolic"),
         ];
         let mut enabled = Vec::new();
         for (kind, label, icon) in available {

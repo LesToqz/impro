@@ -17,8 +17,10 @@ use serde_json::Value;
 use std::rc::Rc;
 
 const LICENSE_NOTE: &str = "impro runs on GTK 3, VTE and WebKitGTK (LGPL-2.1-or-later libraries) \
-through the gtk-rs bindings. Icons come from your system icon theme and the interface uses your \
-system fonts; no third-party fonts or icons are bundled.";
+through the gtk-rs bindings. A few interface icons are bundled from the Yaru icon theme \
+(CC BY-SA 4.0) and GNOME libpanel (LGPL-3.0-or-later); the notices are in THIRD_PARTY_NOTICES.md. \
+Other icons come from your system icon theme and the interface uses your system fonts; no fonts \
+are bundled.";
 
 /// Name, description and owning page of the three font-size rows.
 fn font_row(key: &str) -> (&'static str, &'static str) {
@@ -522,7 +524,7 @@ impl Inner {
         }
         let theme_row = SettingRow::new(
             "Color theme",
-            "Colours for the whole app; applies as you choose.",
+            "Colors for the whole app; applies as you choose.",
             Some(combo.upcast_ref()),
             RowOptions {
                 key: Some("theme"),
@@ -546,7 +548,7 @@ impl Inner {
         let accent = self.row(
             "accent",
             "Accent color",
-            "Colour of toggles, sliders and highlights. Restore to use the theme's own.",
+            "Color of toggles, sliders and highlights. Restore to use the theme's own.",
             picker.upcast_ref(),
             setter,
             &["highlight brand primary colour"],
@@ -635,8 +637,8 @@ impl Inner {
         let rows = [
             self.toggle(
                 "explorer_git_colors",
-                "Git status colours",
-                "Colour file names by their Git status.",
+                "Git status colors",
+                "Color file names by their Git status.",
                 &["version control colors"],
             ),
             self.toggle(
@@ -728,7 +730,7 @@ impl Inner {
             b,
             "feature_notes",
             "notes",
-            "Write and organise project notes.",
+            "Write and organize project notes.",
         );
         let rows = [
             self.toggle(
@@ -1148,5 +1150,25 @@ impl Inner {
             ),
         ];
         self.group(b, None, &rows);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    /// The About page must agree with the notices shipped next to the binary.
+    #[test]
+    fn license_note_names_the_bundled_icon_sources() {
+        let notices = include_str!("../../../THIRD_PARTY_NOTICES.md");
+        for source in ["Yaru", "libpanel"] {
+            assert!(
+                notices.contains(source),
+                "{source} missing from the notices"
+            );
+            assert!(
+                super::LICENSE_NOTE.contains(source),
+                "{source} missing from the About note"
+            );
+        }
+        assert!(!super::LICENSE_NOTE.contains("no third-party"));
     }
 }
