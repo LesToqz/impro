@@ -197,7 +197,11 @@ native captioned, resizable frame?), window, client and DWM frame rectangles, DP
 DPI awareness, the DWM attributes read back (dark mode, corner preference, border,
 caption and text colours) with their HRESULTs, the window's AppUserModelID, whether the
 window has an icon, the OS build, and a few pixel colours sampled from the captured
-window (caption, the docked bar, sidebar, editor). A fact that cannot be read prints
+window (caption, the docked bar, sidebar, editor). The summary also carries, for each launch,
+the size of the first-paint screenshot (about 26 KB for a normal paint; a few KB means a
+blank window), the application's own stdout and stderr as `[launch-output]` lines (with
+`IMPRO_QA_TIMING` set these include the window-fit decision and the capture state), and,
+when the screenshot is judged blank, the `[smoke] first-paint problems:` verdict. A fact that cannot be read prints
 `key=error(...)`, and `done=true` marks a probe that ran to the end. The probe never
 fails the job; it reports.
 

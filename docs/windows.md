@@ -95,11 +95,20 @@ and `bundle-manifest.txt`. The layout and the reason it is flat are in
   folders and files, which is what the Explorer entries use.
 - **Open Folder** is the system folder picker.
 
-The default window is 1200 x 790 pixels of client area and is not yet fitted to the
-screen: on the runner's 1024 x 768 display the probe showed it running off the bottom
-edge, and Windows does not shrink it. An attempt to fit it to the monitor's usable area
-left the installed application's first paint blank on that runner and was reverted; see
-[Known limitations](#known-limitations).
+The default window is 1200 x 790 pixels of client area. Windows only trims an oversized
+window to a little more than the screen, so on a small or heavily scaled display it
+would still reach under the taskbar or past the bottom edge. Right after the window is
+first shown, impro therefore resizes it once to fit the usable area (taskbar excluded) of
+the monitor it is on, allowing for the native frame and never going below 640 x 420; a
+maximised window is left alone. On the CI runner (1024 x 768, usable area 1024 x 720) the
+window became 1000 x 664 client pixels and its visible frame sat inside the usable area,
+with a normal first paint on every launch. `IMPRO_QA_TIMING=1` prints the decision
+(`impro: fit: work_area=... current=... fitted=...`).
+
+This is done after the first map, on purpose: a first attempt that changed the default
+size and asked for the monitor while the window was being built left the first paint
+blank on the runner. That was reverted and its cause was not found; the current approach
+does not touch the initial layout.
 
 Not yet verified: Windows 10 (the dark caption and its fallback attribute), Snap
 Layouts and the system menu in use, taskbar grouping through the AppUserModelID (the
@@ -158,11 +167,9 @@ See [Architecture](ARCHITECTURE.md#platform-backends) for the seams.
 ## Known limitations
 
 - The installer and `impro.exe` are unsigned.
-- The default window (1200 x 790 client pixels) can be taller or wider than a small or
-  heavily scaled screen. Fitting it to the usable area of the primary monitor is not
-  done; the first attempt (`gdk::Monitor::workarea` at window construction) made the
-  first paint blank in the CI smoke test and was reverted. Maximise the window, or
-  resize it from the native frame, on such a screen.
+- The fit to the screen (see above) was verified on a 1024 x 768 runner only. Windows
+  placed on a second monitor, mixed-DPI setups and unusual taskbar positions have not
+  been tried, and the size is not remembered between launches.
 - Several shortcuts use Ctrl+Alt (Graph view Ctrl+Alt+G, Git graph Ctrl+Alt+H, the
   right dock Ctrl+Alt+`). On keyboard layouts where AltGr produces characters,
   Windows reports AltGr as Ctrl+Alt, so these can collide with typing. They have not
