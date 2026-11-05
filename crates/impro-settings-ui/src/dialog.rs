@@ -273,6 +273,9 @@ impl SettingsDialog {
         let window = gtk::Window::new(gtk::WindowType::Toplevel);
         window.set_title("Settings");
         window.set_transient_for(parent);
+        // Window managers that do not place transients themselves (openbox, i3, xfwm)
+        // put it in the screen corner; GTK centres it over the main window instead.
+        window.set_position(gtk::WindowPosition::CenterOnParent);
         window.set_destroy_with_parent(true);
         window.style_context().add_class("impro-settings");
         window.set_default_size(900, 700);
