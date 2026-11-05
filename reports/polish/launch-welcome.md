@@ -75,18 +75,56 @@ Changed: `crates/impro/src/{cli,app,commands,window,lib}.rs`, `crates/impro-edit
 
 ## How verified
 
-See the final section; everything on Linux unless noted.
+All on Linux (Xvfb + dbus, X11 backend) in a private target directory with every workspace crate rebuilt from this
+worktree (`Compiling impro ... (<this worktree>)` checked); the shared target directory was not used for results.
+
+- `cargo fmt --all --check`: clean.
+- `cargo clippy -p impro -p impro-editor --all-targets -- -D warnings`: clean.
+- `scripts/windows/check-stub.sh -p impro --all-targets` and `IMPRO_WIN_CARGO_CMD=clippy ... -- -D warnings`
+  (x86_64-pc-windows-gnu, host stub): both finish clean. Compile and lint only.
+- `G_DEBUG=fatal-criticals bash scripts/test.sh -p impro --no-fail-fast`: every test binary passes except
+  `test_markdown_window::test_table_edit_save_rebuild_and_undo_keep_the_181_pixel_extent` (pixel extent 173, expected
+  181). That test fails identically on the commit before this branch (an archive of that commit built in its own
+  target dir), so it is a font or environment failure of this container, not a regression. The wiring test
+  `test_command_list_has_every_menu_action_with_its_accelerator` initially failed on the new menu entry; it is fixed by
+  the palette command `File: Open Recent`.
+- `G_DEBUG=fatal-criticals bash scripts/test.sh -p impro-editor`: all pass.
+- New unit tests (57 in `impro --lib`): argument parsing, `classify`, `resolve_root` for Unix and for Windows-style
+  paths with injected values (install dir, system dir, profile, case, separators, verbatim and UNC prefixes, bare-root
+  install, sibling-prefix names, Documents and profile fallback), state parsing, atomic write, merge and corruption,
+  observers, key caps, the mark's path tokenizer and the CSS template.
+- New integration tests: `tests/test_launch.rs` (`launch::prepare` against a real file system and environment: launcher in
+  `$HOME`, deleted last folder, no or corrupt state, terminal directory, symlinked `$HOME`, explicit paths) and
+  `tests/test_welcome.rs` (the page replaces the label and yields to tabs, the default label still works, shortcut chips
+  equal the real accelerators, actions run their commands, the native chooser opens and cancels, recents list, exclusion,
+  cap, hidden when empty, click and Enter, scroll-into-view of a focused row in a short window, compact layout, New Note
+  follows the notes feature, theme and accent reach the registered CSS, startup files open in order with the first
+  selected, File > Open Recent and the `File: Open Recent` command).
+- `scripts/ci/smoke.sh <debug binary>` passes: usage line, help describes `path`, bad folder and missing file exit 2,
+  launch writes `state.json`, folder plus file and file-only launches, a launch from a terminal directory keeps it, a
+  launch from `$HOME` reopens the last folder.
+- Single instance on Linux, with `xdotool` window counts: a plain launch opens one window, a second plain launch exits and
+  leaves one window, a launch with a folder argument opens a second window.
+- Screenshots (not committed): dark, light, ember and dracula themes, with and without recents, at 1400x900 and in a
+  900x600 window; the narrow window switches to the compact layout and keeps the header and all five start rows visible.
+- Startup cost, debug build, interleaved A/B of 10 runs each: median first paint 459 ms (pre-change binary) vs 475 ms
+  (this branch), run-to-run spread about 60 ms; building the welcome page itself measures 3 to 7 ms
+  (`IMPRO_QA_TIMING` phases `app-window-shell-ms` to `app-window-built-ms`). Release numbers and `scripts/ci/perf_gate.py`
+  were not run.
 
 ## Not verified / assumptions
 
 - Nothing ran on Windows. The `cfg(windows)` / Windows-rule paths are covered by unit tests with injected
   Windows-style paths (they run on any host) and compile- and clippy-checked for `x86_64-pc-windows-gnu`
-  through the host-stub script. The native Windows folder picker, the Explorer launch environment (shortcut working
+  through the host-stub script. The native Windows folder picker, the shell launch environment (shortcut working
   directory, `%SystemRoot%`) and `%APPDATA%` persistence are untested.
-- `Documents` is `%USERPROFILE%\Documents`; a redirected (OneDrive) Documents folder is not resolved (that needs the
+- `Documents` is `%USERPROFILE%\Documents`; a redirected Documents folder is not resolved (that needs the
   Shell known-folder API and an extra windows-sys feature).
-- Dead network drives: the last-folder existence check and the recent-folder check run, respectively, once on the main
-  thread for ambient launches only and on a background thread.
+- Dead network drives: the last-folder existence check runs once on the main thread, for ambient launches only; the
+  recent-folder existence check runs on the background thread.
+- Known unrelated failure in this container: `test_markdown_window::test_table_edit_save_rebuild_and_undo_keep_the_181_pixel_extent`.
+- Ancestor style-class changes do not reach widgets below `impro_ui::widgets::WrapBox` (style invalidation stops at that
+  container); the welcome page therefore restyles its rows directly instead of using a descendant selector.
 
 ## NEEDED from other owners
 
