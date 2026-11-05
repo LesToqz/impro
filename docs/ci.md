@@ -11,7 +11,7 @@ reproduce it locally, and how to maintain it. The workflows are in
 | CI | `ci.yml` | pull requests, pushes to `main`, manual dispatch |
 | Security | `security.yml` | pull requests, pushes to `main`, weekly (Monday 03:23 UTC), manual dispatch |
 | Nightly | `nightly.yml` | daily 01:41 UTC, manual dispatch |
-| Windows | `windows.yml` | pull requests, pushes to `main`, manual dispatch |
+| Windows | `windows.yml` | pull requests, pushes to `main` and to `claude/**` branches, manual dispatch |
 | Package (Linux) | `package-linux.yml` | pull requests, pushes to `main`, manual dispatch |
 
 All jobs run on `ubuntu-24.04` (the Windows workflow on `windows-2025`, apart from its aggregator) with read-only token permissions. Dependabot
@@ -174,10 +174,10 @@ finds the registry). The Rust cache is saved only on `main`.
 
 | Job | Required | What |
 | --- | --- | --- |
-| `check` | yes | PowerShell script tests, `cargo check --workspace --all-targets --locked --keep-going`, clippy `-D warnings` |
+| `check` | yes | PowerShell parse of every `.ps1`, `cargo check --workspace --all-targets --locked --keep-going`, clippy `-D warnings`, the Python packaging tests (`packaging/windows`, `scripts/ci`) and the PowerShell helper tests for the screenshot log and window probe |
 | `test` | no (report-only, `continue-on-error`) | Independent report-only steps, each ending in `RESULT <name>: PASS\|FAIL` in the step summary: pure-logic tests (`impro-core`, `impro-gitviews`), `impro-graph` library tests, GUI test targets (informational), WebView2 host test, ConPTY terminal tests |
 | `package` | yes | Release build, bundle, portable zip, installer, checksums; artifact `impro-windows` (30 days) |
-| `smoke` | yes (needs `package`) | Installs and launches the installer build and the zip build, uninstalls; a report-only startup lab step; artifact `windows-smoke` (14 days) |
+| `smoke` | yes (needs `package`) | Installs and launches the installer build and the zip build, uninstalls; asserts the integration the installer registers (Start Menu shortcut with its working directory and AppUserModelID, App Paths, "Open with", Explorer entries, PATH) and that the uninstaller removes it; a report-only startup lab step; prints the window probe summary as its last step; artifact `windows-smoke` (14 days) |
 | `package-standin`, `smoke-standin` | no (temporary) | Packaging pipeline with a small GTK stand-in instead of `impro.exe`; artifacts `windows-standin`, `windows-standin-smoke` (7 days); removal list in [Packaging](packaging.md#temporary-stand-in-jobs) |
 | `windows-success` | yes | Aggregates `check`, `package` and `smoke`; fails if any is not `success` |
 
@@ -185,6 +185,27 @@ Require `Windows success` in branch protection. The GUI test targets step is exp
 to fail on the hosted runner (GTK cannot initialise without an interactive desktop),
 which is why `test` is report-only. None of the Windows jobs had a confirmed green
 run when this section was written.
+
+### Windows evidence in the job log
+
+The `smoke` job drives the installed application on a real Windows runner and keeps
+what it sees in `window-probe.txt` (also part of the `windows-smoke` artifact). The
+last step, `Window probe summary`, prints it between `===== WINDOW PROBE SUMMARY BEGIN =====`
+and `===== WINDOW PROBE SUMMARY END =====`, so it is the end of the job log. Each fact is
+one `[window-probe] key=value` line: the window title and class, the style bits (is it a
+native captioned, resizable frame?), window, client and DWM frame rectangles, DPI and
+DPI awareness, the DWM attributes read back (dark mode, corner preference, border,
+caption and text colours) with their HRESULTs, the window's AppUserModelID, whether the
+window has an icon, the OS build, and a few pixel colours sampled from the captured
+window (caption, the docked bar, sidebar, editor). A fact that cannot be read prints
+`key=error(...)`, and `done=true` marks a probe that ran to the end. The probe never
+fails the job; it reports.
+
+The first-paint screenshots stay in the artifact. A manual dispatch with
+`print_screenshots` set prints them into the log as base64 blocks between
+`-----BEGIN IMPRO-SCREENSHOT <name>-----` markers, for hosts that cannot download
+artifacts; `python3 -I scripts/ci/extract_log_screenshots.py -o shots job.log` turns
+such a log back into PNG files.
 
 ### Package (Linux)
 
@@ -210,6 +231,13 @@ UCRT64 headers and pkg-config files fetched by `scripts/windows/fetch-sysroot.sh
 downloads about 108 MB (61 packages, measured once at 94 s); later runs are offline.
 It proves that the code compiles for the target, not that it works. `IMPRO_SKIP_WIN_RESOURCES=1`
 is exported so `crates/impro/build.rs` skips resource compilation.
+
+On a host that cannot reach the MSYS2 mirrors (an agent sandbox, for example),
+`scripts/windows/check-stub.sh` does the same without the download: `cargo check` never
+links, so the GTK `-sys` build scripts only need pkg-config to say that GTK 3 is installed,
+and the script answers from a copy of the host's `.pc` files (the Linux GTK development
+packages are enough; the `cc` crate also wants `gcc-mingw-w64-x86-64`). Use it exactly like
+`check.sh`, for example `IMPRO_WIN_CARGO_CMD=clippy scripts/windows/check-stub.sh -p impro -- -D warnings`.
 
 ## Security
 
