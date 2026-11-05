@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream metadata for software centres and package tooling.
+  Validate offline with appstreamcli (validate subcommand, network checks off).
+  Keep the first release element in step with the workspace version in
+  Cargo.toml; scripts/test-install.sh checks that.
+-->
+<component type="desktop-application">
+  <id>dev.impro.impro</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>impro</name>
+  <summary>IDE with live Markdown notes and a terminal</summary>
+  <developer id="io.github.lestoqz">
+    <name>LesToqz</name>
+  </developer>
+  <description>
+    <p>
+      impro is a small GTK 3 IDE written in Rust. It keeps a project explorer,
+      a code editor, live Markdown notes and terminal docks in one window.
+    </p>
+    <ul>
+      <li>Project explorer with search across files</li>
+      <li>Syntax-highlighted editor with tabs, a command palette and a quick switcher</li>
+      <li>Markdown notes rendered as you type</li>
+      <li>Integrated terminal docks</li>
+      <li>Git graph with commit pages, and a graph view of linked notes</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">impro.desktop</launchable>
+  <provides>
+    <binary>impro</binary>
+  </provides>
+  <categories>
+    <category>Development</category>
+    <category>IDE</category>
+    <category>TextEditor</category>
+  </categories>
+  <keywords>
+    <keyword>editor</keyword>
+    <keyword>ide</keyword>
+    <keyword>code</keyword>
+    <keyword>terminal</keyword>
+    <keyword>markdown</keyword>
+    <keyword>notes</keyword>
+    <keyword>git</keyword>
+  </keywords>
+  <url type="homepage">https://github.com/LesToqz/impro</url>
+  <url type="bugtracker">https://github.com/LesToqz/impro/issues</url>
+  <url type="vcs-browser">https://github.com/LesToqz/impro</url>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <recommends>
+    <display_length compare="ge">768</display_length>
+  </recommends>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-11-05" type="development"/>
+  </releases>
+</component>
