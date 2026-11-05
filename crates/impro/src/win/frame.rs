@@ -27,8 +27,39 @@ pub fn install(window: &gtk::ApplicationWindow) {
     window.connect_map(move |window| {
         if !mapped.replace(true) {
             apply(window);
+            fit_to_monitor(window);
         }
     });
+}
+
+/// Once, right after the first map: when the window is larger than the usable area (taskbar
+/// excluded) of the monitor it is on, together with the native frame, resize it to fit.
+///
+/// Windows keeps an oversized default window as it is, so a 1024x768 screen, or a laptop scaled
+/// to 150 percent, showed a window running off its bottom edge. This runs after the map, never
+/// while the window is built: an earlier attempt that changed the default size and queried the
+/// monitor during construction left the installed application's first paint blank in CI. A
+/// maximized window is left alone. `IMPRO_QA_TIMING` prints what was decided.
+fn fit_to_monitor(window: &gtk::ApplicationWindow) {
+    if window.is_maximized() {
+        return;
+    }
+    let work = work_area_of(window);
+    let current = window.size();
+    let fitted = policy::fit_default_size(current, work);
+    if std::env::var_os(impro_core::identity::QA_TIMING_ENV).is_some() {
+        eprintln!("impro: fit: work_area={work:?} current={current:?} fitted={fitted:?}");
+    }
+    if fitted != current {
+        window.resize(fitted.0, fitted.1);
+    }
+}
+
+/// Width and height of the usable area of the monitor the window is on, in GTK's logical pixels.
+fn work_area_of(window: &gtk::ApplicationWindow) -> Option<(i32, i32)> {
+    let native = window.window()?;
+    let area = window.display().monitor_at_window(&native)?.workarea();
+    Some((area.width(), area.height()))
 }
 
 /// Read the effective theme (accent included) and push it to the window's DWM attributes.

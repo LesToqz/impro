@@ -156,6 +156,45 @@ pub fn parse_build_number(text: &str) -> Option<u32> {
         .ok()
 }
 
+/// Width and height the native frame (side borders, caption, bottom border) takes on top of the
+/// client area, plus a little slack, when sizing a window to a monitor's usable area.
+pub const NATIVE_FRAME_ALLOWANCE: (i32, i32) = (24, 56);
+/// A fitted default never shrinks below this client size.
+pub const MIN_DEFAULT_SIZE: (i32, i32) = (640, 420);
+
+/// Client size to ask for at start. `preferred` is kept unless the primary monitor's usable area
+/// (taskbar excluded) cannot hold it together with the native frame, then it shrinks to fit, but
+/// never below `MIN_DEFAULT_SIZE` and never above `preferred`. Windows does not shrink an
+/// oversized default window to the screen (a 1024x768 display or a heavily scaled laptop would
+/// push the bottom of the window off screen), so the application does it. An unknown or empty
+/// work area leaves `preferred` untouched.
+pub fn fit_default_size(preferred: (i32, i32), work_area: Option<(i32, i32)>) -> (i32, i32) {
+    let Some((work_width, work_height)) = work_area else {
+        return preferred;
+    };
+    let fit = |want: i32, available: i32, allowance: i32, floor: i32| {
+        if available <= 0 {
+            want
+        } else {
+            want.min(available - allowance).max(floor.min(want))
+        }
+    };
+    (
+        fit(
+            preferred.0,
+            work_width,
+            NATIVE_FRAME_ALLOWANCE.0,
+            MIN_DEFAULT_SIZE.0,
+        ),
+        fit(
+            preferred.1,
+            work_height,
+            NATIVE_FRAME_ALLOWANCE.1,
+            MIN_DEFAULT_SIZE.1,
+        ),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -330,5 +369,44 @@ mod tests {
         assert_eq!(parse_build_number(""), None);
         assert_eq!(parse_build_number("22631.1"), None);
         assert_eq!(parse_build_number("abc"), None);
+    }
+
+    #[test]
+    fn default_size_is_kept_when_the_work_area_is_large_or_unknown() {
+        let preferred = (1200, 790);
+        assert_eq!(fit_default_size(preferred, None), preferred);
+        assert_eq!(fit_default_size(preferred, Some((1920, 1040))), preferred);
+        // Exactly enough room for the client area plus the frame allowance.
+        assert_eq!(fit_default_size(preferred, Some((1224, 846))), preferred);
+        // An empty work area from the platform leaves the preference alone.
+        assert_eq!(fit_default_size(preferred, Some((0, 0))), preferred);
+        // A non-positive dimension is ignored on its own; the other one still fits.
+        assert_eq!(fit_default_size(preferred, Some((-5, 700))), (1200, 644));
+    }
+
+    #[test]
+    fn default_size_shrinks_to_the_usable_area_of_a_small_screen() {
+        // A 1024x768 display with the taskbar taking 40 px: the runner's real case.
+        assert_eq!(
+            fit_default_size((1200, 790), Some((1024, 728))),
+            (1000, 672)
+        );
+        // Only one dimension is too big.
+        assert_eq!(
+            fit_default_size((1200, 790), Some((1600, 700))),
+            (1200, 644)
+        );
+        assert_eq!(
+            fit_default_size((1200, 790), Some((1100, 1000))),
+            (1076, 790)
+        );
+    }
+
+    #[test]
+    fn default_size_has_a_floor_and_never_grows() {
+        assert_eq!(fit_default_size((1200, 790), Some((300, 200))), (640, 420));
+        // A preference below the floor stays as asked.
+        assert_eq!(fit_default_size((500, 300), Some((300, 200))), (500, 300));
+        assert_eq!(fit_default_size((500, 300), Some((4000, 3000))), (500, 300));
     }
 }

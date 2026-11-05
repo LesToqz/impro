@@ -180,6 +180,17 @@ function Test-App([string]$AppDir) {
         $paint = Get-TimingValue $text 'first-paint-ms'
         $gtk = Get-TimingValue $text 'app-gtk-startup-ms'
         Step ("launch {0}: first-paint-ms={1} app-gtk-startup-ms={2} exit={3}" -f $run, (Format-Millis $paint), (Format-Millis $gtk), $r.ExitCode)
+        # What the application printed, and how big its screenshot is, go to the log file that the last step of the job
+        # prints again: a blank first paint (a few KB instead of about 29 KB) is explained by these lines.
+        $pngBytes = if (Test-Path -LiteralPath $png) { (Get-Item -LiteralPath $png).Length } else { 0 }
+        Write-LogLine ('[smoke] launch {0}: first-paint screenshot is {1} bytes' -f $run, $pngBytes)
+        foreach ($streamName in 'Stdout', 'Stderr') {
+            $body = ([string]$r.$streamName).Trim()
+            if ($body) {
+                $shown = if ($body.Length -gt 1500) { $body.Substring(0, 1500) + ' ...' } else { $body }
+                Write-LogLine ('[launch-output] {0} {1}: {2}' -f $run, $streamName.ToLower(), ($shown -replace '\s*\r?\n\s*', ' | '))
+            }
+        }
         $launches += [pscustomobject]@{ Run = $run; Result = $r; Png = $png; Text = $text }
     }
     foreach ($l in $launches) {
@@ -193,6 +204,7 @@ function Test-App([string]$AppDir) {
     if ($coldProblems.Count -gt 0) {
         $warmProblems = @(Test-ScreenshotProblems -Path $launches[1].Png)
         $warmNote = if ($warmProblems.Count -gt 0) { 'warm launch: ' + ($warmProblems -join '; ') } else { 'warm launch screenshot is fine' }
+        Write-LogLine ('[smoke] first-paint problems: cold launch: ' + ($coldProblems -join '; ') + ' | ' + $warmNote)
         Fail ("cold launch: " + ($coldProblems -join '; ') + " | $warmNote")
     }
     Pass 'cold launch screenshot is a non-blank PNG'

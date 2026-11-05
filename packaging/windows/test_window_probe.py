@@ -336,6 +336,16 @@ class Wiring(unittest.TestCase):
                 f"{source.name} must print the usage line smoke.ps1 expects",
             )
 
+    def test_smoke_logs_what_the_application_printed_and_the_screenshot_verdict(self):
+        # A blank first paint (a few KB instead of about 29 KB) must explain itself in the summary that the last
+        # step of the job prints: the application's own stdout/stderr text, the PNG size and the verdict.
+        self.assertIn("'[launch-output] {0} {1}: {2}'", SMOKE)
+        self.assertIn("'[smoke] launch {0}: first-paint screenshot is {1} bytes'", SMOKE)
+        self.assertIn("'[smoke] first-paint problems: cold launch: '", SMOKE)
+        launch_loop = SMOKE.index("[launch-output]")
+        self.assertLess(SMOKE.index("Invoke-Capture -Exe $exe -Arguments @($folder)"), launch_loop)
+        self.assertLess(launch_loop, SMOKE.index("Fail (\"cold launch: \""), "the verdict is logged before the failure")
+
     def test_new_tests_run_in_ci(self):
         workflow = (HERE.parents[1] / ".github" / "workflows" / "windows.yml").read_text(encoding="utf-8")
         self.assertIn("test_window_probe.ps1", workflow)

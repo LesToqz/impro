@@ -169,8 +169,19 @@ pub fn capture_window(window: &impl IsA<gtk::Widget>, path: &Path) -> Result<(),
     // The Windows GDK backend returns a blank buffer from GdkWindow::pixbuf, so
     // render the widget tree offscreen. An unallocated top level keeps the old path.
     #[cfg(windows)]
-    if window.is_mapped() && window.allocated_width() > 1 && window.allocated_height() > 1 {
-        return capture_offscreen(window, path);
+    {
+        if std::env::var_os(identity::QA_TIMING_ENV).is_some() {
+            eprintln!(
+                "impro: capture: mapped={} allocated={}x{} scale={}",
+                window.is_mapped(),
+                window.allocated_width(),
+                window.allocated_height(),
+                window.scale_factor()
+            );
+        }
+        if window.is_mapped() && window.allocated_width() > 1 && window.allocated_height() > 1 {
+            return capture_offscreen(window, path);
+        }
     }
     let native = window.window().ok_or("window has no native surface")?;
     let pixbuf = native
