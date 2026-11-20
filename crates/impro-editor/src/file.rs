@@ -55,7 +55,7 @@ pub fn read_file(path: impl AsRef<Path>) -> io::Result<Document> {
         ending: detect_line_ending(&text),
         text: text.replace("\r\n", "\n"),
         mtime: meta.modified()?,
-        resolved_path: path.canonicalize().unwrap_or_else(|_| absolute(path)),
+        resolved_path: impro_core::platform::canonicalize(path).unwrap_or_else(|_| absolute(path)),
     })
 }
 /// Follow symlinks, preserve mode, sync and replace in the destination directory.
@@ -129,8 +129,7 @@ fn resolve_target(path: &Path) -> io::Result<PathBuf> {
                     || (cfg!(windows) && e.raw_os_error() == Some(4390)) =>
             {
                 let parent = target.parent().unwrap_or(Path::new("/"));
-                return Ok(parent
-                    .canonicalize()?
+                return Ok(impro_core::platform::canonicalize(parent)?
                     .join(target.file_name().unwrap_or_default()));
             }
             Err(e) => return Err(e),

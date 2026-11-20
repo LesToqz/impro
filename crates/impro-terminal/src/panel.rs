@@ -110,10 +110,15 @@ fn is_searchable(path: &Path) -> bool {
     std::fs::read_dir(path).is_ok()
 }
 /// Existing searchable directory, falling back to the home directory then the root.
-/// Filesystem checks belong on a worker thread.
+/// Filesystem checks belong on a worker thread. A Windows verbatim path (`\\?\C:\...`) is
+/// returned in its plain spelling: shells started there show and use the plain path (Windows
+/// PowerShell otherwise prompts with `Microsoft.PowerShell.Core\FileSystem::\\?\C:\...`).
 pub fn safe_cwd(path: impl AsRef<Path>) -> PathBuf {
+    impro_core::platform::simplified(&existing_cwd(path.as_ref()))
+}
+fn existing_cwd(path: &Path) -> PathBuf {
     for p in [
-        path.as_ref().to_path_buf(),
+        path.to_path_buf(),
         impro_core::platform::home_dir().unwrap_or_default(),
         fs_root(),
     ] {
@@ -1249,7 +1254,8 @@ impl TerminalPanel {
                     t.set_rewrap_on_resize(false);
                 }
                 t.set_font(&pango::FontDescription::from_string(&format!(
-                    "Monospace {size}"
+                    "{} {size}",
+                    impro_core::platform::MONOSPACE_FAMILY
                 )));
                 t.set_rewrap_on_resize(rewrap);
                 p.frame.queue_resize();
@@ -1380,10 +1386,11 @@ impl TerminalPanel {
             Terminal::set_margin_top,
             Terminal::set_margin_bottom,
         ] {
-            set(t, 8);
+            set(t, impro_ui::scale::px(8));
         }
         t.set_font(&pango::FontDescription::from_string(&format!(
-            "Monospace {}",
+            "{} {}",
+            impro_core::platform::MONOSPACE_FAMILY,
             self.imp().font_size.get()
         )));
         self.apply_colors(t);

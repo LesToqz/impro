@@ -45,9 +45,9 @@ thread_local! {
     static CACHE: RefCell<Cache> = RefCell::new(Cache::default());
 }
 
-/// Edge of the icons in logical pixels (`GTK_ICON_SIZE_MENU`).
+/// Edge of the icons in logical pixels (`GTK_ICON_SIZE_MENU`, at the display scale).
 pub fn menu_size() -> i32 {
-    gtk::IconSize::Menu.lookup().map_or(16, |(w, _)| w)
+    impro_ui::scale::px(gtk::IconSize::Menu.lookup().map_or(16, |(w, _)| w))
 }
 
 /// The icon `name` at `px` logical pixels, recoloured to `fg`, if it is decoded.

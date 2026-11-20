@@ -45,7 +45,8 @@ thread_local! {
 /// text, this keeps views usable without the full application style.
 pub fn install(ui: &UiColors, accent: &str) {
     let colors = PanelColors::from_theme(ui, accent);
-    let text = css_with(&colors);
+    // Scaled like the application style sheet, which carries the same rules.
+    let text = impro_ui::scale::css(&css_with(&colors));
     PROVIDER.with(|slot| {
         let mut slot = slot.borrow_mut();
         if slot.as_ref().is_some_and(|(_, t)| *t == text) {

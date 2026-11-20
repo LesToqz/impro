@@ -212,7 +212,9 @@ thread_local! {
 }
 fn async_icon(name: &str) -> gtk::Image {
     let image = gtk::Image::new();
-    image.set_size_request(16, 16);
+    // A 16 pixel icon at 100 percent, rendered at the display scale (see impro_ui::scale).
+    let size = impro_ui::scale::px(16);
+    image.set_size_request(size, size);
     let name = name.to_owned();
     let generation = Rc::new(Cell::new(0u64));
     image.connect_style_updated(move |image| {
@@ -230,7 +232,7 @@ fn async_icon(name: &str) -> gtk::Image {
         let scale = image.scale_factor();
         if let Some(surface) = impro_ui::icons::symbolic_surface(
             &name,
-            16,
+            size,
             scale,
             &image.style_context(),
             image.state_flags(),
@@ -239,7 +241,7 @@ fn async_icon(name: &str) -> gtk::Image {
             return;
         }
         let Some(info) =
-            theme.lookup_icon_for_scale(&name, 16, scale, gtk::IconLookupFlags::empty())
+            theme.lookup_icon_for_scale(&name, size, scale, gtk::IconLookupFlags::empty())
         else {
             return;
         };
@@ -383,7 +385,7 @@ impl PaneHeader {
         self.label.set_text(&match self.kind.as_str() {
             "graph" => "Graph view".into(),
             "gitgraph" => "Git graph".into(),
-            _ => format!("{shell_name}{position}"),
+            _ => shell_label(&shell_name, position, cfg!(windows)),
         });
     }
     pub fn set_active(&self, value: bool) {
@@ -700,5 +702,56 @@ impl LimitToast {
             }
         });
         *self.0.timer.borrow_mut() = Some(id);
+    }
+}
+
+/// Tab label of a shell pane. Linux keeps the executable name run into the number (`bash1`);
+/// Windows uses the names Windows itself gives its shells, with a space (`PowerShell 1`,
+/// `Windows PowerShell 1`, `Command Prompt 1`, otherwise the name without `.exe`).
+pub(crate) fn shell_label(shell_name: &str, position: usize, windows: bool) -> String {
+    if !windows {
+        return format!("{shell_name}{position}");
+    }
+    let stem = match shell_name.len().checked_sub(4) {
+        Some(at)
+            if shell_name.is_char_boundary(at) && shell_name[at..].eq_ignore_ascii_case(".exe") =>
+        {
+            &shell_name[..at]
+        }
+        _ => shell_name,
+    };
+    let name = match stem.to_ascii_lowercase().as_str() {
+        "pwsh" => "PowerShell",
+        "powershell" => "Windows PowerShell",
+        "cmd" => "Command Prompt",
+        _ => stem,
+    };
+    format!("{name} {position}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::shell_label;
+
+    #[test]
+    fn linux_labels_keep_the_executable_name() {
+        assert_eq!(shell_label("bash", 1, false), "bash1");
+        assert_eq!(shell_label("powershell.exe", 2, false), "powershell.exe2");
+    }
+
+    #[test]
+    fn windows_labels_use_the_shell_names_windows_uses() {
+        assert_eq!(shell_label("pwsh.exe", 1, true), "PowerShell 1");
+        assert_eq!(
+            shell_label("powershell.exe", 2, true),
+            "Windows PowerShell 2"
+        );
+        assert_eq!(
+            shell_label("PowerShell.EXE", 1, true),
+            "Windows PowerShell 1"
+        );
+        assert_eq!(shell_label("cmd.exe", 3, true), "Command Prompt 3");
+        assert_eq!(shell_label("bash.exe", 1, true), "bash 1");
+        assert_eq!(shell_label("nu", 1, true), "nu 1");
     }
 }

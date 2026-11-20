@@ -1,5 +1,5 @@
 //! Reusable compact settings controls; composite handles expose widget() for GTK containers.
-use crate::{motion, style};
+use crate::{motion, scale, style};
 use gtk::prelude::*;
 use impro_core::{settings, themes::UiColors};
 use std::{
@@ -72,13 +72,13 @@ impl Toggle {
     pub fn new(active: bool, label: Option<&str>) -> Self {
         let widget = gtk::ToggleButton::new();
         class(&widget, "impro-toggle");
-        widget.set_size_request(40, 22);
+        widget.set_size_request(scale::px(40), scale::px(22));
         widget.set_halign(gtk::Align::End);
         widget.set_valign(gtk::Align::Center);
         widget.set_focus_on_click(false);
         let thumb = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         class(&thumb, "impro-toggle-thumb");
-        thumb.set_size_request(18, 18);
+        thumb.set_size_request(scale::px(18), scale::px(18));
         thumb.set_halign(gtk::Align::Start);
         thumb.set_valign(gtk::Align::Center);
         widget.add(&thumb);
@@ -89,13 +89,13 @@ impl Toggle {
             }
         }
         widget.set_active(active);
-        thumb.set_margin_start(if active { 20 } else { 2 });
+        thumb.set_margin_start(scale::px(if active { 20 } else { 2 }));
         let weak = thumb.downgrade();
         let key = motion::MotionKey::unique();
         widget.connect_toggled(move |button| {
             if let Some(thumb) = weak.upgrade() {
                 let start = thumb.margin_start();
-                let target = if button.is_active() { 20 } else { 2 };
+                let target = scale::px(if button.is_active() { 20 } else { 2 });
                 let duration = if button.is_mapped() {
                     TOGGLE_DURATION
                 } else {

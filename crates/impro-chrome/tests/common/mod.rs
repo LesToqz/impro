@@ -11,6 +11,8 @@ pub fn run(f: impl FnOnce() + Send + 'static) {
     let worker = GTK.get_or_init(|| {
         let (tx, rx) = mpsc::channel::<Job>();
         std::thread::spawn(move || {
+            // Geometry assertions are written for 100 percent; keep the Windows display scale out.
+            std::env::set_var("IMPRO_UI_SCALE", "1");
             gtk::init().expect("Xvfb display");
             while let Ok(job) = rx.recv() {
                 job();

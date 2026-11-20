@@ -63,8 +63,8 @@ pub fn css(ui: &UiColors) -> String {
         border: get("border"),
         overlay: get("overlay"),
         surface: get("sidebar_bg"),
-        body_font: "sans-serif".into(),
-        code_font: "monospace".into(),
+        body_font: impro_core::platform::SANS_FAMILY.into(),
+        code_font: impro_core::platform::MONOSPACE_FAMILY.to_lowercase(),
         ..Default::default()
     };
     view_css(&style, "")
@@ -120,14 +120,14 @@ impl Inner {
         let surface = pick("sidebar_bg", chrome_get("current_line_bg"));
         let families = font_families(&self.view);
         let body_font = if families.iter().any(|f| f == "Inter") {
-            "Inter"
+            "Inter".to_owned()
         } else {
-            "sans-serif"
+            impro_core::platform::SANS_FAMILY.to_owned()
         };
         let code_font = if families.iter().any(|f| f == "IBM Plex Mono") {
-            "IBM Plex Mono"
+            "IBM Plex Mono".to_owned()
         } else {
-            "monospace"
+            impro_core::platform::MONOSPACE_FAMILY.to_lowercase()
         };
         let state = StyleState {
             chrome: chrome.clone(),
@@ -138,8 +138,8 @@ impl Inner {
             border,
             overlay: overlay.clone(),
             surface: surface.clone(),
-            body_font: body_font.into(),
-            code_font: code_font.into(),
+            body_font: body_font.clone(),
+            code_font: code_font.clone(),
         };
         self.style.replace(state.clone());
         let mut palette = ui.clone();
@@ -155,7 +155,7 @@ impl Inner {
                 .entry(key.into())
                 .or_insert_with(|| chrome_get("gutter_fg_active"));
         }
-        let tables = crate::livetable::styled_css(&palette, &bg, size, body_font);
+        let tables = crate::livetable::styled_css(&palette, &bg, size, &body_font);
         let css = view_css(&state, &tables);
         if let Err(error) = self.provider.load_from_data(css.as_bytes()) {
             eprintln!("live markdown stylesheet: {error}");

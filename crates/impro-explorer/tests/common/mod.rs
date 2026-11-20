@@ -17,6 +17,8 @@ pub fn run(f: impl FnOnce() + Send + 'static) {
         std::thread::spawn(move || {
             #[cfg(unix)]
             std::env::set_var("GDK_BACKEND", "x11");
+            // Geometry assertions are written for 100 percent; keep the Windows display scale out.
+            std::env::set_var("IMPRO_UI_SCALE", "1");
             gtk::init().expect("Xvfb display");
             impro_ui::init();
             impro_explorer::init();

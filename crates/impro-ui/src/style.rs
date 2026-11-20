@@ -210,7 +210,10 @@ pub fn apply_theme(
     );
     let cached = STATE.with(|s| s.borrow().cache.get(&key).cloned());
     let css = cached.unwrap_or_else(|| {
-        let css = Rc::new(build_css(&themed) + &build_overrides(ui_font, editor_font));
+        // Pixel lengths follow the display scale like point sizes do (see `scale`).
+        let css = Rc::new(crate::scale::css(
+            &(build_css(&themed) + &build_overrides(ui_font, editor_font)),
+        ));
         STATE.with(|s| {
             s.borrow_mut().cache.insert(key, css.clone());
         });

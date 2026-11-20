@@ -79,8 +79,7 @@ pub fn classify(
             io::ErrorKind::NotFound => format!("no such file or directory: {shown}"),
             _ => format!("cannot open {shown}: {e}"),
         })?;
-        let canonical = full
-            .canonicalize()
+        let canonical = impro_core::platform::canonicalize(&full)
             .map_err(|e| format!("cannot open {shown}: {e}"))?;
         if meta.is_dir() {
             targets.dir.get_or_insert(canonical);
@@ -411,7 +410,7 @@ impl Launch {
 }
 
 fn canonical(path: PathBuf) -> PathBuf {
-    path.canonicalize().unwrap_or(path)
+    impro_core::platform::canonicalize(&path).unwrap_or(path)
 }
 
 /// Resolve against the real process environment and read `state.json` (one small file).
@@ -646,7 +645,7 @@ mod tests {
     #[test]
     fn classify_splits_directories_and_files_in_order() {
         let dir = tempfile::tempdir().unwrap();
-        let base = dir.path().canonicalize().unwrap();
+        let base = impro_core::platform::canonicalize(dir.path()).unwrap();
         for name in ["a.txt", "b.txt"] {
             fs::write(base.join(name), "x").unwrap();
         }
@@ -695,7 +694,7 @@ mod tests {
     #[test]
     fn classify_passes_every_argument_through_the_expander_untouched() {
         let dir = tempfile::tempdir().unwrap();
-        let expected = dir.path().canonicalize().unwrap();
+        let expected = impro_core::platform::canonicalize(dir.path()).unwrap();
         for raw in [
             r"C:\Users\x\proj",
             "C:/Users/x/proj",
@@ -715,7 +714,7 @@ mod tests {
     #[test]
     fn classify_accepts_file_uris() {
         let dir = tempfile::tempdir().unwrap();
-        let base = dir.path().canonicalize().unwrap();
+        let base = impro_core::platform::canonicalize(dir.path()).unwrap();
         let file = base.join("a b.txt");
         fs::write(&file, "x").unwrap();
         let uri = format!("file://{}", base.join("a%20b.txt").display());

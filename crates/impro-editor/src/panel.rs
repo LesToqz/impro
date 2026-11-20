@@ -1209,7 +1209,7 @@ impl EditorPanel {
         let expected = new.clone();
         let weak = Rc::downgrade(&tab);
         self.worker(
-            move || new.canonicalize().unwrap_or(new),
+            move || impro_core::platform::canonicalize(&new).unwrap_or(new),
             move |resolved| {
                 if let Some(tab) = weak
                     .upgrade()
@@ -1234,7 +1234,7 @@ impl EditorPanel {
                     let weak = Rc::downgrade(&t);
                     let expected = path.clone();
                     self.worker(
-                        move || path.canonicalize().unwrap_or(path),
+                        move || impro_core::platform::canonicalize(&path).unwrap_or(path),
                         move |resolved| {
                             if let Some(t) = weak.upgrade() {
                                 if !t.is_closed() && t.path() == expected {
@@ -1257,7 +1257,7 @@ impl EditorPanel {
         if let Some(root) = root {
             let weak = self.downgrade();
             self.worker(
-                move || root.canonicalize().unwrap_or(root),
+                move || impro_core::platform::canonicalize(&root).unwrap_or(root),
                 move |resolved| {
                     if let Some(p) = weak.upgrade() {
                         if p.imp().root_revision.get() == revision {

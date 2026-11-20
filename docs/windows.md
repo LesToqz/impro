@@ -15,6 +15,11 @@ resizable frame (caption, system menu, minimise and maximise boxes), the caption
 `<folder> - impro`, a caption colour equal to the docked bar's colour at the sampled
 points, rounded corners, and a light theme chosen on first run because the runner uses
 Windows' light mode. Items marked *not yet verified* below were not confirmed by it.
+A development build (not the installed package) has since been run on a Windows 11 PC
+(build 26300, 2560 x 1440 at 150 percent): the display scaling, fonts and Windows PowerShell
+behaviour described under [Behaviour as a Windows application](#behaviour-as-a-windows-application)
+were checked there, and `crates/impro-terminal/tests/windows_powershell.rs` runs a real Windows
+PowerShell in a terminal pane.
 
 ## Supported systems
 
@@ -94,6 +99,26 @@ and `bundle-manifest.txt`. The layout and the reason it is flat are in
   [Opening projects](../README.md#opening-projects). `impro.exe [path ...]` accepts
   folders and files, which is what the Explorer entries use.
 - **Open Folder** is the system folder picker.
+- **Display scaling.** The executable declares system DPI awareness, so Windows never
+  stretches (and blurs) the window, and impro scales its own interface to the Windows display
+  scale (Settings, System, Display, Scale). GTK 3 only scales whole windows in whole steps: at
+  125, 150 or 175 percent it keeps the window at 1x and enlarges only text sized in points,
+  which left the menus, headers, buttons and icons at their 100 percent size next to text half
+  as large again. impro applies the same ratio (the font resolution divided by 96 dpi, 1.5 at
+  150 percent) to every pixel length in its style sheets, to icon images, to the default window
+  and sidebar size and to the start page and Settings layout. At 200 percent and above GDK
+  scales the window itself and impro's own factor is 1. `IMPRO_UI_SCALE` overrides the factor
+  (`1` turns it off). The factor is read once at startup.
+- **Fonts.** The interface uses Segoe UI. Terminals and the editor use Cascadia Mono where it
+  is installed and Consolas otherwise (Pango's generic `Monospace` is Courier New on Windows);
+  notes use Segoe UI instead of Arial.
+- **Terminal shells.** A shell starts in the plain spelling of the folder (`C:\Users\...`),
+  never in the `\\?\C:\...` form Rust's `canonicalize` returns: Windows PowerShell showed its
+  prompt as `PS Microsoft.PowerShell.Core\FileSystem::\\?\C:\...` there. Paths the application
+  shows and stores use the plain form too, except paths longer than `MAX_PATH` or with names
+  Win32 would reinterpret (`CON`, a trailing dot), which keep the prefix. Terminal tabs are
+  named the way Windows names its shells: `PowerShell 1` (PowerShell 7), `Windows PowerShell
+  1`, `Command Prompt 1`.
 
 The default window is 1200 x 790 pixels of client area. Windows only trims an oversized
 window to a little more than the screen, so on a small or heavily scaled display it
@@ -145,7 +170,8 @@ cause is not confirmed in this documentation.
 | ConPTY terminal (pseudo console plus a terminal emulator and GTK widget) | `crates/impro-vte/src/windows`, `crates/impro-vte/src/emu` |
 | WebView2 Git pages | `crates/impro-gitviews/src/gitviews_windows.rs` (navigation policy `windows_policy.rs`, diagnostics `windows_diag.rs`) |
 | Executable resources (icon, version info, manifest) | `crates/impro/build.rs`, `crates/impro/windows/` |
-| Platform directories, process spawning, executable lookup | `crates/impro-core/src/{platform,process,exec}.rs` |
+| Platform directories, plain-path `canonicalize`, default font families, process spawning, executable lookup | `crates/impro-core/src/{platform,process,exec}.rs` |
+| Display scaling (style sheet pixels, icon images, sizes in code) | `crates/impro-ui/src/scale.rs` |
 | Bundling, installer, smoke tests | `packaging/windows`, `scripts/package/windows` |
 
 See [Architecture](ARCHITECTURE.md#platform-backends) for the seams.
@@ -160,6 +186,7 @@ See [Architecture](ARCHITECTURE.md#platform-backends) for the seams.
 | `IMPRO_GIT_DIAG=1` | Echo the Git page diagnostics timeline to stderr (also used by the test harness). |
 | `IMPRO_QA_TIMING=1` | Print startup phases and `first-paint-ms` (with the screenshot helper). |
 | `IMPRO_QA_SCREENSHOT=path.png` | Capture the first complete paint to a PNG and exit. |
+| `IMPRO_UI_SCALE` | Interface scale factor, 0.5 to 4 (`1` turns impro's own scaling off). Default: the Windows display scale. With `IMPRO_QA_TIMING=1` the chosen factor is printed (`impro: ui-scale=...`). |
 
 `impro.exe` is a GUI-subsystem program; it re-attaches to the parent console for
 `--help`, `--version` and usage errors, so the output appears in `cmd` and PowerShell.
@@ -174,6 +201,16 @@ See [Architecture](ARCHITECTURE.md#platform-backends) for the seams.
   right dock Ctrl+Alt+`). On keyboard layouts where AltGr produces characters,
   Windows reports AltGr as Ctrl+Alt, so these can collide with typing. They have not
   been audited for this yet.
+- Display scaling covers impro's style sheets, icon images and the sizes listed above. Parts
+  drawn by GTK's built-in theme keep their 100 percent size: the icon inside entries (the
+  search field), tree expander arrows, check and radio marks. The project graph canvas is not
+  scaled (it has its own zoom). A window moved to a monitor with a different scale is stretched
+  by Windows, as for any system-aware application; the scale is fixed at startup.
+- The "terminal below" toggle shows a `▭` glyph instead of an icon: `panel-bottom-symbolic` is
+  not part of the Adwaita theme that is bundled on Windows.
+- `IMPRO_QA_SCREENSHOT` captures a blank image when a file is opened from the command line
+  (`gtk_widget_draw: assertion '!widget->priv->alloc_needed' failed`); without a file argument
+  it works.
 - No primary-selection clipboard: `copy_primary` and `paste_primary` in the terminal
   are no-ops on Windows. The normal clipboard works.
 - Windows behaviour has been checked mainly through CI and cross type-checking from

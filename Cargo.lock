@@ -799,6 +799,7 @@ dependencies = [
  "gdk",
  "gio",
  "glib",
+ "gobject-sys",
  "gtk",
  "impro-core",
  "pango",

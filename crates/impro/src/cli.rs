@@ -118,7 +118,7 @@ mod tests {
     }
     fn dir(path: &Path) -> Targets {
         Targets {
-            dir: Some(path.canonicalize().unwrap()),
+            dir: Some(impro_core::platform::canonicalize(path).unwrap()),
             files: vec![],
         }
     }
@@ -173,7 +173,7 @@ mod tests {
     }
     #[test]
     fn test_optional_path_and_default() {
-        let cwd = std::env::temp_dir().canonicalize().unwrap();
+        let cwd = impro_core::platform::canonicalize(std::env::temp_dir()).unwrap();
         assert_eq!(
             parse_args(args(&[]), &cwd).unwrap(),
             Command::Run(Targets::default())
@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn directories_and_files_may_be_mixed() {
         let tmp = tempfile::tempdir().unwrap();
-        let base = tmp.path().canonicalize().unwrap();
+        let base = impro_core::platform::canonicalize(tmp.path()).unwrap();
         std::fs::create_dir(base.join("proj")).unwrap();
         std::fs::create_dir(base.join("other")).unwrap();
         std::fs::write(base.join("a.txt"), "a").unwrap();
@@ -203,7 +203,7 @@ mod tests {
     #[test]
     fn double_dash_makes_dashed_names_paths() {
         let tmp = tempfile::tempdir().unwrap();
-        let base = tmp.path().canonicalize().unwrap();
+        let base = impro_core::platform::canonicalize(tmp.path()).unwrap();
         std::fs::write(base.join("-odd.txt"), "x").unwrap();
         assert_eq!(
             parse_args(args(&["--", "-odd.txt"]), &base).unwrap(),

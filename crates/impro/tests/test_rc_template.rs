@@ -93,3 +93,15 @@ fn version_quad_and_referenced_files() {
         assert!(Path::new(path).exists(), "missing {path}");
     }
 }
+
+#[test]
+fn manifest_declares_dpi_awareness_and_current_common_controls() {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let manifest = std::fs::read_to_string(dir.join("windows/impro.manifest")).unwrap();
+    // System awareness, matching what GTK 3 asks for; never per-monitor (GTK 3 cannot follow it).
+    assert!(manifest.contains(">true</dpiAware>"));
+    assert!(manifest.contains(">system</dpiAwareness>"));
+    assert!(!manifest.to_ascii_lowercase().contains("permonitor"));
+    assert!(manifest.contains(r#"name="Microsoft.Windows.Common-Controls" version="6.0.0.0""#));
+    assert!(manifest.is_ascii());
+}

@@ -7,7 +7,10 @@
 use crate::{launch, window::WindowWidgets, MainWindow};
 use gtk::{atk::prelude::AtkObjectExt, prelude::*};
 use impro_core::themes::UiColors;
-use impro_ui::widgets::{CenteredColumn, WrapBox};
+use impro_ui::{
+    scale::px,
+    widgets::{CenteredColumn, WrapBox},
+};
 use std::{
     cell::{Cell, RefCell},
     path::PathBuf,
@@ -376,6 +379,7 @@ fn draw_mark(cr: &gtk::cairo::Context, width: f64, height: f64) -> Result<(), gt
 
 fn size_mark(area: &gtk::DrawingArea, height: i32) {
     let (_, _, w, h) = MARK_BOUNDS;
+    let height = px(height);
     area.set_size_request((f64::from(height) * w / h).ceil() as i32, height);
 }
 
@@ -500,9 +504,9 @@ impl Density {
         } else {
             (30, 28, MARK_HEIGHT)
         };
-        self.content.set_spacing(gap);
-        self.content.set_margin_top(edge);
-        self.content.set_margin_bottom(edge);
+        self.content.set_spacing(px(gap));
+        self.content.set_margin_top(px(edge));
+        self.content.set_margin_bottom(px(edge));
         size_mark(&self.logo, mark);
         self.tagline.set_visible(!compact);
         for widget in &self.tight {
@@ -524,7 +528,7 @@ impl Density {
 /// A titled column: the column, its row container and its heading.
 fn column(title: &str) -> (gtk::Box, gtk::Box, gtk::Label) {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    column.set_size_request(COLUMN_WIDTH, -1);
+    column.set_size_request(px(COLUMN_WIDTH), -1);
     column.set_valign(gtk::Align::Start);
     let heading = label(title, "impro-welcome-heading");
     column.pack_start(&heading, false, false, 0);
@@ -545,12 +549,12 @@ fn build(window: &MainWindow) -> Welcome {
 
     let title = label("impro", "impro-welcome-title");
     let tagline = label(TAGLINE, "impro-welcome-tagline");
-    let words = gtk::Box::new(gtk::Orientation::Vertical, 2);
+    let words = gtk::Box::new(gtk::Orientation::Vertical, px(2));
     words.set_valign(gtk::Align::Center);
     words.pack_start(&title, false, false, 0);
     words.pack_start(&tagline, false, false, 0);
-    let header = gtk::Box::new(gtk::Orientation::Horizontal, 18);
-    header.set_margin_start(11);
+    let header = gtk::Box::new(gtk::Orientation::Horizontal, px(18));
+    header.set_margin_start(px(11));
     let logo = mark(MARK_HEIGHT);
     header.pack_start(&logo, false, false, 0);
     header.pack_start(&words, false, false, 0);
@@ -571,7 +575,7 @@ fn build(window: &MainWindow) -> Welcome {
     }
     let (recents, list, recents_heading) = column("Recent folders");
 
-    let columns = WrapBox::new(COLUMN_GAP, 28);
+    let columns = WrapBox::new(px(COLUMN_GAP), px(28));
     columns.add(&start);
     columns.add(&recents);
     let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -581,7 +585,7 @@ fn build(window: &MainWindow) -> Welcome {
     content.pack_start(&header, false, false, 0);
     content.pack_start(&columns, false, false, 0);
 
-    let centered = CenteredColumn::new(2 * COLUMN_WIDTH + COLUMN_GAP, 32, 0, 0);
+    let centered = CenteredColumn::new(px(2 * COLUMN_WIDTH + COLUMN_GAP), px(32), 0, 0);
     centered.add(&content);
     let scroller = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
     scroller.set_policy(gtk::PolicyType::Never, gtk::PolicyType::Automatic);
@@ -617,9 +621,9 @@ fn build(window: &MainWindow) -> Welcome {
         let was = compact.get();
         let now = rect.height()
             < if was {
-                COMPACT_BELOW + 40
+                px(COMPACT_BELOW + 40)
             } else {
-                COMPACT_BELOW
+                px(COMPACT_BELOW)
             };
         if now != was {
             compact.set(now);

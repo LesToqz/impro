@@ -278,8 +278,9 @@ impl SettingsDialog {
         window.set_position(gtk::WindowPosition::CenterOnParent);
         window.set_destroy_with_parent(true);
         window.style_context().add_class("impro-settings");
-        window.set_default_size(900, 700);
-        window.set_size_request(600, 400);
+        let px = impro_ui::scale::px;
+        window.set_default_size(px(900), px(700));
+        window.set_size_request(px(600), px(400));
         let nav_pane = class(&gtk::Box::new(gtk::Orientation::Vertical, 0), "nav");
         let search_entry = SearchField::default();
         let group_title = class(&label("Options", 0.0), "group-title");
@@ -900,12 +901,13 @@ impl Inner {
 
     fn update_nav_width(&self, width: i32) {
         let (fraction, low, high) = NAV_WIDTH;
-        let target = ((width as f64 * fraction).round_ties_even() as i32).clamp(low, high);
+        let px = impro_ui::scale::px;
+        let target = ((width as f64 * fraction).round_ties_even() as i32).clamp(px(low), px(high));
         if self.nav_pane.size_request().0 != target {
             self.nav_pane.set_size_request(target, -1);
         }
-        let column = 700.min(width - target - 1 - 2 * 32);
-        let narrow = column < NARROW_CONTENT;
+        let column = px(700).min(width - target - 1 - 2 * px(32));
+        let narrow = column < px(NARROW_CONTENT);
         if narrow != self.narrow.get() {
             self.narrow.set(narrow);
             for row in self.all_rows() {

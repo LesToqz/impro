@@ -175,6 +175,7 @@ jobs:
           status=0
           cargo test --locked -p impro-vte --test windows_conpty -- --nocapture || status=1
           cargo test --locked -p impro-terminal --test windows_panel -- --nocapture || status=1
+          cargo test --locked -p impro-terminal --test windows_powershell -- --nocapture || status=1
           result=$([[ $status -eq 0 ]] && echo PASS || echo FAIL)
           echo "RESULT windows-terminal: $result" | tee -a "$(cygpath -u "$GITHUB_STEP_SUMMARY")"
           exit $status

@@ -82,7 +82,8 @@ mod centered {
 glib::wrapper! {pub struct CenteredColumn(ObjectSubclass<centered::CenteredColumn>) @extends gtk::Bin,gtk::Container,gtk::Widget,@implements gtk::Buildable;}
 impl Default for CenteredColumn {
     fn default() -> Self {
-        Self::new(700, 32, 48, 64)
+        use crate::scale::px;
+        Self::new(px(700), px(32), px(48), px(64))
     }
 }
 impl CenteredColumn {

@@ -46,7 +46,9 @@ mod imp {
                     if let Some(image) =
                         button.child().and_then(|w| w.downcast::<gtk::Image>().ok())
                     {
-                        if image.pixel_size() != WINDOW_ICON_SIZE {
+                        // The display scale enlarges the size set here (impro_ui::scale); comparing
+                        // with the enlarged size keeps the two from undoing each other.
+                        if image.pixel_size() != impro_ui::scale::px(WINDOW_ICON_SIZE) {
                             image.set_pixel_size(WINDOW_ICON_SIZE);
                         }
                         impro_ui::icons::prepare_image(&image);

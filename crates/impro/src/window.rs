@@ -105,12 +105,16 @@ impl MainWindow {
             values["editor_font"].as_str(),
         )
         .err();
+        // Before any widget exists, so every icon image is caught (no-op at 100 percent).
+        impro_ui::scale::install_icon_scaling();
         trace("style");
         let root = root.as_ref().to_path_buf();
         let window = gtk::ApplicationWindow::new(app);
         window.set_title(&crate::win::policy::window_title(&root));
         crate::win::install_frame(&window);
-        window.set_default_size(1200, 750);
+        // Sizes in code are 100 percent pixels; `px` follows the display scale on Windows.
+        let px = impro_ui::scale::px;
+        window.set_default_size(px(1200), px(750));
         trace("window");
         let explorer = ExplorerPanel::new(&root);
         trace("explorer");
@@ -132,7 +136,7 @@ impl MainWindow {
         let sidebar = gtk::Paned::new(gtk::Orientation::Horizontal);
         sidebar.pack1(&explorer, false, false);
         sidebar.pack2(&dock, true, false);
-        sidebar.set_position(300);
+        sidebar.set_position(px(300));
         let menu_bar = gtk::MenuBar::new();
         // Docked (Windows): the native caption stays and the bar sits above the overlay host, so
         // overlays keep the geometry they have under the client-side header bar.
@@ -140,7 +144,7 @@ impl MainWindow {
         let titlebar = if docked {
             // The native caption is outside the client area, so the docked bar takes its height
             // from the workspace; grow the window by it to keep the workspace at 1200x750.
-            window.set_default_size(1200, 750 + impro_chrome::HEADER_HEIGHT);
+            window.set_default_size(px(1200), px(750 + impro_chrome::HEADER_HEIGHT));
             TitleBar::new_docked(&menu_bar)
         } else {
             TitleBar::new(&menu_bar)
@@ -657,7 +661,7 @@ impl MainWindow {
         let weak = self.weak();
         self.worker(
             move || {
-                path.canonicalize().and_then(|p| {
+                impro_core::platform::canonicalize(&path).and_then(|p| {
                     if p.is_dir() {
                         Ok(p)
                     } else {

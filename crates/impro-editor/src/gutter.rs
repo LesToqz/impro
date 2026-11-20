@@ -77,13 +77,13 @@ fn label_font(view: &gtk::TextView) -> pango::FontDescription {
         "label.impro-gutter-num {{font-family: \"{}\"; font-size: 12px; font-feature-settings: \"tnum\";}}",
         family.replace('\\', "\\\\").replace('"', "\\\"")
     );
-    let _ = provider.load_from_data(css.as_bytes());
+    let _ = provider.load_from_data(impro_ui::scale::css(&css).as_bytes());
     let label = gtk::Label::new(None);
     let context = label.style_context();
     context.add_class("impro-gutter-num");
     context.add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION - 1);
     let mut font = context.font(gtk::StateFlags::NORMAL);
-    font.set_absolute_size(12.0 * pango::SCALE as f64);
+    font.set_absolute_size(12.0 * impro_ui::scale::factor() * pango::SCALE as f64);
     font
 }
 /// A drawn row in viewport coordinates, exposed for geometry/accessibility adapters.

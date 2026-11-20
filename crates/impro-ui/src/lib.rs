@@ -2,6 +2,7 @@
 pub mod icons;
 pub mod motion;
 pub mod notes;
+pub mod scale;
 pub mod style;
 pub mod widgets;
 pub use impro_core::themes::{Theme, UiColors};
