@@ -12,7 +12,8 @@ pub(super) fn above_of(name: &str) -> i32 {
         "h2" => 14,
         "h3" | "h4" | "h5" | "h6" => 12,
         "quote" => 10,
-        "code-opening" => 34,
+        // Room for the code card's tool strip, which follows the display scale.
+        "code-opening" => impro_ui::scale::px(34),
         _ => 0,
     }
 }
@@ -42,7 +43,6 @@ pub fn view_css(style: &StyleState, tables: &str) -> String {
         ("size", style.size.to_string()),
         ("body_font", style.body_font.clone()),
         ("code_font", style.code_font.clone()),
-        ("pill_size", 7.max(style.size - 2).to_string()),
         ("placeholder", format!("alpha({}, 0.55)", style.muted)),
         ("tables", tables.to_string()),
     ] {
@@ -156,7 +156,10 @@ impl Inner {
                 .or_insert_with(|| chrome_get("gutter_fg_active"));
         }
         let tables = crate::livetable::styled_css(&palette, &bg, size, &body_font);
-        let css = view_css(&state, &tables);
+        // Pixel lengths follow the display scale like the shared stylesheet's (see
+        // `impro_ui::scale`); unscaled, this view's labels, task boxes, table padding and tool
+        // buttons were two thirds of their size next to 150 percent text.
+        let css = impro_ui::scale::css(&view_css(&state, &tables));
         if let Err(error) = self.provider.load_from_data(css.as_bytes()) {
             eprintln!("live markdown stylesheet: {error}");
         }
@@ -250,7 +253,7 @@ impl Inner {
             &[
                 ("size-points", 1.0f64.to_value()),
                 ("paragraph-background", bg.to_value()),
-                ("pixels-above-lines", 34.to_value()),
+                ("pixels-above-lines", impro_ui::scale::px(34).to_value()),
                 ("pixels-below-lines", 0.to_value()),
             ],
         );
@@ -259,7 +262,7 @@ impl Inner {
             &[
                 ("size-points", 1.0f64.to_value()),
                 ("paragraph-background", bg.to_value()),
-                ("pixels-above-lines", 12.to_value()),
+                ("pixels-above-lines", impro_ui::scale::px(12).to_value()),
                 ("pixels-below-lines", 0.to_value()),
             ],
         );

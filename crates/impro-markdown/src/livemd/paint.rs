@@ -20,7 +20,6 @@ pub(super) struct Out {
     pub spacing: Option<&'static str>,
     pub below: i32,
     pub links: Vec<LinkSpan>,
-    pub pills: Vec<(i32, i32)>,
     pub wants: Vec<(i32, Want)>,
     pub list_level: usize,
     pub number: usize,
@@ -150,12 +149,14 @@ impl Inner {
             }
         }
         if let Some((inset, hanging)) = plan.indent {
-            self.indent(out, Kind::Line, a, b, inset, hanging);
+            // Insets are lengths at 100 percent: the bullets, numbers and task boxes they make
+            // room for follow the display scale.
+            let px = impro_ui::scale::px;
+            self.indent(out, Kind::Line, a, b, px(inset), px(hanging));
         }
         out.spacing = plan.spacing;
         out.below = plan.below;
         out.links = plan.links;
-        out.pills = plan.pills;
         out.list_level = plan.list_level;
         out.number = plan.number;
         out.wants = plan.wants.clone();
@@ -347,7 +348,6 @@ impl Inner {
             deco.tags.append(&mut out.tags);
             deco.applied = std::mem::take(&mut out.applied);
             deco.links = std::mem::take(&mut out.links);
-            deco.pills = std::mem::take(&mut out.pills);
             deco.wants = std::mem::take(&mut out.wants);
             deco.list_level = out.list_level;
             deco.number = out.number;
@@ -471,7 +471,6 @@ impl Inner {
             deco.pad = None;
             deco.lead_tag = None;
             deco.links.clear();
-            deco.pills.clear();
             deco.wants.clear();
             deco.spacing = None;
             deco.code = None;

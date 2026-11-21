@@ -1,5 +1,5 @@
-//! Caret handling, widget realization and placement, details (pills and the
-//! empty-line placeholder) and the document tail.
+//! Caret handling, widget realization and placement, the empty-line placeholder and
+//! the document tail.
 use super::{
     model::BOTTOM_MARGIN, structure::INTERACTIVE, Aim, Inner, Kind, Role, Slot, BAND, TABLE_BAND,
 };
@@ -475,14 +475,17 @@ impl Inner {
         for slot in slots {
             let widget = &slot.widget;
             let iter = self.iter(start + slot.rel);
-            let rect = self.view.iter_location(&iter);
+            let rect = crate::char_location(&self.view, &iter);
             let (mut x, mut y) = (self.view.left_margin(), rect.y());
             let mut height = widget.preferred_height().1;
             match slot.role {
                 Role::Tools => {
                     x += 1;
                     let (line_y, line_height) = self.view.line_yrange(&iter);
-                    widget.set_size_request(width - 2, 28.max(line_height - lead - 1));
+                    widget.set_size_request(
+                        width - 2,
+                        impro_ui::scale::px(28).max(line_height - lead - 1),
+                    );
                     y = line_y + lead + 1;
                 }
                 Role::CodeCard | Role::CodeFooter | Role::CodeSideLeft | Role::CodeSideRight => {
@@ -496,7 +499,7 @@ impl Inner {
                     }
                     let tail_end = bottom_y + bottom_height + below;
                     y = top_y;
-                    height = 36.max(tail_end - 8 - y);
+                    height = impro_ui::scale::px(36).max(tail_end - 8 - y);
                     if slot.role == Role::CodeFooter {
                         y = bottom_y;
                         x += 1;
@@ -512,16 +515,24 @@ impl Inner {
                         y = line_y + line_height;
                         height = 1.max(bottom_y - y);
                     }
+                    // The right piece reaches the view's edge (see `code_widgets`).
+                    let right_edge = self.view.allocated_width() - x;
                     widget.set_size_request(
-                        if side {
-                            15
-                        } else {
-                            width - if slot.role == Role::CodeFooter { 2 } else { 0 }
+                        match slot.role {
+                            Role::CodeSideLeft => 15,
+                            Role::CodeSideRight => 15.max(right_edge),
+                            Role::CodeFooter => width - 2,
+                            _ => width,
                         },
                         height,
                     );
                 }
-                Role::Marker => x += slot.data,
+                Role::Marker => {
+                    x += impro_ui::scale::px(slot.data);
+                    // Centre on the text line: a task box is shorter than the line and sat on
+                    // its top edge, above the words it belongs to.
+                    y = rect.y() + ((rect.height() - height) / 2).max(0);
+                }
                 Role::Table | Role::Image | Role::Rule => {
                     height = match slot.role {
                         Role::Table => lead_tag
@@ -561,10 +572,7 @@ impl Inner {
                 let (wx, wy) = self
                     .view
                     .buffer_to_window_coords(gtk::TextWindowType::Widget, x, y);
-                let allocation = widget.allocation();
-                if (allocation.x(), allocation.y()) != (wx, wy) {
-                    self.view.move_child(widget, wx, wy);
-                }
+                move_child(&self.view, widget, wx, wy);
             }
         }
     }
@@ -577,8 +585,7 @@ impl Inner {
         label
             .style_context()
             .add_provider(&self.provider, gtk::STYLE_PROVIDER_PRIORITY_USER + 1);
-        self.view
-            .add_child_in_window(&label, gtk::TextWindowType::Widget, 0, 0);
+        add_child(&self.view, label.upcast_ref());
         label
     }
 
@@ -586,85 +593,18 @@ impl Inner {
         let (x, y) = self
             .view
             .buffer_to_window_coords(gtk::TextWindowType::Widget, x, y);
-        let allocation = label.allocation();
-        if (allocation.x(), allocation.y()) != (x, y) {
-            self.view.move_child(label, x, y);
-        }
+        move_child(&self.view, label.upcast_ref(), x, y);
         label.show();
     }
 
-    /// Reuse labels for visible inline pills; large notes never create one per span.
+    /// The "Type '/' for commands" hint on an empty line.
+    ///
+    /// Inline code is drawn by the text itself (the `code` tag: code font on the surface colour,
+    /// like a highlighted run in the editor). Labels re-drawing each span on top of the text are
+    /// gone: they could never share the text's baseline, and with invisible text before a span
+    /// on its line (a list marker, backticks) GTK placed them characters to the right, so
+    /// `` `cd` `` in a list item showed twice.
     fn position_details(&self) {
-        let visible = self.view.visible_rect();
-        let (first, _) = self.view.line_at_y(visible.y());
-        let (last, _) = self.view.line_at_y(visible.y() + visible.height());
-        let (begin, end) = {
-            let blocks = self.blocks.borrow();
-            (
-                blocks.index(first.offset()),
-                (blocks.index(last.offset()) + 1).min(blocks.len()),
-            )
-        };
-        let selection = self.buffer.selection_bounds();
-        let pills: Vec<(i32, i32)> = {
-            let blocks = self.blocks.borrow();
-            (begin..end)
-                .flat_map(|i| {
-                    let start = blocks.spans[i].0;
-                    blocks.items[i]
-                        .pills
-                        .iter()
-                        .map(move |&(a, b)| (start + a, start + b))
-                })
-                .collect()
-        };
-        let mut used = 0;
-        for (a, b) in pills {
-            if let Some((s, e)) = &selection {
-                if s.offset() < b && e.offset() > a {
-                    continue;
-                }
-            }
-            let (from, to) = (self.iter(a), self.iter(b));
-            let (rect, tail) = (self.view.iter_location(&from), self.view.iter_location(&to));
-            if rect.y() != tail.y()
-                || rect.y() + rect.height() < visible.y()
-                || rect.y() > visible.y() + visible.height()
-            {
-                continue;
-            }
-            let label = {
-                let labels = self.detail_labels.borrow();
-                if used == labels.len() {
-                    drop(labels);
-                    let label = self.detail_label("live-md-pill");
-                    self.detail_labels.borrow_mut().push(label);
-                    self.detail_labels.borrow()[used].clone()
-                } else {
-                    labels[used].clone()
-                }
-            };
-            let text = self
-                .buffer
-                .text(&from, &to, true)
-                .map(|s| s.to_string())
-                .unwrap_or_default();
-            if label.text() != text {
-                label.set_text(&text);
-            }
-            self.place_detail(&label, rect.x() - 3, rect.y() - 1);
-            used += 1;
-        }
-        let rest: Vec<gtk::Label> = self
-            .detail_labels
-            .borrow()
-            .iter()
-            .skip(used)
-            .cloned()
-            .collect();
-        for label in rest {
-            label.hide();
-        }
         let cursor = self.iter(self.caret());
         let mut line_start = cursor;
         line_start.set_line_offset(0);
@@ -698,7 +638,7 @@ impl Inner {
                     label
                 }
             };
-            let rect = self.view.iter_location(&cursor);
+            let rect = crate::char_location(&self.view, &cursor);
             self.place_detail(&label, rect.x() + 4, rect.y());
         } else if let Some(label) = self.placeholder.borrow().clone() {
             label.hide();
@@ -711,13 +651,41 @@ impl Inner {
     pub(super) fn attach(&self, widget: &gtk::Widget, rel: i32, role: Role, data: i32) -> Slot {
         widget.set_no_show_all(true);
         self.provide(widget);
-        self.view
-            .add_child_in_window(widget, gtk::TextWindowType::Widget, 0, 0);
+        add_child(&self.view, widget);
         Slot {
             widget: widget.clone(),
             rel,
             role,
             data,
         }
+    }
+}
+
+/// Key of the window position a child of the view was last moved to.
+const AT_KEY: &str = "impro-livemd-at";
+
+/// Add `child` to the view's widget window at the origin (it is moved when placed).
+fn add_child(view: &gtk::TextView, child: &gtk::Widget) {
+    view.add_child_in_window(child, gtk::TextWindowType::Widget, 0, 0);
+    // SAFETY: the key is only ever set to an `(i32, i32)` (see `move_child`).
+    unsafe {
+        child.set_data(AT_KEY, (0i32, 0i32));
+    }
+}
+
+/// Move a child of the view's widget window to (`x`, `y`) unless it was already sent there.
+///
+/// The request is remembered rather than compared with the child's allocation: GTK allocates
+/// the child only on the next layout pass, so two placements within one frame compared
+/// against a stale allocation and could leave the child at the earlier position. Moving it
+/// unconditionally would queue a resize from every frame.
+pub(super) fn move_child(view: &gtk::TextView, child: &gtk::Widget, x: i32, y: i32) {
+    // SAFETY: the key is only ever set to an `(i32, i32)`, here.
+    let last = unsafe { child.data::<(i32, i32)>(AT_KEY).map(|at| *at.as_ref()) };
+    if last != Some((x, y)) {
+        unsafe {
+            child.set_data(AT_KEY, (x, y));
+        }
+        view.move_child(child, x, y);
     }
 }

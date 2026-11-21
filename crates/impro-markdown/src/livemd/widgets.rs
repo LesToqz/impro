@@ -4,6 +4,10 @@ use super::{model::Want, CodeInfo, ImageState, Inner, Role, Slot};
 use gtk::prelude::*;
 use std::rc::Rc;
 
+/// Width of the code background a code card's side pieces add inside its edges (the code
+/// lines' paragraph background stops this far from the card).
+pub(super) const CODE_SIDE: f64 = 15.0;
+
 /// Widgets of a code card's tool strip, reachable from tests and handlers.
 pub struct Tools {
     pub copy: gtk::Button,
@@ -78,7 +82,7 @@ impl Inner {
                 Want::Bullet { text, x } => {
                     let label = gtk::Label::new(Some(&text));
                     label.set_xalign(0.5);
-                    label.set_size_request(16, -1);
+                    label.set_size_request(impro_ui::scale::px(16), -1);
                     label.style_context().add_class("live-md-marker");
                     slots.push(self.attach(label.upcast_ref(), rel, Role::Marker, x));
                 }
@@ -194,12 +198,35 @@ impl Inner {
         let card = gtk::Frame::new(None);
         card.style_context().add_class("live-md-code-card");
         slots.push(self.attach(card.upcast_ref(), 0, Role::CodeCard, 0));
-        for (side, role) in [("left", Role::CodeSideLeft), ("right", Role::CodeSideRight)] {
-            let padding = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-            padding.style_context().add_class("live-md-code-side");
-            let _ = side;
-            slots.push(self.attach(padding.upcast_ref(), 0, role, 0));
-        }
+        let left = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        left.style_context().add_class("live-md-code-side");
+        slots.push(self.attach(left.upcast_ref(), 0, Role::CodeSideLeft, 0));
+        // The right piece fills the card's inner edge with the code background and the rest of
+        // the line, out to the view's edge, with the page colour. GTK paints a paragraph
+        // background out to the widest line it has measured, and after the view narrows that
+        // can be the old width until the lines are measured again: the code background then
+        // showed as a strip beside the card.
+        let right = gtk::DrawingArea::new();
+        right.style_context().add_class("live-md-code-side");
+        right.connect_draw(|area, cr| {
+            let context = area.style_context();
+            let (width, height) = (
+                f64::from(area.allocated_width()),
+                f64::from(area.allocated_height()),
+            );
+            let inner = CODE_SIDE.min(width);
+            gtk::render_background(&context, cr, 0.0, 0.0, inner, height);
+            // One pixel left clear for the card's border.
+            let outside = inner + 1.0;
+            if width > outside {
+                let page = context.color(area.state_flags());
+                cr.set_source_rgba(page.red(), page.green(), page.blue(), page.alpha());
+                cr.rectangle(outside, 0.0, width - outside, height);
+                let _ = cr.fill();
+            }
+            glib::Propagation::Stop
+        });
+        slots.push(self.attach(right.upcast_ref(), 0, Role::CodeSideRight, 0));
         let footer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         footer.style_context().add_class("live-md-code-footer");
         slots.push(self.attach(footer.upcast_ref(), 0, Role::CodeFooter, 0));

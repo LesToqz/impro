@@ -157,7 +157,6 @@ fn test_placeholder_tracks_empty_caret_line_and_mode_without_source_edits() {
         assert!(!fx.tab.buffer.is_modified());
         fx.tab.set_markdown_mode("source");
         assert!(fx.live.placeholder().is_none());
-        assert!(fx.live.detail_labels().is_empty());
         fx.open("", "empty.md");
         fx.live.position();
         assert!(fx.live.placeholder().expect("placeholder").is_visible());
@@ -512,7 +511,6 @@ fn test_incremental_5000_lines_and_typing_burst() {
         let fx = Fx::new(&source);
         assert_eq!(fx.live.block_count(), 5001);
         fx.live.position();
-        assert!(fx.live.detail_labels().len() < 100);
         assert!(
             fx.live.max_slice_time() < std::time::Duration::from_millis(16),
             "{:?}",

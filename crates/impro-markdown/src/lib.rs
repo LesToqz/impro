@@ -30,6 +30,32 @@ pub fn css(ui: &impro_core::themes::UiColors) -> String {
     livemd::css(ui)
 }
 
+/// Where the character at `iter` is drawn, in buffer coordinates (its width reaches the next
+/// cursor position on the same display line, 0 at a line end).
+///
+/// Use this instead of `gtk_text_view_get_iter_location` in views with invisible text. GTK 3
+/// maps the iterator through its byte index in the line *including* invisible text, so every
+/// hidden byte before it on the line (a list marker, backticks, emphasis marks) moved the
+/// result one character further right, and past the end of a short line. In the live preview
+/// the code chip of `` `cd` `` in a list item was drawn a second time three characters to the
+/// right. Cursor locations account for invisible text.
+pub fn char_location(view: &gtk::TextView, iter: &gtk::TextIter) -> gdk::Rectangle {
+    use gtk::prelude::*;
+    let (strong, _) = view.cursor_locations(Some(iter));
+    let mut next = *iter;
+    let width = if !iter.ends_line() && next.forward_cursor_position() {
+        let (end, _) = view.cursor_locations(Some(&next));
+        if end.y() == strong.y() {
+            (end.x() - strong.x()).max(0)
+        } else {
+            0
+        }
+    } else {
+        0
+    };
+    gdk::Rectangle::new(strong.x(), strong.y(), width, strong.height())
+}
+
 pub mod livemd;
 pub mod seltoolbar;
 pub mod slashmenu;

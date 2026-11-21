@@ -486,7 +486,7 @@ impl Inner {
         let Some(mark) = self.buffer.get_insert() else {
             return;
         };
-        let rect = self.view.iter_location(&self.buffer.iter_at_mark(&mark));
+        let rect = crate::char_location(&self.view, &self.buffer.iter_at_mark(&mark));
         let visible = self.view.visible_rect();
         if rect.y() + rect.height() < visible.y()
             || rect.y() > visible.y() + visible.height()
@@ -587,7 +587,7 @@ impl Inner {
             self.build_rows();
         }
         if let Some(mark) = self.buffer.get_insert() {
-            let rect = self.view.iter_location(&self.buffer.iter_at_mark(&mark));
+            let rect = crate::char_location(&self.view, &self.buffer.iter_at_mark(&mark));
             let (x, y) =
                 self.view
                     .buffer_to_window_coords(gtk::TextWindowType::Widget, rect.x(), rect.y());

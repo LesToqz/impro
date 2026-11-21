@@ -159,7 +159,6 @@ pub(crate) struct Deco {
     pub closed: bool,
     pub hot: bool,
     pub links: Vec<LinkSpan>,
-    pub pills: Vec<(i32, i32)>,
     pub wants: Vec<(i32, Want)>,
     /// Registry tags applied by the last paint (to remove them again).
     pub applied: Vec<gtk::TextTag>,
@@ -187,7 +186,6 @@ impl Deco {
             closed: false,
             hot: false,
             links: Vec::new(),
-            pills: Vec::new(),
             wants: Vec::new(),
             applied: Vec::new(),
             tags: Vec::new(),
@@ -346,7 +344,6 @@ pub(crate) struct Inner {
     pub provider: gtk::CssProvider,
     pub accent_provider: gtk::CssProvider,
     pub accent: RefCell<Option<(String, String, String)>>,
-    pub detail_labels: RefCell<Vec<gtk::Label>>,
     pub placeholder: RefCell<Option<gtk::Label>>,
     pub hover_tools: RefCell<Option<gtk::Widget>>,
     pub language_popover: RefCell<Option<gtk::Popover>>,
@@ -514,7 +511,6 @@ impl LiveMarkdown {
             provider: gtk::CssProvider::new(),
             accent_provider: gtk::CssProvider::new(),
             accent: RefCell::new(None),
-            detail_labels: RefCell::new(Vec::new()),
             placeholder: RefCell::new(None),
             hover_tools: RefCell::new(None),
             language_popover: RefCell::new(None),
@@ -721,9 +717,6 @@ impl LiveMarkdown {
     }
     pub fn placeholder(&self) -> Option<gtk::Label> {
         self.0.placeholder.borrow().clone()
-    }
-    pub fn detail_labels(&self) -> Vec<gtk::Label> {
-        self.0.detail_labels.borrow().clone()
     }
     pub fn language_popover(&self) -> Option<gtk::Popover> {
         self.0.language_popover.borrow().clone()

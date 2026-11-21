@@ -256,7 +256,6 @@ pub struct LinePlan {
     /// `(inset, hanging)` for the per-block indent tag.
     pub indent: Option<(i32, i32)>,
     pub links: Vec<LinkSpan>,
-    pub pills: Vec<(i32, i32)>,
     pub wants: Vec<(i32, Want)>,
     pub replacement: Option<i32>,
     pub list_level: usize,
@@ -269,6 +268,43 @@ fn expand_len(text: &str) -> usize {
 
 /// Cached level / number of a block above that has not been painted yet.
 pub const UNKNOWN: usize = usize::MAX;
+
+/// Continuation lines of a list item looked back through before a line counts as plain text.
+const CONTINUATION_LIMIT: usize = 32;
+
+/// Whether `text` (a line, with or without its newline) is plain paragraph text: not blank,
+/// and not a heading, rule, quote, list item, fence or table row.
+fn is_plain(text: &str) -> bool {
+    let line = text.strip_suffix('\n').unwrap_or(text);
+    let trimmed = line.trim_start();
+    !trimmed.is_empty()
+        && !blockedit::HEADING.is_match(line)
+        && !mdview::_RULE.is_match(line)
+        && !QUOTE.is_match(line)
+        && !LIST.is_match(line)
+        && !trimmed.starts_with("```")
+        && !trimmed.starts_with("~~~")
+        && !trimmed.starts_with('|')
+}
+
+/// Indent depth of the list item a plain line continues: the nearest lines above (nearest
+/// first) reach the item through plain lines only, with no blank line between. These are
+/// CommonMark's continuation lines (indented under the item's text) and lazy continuation
+/// lines; they belong to the item's paragraph.
+pub fn continued_item<'a>(
+    previous: impl Iterator<Item = (&'a str, usize, usize)>,
+) -> Option<usize> {
+    // Bounded: a long run of plain lines would otherwise make every line walk back to its start.
+    for (text, _, _) in previous.take(CONTINUATION_LIMIT + 1) {
+        if let Some(item) = LIST.captures(text) {
+            return Some(expand_len(&item[1]));
+        }
+        if !is_plain(text) {
+            return None;
+        }
+    }
+    None
+}
 
 /// Nesting level of a list item of indent `depth` from the blocks before it
 /// (nearest first). Items not painted yet carry `UNKNOWN`; their level follows
@@ -283,8 +319,14 @@ pub fn list_level<'a>(
     // `target` is the indent of the ancestor chain being climbed, `climbed` the
     // number of levels between the item and that ancestor.
     let (mut target, mut climbed) = (depth, 0);
+    let mut plain = 0;
     for (text, level, _) in previous {
         let Some(parent) = LIST.captures(text) else {
+            // Continuation lines of an item above do not end the list.
+            plain += 1;
+            if plain <= CONTINUATION_LIMIT && is_plain(text) {
+                continue;
+            }
             break;
         };
         let parent_depth = expand_len(&parent[1]);
@@ -314,8 +356,14 @@ pub fn list_number<'a>(
     // number they start at when they are ordered items.
     let mut unknown: Vec<Option<usize>> = Vec::new();
     let mut base = 0;
+    let mut plain = 0;
     for (text, _, number) in previous {
         let Some(item) = LIST.captures(text) else {
+            // Continuation lines of an item above do not end the list.
+            plain += 1;
+            if plain <= CONTINUATION_LIMIT && is_plain(text) {
+                continue;
+            }
             break;
         };
         let other = expand_len(&item[1]);
@@ -418,7 +466,6 @@ pub fn plan_inline(plan: &mut LinePlan, env: &InlineEnv, text: &str, base: i32, 
             let n = ticks.as_str().chars().count() as i32;
             plan.ops.push(Op::Tag("code", a, b));
             if !active {
-                plan.pills.push((relative(a) + n, relative(b) - n));
                 plan.ops.push(Op::Hidden(a, a + n));
                 plan.ops.push(Op::Hidden(b - n, b));
             }
@@ -648,6 +695,13 @@ where
             };
             plan.wants.push((0, Want::Bullet { text, x }));
         }
+    } else if let Some(depth) = continued_item(previous()) {
+        // A continuation line of a list item lines up with the item's text (it used to start
+        // under the bullet, its leading spaces shown).
+        content = line.len() - line.trim_start().len();
+        plan.indent = Some((depth as i32 * 12 + 24, 0));
+        let skipped = line[..content].chars().count() as i32;
+        plan.ops.push(Op::Hidden(start, start + skipped));
     } else {
         content = 0;
     }
@@ -728,11 +782,48 @@ mod tests {
     }
 
     #[test]
+    fn list_continuation_lines_line_up_with_the_item_text() {
+        let item = "- Edit ONLY files listed as owned. If you must change\n";
+        let above = || [(item, 1usize, 0usize)].into_iter();
+        let plan = plan_line("  another file.\n", 60, false, None, above);
+        assert_eq!(plan.indent, Some((24, 0)));
+        assert!(plan.ops.contains(&Op::Hidden(60, 62)));
+        // Lazy continuation (no indent) and a second continuation line.
+        let plan = plan_line("lazy\n", 60, false, None, above);
+        assert_eq!(plan.indent, Some((24, 0)));
+        let nested = "    - nested item\n";
+        let plan = plan_line("      more\n", 90, false, None, || {
+            [("      first\n", 2usize, 0usize), (nested, 2, 0)].into_iter()
+        });
+        assert_eq!(plan.indent, Some((4 * 12 + 24, 0)));
+        // A blank line or a heading ends the item.
+        let plan = plan_line("after\n", 90, false, None, || {
+            [("\n", 0usize, 0usize), (item, 1, 0)].into_iter()
+        });
+        assert_eq!(plan.indent, None);
+        let plan = plan_line("after\n", 90, false, None, || {
+            [("# Title\n", 0usize, 0usize), (item, 1, 0)].into_iter()
+        });
+        assert_eq!(plan.indent, None);
+        // Nesting and numbering look past continuation lines.
+        assert_eq!(
+            list_level([("  more\n", 0, 0), ("- item\n", 1, 0)].into_iter(), 2),
+            2
+        );
+        assert_eq!(
+            list_number([("   more\n", 0, 0), ("1. one\n", 1, 1)].into_iter(), 0, 1),
+            2
+        );
+    }
+
+    #[test]
     fn inline_spans_reveal_only_around_the_caret() {
         let text = "**bold** `code`\n";
         let hidden = plan_line(text, 0, false, Some(100), std::iter::empty);
         assert!(hidden.ops.contains(&Op::Hidden(0, 2)));
-        assert_eq!(hidden.pills, vec![(10, 14)]);
+        assert!(
+            hidden.ops.contains(&Op::Hidden(9, 10)) && hidden.ops.contains(&Op::Hidden(14, 15))
+        );
         let shown = plan_line(text, 0, true, Some(4), std::iter::empty);
         assert!(!shown.ops.contains(&Op::Hidden(0, 2)));
         assert!(shown.ops.contains(&Op::Hidden(9, 10)));

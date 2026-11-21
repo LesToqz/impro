@@ -14,6 +14,26 @@ const BACKGROUND: i32 = 200;
 /// Longest total time interactive-priority work may hold off the redraw.
 const INTERACTIVE_BUDGET: std::time::Duration = std::time::Duration::from_millis(30);
 pub(super) const BACKGROUND_PRIORITY: i32 = BACKGROUND;
+
+/// Let wheel and touchpad scrolling over the widgets placed on the text reach the scrolled
+/// window around the view.
+///
+/// Tables, code cards, task boxes and the other widgets live in child windows of the view's own
+/// window, and those child windows do not select scroll events. GDK hands such an event to the
+/// nearest ancestor window that selects it. `GtkTextView` creates its own window with nothing
+/// but the visibility mask (its text area window is the one that scrolls), so the nearest one
+/// was the toplevel, which dropped the event: the page did not move while the pointer was over
+/// a table. With the masks on the view's window the event goes to the view and on to its
+/// scrolled window, as it does over plain text.
+pub(super) fn pass_scroll_through(view: &gtk::TextView) {
+    if let Some(window) = gtk::prelude::WidgetExt::window(view) {
+        let wanted = gdk::EventMask::SCROLL_MASK | gdk::EventMask::SMOOTH_SCROLL_MASK;
+        let events = gdk::Window::events(&window);
+        if !events.contains(wanted) {
+            gdk::Window::set_events(&window, events | wanted);
+        }
+    }
+}
 const CHUNK: i32 = 32 * 1024;
 
 impl Inner {
@@ -147,6 +167,7 @@ impl Inner {
 
     pub(super) fn on_realize(&self) {
         self.on_unrealize();
+        pass_scroll_through(&self.view);
         let Some(clock) = self.view.frame_clock() else {
             return;
         };
@@ -207,10 +228,13 @@ impl Inner {
             return;
         }
         let width = self.view.allocated_width();
+        // The column and the least margin are lengths at 100 percent, scaled like the rest of
+        // the interface: at 150 percent the 700 px column held two thirds of its lines' words.
+        let least = impro_ui::scale::px(32);
         let margin = if self.readable_width.get() {
-            32.max((width - super::COLUMN + 1) / 2)
+            least.max((width - impro_ui::scale::px(super::COLUMN) + 1) / 2)
         } else {
-            32
+            least
         };
         let changed = self.view.left_margin() != margin;
         self.view.set_left_margin(margin);
@@ -320,10 +344,6 @@ impl Inner {
         self.active.borrow_mut().clear();
         self.hover_tools.replace(None);
         self.aim.replace(Aim::default());
-        let labels = std::mem::take(&mut *self.detail_labels.borrow_mut());
-        for label in labels {
-            unsafe { label.destroy() };
-        }
         let placeholder = self.placeholder.borrow_mut().take();
         if let Some(placeholder) = placeholder {
             unsafe { placeholder.destroy() };

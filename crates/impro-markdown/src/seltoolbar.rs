@@ -538,8 +538,8 @@ impl Inner {
         let (start, mut end) = self.buffer.selection_bounds()?;
         // The end iterator is exclusive, and may be at the next line's start.
         end.backward_char();
-        let first = self.view.iter_location(&start);
-        let last = self.view.iter_location(&end);
+        let first = crate::char_location(&self.view, &start);
+        let last = crate::char_location(&self.view, &end);
         let visible = self.view.visible_rect();
         if last.y() + last.height() <= visible.y() || first.y() >= visible.y() + visible.height() {
             return None;
@@ -558,7 +558,7 @@ impl Inner {
             rect = first;
             if rect.y() < visible.y() {
                 if let Some(iter) = self.view.iter_at_location(visible.x(), visible.y()) {
-                    rect = self.view.iter_location(&iter);
+                    rect = crate::char_location(&self.view, &iter);
                 }
             }
             let x = visible
