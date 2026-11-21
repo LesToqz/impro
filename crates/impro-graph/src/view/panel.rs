@@ -16,6 +16,12 @@ use crate::prefs::{self, ColorRule, GraphPrefs, MAX_COLOR_RULES};
 
 pub const PANEL_WIDTH: i32 = 240;
 
+/// A length in CSS pixels at 100 percent, scaled like the panel's style sheet (see
+/// `impro_ui::scale`): sizes set from code must grow with the text, or the panel overflows.
+fn px(value: i32) -> i32 {
+    impro_ui::scale::px(value)
+}
+
 /// A user edit of the panel.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Change {
@@ -190,7 +196,7 @@ fn slider_row(
     let scale = gtk::Scale::new(gtk::Orientation::Horizontal, Some(&adjustment));
     scale.set_draw_value(false);
     class(&scale, "impro-graph-scale");
-    scale.set_margin_top(8);
+    scale.set_margin_top(px(8));
     if let Some(a) = scale.accessible() {
         a.set_name(text);
     }
@@ -251,7 +257,7 @@ fn swatch_button(color: Rc<Cell<Rgba>>) -> gtk::Button {
     button.set_relief(gtk::ReliefStyle::None);
     class(&button, "impro-graph-swatch");
     let area = gtk::DrawingArea::new();
-    area.set_size_request(18, 18);
+    area.set_size_request(px(18), px(18));
     area.connect_draw(move |a, cr| {
         let c = color.get();
         let (w, h) = (a.allocated_width() as f64, a.allocated_height() as f64);
@@ -304,13 +310,13 @@ impl Panel {
         let search_clear = icons::icon_button(Icon::Close, "Clear project filter", 16);
         search_clear.set_halign(gtk::Align::End);
         search_clear.set_valign(gtk::Align::Center);
-        search_clear.set_margin_end(2);
+        search_clear.set_margin_end(px(2));
         search_clear.set_no_show_all(true);
         let search_box = gtk::Overlay::new();
         search_box.add(&search);
         search_box.add_overlay(&search_clear);
-        search_box.set_margin_top(2);
-        search_box.set_margin_bottom(6);
+        search_box.set_margin_top(px(2));
+        search_box.set_margin_bottom(px(6));
         filters.pack_start(&search_box, false, false, 0);
         filters.pack_start(
             &add_slider(slider_row(
@@ -441,6 +447,7 @@ impl Panel {
         let bodies = [filters, groups, display, forces];
         let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let mut sections = Vec::new();
+        let mut first_title: Option<gtk::Label> = None;
         for (i, ((id, key, title), body)) in SECTIONS.iter().zip(bodies).enumerate() {
             let section = gtk::Box::new(gtk::Orientation::Vertical, 0);
             class(&section, "impro-graph-section");
@@ -459,10 +466,15 @@ impl Panel {
                 class(&line, "impro-graph-first");
             }
             let chevron = gtk::DrawingArea::new();
-            chevron.set_size_request(16, 16);
+            chevron.set_size_request(px(16), px(16));
             chevron.set_valign(gtk::Align::Center);
             let text = gtk::Label::new(Some(title));
             text.set_xalign(0.0);
+            // A title never widens the fixed-width panel (larger text at a display scale).
+            text.set_ellipsize(gtk::pango::EllipsizeMode::End);
+            if i == 0 {
+                first_title = Some(text.clone());
+            }
             line.pack_start(&chevron, false, false, 0);
             line.pack_start(&text, true, true, 0);
             head.add(&line);
@@ -503,15 +515,30 @@ impl Panel {
         head_box.pack_start(&close, false, false, 0);
         head_box.set_halign(gtk::Align::End);
         head_box.set_valign(gtk::Align::Start);
-        head_box.set_margin_top(6);
-        head_box.set_margin_end(8);
+        head_box.set_margin_top(px(6));
+        head_box.set_margin_end(px(8));
+        if let Some(title) = first_title {
+            // The buttons float over the first section header: keep its title clear of their
+            // real width (it grows with the display scale and the theme) rather than of a fixed
+            // padding, which let them cover "Project scope" at 150 percent.
+            let reserve = move |buttons: &gtk::Box, width: i32| {
+                let wanted = width + buttons.margin_end();
+                if width > 1 && title.margin_end() != wanted {
+                    title.set_margin_end(wanted);
+                }
+            };
+            reserve(&head_box, head_box.preferred_width().1);
+            head_box.connect_size_allocate(move |buttons, allocation| {
+                reserve(buttons, allocation.width());
+            });
+        }
 
         let scroller = gtk::ScrolledWindow::new(gtk::Adjustment::NONE, gtk::Adjustment::NONE);
         scroller.set_policy(gtk::PolicyType::Never, gtk::PolicyType::Automatic);
         scroller.set_propagate_natural_height(true);
         scroller.set_overlay_scrolling(true);
-        scroller.set_min_content_width(PANEL_WIDTH - 2);
-        scroller.set_max_content_width(PANEL_WIDTH - 2);
+        scroller.set_min_content_width(px(PANEL_WIDTH) - 2);
+        scroller.set_max_content_width(px(PANEL_WIDTH) - 2);
         scroller.set_propagate_natural_width(false);
         scroller.add(&content);
         let inner = gtk::Overlay::new();
@@ -519,7 +546,7 @@ impl Panel {
         inner.add_overlay(&head_box);
         let frame = gtk::Box::new(gtk::Orientation::Vertical, 0);
         class(&frame, "impro-graph-panel");
-        frame.set_size_request(PANEL_WIDTH, -1);
+        frame.set_size_request(px(PANEL_WIDTH), -1);
         frame.pack_start(&inner, true, true, 0);
         let panel_revealer = gtk::Revealer::new();
         panel_revealer.set_transition_type(gtk::RevealerTransitionType::Crossfade);
@@ -537,8 +564,8 @@ impl Panel {
         class(&root, "impro-graph-controls");
         root.set_halign(gtk::Align::End);
         root.set_valign(gtk::Align::Start);
-        root.set_margin_top(12);
-        root.set_margin_end(12);
+        root.set_margin_top(px(12));
+        root.set_margin_end(px(12));
         root.pack_start(&chip, false, false, 0);
         root.pack_start(&panel_revealer, false, false, 0);
         chip.set_no_show_all(true);
@@ -994,7 +1021,7 @@ impl Panel {
         let grid = gtk::Grid::new();
         grid.set_column_spacing(6);
         grid.set_row_spacing(6);
-        grid.set_margin(8);
+        grid.set_margin(px(8));
         for (n, c) in self.parts.presets.borrow().iter().enumerate() {
             let color = Rc::new(Cell::new(*c));
             let b = swatch_button(color);

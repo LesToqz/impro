@@ -55,7 +55,7 @@ fn mix(a: &gdk::RGBA, b: &gdk::RGBA, t: f64) -> (f64, f64, f64) {
 impl Switch {
     pub fn new(label: &str) -> Switch {
         let area = gtk::DrawingArea::new();
-        area.set_size_request(SIZE.0, SIZE.1);
+        area.set_size_request(impro_ui::scale::px(SIZE.0), impro_ui::scale::px(SIZE.1));
         area.set_halign(gtk::Align::End);
         area.set_valign(gtk::Align::Center);
         area.set_can_focus(true);
@@ -109,13 +109,16 @@ impl Switch {
                 cr.close_path();
                 cr.set_source_rgb(r, g, b);
                 let _ = cr.fill();
-                let x = INSET + THUMB / 2.0 + TRAVEL * t;
+                // Drawn for SIZE; the display scale enlarges the area (see `impro_ui::scale`).
+                let k = h / f64::from(SIZE.1);
+                let thumb = THUMB * k;
+                let x = (INSET + THUMB / 2.0 + TRAVEL * t) * k;
                 let y = h / 2.0;
                 cr.set_source_rgba(0.0, 0.0, 0.0, 0.3);
-                cr.arc(x, y + 1.0, THUMB / 2.0 + 0.5, 0.0, TAU);
+                cr.arc(x, y + k, thumb / 2.0 + 0.5, 0.0, TAU);
                 let _ = cr.fill();
                 cr.set_source_rgb(1.0, 1.0, 1.0);
-                cr.arc(x, y, THUMB / 2.0, 0.0, TAU);
+                cr.arc(x, y, thumb / 2.0, 0.0, TAU);
                 let _ = cr.fill();
                 if area.has_focus() {
                     let text = color(&ctx, "impro_graph_text", (0.9, 0.93, 0.96));

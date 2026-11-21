@@ -111,6 +111,8 @@ pub fn icon_button(icon: Icon, tooltip: &str, size: i32) -> gtk::Button {
         a.set_name(tooltip);
     }
     let area = gtk::DrawingArea::new();
+    // Scaled like the style sheet, so the glyph keeps its size next to the text.
+    let size = impro_ui::scale::px(size);
     area.set_size_request(size, size);
     area.set_halign(gtk::Align::Center);
     area.set_valign(gtk::Align::Center);
