@@ -29,9 +29,9 @@ fn test_coalesced_burst_lands_last_value_after_flush() {
 fn test_write_goes_to_the_path_current_at_queue_time() {
     run(|| {
         let (a, b) = (tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap());
-        std::env::set_var("XDG_CONFIG_HOME", a.path());
+        set_config_root(a.path());
         save_value_async("auto_pair", Value::Bool(false));
-        std::env::set_var("XDG_CONFIG_HOME", b.path());
+        set_config_root(b.path());
         save_value_async("line_numbers", Value::Bool(false));
         flush();
         let first = settings::Store::new(a.path().join("impro/settings.json")).load();
@@ -65,7 +65,7 @@ fn test_failed_save_still_changes_live_and_reused_dialog() {
         let fx = Fixture::new();
         let blocker = fx.root.path().join("blocked");
         std::fs::write(&blocker, "x").unwrap();
-        std::env::set_var("XDG_CONFIG_HOME", &blocker); // settings_path() now has a file as parent.
+        set_config_root(&blocker); // settings_path() now has a file as parent.
         let failures: Rc<RefCell<Vec<PathBuf>>> = Rc::default();
         let sink = failures.clone();
         fx.dialog
@@ -83,6 +83,6 @@ fn test_failed_save_still_changes_live_and_reused_dialog() {
         fx.dialog.hide();
         fx.show();
         assert_eq!(fx.dialog.values()["auto_pair"], false);
-        std::env::set_var("XDG_CONFIG_HOME", fx.root.path());
+        set_config_root(fx.root.path());
     });
 }

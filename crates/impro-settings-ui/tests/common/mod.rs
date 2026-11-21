@@ -1,5 +1,5 @@
 //! Shared GTK test harness: every test closure runs on one dedicated GTK thread, each
-//! with its own settings directory (`XDG_CONFIG_HOME`).
+//! with its own settings directory (`XDG_CONFIG_HOME`, `%APPDATA%` on Windows).
 #![allow(dead_code, clippy::type_complexity)]
 use gtk::prelude::*;
 use impro_core::settings::Values;
@@ -119,7 +119,7 @@ pub struct Fixture {
 impl Fixture {
     pub fn new() -> Self {
         let root = tempfile::tempdir().unwrap();
-        std::env::set_var("XDG_CONFIG_HOME", root.path());
+        set_config_root(root.path());
         impro_ui::motion::set_reduce_motion(true);
         impro_ui::apply_style(Some(impro_core::themes::get_theme(Some("impro-dark")))).unwrap();
         let dialog = SettingsDialog::new(None, None, None);
@@ -162,4 +162,11 @@ pub fn visible_page(dialog: &SettingsDialog) -> Option<String> {
         .map(|p| p.0)
         .collect();
     (ids.len() == 1).then(|| ids[0].to_owned())
+}
+
+/// Point the settings folder at `path` on every platform: Unix reads `XDG_CONFIG_HOME`,
+/// Windows `%APPDATA%` (left alone, tests would share, and overwrite, the real settings).
+pub fn set_config_root(path: impl AsRef<std::path::Path>) {
+    std::env::set_var("XDG_CONFIG_HOME", path.as_ref());
+    std::env::set_var("APPDATA", path.as_ref());
 }
