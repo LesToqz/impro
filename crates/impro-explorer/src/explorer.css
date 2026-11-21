@@ -5,6 +5,12 @@
 @define-color impro_git_new {ui['git_new']};
 @define-color impro_git_modified {ui['git_modified']};
 @define-color impro_git_conflict {ui['git_conflict']};
+@define-color impro_explorer_icon {ui['muted']};
+@define-color impro_indent_guide alpha({ui['foreground']}, 0.12);
+@define-color impro_indent_guide_active alpha({ui['foreground']}, 0.36);
+@define-color impro_explorer_focus alpha({ui['accent']}, 0.8);
+@define-color impro_explorer_sticky_bg {ui['sidebar_bg']};
+@define-color impro_explorer_sticky_hover alpha({ui['overlay']}, 0.045);
 .impro-explorer, .impro-explorer viewport, .impro-explorer scrolledwindow,
 .impro-explorer treeview {{ background: {ui['sidebar_bg']}; color: {ui['foreground']}; }}
 .impro-explorer-header {{ background: {ui['sidebar_bg']}; min-height: 24px; padding: 8px; }}
@@ -25,6 +31,17 @@
     background: alpha({ui['overlay']}, 0.067); color: {ui['foreground']}; border-radius: 8px; }}
 .impro-explorer treeview.view:focus {{ -gtk-outline-radius: 8px; }}
 .impro-explorer treeview expander {{ color: {ui['muted']}; }}
+/* The file tree, as Zed's project panel: square full-width rows, names in the text colour,
+   a hover tint and a stronger tint on the selected row; the focused row's border and the
+   indent guides are painted by the panel (guides.rs). */
+.impro-explorer treeview.view.impro-file-tree {{ color: {ui['foreground']};
+    -GtkTreeView-vertical-separator: 0; -GtkTreeView-horizontal-separator: 0;
+    outline-style: none; outline-width: 0; }}
+.impro-explorer treeview.view.impro-file-tree:hover {{
+    background: alpha({ui['overlay']}, 0.045); color: {ui['foreground']}; border-radius: 0; }}
+.impro-explorer treeview.view.impro-file-tree:selected {{
+    background: alpha({ui['overlay']}, 0.095); color: {ui['foreground']}; border-radius: 0; }}
+.impro-explorer.impro-explorer-compact treeview.view.impro-file-tree {{ -GtkTreeView-vertical-separator: 0; }}
 .impro-dialog-error {{ color: {ui['danger']}; font-size: 12px; }}
 messagedialog.impro-explorer-confirm button.destructive-action {{ color: {ui['danger']}; }}
 .impro-explorer .impro-notes-header {{ border: 0; padding: 3px 8px; color: {ui['muted']}; }}

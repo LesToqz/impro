@@ -6,7 +6,10 @@
 //! GTK models and applies results in time-sliced steps.
 mod actions;
 mod gitdeco;
+mod guides;
+mod nav;
 mod notes;
+mod sticky;
 mod tree;
 mod watch;
 
@@ -88,6 +91,8 @@ pub(crate) struct Widgets {
     pub tree: gtk::TreeView,
     pub text_cell: gtk::CellRendererText,
     pub scroll: gtk::ScrolledWindow,
+    /// Pinned folders over the top of the tree (see sticky.rs).
+    pub sticky: gtk::DrawingArea,
     pub search: SearchPanel,
     pub notes_split: gtk::Paned,
     pub notes: NotesWidgets,
@@ -167,6 +172,15 @@ mod imp {
         // dialogs
         pub(crate) hooks: RefCell<DialogHooks>,
         pub(crate) dialog: RefCell<Option<gtk::Dialog>>,
+        // pointer (see nav.rs)
+        /// Row under the primary button press that a release on the same row clicks.
+        pub(crate) pressed_row: RefCell<Option<gtk::TreePath>>,
+        /// The primary button is down over the tree (hides the focus border, as in Zed).
+        pub(crate) mouse_down: Cell<bool>,
+        /// Set while GTK handles a primary press: a `row-activated` then is a double click.
+        pub(crate) pressing: Cell<bool>,
+        /// The folders pinned over the tree.
+        pub(crate) sticky: RefCell<sticky::Sticky>,
     }
 
     impl Default for ExplorerPanel {
@@ -236,6 +250,10 @@ mod imp {
                 notes_window: RefCell::new(None),
                 hooks: RefCell::default(),
                 dialog: RefCell::new(None),
+                pressed_row: RefCell::new(None),
+                mouse_down: Cell::new(false),
+                pressing: Cell::new(false),
+                sticky: RefCell::default(),
             }
         }
     }
@@ -253,6 +271,12 @@ mod imp {
             SIGNALS.get_or_init(|| {
                 vec![
                     Signal::builder("file-activated")
+                        .param_types([String::static_type()])
+                        .run_last()
+                        .build(),
+                    // A single click (or Space) on a file: open it as a preview, keeping
+                    // the keyboard in the tree.
+                    Signal::builder("file-previewed")
                         .param_types([String::static_type()])
                         .run_last()
                         .build(),
@@ -287,7 +311,8 @@ mod imp {
 glib::wrapper! {
     /// The file explorer panel.
     ///
-    /// Signals: `file-activated(path)`, `path-renamed(old, new)`, `path-deleted(path)`,
+    /// Signals: `file-activated(path)`, `file-previewed(path)`, `path-renamed(old, new)`,
+    /// `path-deleted(path)`,
     /// `search-result-activated(path, line, column, length)` and `search-escaped()`.
     pub struct ExplorerPanel(ObjectSubclass<imp::ExplorerPanel>)
         @extends gtk::Box, gtk::Container, gtk::Widget, @implements gtk::Buildable, gtk::Orientable;
@@ -341,26 +366,40 @@ impl ExplorerPanel {
             String::static_type(),
             String::static_type(),
         ]);
+        // Rows laid out like Zed's project panel: full-width rows without rounded corners,
+        // 20 px per level, no disclosure triangles (a folder shows a closed or open folder
+        // glyph), a muted file-type glyph 6 px before the name, indent guides and a border on
+        // the focused row (see `guides.rs`).
         let tree = gtk::TreeView::with_model(&store);
+        tree.style_context().add_class("impro-file-tree");
         tree.set_headers_visible(false);
         tree.set_grid_lines(gtk::TreeViewGridLines::None);
-        tree.set_margin_start(12);
-        tree.set_margin_end(12);
-        tree.set_margin_top(4);
-        tree.set_margin_bottom(24);
+        tree.set_enable_tree_lines(false);
+        tree.set_show_expanders(false);
+        tree.set_level_indentation(impro_ui::scale::px(guides::INDENT));
+        tree.set_enable_search(false);
+        tree.set_margin_bottom(impro_ui::scale::px(24));
         let column = gtk::TreeViewColumn::new();
-        // Folder glyphs fill the whole icon cell (file glyphs are narrower), so without
-        // spacing a folder's name touched its icon.
-        column.set_spacing(4);
-        let icon = crate::icons::IconCell::new();
+        column.set_spacing(impro_ui::scale::px(6));
+        let icon = crate::icons::GlyphCell::new();
         util::pack(&column, &icon, false);
-        // Preserve model icon names (also used to identify directories), but render their
-        // system symbolic variants in the row's muted colour.
+        // The model keeps its icon names ("folder" marks directories); the cell paints a glyph
+        // chosen from the name, as the editor's icon theme does.
         util::data_func(&column, &icon, |cell, model, iter| {
-            let name = util::opt_string(model, iter, 0).filter(|name| !name.is_empty());
-            cell.set_property("icon-name", name.map(|name| format!("{name}-symbolic")));
+            let Some(cell) = cell.downcast_ref::<crate::icons::GlyphCell>() else {
+                return;
+            };
+            let glyph = match util::opt_string(model, iter, 0).as_deref() {
+                Some("folder") => "folder",
+                Some(kind) if !kind.is_empty() => {
+                    impro_ui::glyphs::file_glyph(&util::string(model, iter, 1))
+                }
+                _ => "",
+            };
+            cell.set_glyph(glyph);
         });
         let text_cell = gtk::CellRendererText::new();
+        text_cell.set_padding(0, 0);
         text_cell.set_ellipsize(pango::EllipsizeMode::End);
         util::pack(&column, &text_cell, true);
         util::attribute(&column, &text_cell, "text", 1);
@@ -374,8 +413,13 @@ impl ExplorerPanel {
             .vscrollbar_policy(gtk::PolicyType::Automatic)
             .build();
         scroll.add(&tree);
+        // Pinned folders float over the top of the tree.
+        let sticky = self.build_sticky();
+        let tree_area = gtk::Overlay::new();
+        tree_area.add(&scroll);
+        tree_area.add_overlay(&sticky);
         // The search row sits directly under the header; the tree is its idle content.
-        let search = SearchPanel::new(&scroll, root);
+        let search = SearchPanel::new(&tree_area, root);
         search.set_size_request(-1, 120);
         let notes_split = gtk::Paned::new(gtk::Orientation::Vertical);
         notes_split.style_context().add_class("impro-notes-split");
@@ -394,6 +438,7 @@ impl ExplorerPanel {
             tree,
             text_cell,
             scroll,
+            sticky,
             search,
             notes_split,
             notes,
@@ -461,6 +506,8 @@ impl ExplorerPanel {
                 panel.on_button(tree, event)
             })
         });
+        self.connect_navigation();
+        self.connect_sticky();
         let weak = self.downgrade();
         w.tree.connect_popup_menu(move |_| {
             if let Some(panel) = weak.upgrade() {
@@ -694,12 +741,16 @@ impl ExplorerPanel {
         let height = f64::from(metrics.ascent() + metrics.descent()) / f64::from(pango::SCALE);
         let compact = imp.compact.get();
         let whole = (height + 0.999) as i32;
+        let px = impro_ui::scale::px;
+        // Zed's rows: the name's line plus 8 px ("comfortable"), 4 px in compact mode.
+        let row = if compact {
+            px(20).max(whole + px(4))
+        } else {
+            px(24).max(whole + px(8))
+        };
         for (cell, tree) in [(&w.text_cell, &w.tree), (&w.notes.cell, &w.notes.tree)] {
             cell.set_size_points(size);
-            cell.set_fixed_size(
-                -1,
-                if compact { 16 } else { 20 }.max(whole + if compact { 0 } else { 4 }),
-            );
+            cell.set_fixed_size(-1, row);
             tree.columns_autosize();
             tree.queue_resize();
         }
@@ -761,6 +812,21 @@ impl ExplorerPanel {
         })
     }
 
+    /// A file was clicked once or opened with Space: show it without taking the focus (the
+    /// editor's preview tab). A double click activates it instead
+    /// ([`Self::connect_file_activated`]).
+    pub fn connect_file_previewed<F: Fn(&Self, &Path) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
+        self.connect_local("file-previewed", false, move |args| {
+            let panel = args[0].get::<ExplorerPanel>().ok()?;
+            let path: String = args[1].get().ok()?;
+            f(&panel, &util::decode_path(&path));
+            None
+        })
+    }
+
     pub fn connect_path_renamed<F: Fn(&Self, &Path, &Path) + 'static>(
         &self,
         f: F,
@@ -814,6 +880,11 @@ impl ExplorerPanel {
     /// Activate a file as if it was opened from the tree (emits `file-activated`).
     pub(crate) fn emit_file_activated(&self, path: &Path) {
         self.emit_by_name::<()>("file-activated", &[&model_path(path)]);
+    }
+
+    /// Preview a file as a single click on it does (emits `file-previewed`).
+    pub(crate) fn emit_file_previewed(&self, path: &Path) {
+        self.emit_by_name::<()>("file-previewed", &[&model_path(path)]);
     }
 }
 

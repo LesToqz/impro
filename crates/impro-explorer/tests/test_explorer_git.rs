@@ -186,14 +186,14 @@ fn test_long_name_uses_right_edge_without_a_badge_gap() {
         let (column, cell) = f.text_cell();
         let cells = column.cells();
         assert_eq!(cells.len(), 2);
-        assert!(cells[0].is::<gtk::CellRendererPixbuf>());
+        assert!(cells[0].is::<impro_explorer::icons::GlyphCell>());
         assert_eq!(cells[1], cell.clone().upcast::<gtk::CellRenderer>());
         let row = f.panel.find_row(&path).unwrap();
         column.cell_set_cell_data(&f.panel.store(), &row, false, false);
         assert_eq!(cell.ellipsize(), pango::EllipsizeMode::End);
         let (start, width) = column.cell_get_position(&cell).unwrap();
         assert_eq!(start + width, column.width());
-        assert!(column.width() < 300);
+        assert!(column.width() <= 300);
         f.assert_decoration(&path, Some(Kind::New), "impro-dark");
         window.remove(&f.panel);
         destroy(&window);

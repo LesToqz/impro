@@ -115,6 +115,15 @@ menus and toggles sits directly below it, so the content looks the same on both
 systems. The explorer sidebar starts 300 px wide.
 The explorer on the left has a collapsible Notes section below the file tree, with a draggable divider.
 Its Notes header button shows or hides the section; the tree stays visible above it.
+The file tree is laid out like Zed's project panel: full-width rows indented 20 px per
+level, a closed or open folder glyph instead of a disclosure triangle, a file-type glyph
+before each name, indent guides (the one of the selected entry's folder brighter), and a
+border around the selected row while the tree has the keyboard focus. While you scroll into
+a folder, the folders holding the first visible row stay pinned at the top; click one to
+scroll back to it. A single click on a folder expands or collapses it; a single click on a
+file opens it in a preview tab (italic title) and leaves the keyboard in the tree. The next
+preview replaces that tab until you edit the file, double-click its tab or double-click the
+file in the tree, which opens it for editing.
 The explorer supports searching (see Search in Files), creating
 files/folders, renaming, deleting and refreshing. Renames retarget open files; deletions mark affected tabs deleted.
 File → Open Folder changes the explorer root and the directory for new shells;
@@ -131,6 +140,11 @@ undo/redo, indentation, line comments and zoom via Ctrl+Plus/Minus or Ctrl+wheel
 Ctrl+0 resets to the editor text size chosen in Settings (11 pt by default).
 Ctrl+F opens the in-file find bar (case-insensitive, Enter finds the next match).
 Unsaved files prompt on close/quit.
+The tab strip follows Zed's: tabs as wide as their title on a 32 px bar, the active tab in
+the editor colour and open towards the text, edges between the tabs, muted titles on the
+inactive ones, a dot before the title while a file has unsaved changes, and a close button
+that shows while the pointer is over a tab. A Markdown tab of a project file switches
+between preview and code with the eye and `</>` buttons at its top right.
 Syntax highlighting detects filenames and shebangs: examples include Python,
 JavaScript/TypeScript/JSX/TSX, HTML/XML, CSS, JSON, YAML, TOML, shell, C/C++, Rust,
 Go, Java, SQL, Markdown, Dockerfile and Makefile through syntect.
@@ -470,7 +484,11 @@ These are app bindings; GTK text editing and shell bindings also apply.
 | Ctrl+Shift+C / V | Copy / paste (terminal focus; the editor uses Ctrl+Shift+M for Markdown source mode) |
 | Ctrl+Shift+Plus (or Ctrl+Shift+=) / Minus / 0 | Increase / decrease / reset terminal font (hold Ctrl+Shift for each) |
 | F2 / Delete / F5 | Rename / delete / refresh (explorer tree; ignored while the search box has focus) |
-| Ctrl+Shift+N | New folder (explorer tree) |
+| Enter / Space / Backspace | Rename / open (a file as a preview, a folder expands or collapses) / delete (explorer tree) |
+| Left / Right | Collapse the selected folder or the folder holding the selection / expand the selected folder, or move into it when open (explorer tree) |
+| Ctrl+Left | Collapse every folder except the root (explorer tree) |
+| Ctrl+N / Alt+N / Ctrl+Shift+N | New file / new folder / new folder (explorer tree) |
+| Shift+Alt+C | Copy the selected path (explorer tree) |
 
 ## Performance
 

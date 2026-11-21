@@ -676,6 +676,10 @@ impl ExplorerPanel {
         };
         let full_path = util::string(&w.store, &iter, 2);
         if util::string(&w.store, &iter, 0) == "folder" {
+            // Each click of a double click already toggled the folder (see nav.rs).
+            if self.double_click_activation() {
+                return;
+            }
             if w.tree.row_expanded(path) {
                 w.tree.collapse_row(path);
             } else {

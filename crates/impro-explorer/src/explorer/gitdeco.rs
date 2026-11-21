@@ -39,36 +39,39 @@ impl ExplorerPanel {
         model: &gtk::TreeModel,
         iter: &gtk::TreeIter,
     ) {
+        let path = util::decode_path(&util::string(model, iter, 2));
+        let colour = self.git_colour(&path, util::string(model, iter, 0) == "folder");
+        if let Some(colour) = &colour {
+            cell.set_property("foreground-rgba", colour);
+        }
+        cell.set_property("foreground-set", colour.is_some());
+    }
+
+    /// The name colour Git status gives `path` (a folder's from the files below it), if any.
+    pub(super) fn git_colour(&self, path: &Path, is_dir: bool) -> Option<gdk::RGBA> {
         let imp = self.imp();
-        let status = if imp.git_enabled.get() && imp.git_colors.get() {
-            let snapshot = imp.git_snapshot.borrow().clone();
-            let path = util::string(model, iter, 2);
-            let statuses = if util::string(model, iter, 0) == "folder" {
+        if !imp.git_enabled.get() || !imp.git_colors.get() {
+            return None;
+        }
+        let status = {
+            let snapshot = imp.git_snapshot.borrow();
+            let statuses = if is_dir {
                 &snapshot.folders
             } else {
                 &snapshot.files
             };
-            statuses.get(&util::decode_path(&path)).copied()
-        } else {
-            None
+            statuses.get(path).copied()
+        }?;
+        let role = match status.kind {
+            Kind::New => "git_new",
+            Kind::Modified => "git_modified",
+            Kind::Conflict => "git_conflict",
         };
-        if let Some(status) = status {
-            let role = match status.kind {
-                Kind::New => "git_new",
-                Kind::Modified => "git_modified",
-                Kind::Conflict => "git_conflict",
-            };
-            let colour = self
-                .w()
-                .tree
-                .style_context()
-                .lookup_color(&format!("impro_{role}"))
-                .or_else(|| gdk::RGBA::parse(&impro_core::themes::get_theme(None).ui[role]).ok());
-            if let Some(colour) = colour {
-                cell.set_property("foreground-rgba", colour);
-            }
-        }
-        cell.set_property("foreground-set", status.is_some());
+        self.w()
+            .tree
+            .style_context()
+            .lookup_color(&format!("impro_{role}"))
+            .or_else(|| gdk::RGBA::parse(&impro_core::themes::get_theme(None).ui[role]).ok())
     }
 
     pub fn set_git_colors(&self, enabled: bool) {

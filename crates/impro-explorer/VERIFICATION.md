@@ -42,3 +42,17 @@ Final command results, timings and visual limitations are in `.ceo/report.md`.
   `iter_next(&iter)` loops only matched the first row in release builds (release test run:
   `cargo test --release -p impro-explorer`).
 - Measurements: `examples/perf.rs` (`search`, `bigdir`, `notes`, `idle`); figures are in `.ceo/report.md`.
+
+## Zed-style tree
+
+- Rows follow Zed's project panel: no GTK expanders, 20 px indentation (`level-indentation`),
+  folder and file-type glyphs from `impro_ui::glyphs` (`icons::GlyphCell`), square rows.
+- `explorer/guides.rs` paints indent guides and the focused row's border after the tree draws;
+  `explorer/nav.rs` holds Zed's click and key handling (single click toggles a folder or emits
+  `file-previewed`, double click `file-activated`); `explorer/sticky.rs` pins the folders of the
+  first visible row over the tree (Zed's `find_sticky_anchor`).
+- Rows are walked with `util::next_iter` (see above), never `iter_next`.
+- Tests: `test_tree_geometry_square_selection_hover_and_live_themes`,
+  `test_zed_keys_expand_enter_collapse_towards_the_root`,
+  `test_single_click_toggles_folders_and_previews_files`,
+  `test_sticky_folders_pin_the_parents_of_the_first_visible_row`.

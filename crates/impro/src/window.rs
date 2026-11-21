@@ -321,6 +321,13 @@ impl MainWindow {
                 this.editor.open_file(path);
             }
         });
+        // A single click previews the file and leaves the keyboard in the explorer.
+        let weak = self.weak();
+        self.explorer.connect_file_previewed(move |_, path| {
+            if let Some(this) = weak.upgrade().map(Self) {
+                this.editor.open_file_preview(path);
+            }
+        });
         let weak = self.weak();
         self.explorer
             .connect_search_result_activated(move |_, path, line, column, length| {

@@ -717,7 +717,7 @@ fn rgb(hex: &str) -> (u8, u8, u8) {
 }
 
 #[test]
-fn test_tree_geometry_rounded_selection_hover_and_live_themes() {
+fn test_tree_geometry_square_selection_hover_and_live_themes() {
     run(|| {
         let f = setup();
         let window = show_panel(&f, "impro-dark");
@@ -733,29 +733,47 @@ fn test_tree_geometry_rounded_selection_hover_and_live_themes() {
             pump_until("tree allocated", move || t.allocated_width() > 1);
             let column = tree.column(0).unwrap();
             let area = tree.background_area(Some(&path), Some(&column));
-            assert!((24..=26).contains(&area.height()), "{}", area.height());
-            assert_eq!(tree.margin_start(), 12);
-            assert_eq!(tree.margin_end(), 12);
+            // The name's line plus 8 px, at least 24 px (25 px for 10 pt text at 96 dpi).
+            let context = tree.pango_context();
+            let mut font = context.font_description().unwrap_or_default();
+            font.set_size((f.panel.font_size() * f64::from(pango::SCALE)) as i32);
+            let metrics = context.metrics(Some(&font), None);
+            let line = f64::from(metrics.ascent() + metrics.descent()) / f64::from(pango::SCALE);
+            assert_eq!(area.height(), 24.max((line + 0.999) as i32 + 8));
+            // Zed's project panel: full-width square rows, 20 px per level, folder glyphs
+            // instead of disclosure triangles.
+            assert_eq!(tree.margin_start(), 0);
+            assert_eq!(tree.margin_end(), 0);
+            assert!(!tree.shows_expanders());
+            assert_eq!(tree.level_indentation(), 20);
             let sidebar = rgb(&theme.ui["sidebar_bg"]);
             let overlay = rgb(&theme.ui["overlay"]);
-            let mix = |a: u8, b: u8| (f64::from(a) * 0.933 + f64::from(b) * 0.067).round() as u8;
-            let tint = (
-                mix(sidebar.0, overlay.0),
-                mix(sidebar.1, overlay.1),
-                mix(sidebar.2, overlay.2),
-            );
-            let close = move |p: (u8, u8, u8)| {
-                p.0.abs_diff(tint.0) <= 1 && p.1.abs_diff(tint.1) <= 1 && p.2.abs_diff(tint.2) <= 1
+            let tint = |alpha: f64| {
+                let mix = |a: u8, b: u8| {
+                    (f64::from(a) * (1.0 - alpha) + f64::from(b) * alpha).round() as u8
+                };
+                (
+                    mix(sidebar.0, overlay.0),
+                    mix(sidebar.1, overlay.1),
+                    mix(sidebar.2, overlay.2),
+                )
             };
+            let (selected, hovered) = (tint(0.095), tint(0.045));
+            let close = |p: (u8, u8, u8), t: (u8, u8, u8)| {
+                p.0.abs_diff(t.0) <= 1 && p.1.abs_diff(t.1) <= 1 && p.2.abs_diff(t.2) <= 1
+            };
+            // The selection fills the row out to its corner.
             let (w, t) = (window.clone(), tree.clone());
             let (ax, ay) = (area.x(), area.y());
-            pump_until("corner is sidebar", move || {
-                row_pixel(&w, &t, ax, ay) == sidebar
+            pump_until("selected corner", move || {
+                close(row_pixel(&w, &t, ax, ay), selected)
             });
             let (w, t) = (window.clone(), tree.clone());
             let (cx, cy) = (area.width() - 15, area.y() + area.height() / 2);
-            pump_until("selection tint", move || close(row_pixel(&w, &t, cx, cy)));
-            // A real pointer hover produces the same tint, without a timed fade.
+            pump_until("selection tint", move || {
+                close(row_pixel(&w, &t, cx, cy), selected)
+            });
+            // A real pointer hover gives the lighter tint, without a timed fade.
             tree.selection().unselect_all();
             let origin = tree.bin_window().unwrap().origin();
             let display = gdk::Display::default().unwrap();
@@ -766,7 +784,9 @@ fn test_tree_geometry_rounded_selection_hover_and_live_themes() {
                 origin.2 + cy,
             );
             let (w, t) = (window.clone(), tree.clone());
-            pump_until("hover tint", move || close(row_pixel(&w, &t, cx, cy)));
+            pump_until("hover tint", move || {
+                close(row_pixel(&w, &t, cx, cy), hovered)
+            });
             pointer.warp(&gdk::Screen::default().unwrap(), 0, 0);
             let (w, t) = (window.clone(), tree.clone());
             pump_until("hover cleared", move || {
@@ -1229,5 +1249,114 @@ fn test_reveal_deeply_nested_path_and_latest_request_wins() {
             f.panel.selected_path(),
             Some(f.p("a/other/deeper/second.txt"))
         );
+    });
+}
+
+fn tree_key(f: &Fix, keyval: gdk::keys::Key, state: gdk::ModifierType) -> bool {
+    f.panel
+        .tree()
+        .emit_by_name::<bool>("key-press-event", &[&key_event(keyval, state)])
+}
+
+#[test]
+fn test_zed_keys_expand_enter_collapse_towards_the_root() {
+    run(|| {
+        let f = setup();
+        let window = show_panel(&f, "impro-dark");
+        let none = gdk::ModifierType::empty();
+        f.panel.select(&f.p("Zdir"));
+        f.panel.tree().grab_focus();
+        // Right expands a closed folder...
+        assert!(tree_key(&f, key::Right, none));
+        wait_idle(&f.panel);
+        assert!(f.panel.expanded_paths().contains(&f.p("Zdir")));
+        assert_eq!(f.panel.selected_path(), Some(f.p("Zdir")));
+        // ...and moves into an open one.
+        assert!(tree_key(&f, key::Right, none));
+        assert_eq!(f.panel.selected_path(), Some(f.p("Zdir/inner")));
+        // Left on a closed folder closes the open folder above it and selects that.
+        assert!(tree_key(&f, key::Left, none));
+        assert_eq!(f.panel.selected_path(), Some(f.p("Zdir")));
+        assert!(!f.panel.expanded_paths().contains(&f.p("Zdir")));
+        // Ctrl+Left closes every folder but the root.
+        expand(&f.panel, &f.p("Zdir"));
+        expand(&f.panel, &f.p("Zdir/inner"));
+        assert!(tree_key(&f, key::Left, gdk::ModifierType::CONTROL_MASK));
+        let open = f.panel.expanded_paths();
+        assert_eq!(open, [f.root()].into_iter().collect::<HashSet<_>>());
+        destroy(&window);
+    });
+}
+
+#[test]
+fn test_single_click_toggles_folders_and_previews_files() {
+    run(|| {
+        let f = setup();
+        let window = show_panel(&f, "impro-dark");
+        let previewed = Rc::new(RefCell::new(Vec::new()));
+        let activated = Rc::new(RefCell::new(Vec::new()));
+        let p = previewed.clone();
+        f.panel
+            .connect_file_previewed(move |_, path| p.borrow_mut().push(path.to_path_buf()));
+        let a = activated.clone();
+        f.panel
+            .connect_file_activated(move |_, path| a.borrow_mut().push(path.to_path_buf()));
+        f.panel.click(&f.p("A.py"));
+        assert_eq!(*previewed.borrow(), vec![f.p("A.py")]);
+        assert!(activated.borrow().is_empty());
+        f.panel.click(&f.p("Zdir"));
+        wait_idle(&f.panel);
+        assert!(f.panel.expanded_paths().contains(&f.p("Zdir")));
+        f.panel.click(&f.p("Zdir"));
+        assert!(!f.panel.expanded_paths().contains(&f.p("Zdir")));
+        // Space opens the selected file the same way.
+        f.panel.select(&f.p("b.py"));
+        assert!(tree_key(&f, key::space, gdk::ModifierType::empty()));
+        assert_eq!(previewed.borrow().last(), Some(&f.p("b.py")));
+        assert!(activated.borrow().is_empty());
+        destroy(&window);
+    });
+}
+
+#[test]
+fn test_sticky_folders_pin_the_parents_of_the_first_visible_row() {
+    run(|| {
+        let f = setup();
+        let many = f.p("many");
+        std::fs::create_dir(&many).unwrap();
+        for i in 0..80 {
+            std::fs::File::create(many.join(format!("file_{i:02}.txt"))).unwrap();
+        }
+        f.panel.refresh();
+        wait_idle(&f.panel);
+        let window = show_panel(&f, "impro-dark");
+        expand(&f.panel, &many);
+        wait_idle(&f.panel);
+        assert!(f.panel.sticky_folders().is_empty());
+        // Scroll well into the folder: the root and the folder stay pinned. The adjustment is
+        // set directly (`scroll_to_cell` animates, and an animation only advances while the
+        // test window is painted), and again if GTK, still measuring the new rows, puts its
+        // previous top row back.
+        let tree = f.panel.tree();
+        let adjustment = tree.vadjustment().expect("tree adjustment");
+        let row = f.panel.find_row(&many.join("file_40.txt")).unwrap();
+        let path = f.panel.store().path(&row).unwrap();
+        let column = tree.column(0).unwrap();
+        let top =
+            adjustment.value() + f64::from(tree.background_area(Some(&path), Some(&column)).y());
+        let panel = f.panel.clone();
+        let (root, folder) = (f.root(), many.clone());
+        let scroll = adjustment.clone();
+        pump_until("pinned folders", move || {
+            if (scroll.value() - top).abs() > 1.0 {
+                scroll.set_value(top);
+            }
+            panel.sticky_folders() == vec![root.clone(), folder.clone()]
+        });
+        // Back at the top nothing is pinned.
+        adjustment.set_value(0.0);
+        let panel = f.panel.clone();
+        pump_until("nothing pinned", move || panel.sticky_folders().is_empty());
+        destroy(&window);
     });
 }

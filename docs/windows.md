@@ -106,7 +106,10 @@ and `bundle-manifest.txt`. The layout and the reason it is flat are in
   which left the menus, headers, buttons and icons at their 100 percent size next to text half
   as large again. impro applies the same ratio (the font resolution divided by 96 dpi, 1.5 at
   150 percent) to every pixel length in its style sheets, to icon images, to the default window
-  and sidebar size and to the start page and Settings layout. At 200 percent and above GDK
+  and sidebar size, to the start page and Settings layout, and to the graph controls panel (its
+  width, switches and icon buttons; at a fixed 100 percent width the larger title ran under the
+  panel's buttons). Interface glyphs (dock toggles, the settings cog, explorer and tab icons)
+  are drawn as vectors at the scaled size, so they need no icon theme. At 200 percent and above GDK
   scales the window itself and impro's own factor is 1. `IMPRO_UI_SCALE` overrides the factor
   (`1` turns it off). The factor is read once at startup.
 - **Fonts.** The interface uses Segoe UI. Terminals and the editor use Cascadia Mono where it

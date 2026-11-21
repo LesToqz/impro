@@ -576,7 +576,7 @@ impl ExplorerPanel {
         );
     }
 
-    fn copy_path(&self) {
+    pub(super) fn copy_path(&self) {
         let path = self.selected_path().unwrap_or_else(|| self.root());
         gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD).set_text(&model_path(&path));
     }

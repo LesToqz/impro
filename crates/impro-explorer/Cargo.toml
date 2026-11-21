@@ -10,6 +10,7 @@ gdk.workspace = true
 glib.workspace = true
 gio.workspace = true
 pango.workspace = true
+pangocairo.workspace = true
 regex.workspace = true
 libc.workspace = true
 atk = "~0.18.2"

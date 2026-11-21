@@ -692,6 +692,7 @@ dependencies = [
  "impro-ui",
  "libc",
  "pango",
+ "pangocairo",
  "regex",
  "tempfile",
 ]

@@ -282,3 +282,104 @@ impl Default for IconCell {
         Self::new()
     }
 }
+
+/// Left edge of a row to its icon: a 1 px border and 6 px padding, as in Zed's project panel.
+pub fn glyph_inset() -> i32 {
+    impro_ui::scale::px(7)
+}
+
+/// Edge of the file and folder glyphs.
+pub fn glyph_size() -> i32 {
+    impro_ui::scale::px(16)
+}
+
+mod glyph_imp {
+    use super::*;
+    use gtk::subclass::cell_renderer::CellRendererImpl;
+
+    #[derive(Default)]
+    pub struct GlyphCell {
+        pub glyph: RefCell<String>,
+    }
+
+    #[glib::object_subclass]
+    impl ObjectSubclass for GlyphCell {
+        const NAME: &'static str = "ImproGlyphCell";
+        type Type = super::GlyphCell;
+        type ParentType = gtk::CellRenderer;
+    }
+
+    impl ObjectImpl for GlyphCell {}
+
+    impl CellRendererImpl for GlyphCell {
+        fn preferred_width<P: IsA<gtk::Widget>>(&self, _widget: &P) -> (i32, i32) {
+            let width = glyph_inset() + glyph_size();
+            (width, width)
+        }
+
+        fn preferred_height<P: IsA<gtk::Widget>>(&self, _widget: &P) -> (i32, i32) {
+            let height = glyph_size();
+            (height, height)
+        }
+
+        fn render<P: IsA<gtk::Widget>>(
+            &self,
+            cr: &cairo::Context,
+            widget: &P,
+            _background_area: &gdk::Rectangle,
+            cell_area: &gdk::Rectangle,
+            _flags: gtk::CellRendererState,
+        ) {
+            let glyph = self.glyph.borrow().clone();
+            if glyph.is_empty() {
+                return;
+            }
+            // An expanded folder shows the open folder.
+            let glyph = if glyph == "folder" && self.obj().is_expanded() {
+                "folder-open".to_owned()
+            } else {
+                glyph
+            };
+            let widget: &gtk::Widget = widget.upcast_ref();
+            let context = widget.style_context();
+            let color = context
+                .lookup_color("impro_explorer_icon")
+                .unwrap_or_else(|| context.color(widget.state_flags()));
+            let size = f64::from(glyph_size());
+            let x = f64::from(cell_area.x() + glyph_inset());
+            let y =
+                f64::from(cell_area.y()) + ((f64::from(cell_area.height()) - size) / 2.0).floor();
+            impro_ui::glyphs::draw(cr, &glyph, x, y, size, &color);
+        }
+    }
+}
+
+glib::wrapper! {
+    /// A cell painting one of `impro_ui::glyphs` (muted, like the icons of Zed's project panel):
+    /// folders as a closed or open folder by the row's expansion, files by their name.
+    pub struct GlyphCell(ObjectSubclass<glyph_imp::GlyphCell>) @extends gtk::CellRenderer;
+}
+
+impl GlyphCell {
+    pub fn new() -> Self {
+        glib::Object::new()
+    }
+
+    /// The glyph to paint ("" for none); `folder` becomes `folder-open` on expanded rows.
+    pub fn set_glyph(&self, glyph: &str) {
+        let imp = self.imp();
+        if *imp.glyph.borrow() != glyph {
+            *imp.glyph.borrow_mut() = glyph.to_owned();
+        }
+    }
+
+    pub fn glyph(&self) -> String {
+        self.imp().glyph.borrow().clone()
+    }
+}
+
+impl Default for GlyphCell {
+    fn default() -> Self {
+        Self::new()
+    }
+}
