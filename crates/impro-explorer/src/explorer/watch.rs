@@ -55,19 +55,72 @@ impl ExplorerPanel {
         *imp.dir_sync.borrow_mut() = Some(source);
     }
 
+    /// The folders inside folded rows below the expanded folders, each with the folder whose
+    /// listing made that row: a change in `a` or `a/b` of the row `a/b/c` can split or extend
+    /// the fold, which only re-listing the row's parent shows. The innermost folder counts
+    /// while its row is collapsed (an expanded one is watched for its own listing).
+    fn folded_folders(&self) -> Vec<(PathBuf, PathBuf)> {
+        let w = self.w();
+        let parents = RefCell::new(Vec::new());
+        w.tree.map_expanded_rows(|_, path| {
+            if let Some(iter) = w.store.iter(path) {
+                parents.borrow_mut().push(iter);
+            }
+        });
+        let mut found = Vec::new();
+        for parent in parents.into_inner() {
+            let listed = util::decode_path(&util::string(&w.store, &parent, 2));
+            let mut row = w.store.iter_children(Some(&parent));
+            while let Some(child) = row {
+                // Only folded rows show a separator in their name.
+                if util::string(&w.store, &child, 1).contains(std::path::MAIN_SEPARATOR) {
+                    let inner = util::decode_path(&util::string(&w.store, &child, 2));
+                    let open = w
+                        .store
+                        .path(&child)
+                        .is_some_and(|path| w.tree.row_expanded(&path));
+                    let mut folder = if open {
+                        inner.parent().map(Path::to_path_buf)
+                    } else {
+                        Some(inner.clone())
+                    };
+                    while let Some(dir) = folder {
+                        if dir == listed || !dir.starts_with(&listed) {
+                            break;
+                        }
+                        folder = dir.parent().map(Path::to_path_buf);
+                        found.push((dir, listed.clone()));
+                    }
+                }
+                row = util::next_iter(&w.store, &child);
+            }
+        }
+        found
+    }
+
     fn sync_watches(&self) {
         let imp = self.imp();
         if self.is_destroyed() {
             return;
         }
-        let mut wanted: Vec<PathBuf> = if imp.watch_folders.get() {
-            self.expanded_paths().into_iter().collect()
-        } else {
-            Vec::new()
-        };
+        // Watched folder -> folder to re-list when it changes.
+        let mut targets: HashMap<PathBuf, PathBuf> = HashMap::new();
+        if imp.watch_folders.get() {
+            for dir in self.expanded_paths() {
+                targets.insert(dir.clone(), dir);
+            }
+            if imp.auto_fold.get() {
+                for (dir, listed) in self.folded_folders() {
+                    targets.entry(dir).or_insert(listed);
+                }
+            }
+        }
+        let mut wanted: Vec<PathBuf> = targets.keys().cloned().collect();
         wanted.sort_by_key(|path| (path.components().count(), path.clone()));
         wanted.truncate(MAX_WATCHES);
         let wanted: HashSet<PathBuf> = wanted.into_iter().collect();
+        targets.retain(|dir, _| wanted.contains(dir));
+        *imp.watch_targets.borrow_mut() = targets;
         let stale: Vec<PathBuf> = imp
             .dir_monitors
             .borrow()
@@ -127,13 +180,32 @@ impl ExplorerPanel {
         if !imp.show_hidden.get() && hidden(file) && other.is_none_or(hidden) {
             return;
         }
-        imp.dir_dirty.borrow_mut().insert(dir.to_path_buf());
+        // A folder inside a folded row is re-listed through the folder that lists the row.
+        let target = imp
+            .watch_targets
+            .borrow()
+            .get(dir)
+            .cloned()
+            .unwrap_or_else(|| dir.to_path_buf());
+        imp.dir_dirty.borrow_mut().insert(target.clone());
+        // With folding, a folder that now holds a single folder (or no longer does) changes
+        // shape in the listing of the folder above it: re-list that one too.
+        if imp.auto_fold.get() && target == dir {
+            let parent = self.find_exact_row(dir).and_then(|row| {
+                let store = &self.w().store;
+                let parent = store.iter_parent(&row)?;
+                Some(util::decode_path(&util::string(store, &parent, 2)))
+            });
+            if let Some(parent) = parent {
+                imp.dir_dirty.borrow_mut().insert(parent);
+            }
+        }
         if imp.dir_timeout.borrow().is_some() {
             return;
         }
         // A big folder takes long to list and merge: look at it less often.
         let rows = self
-            .find_row(dir)
+            .find_exact_row(&target)
             .map_or(0, |row| self.w().store.iter_n_children(Some(&row)));
         let delay = (BASE_DELAY + Duration::from_millis(rows.max(0) as u64 / 5)).min(MAX_DELAY);
         let weak = self.downgrade();
@@ -157,11 +229,14 @@ impl ExplorerPanel {
             if !imp.dir_monitors.borrow().contains_key(&dir) {
                 continue;
             }
-            let expanded = self.find_row(&dir).is_some_and(|row| {
+            let expanded = self.find_exact_row(&dir).is_some_and(|row| {
                 let path = util::path_of(&self.w().store, &row);
                 self.w().tree.row_expanded(&path)
             });
             if expanded {
+                if imp.auto_fold.get() {
+                    self.remember_expansion();
+                }
                 self.request_scan(&dir);
             }
         }
@@ -179,5 +254,6 @@ impl ExplorerPanel {
             monitor.cancel();
         }
         imp.dir_dirty.take();
+        imp.watch_targets.take();
     }
 }

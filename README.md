@@ -321,6 +321,7 @@ limits, branch visibility and timestamp formatting.
 | `explorer_git_colors` | `true` | boolean |
 | `explorer_folders_first` | `true` | boolean |
 | `explorer_compact` | `false` | boolean |
+| `explorer_auto_fold` | `true` | boolean |
 | `terminal_max_panes` | `6` | 1–8 |
 | `terminal_shell` | `""` | executable path; empty = default shell |
 | `terminal_copy_on_select` | `false` | boolean |

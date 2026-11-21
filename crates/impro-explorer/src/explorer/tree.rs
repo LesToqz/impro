@@ -54,6 +54,58 @@ fn record_scan(dir: &Path) {
     }
 }
 
+/// Longest chain of folders folded onto one row.
+const MAX_FOLD: usize = 64;
+
+/// Sort key of a row's name: the case-folded name of the folder in the listing, which for a
+/// folded row ("a/b/c") is its first component.
+pub(crate) fn sort_key(name: &str) -> String {
+    crate::search::fold(name.split(std::path::MAIN_SEPARATOR).next().unwrap_or(name))
+}
+
+/// The only entry of `dir` when it is a folder (symlinks excluded, hidden entries ignored
+/// unless shown): its display name and path.
+fn single_child_folder(dir: &Path, show_hidden: bool) -> Option<(String, PathBuf)> {
+    let mut found = None;
+    for item in std::fs::read_dir(dir).ok()?.flatten() {
+        let name = util::display_name(&item.file_name());
+        if !show_hidden && name.starts_with('.') {
+            continue;
+        }
+        if found.is_some() || !item.file_type().ok()?.is_dir() {
+            return None;
+        }
+        found = Some((name, item.path()));
+    }
+    found
+}
+
+/// Zed's auto-folding: a folder whose only entry is a folder shares its row ("a/b/c", joined
+/// with the platform's separator). The row stands for the innermost folder: its path is that
+/// folder's, and expanding it lists that folder.
+fn fold_entry(entry: &mut Entry, show_hidden: bool, cancel: &CancelToken) {
+    if !entry.is_dir {
+        return;
+    }
+    let mut deepest = util::decode_path(&entry.path);
+    let mut name = entry.name.clone();
+    for _ in 0..MAX_FOLD {
+        if cancel.is_cancelled() {
+            break;
+        }
+        let Some((child, path)) = single_child_folder(&deepest, show_hidden) else {
+            break;
+        };
+        name.push(std::path::MAIN_SEPARATOR);
+        name.push_str(&child);
+        deepest = path;
+    }
+    if name != entry.name {
+        entry.name = name;
+        entry.path = util::encode_path(&deepest);
+    }
+}
+
 /// Ordering of siblings: folders first (optionally), then case-folded name, then name.
 pub(crate) fn order(a: &Entry, b: &Entry, folders_first: bool) -> Ordering {
     let rank = |e: &Entry| folders_first && !e.is_dir;
@@ -69,11 +121,32 @@ pub fn scan_dir(dir: &Path, show_hidden: bool, folders_first: bool) -> Vec<Entry
     scan_dir_cancellable(dir, show_hidden, folders_first, &CancelToken::new())
 }
 
+/// [`scan_dir`], optionally folding chains of single-folder folders onto one entry each
+/// (see `fold_entry`): `a` holding only `b` holding only `c` lists as `a/b/c`, with `c`'s path.
+pub fn scan_dir_folding(
+    dir: &Path,
+    show_hidden: bool,
+    folders_first: bool,
+    fold: bool,
+) -> Vec<Entry> {
+    scan_dir_with(dir, show_hidden, folders_first, fold, &CancelToken::new())
+}
+
 /// [`scan_dir`] that gives up (returning what it has, unsorted) once `cancel` is set.
 pub fn scan_dir_cancellable(
     dir: &Path,
     show_hidden: bool,
     folders_first: bool,
+    cancel: &CancelToken,
+) -> Vec<Entry> {
+    scan_dir_with(dir, show_hidden, folders_first, false, cancel)
+}
+
+fn scan_dir_with(
+    dir: &Path,
+    show_hidden: bool,
+    folders_first: bool,
+    fold: bool,
     cancel: &CancelToken,
 ) -> Vec<Entry> {
     record_scan(dir);
@@ -88,12 +161,16 @@ pub fn scan_dir_cancellable(
                 continue;
             }
             let Ok(kind) = item.file_type() else { continue };
-            entries.push(Entry {
+            let mut entry = Entry {
                 is_dir: kind.is_dir(),
                 key: crate::search::fold(&name),
                 path: util::encode_path(&item.path()),
                 name,
-            });
+            };
+            if fold {
+                fold_entry(&mut entry, show_hidden, cancel);
+            }
+            entries.push(entry);
         }
     }
     entries.sort_unstable_by(|a, b| order(a, b, folders_first));
@@ -131,10 +208,11 @@ impl ExplorerPanel {
         imp.pending_scans.set(imp.pending_scans.get() + 1);
         let generation = imp.generation.get();
         let (hidden, folders_first) = (imp.show_hidden.get(), imp.folders_first.get());
+        let fold = imp.auto_fold.get();
         let dir = dir.to_path_buf();
         let cancel = imp.scan_cancel.borrow().clone();
         pool::spawn(Lane::Interactive, move || {
-            let entries = scan_dir_cancellable(&dir, hidden, folders_first, &cancel);
+            let entries = scan_dir_with(&dir, hidden, folders_first, fold, &cancel);
             let _ = sender.send(Msg::Dir {
                 generation,
                 dir,
@@ -151,7 +229,7 @@ impl ExplorerPanel {
         imp.pending_scans
             .set(imp.pending_scans.get().saturating_sub(1));
         let row = self
-            .find_row(&dir)
+            .find_exact_row(&dir)
             .and_then(|iter| self.w().store.path(&iter))
             .and_then(|path| gtk::TreeRowReference::new(&self.w().store, &path));
         let Some(row) = row else {
@@ -375,7 +453,7 @@ impl ExplorerPanel {
                             let name = util::string(store, &current, 1);
                             let current_entry = Entry {
                                 is_dir: util::string(store, &current, 0) == "folder",
-                                key: crate::search::fold(&name),
+                                key: sort_key(&name),
                                 name,
                                 path: current_path,
                             };
@@ -444,6 +522,10 @@ impl ExplorerPanel {
 
     fn apply_finished(&self) {
         self.advance_reveal();
+        // Folded rows may have come or gone: their inner folders are watched too.
+        if self.imp().auto_fold.get() {
+            self.schedule_watch_sync();
+        }
     }
 
     /// When every listing has been merged, forget the one-shot restore requests.
@@ -476,7 +558,18 @@ impl ExplorerPanel {
     // ---- lookup ---------------------------------------------------------------------------
 
     /// The row of `path`, if it has been loaded into the tree.
+    ///
+    /// A folder folded into a row with the folders below it (`a/b/c`) is found at that row.
     pub fn find_row(&self, path: &Path) -> Option<gtk::TreeIter> {
+        self.find_row_with(path, false)
+    }
+
+    /// The row whose own path is `path` (a folded row only for its innermost folder).
+    pub(crate) fn find_exact_row(&self, path: &Path) -> Option<gtk::TreeIter> {
+        self.find_row_with(path, true)
+    }
+
+    fn find_row_with(&self, path: &Path, exact: bool) -> Option<gtk::TreeIter> {
         if self.is_destroyed() {
             return None;
         }
@@ -486,15 +579,52 @@ impl ExplorerPanel {
         if path == root {
             return Some(row);
         }
-        let relative = path.strip_prefix(&root).ok()?;
-        let mut walked = root.clone();
-        for component in relative.components() {
-            // Compare whole paths: two names can look alike once shown (invalid bytes).
-            walked.push(component);
-            let wanted = model_path(&walked);
-            row = util::find_child(store, Some(&row), 2, &wanted)?;
+        path.strip_prefix(&root).ok()?;
+        loop {
+            let (child, child_path) = self.child_toward(&row, path)?;
+            if child_path == path {
+                return Some(child);
+            }
+            if child_path.starts_with(path) {
+                // `path` is one of the folders folded into this row.
+                return (!exact).then_some(child);
+            }
+            row = child;
         }
-        Some(row)
+    }
+
+    /// The child row of `parent` on the way to `target`: its row, a folder holding it, or the
+    /// folded row whose chain of folders holds it.
+    fn child_toward(
+        &self,
+        parent: &gtk::TreeIter,
+        target: &Path,
+    ) -> Option<(gtk::TreeIter, PathBuf)> {
+        let store = &self.w().store;
+        // Compare whole paths: two names can look alike once shown (invalid bytes). The model
+        // strings are compared first; their encoding keeps one path's prefix the other's,
+        // except for the escaped form of a Windows name that is not valid UTF-16.
+        // Rebuilt from its components, `target` is spelled like the stored paths (`a/b` and
+        // `a\b` are one path on Windows, but only one of them prefixes `a\b\c`).
+        let wanted = model_path(&target.components().collect::<PathBuf>());
+        let escaped = |text: &str| text.starts_with('\u{E000}');
+        let mut row = store.iter_children(Some(parent));
+        while let Some(candidate) = row {
+            let encoded = util::string(store, &candidate, 2);
+            if !encoded.is_empty()
+                && (wanted.starts_with(encoded.as_str())
+                    || encoded.starts_with(wanted.as_str())
+                    || escaped(&encoded)
+                    || escaped(&wanted))
+            {
+                let path = util::decode_path(&encoded);
+                if target.starts_with(&path) || path.starts_with(target) {
+                    return Some((candidate, path));
+                }
+            }
+            row = util::next_iter(store, &candidate);
+        }
+        None
     }
 
     pub fn selected_path(&self) -> Option<PathBuf> {
@@ -610,10 +740,35 @@ impl ExplorerPanel {
         );
         w.store
             .insert_with_values(Some(&iter), None, &placeholder_values());
-        *imp.want_expanded.borrow_mut() = expanded;
+        *imp.want_expanded.borrow_mut() = self.with_folded_ancestors(expanded);
         *imp.want_select.borrow_mut() = selected;
         self.expand_wanted();
         self.settle();
+    }
+
+    /// `expanded` with every folder above each of them, up to the root. Above an expanded row
+    /// those are expanded rows, or folders folded into it: when a fold splits (`a/b/c` becomes
+    /// `a` holding `b/c` and a file) or is turned off, they open again instead of closing.
+    pub(super) fn with_folded_ancestors(&self, expanded: HashSet<PathBuf>) -> HashSet<PathBuf> {
+        let root = self.root();
+        let mut all = expanded.clone();
+        for path in &expanded {
+            let mut dir = path.parent();
+            while let Some(folder) = dir {
+                if !folder.starts_with(&root) || !all.insert(folder.to_path_buf()) {
+                    break;
+                }
+                dir = folder.parent();
+            }
+        }
+        all
+    }
+
+    /// Before re-listing folders that changed on disk: keep what is open now open, folded
+    /// folders included (see `with_folded_ancestors`).
+    pub(super) fn remember_expansion(&self) {
+        let wanted = self.with_folded_ancestors(self.expanded_paths());
+        self.imp().want_expanded.borrow_mut().extend(wanted);
     }
 
     /// Re-list every visible folder and merge the changes in place, keeping expansion,
@@ -624,7 +779,7 @@ impl ExplorerPanel {
         }
         let imp = self.imp();
         self.restart_generation();
-        *imp.want_expanded.borrow_mut() = expanded;
+        *imp.want_expanded.borrow_mut() = self.with_folded_ancestors(expanded);
         *imp.want_select.borrow_mut() = selected;
         let visible = self.expanded_paths();
         let loaded: Vec<PathBuf> = imp.loaded.take().into_iter().collect();
@@ -646,7 +801,7 @@ impl ExplorerPanel {
     /// Drop a folder's children (it is collapsed) and leave only the placeholder.
     fn reset_dir(&self, dir: &Path) {
         let store = &self.w().store;
-        let Some(row) = self.find_row(dir) else {
+        let Some(row) = self.find_exact_row(dir) else {
             return;
         };
         while let Some(child) = store.iter_children(Some(&row)) {
@@ -663,7 +818,13 @@ impl ExplorerPanel {
             return;
         }
         let path = util::decode_path(&path);
-        if self.imp().loaded.borrow().contains(&path) {
+        // A row holding only its placeholder has no listing yet, even for a folder listed
+        // before under another row (a fold that split or merged).
+        let store = &self.w().store;
+        let unlisted = store
+            .iter_children(Some(iter))
+            .is_some_and(|child| util::string(store, &child, 2).is_empty());
+        if self.imp().loaded.borrow().contains(&path) && !unlisted {
             return;
         }
         self.request_scan(&path);
@@ -726,24 +887,24 @@ impl ExplorerPanel {
         };
         let w = self.w();
         let root = self.root();
-        let Ok(relative) = target.strip_prefix(&root) else {
+        if target.strip_prefix(&root).is_err() {
             return;
-        };
+        }
         let Some(mut row) = w.store.iter_first() else {
             return;
         };
-        let mut walked = root.clone();
-        for component in relative.components() {
+        let mut current = root;
+        // Down from the root, one row at a time (a folded row covers several folders).
+        while current != target && !current.starts_with(&target) {
             let tree_path = util::path_of(&w.store, &row);
             if !w.tree.row_expanded(&tree_path) {
                 w.tree.expand_row(&tree_path, false);
             }
-            walked.push(component);
-            let wanted = model_path(&walked);
-            let Some(child) = util::find_child(&w.store, Some(&row), 2, &wanted) else {
+            let Some((child, path)) = self.child_toward(&row, &target) else {
                 return;
             };
             row = child;
+            current = path;
         }
         self.imp().want_select.borrow_mut().take();
         self.select_iter(&row);

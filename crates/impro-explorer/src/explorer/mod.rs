@@ -19,7 +19,7 @@ pub use actions::{
 };
 pub use gitdeco::set_git_collector;
 pub use notes::{note_edited_text, NotesHandles};
-pub use tree::{scan_count, scan_dir, set_scan_counting, Entry};
+pub use tree::{scan_count, scan_dir, scan_dir_folding, set_scan_counting, Entry};
 
 use crate::gitstatus::Snapshot;
 use crate::searchpanel::{PathTextProvider, SearchPanel};
@@ -110,6 +110,8 @@ mod imp {
         pub(crate) delete_mode: Cell<DeleteMode>,
         pub(crate) open_after_create: Cell<bool>,
         pub(crate) folders_first: Cell<bool>,
+        /// Fold chains of single-folder folders onto one row, as Zed does.
+        pub(crate) auto_fold: Cell<bool>,
         pub(crate) compact: Cell<bool>,
         pub(crate) git_colors: Cell<bool>,
         pub(crate) git_enabled: Cell<bool>,
@@ -160,6 +162,8 @@ mod imp {
         pub(crate) watch_folders: Cell<bool>,
         pub(crate) dir_monitors: RefCell<HashMap<PathBuf, gio::FileMonitor>>,
         pub(crate) dir_dirty: RefCell<HashSet<PathBuf>>,
+        /// Watched folder -> folder to re-list when it changes (see watch.rs).
+        pub(crate) watch_targets: RefCell<HashMap<PathBuf, PathBuf>>,
         pub(crate) dir_timeout: RefCell<Option<glib::SourceId>>,
         pub(crate) dir_sync: RefCell<Option<glib::SourceId>>,
         pub(crate) notes_task: RefCell<Option<notes::NotesTask>>,
@@ -194,6 +198,7 @@ mod imp {
                 delete_mode: Cell::new(DeleteMode::Delete),
                 open_after_create: Cell::new(true),
                 folders_first: Cell::new(true),
+                auto_fold: Cell::new(false),
                 compact: Cell::new(false),
                 git_colors: Cell::new(true),
                 git_enabled: Cell::new(true),
@@ -240,6 +245,7 @@ mod imp {
                 watch_folders: Cell::new(true),
                 dir_monitors: RefCell::default(),
                 dir_dirty: RefCell::default(),
+                watch_targets: RefCell::default(),
                 dir_timeout: RefCell::new(None),
                 dir_sync: RefCell::new(None),
                 notes_task: RefCell::new(None),

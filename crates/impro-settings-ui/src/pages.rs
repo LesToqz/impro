@@ -653,6 +653,12 @@ impl Inner {
                 "Use less space between file names.",
                 &["density spacing"],
             ),
+            self.toggle(
+                "explorer_auto_fold",
+                "Fold single-folder folders",
+                "Show a folder that holds only one folder on one row with it, like src/app/main.",
+                &["compact collapse nested directories auto fold"],
+            ),
             self.font_size_row("explorer_font_size"),
         ];
         self.group(b, None, &rows);

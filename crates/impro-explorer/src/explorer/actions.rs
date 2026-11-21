@@ -146,6 +146,23 @@ impl ExplorerPanel {
         self.imp().folders_first.get()
     }
 
+    /// Fold a folder whose only entry is a folder onto one row with it (`src/a/b`), as Zed's
+    /// project panel does; the row stands for the innermost folder. Off by default here; the
+    /// application turns it on from the `explorer_auto_fold` setting.
+    pub fn set_auto_fold(&self, enabled: bool) {
+        let imp = self.imp();
+        if imp.auto_fold.replace(enabled) == enabled || imp.destroyed.get() {
+            return;
+        }
+        // Rows change shape, so merging in place would not line up: start over.
+        self.rebuild_clear(self.expanded_paths(), self.selected_path());
+        self.schedule_watch_sync();
+    }
+
+    pub fn auto_fold(&self) -> bool {
+        self.imp().auto_fold.get()
+    }
+
     /// Show dot-files and dot-folders in the navigator (default `true`).
     pub fn set_show_hidden(&self, show: bool) {
         if self.imp().show_hidden.get() != show {

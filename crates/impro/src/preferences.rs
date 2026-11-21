@@ -189,6 +189,7 @@ impl MainWindow {
             "explorer_git_colors" => self.explorer.set_git_colors(flag),
             "explorer_folders_first" => self.explorer.set_folders_first(flag),
             "explorer_compact" => self.explorer.set_compact(flag),
+            "explorer_auto_fold" => self.explorer.set_auto_fold(flag),
             "terminal_max_panes" => {
                 for panel in self.panels() {
                     panel.set_max_panes(number as usize);

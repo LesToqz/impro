@@ -203,6 +203,7 @@ pub(crate) fn page_of(key: &str) -> Option<&'static str> {
         | "explorer_git_colors"
         | "explorer_folders_first"
         | "explorer_compact"
+        | "explorer_auto_fold"
         | "explorer_font_size"
         | "show_hidden"
         | "confirm_delete"

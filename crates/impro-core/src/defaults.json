@@ -11,6 +11,7 @@
   "explorer_git_colors": true,
   "explorer_folders_first": true,
   "explorer_compact": false,
+  "explorer_auto_fold": true,
   "terminal_max_panes": 6,
   "terminal_shell": "",
   "terminal_copy_on_select": false,

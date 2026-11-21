@@ -1360,3 +1360,137 @@ fn test_sticky_folders_pin_the_parents_of_the_first_visible_row() {
         destroy(&window);
     });
 }
+
+#[test]
+fn test_scan_folds_chains_of_single_folder_folders() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    std::fs::create_dir_all(root.join("a/b/c")).unwrap();
+    std::fs::File::create(root.join("a/b/c/file.rs")).unwrap();
+    std::fs::create_dir_all(root.join("p/q")).unwrap();
+    std::fs::File::create(root.join("p/file.txt")).unwrap();
+    std::fs::create_dir_all(root.join("x/y")).unwrap();
+    std::fs::create_dir_all(root.join("z/.hidden")).unwrap();
+    std::fs::File::create(root.join("top.txt")).unwrap();
+    let sep = std::path::MAIN_SEPARATOR;
+    let listing = |hidden: bool, fold: bool| -> Vec<(String, PathBuf)> {
+        impro_explorer::explorer::scan_dir_folding(root, hidden, true, fold)
+            .into_iter()
+            .map(|entry| (entry.name, impro_explorer::util::decode_path(&entry.path)))
+            .collect()
+    };
+    // `a` holds only `b`, which holds only `c`: one entry, standing for `c`. `p` holds a
+    // file as well, `x/y` ends in an empty folder and `z` holds only a hidden folder.
+    assert_eq!(
+        listing(false, true),
+        vec![
+            (format!("a{sep}b{sep}c"), root.join("a/b/c")),
+            ("p".to_owned(), root.join("p")),
+            (format!("x{sep}y"), root.join("x/y")),
+            ("z".to_owned(), root.join("z")),
+            ("top.txt".to_owned(), root.join("top.txt")),
+        ]
+    );
+    // Hidden folders count once they are shown.
+    assert!(listing(true, true).contains(&(format!("z{sep}.hidden"), root.join("z/.hidden"))));
+    // Without folding, every folder is its own entry.
+    let plain: Vec<String> = listing(false, false).into_iter().map(|(n, _)| n).collect();
+    assert_eq!(plain, ["a", "p", "x", "z", "top.txt"]);
+}
+
+/// The tree path of the row standing for `path`, to compare rows.
+fn row_path(panel: &ExplorerPanel, path: &Path) -> Option<String> {
+    let row = panel.find_row(path)?;
+    Some(
+        impro_explorer::util::path_of(&panel.store(), &row)
+            .to_str()
+            .to_string(),
+    )
+}
+
+#[test]
+fn test_auto_fold_rows_lookup_reveal_and_switching_off() {
+    run(|| {
+        let f = setup();
+        let sep = std::path::MAIN_SEPARATOR;
+        assert!(!f.panel.auto_fold());
+        f.panel.set_auto_fold(true);
+        assert!(f.panel.auto_fold());
+        wait_idle(&f.panel);
+        // `Zdir` holds only `inner`: they share a row standing for `inner`.
+        let root_names = names(&f.panel, &f.root());
+        assert!(
+            root_names.contains(&format!("Zdir{sep}inner")),
+            "{root_names:?}"
+        );
+        assert!(!root_names.contains(&"Zdir".to_owned()));
+        // `adir` is empty: nothing to fold.
+        assert!(root_names.contains(&"adir".to_owned()));
+        let folded = row_path(&f.panel, &f.p("Zdir/inner")).expect("folded row");
+        assert_eq!(row_path(&f.panel, &f.p("Zdir")), Some(folded));
+        let row = f.panel.find_row(&f.p("Zdir")).unwrap();
+        assert_eq!(
+            impro_explorer::util::decode_path(&impro_explorer::util::string(
+                &f.panel.store(),
+                &row,
+                2
+            )),
+            f.p("Zdir/inner")
+        );
+        // Revealing a file inside opens the folded row and selects the file.
+        let deep = f.p("Zdir/inner/deep.py");
+        f.panel.set_current_file(Some(&deep));
+        wait_idle(&f.panel);
+        let panel = f.panel.clone();
+        let wanted = deep.clone();
+        pump_until("revealed", move || {
+            panel.selected_path() == Some(wanted.clone())
+        });
+        assert!(f.panel.expanded_paths().contains(&f.p("Zdir/inner")));
+        assert_eq!(names(&f.panel, &f.p("Zdir/inner")), ["deep.py"]);
+        // Switching folding off restores both folders, still open, and the selection.
+        f.panel.set_auto_fold(false);
+        wait_idle(&f.panel);
+        let panel = f.panel.clone();
+        let (zdir, inner) = (f.p("Zdir"), f.p("Zdir/inner"));
+        pump_until("unfolded and open", move || {
+            let open = panel.expanded_paths();
+            open.contains(&zdir) && open.contains(&inner)
+        });
+        assert!(names(&f.panel, &f.root()).contains(&"Zdir".to_owned()));
+        assert_eq!(names(&f.panel, &f.p("Zdir")), ["inner"]);
+        assert_eq!(f.panel.selected_path(), Some(deep));
+    });
+}
+
+#[test]
+fn test_folds_split_and_merge_when_folders_change_on_disk() {
+    run(|| {
+        let f = setup();
+        let sep = std::path::MAIN_SEPARATOR;
+        f.panel.set_auto_fold(true);
+        wait_idle(&f.panel);
+        expand(&f.panel, &f.p("Zdir/inner"));
+        pump(50);
+        // `Zdir` is inside the folded row: it is watched too, through the root's listing.
+        assert!(f.panel.watched_folders().contains(&f.p("Zdir")));
+        // A file next to `inner` splits the fold; the folders stay open.
+        std::fs::File::create(f.p("Zdir/note.txt")).unwrap();
+        let panel = f.panel.clone();
+        let (root, zdir) = (f.root(), f.p("Zdir"));
+        pump_until("fold split", move || {
+            names(&panel, &root).contains(&"Zdir".to_owned())
+                && names(&panel, &zdir) == ["inner", "note.txt"]
+        });
+        assert!(f.panel.expanded_paths().contains(&f.p("Zdir")));
+        assert!(f.panel.expanded_paths().contains(&f.p("Zdir/inner")));
+        // Without it the folders share a row again, open, with their contents.
+        std::fs::remove_file(f.p("Zdir/note.txt")).unwrap();
+        let panel = f.panel.clone();
+        let (root, folded, inner) = (f.root(), format!("Zdir{sep}inner"), f.p("Zdir/inner"));
+        pump_until("fold merged", move || {
+            names(&panel, &root).contains(&folded) && names(&panel, &inner) == ["deep.py"]
+        });
+        assert!(f.panel.expanded_paths().contains(&f.p("Zdir/inner")));
+    });
+}

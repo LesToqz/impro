@@ -122,7 +122,7 @@ fn test_junk_font_values() {
 }
 #[test]
 fn test_defaults_cover_spec_keys() {
-    assert_eq!(defaults().len(), 45);
+    assert_eq!(defaults().len(), 46);
     assert!(!defaults().contains_key("md_default_preview"));
     assert!(!defaults().contains_key("graph"));
     assert_eq!(defaults()["delete_mode"], "permanent");
