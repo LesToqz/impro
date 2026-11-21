@@ -164,7 +164,7 @@ fn test_dirty_save_and_undo_to_saved_state() {
         let t = h.open("a.py", "first");
         replace(&t, "modified");
         assert!(h.panel.has_unsaved());
-        assert!(t.header.label.text().starts_with("● "));
+        assert!(t.header.is_dirty());
         assert!(h.save());
         assert_eq!(fs::read_to_string(t.path()).unwrap(), "modified");
         assert!(!h.panel.has_unsaved());
@@ -676,5 +676,56 @@ fn test_quit_cancel_discard_and_save_all() {
         assert!(result(|cb| h.panel.request_quit(cb)));
         assert!(!h.panel.has_unsaved());
         assert_eq!(fs::read_to_string(t.path()).unwrap(), "after");
+    });
+}
+#[test]
+fn test_preview_tab_is_replaced_until_kept() {
+    run(|| {
+        let h = Harness::new();
+        let pinned = h.open("pinned.txt", "p");
+        let write = |name: &str| {
+            let path = h.dir.path().join(name);
+            fs::write(&path, name).unwrap();
+            path
+        };
+        let (a, b, c) = (write("a.txt"), write("b.txt"), write("c.txt"));
+        // A preview opens in its own italic tab and leaves the keyboard where it was.
+        h.panel.open_file_preview(&a);
+        poll(|| !h.panel.is_busy());
+        let first = h.panel.tab_for_path(&a).expect("preview tab");
+        assert!(first.is_preview());
+        assert!(first.header.is_preview());
+        assert!(!pinned.is_preview());
+        assert_eq!(h.panel.notebook().n_pages(), 2);
+        // The next preview takes its place.
+        h.panel.open_file_preview(&b);
+        poll(|| !h.panel.is_busy());
+        assert!(h.panel.tab_for_path(&a).is_none());
+        let second = h.panel.tab_for_path(&b).expect("replacement");
+        assert!(second.is_preview());
+        assert_eq!(h.panel.notebook().n_pages(), 2);
+        assert_eq!(h.panel.notebook().page_num(&second.page), Some(1));
+        // Editing keeps it: the next preview opens beside it.
+        second
+            .buffer
+            .insert(&mut second.buffer.end_iter(), "edited");
+        assert!(!second.is_preview());
+        h.panel.open_file_preview(&c);
+        poll(|| !h.panel.is_busy());
+        assert!(h.panel.tab_for_path(&b).is_some());
+        let third = h.panel.tab_for_path(&c).expect("new preview");
+        assert!(third.is_preview());
+        assert_eq!(h.panel.notebook().n_pages(), 3);
+        // Opening it for editing keeps it too.
+        h.panel.open_file(&c);
+        poll(|| !h.panel.is_busy());
+        assert!(!third.is_preview());
+        assert!(!third.header.is_preview());
+        // Previewing a file that is open only brings it forward.
+        h.panel.open_file_preview(&pinned.path());
+        poll(|| !h.panel.is_busy());
+        assert_eq!(h.panel.notebook().n_pages(), 3);
+        assert!(!pinned.is_preview());
+        assert_eq!(h.panel.current_path(), Some(pinned.path()));
     });
 }

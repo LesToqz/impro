@@ -39,6 +39,10 @@ struct PendingOpen {
     cancel: Arc<AtomicBool>,
     source: glib::SourceId,
     callbacks: Vec<OpenDone>,
+    /// Open in the preview tab (a single click in the explorer); any plain open clears it.
+    preview: bool,
+    /// Give the new tab the keyboard focus.
+    focus: bool,
 }
 /// Arbitrary read-only page; shutdown runs once before removal or parent destruction.
 pub struct ViewTab {
@@ -115,7 +119,6 @@ mod imp {
         pub announced: RefCell<Option<PathBuf>>,
         pub dirty: Cell<bool>,
         pub closed: Cell<bool>,
-        pub(super) tabs_relayout: Cell<bool>,
         pub assembling: Cell<bool>,
         pub root_revision: Cell<u64>,
         pub dialog: RefCell<Option<DialogHook>>,
@@ -274,12 +277,6 @@ impl EditorPanel {
         notebook.connect_page_reordered(move |_, _, _| {
             if let Some(p) = weak.upgrade() {
                 p.update_tabs();
-            }
-        });
-        let weak = self.downgrade();
-        notebook.connect_size_allocate(move |_, _| {
-            if let Some(p) = weak.upgrade() {
-                p.size_tabs();
             }
         });
         let weak = self.downgrade();
@@ -466,10 +463,29 @@ impl EditorPanel {
     pub fn open_file(&self, path: impl AsRef<Path>) {
         self.open_file_with(path, |_| {});
     }
-    #[allow(deprecated)]
     pub fn open_file_with(
         &self,
         path: impl AsRef<Path>,
+        done: impl FnOnce(Option<Rc<EditorTab>>) + 'static,
+    ) {
+        self.open_file_options(path, false, true, done);
+    }
+    /// Open `path` in the preview tab without taking the keyboard focus, as a single click in
+    /// Zed's project panel does: the previous preview tab, if still untouched, is replaced in
+    /// place. A file that is already open is only brought forward.
+    pub fn open_file_preview(&self, path: impl AsRef<Path>) {
+        self.open_file_options(path, true, false, |_| {});
+    }
+    /// The preview tab, if one is open.
+    pub fn preview_tab(&self) -> Option<Rc<EditorTab>> {
+        self.tabs().into_iter().find(|t| t.is_preview())
+    }
+    #[allow(deprecated)]
+    fn open_file_options(
+        &self,
+        path: impl AsRef<Path>,
+        preview: bool,
+        focus: bool,
         done: impl FnOnce(Option<Rc<EditorTab>>) + 'static,
     ) {
         if self.imp().closed.get() {
@@ -480,14 +496,22 @@ impl EditorPanel {
         {
             let mut pending = self.imp().pending.borrow_mut();
             if let Some(p) = pending.get_mut(&path) {
+                // A plain open of a file still loading as a preview keeps it.
+                p.preview &= preview;
+                p.focus |= focus;
                 p.callbacks.push(Box::new(done));
                 return;
             }
         }
         if let Some(t) = self.tab_for_path(&path) {
+            if !preview {
+                t.set_preview(false);
+            }
             let n = self.notebook();
             n.set_current_page(n.page_num(&t.page));
-            t.view.grab_focus();
+            if focus {
+                t.view.grab_focus();
+            }
             self.announce_current();
             done(Some(t));
             return;
@@ -574,6 +598,8 @@ impl EditorPanel {
                 cancel,
                 source,
                 callbacks: vec![Box::new(done)],
+                preview,
+                focus,
             },
         );
     }
@@ -586,6 +612,28 @@ impl EditorPanel {
         if let Some(tab) = self.tab_for_path(&path) {
             return tab;
         }
+        let (preview, focus) = self
+            .imp()
+            .pending
+            .borrow()
+            .get(&path)
+            .map_or((false, true), |p| (p.preview, p.focus));
+        // A new preview takes the place of the previous one while that is untouched; an
+        // edited (or deleted) one stays as an ordinary tab.
+        let mut slot = None;
+        if preview {
+            if let Some(old) = self.preview_tab() {
+                if old.buffer.is_modified() || old.deleted() || old.loading.get() {
+                    old.set_preview(false);
+                } else {
+                    slot = self.notebook().page_num(&old.page);
+                    // No intermediate switch to the neighbour while the tab is replaced.
+                    self.imp().assembling.set(true);
+                    self.discard_tab(&old);
+                    self.imp().assembling.set(false);
+                }
+            }
+        }
         let trace_start = std::time::Instant::now();
         let trace = |label: &str| {
             if std::env::var_os("IMPRO_EDITOR_TRACE").is_some() {
@@ -595,9 +643,13 @@ impl EditorPanel {
         let tab = EditorTab::new(self, path, doc, language);
         trace("tab");
         self.imp().tabs.borrow_mut().push(tab.clone());
+        tab.set_preview(preview);
         let n = self.notebook();
         self.imp().assembling.set(true);
-        n.append_page(&tab.page, Some(&tab.header.widget));
+        match slot {
+            Some(index) => n.insert_page(&tab.page, Some(&tab.header.widget), Some(index)),
+            None => n.append_page(&tab.page, Some(&tab.header.widget)),
+        };
         self.imp().assembling.set(false);
         n.set_tab_reorderable(&tab.page, true);
         trace("append");
@@ -608,7 +660,9 @@ impl EditorPanel {
         trace("show");
         self.switched();
         trace("switch");
-        self.focus_current();
+        if focus {
+            self.focus_current();
+        }
         trace("focus");
         tab
     }
@@ -733,55 +787,16 @@ impl EditorPanel {
                 .unwrap_or_else(|| "Plain Text".into())
         ));
     }
-    fn size_tabs(&self) {
-        let n = self.notebook();
-        let width = ((n.allocated_width() - 16) / n.n_pages().max(1) as i32).clamp(120, 200) - 8;
-        let mut changed = false;
-        let headers = self
-            .tabs()
-            .into_iter()
-            .map(|t| t.header.widget.clone())
-            .chain(
-                self.view_tabs()
-                    .into_iter()
-                    .map(|t| t.header.widget.clone()),
-            );
-        for header in headers {
-            if header.width_request() != width {
-                header.set_size_request(width, 32);
-                changed = true;
-            }
-        }
-        // A resize request made inside the notebook's own size-allocate is
-        // consumed by that allocation: lay the new tab widths out afterwards.
-        if changed && !self.imp().tabs_relayout.replace(true) {
-            let weak = self.downgrade();
-            glib::idle_add_local_once(move || {
-                if let Some(p) = weak.upgrade() {
-                    p.imp().tabs_relayout.set(false);
-                    p.notebook().queue_resize();
-                }
-            });
-        }
-    }
+    /// Tabs take the width of their title (as in Zed); the strip scrolls when they overflow.
+    /// Borders follow the active tab (see [`TabHeader::set_strip_position`]).
     fn update_tabs(&self) {
         let n = self.notebook();
         let current = n.current_page();
+        let count = n.n_pages();
         let update = |page: &gtk::Widget, h: &TabHeader| {
-            let index = n.page_num(page);
-            let context = h.inner.style_context();
-            if index == current {
-                context.add_class("active");
-            } else {
-                context.remove_class("active");
+            if let Some(index) = n.page_num(page) {
+                h.set_strip_position(index, current, count);
             }
-            h.divider.set_opacity(
-                if index == current || index.and_then(|i| i.checked_add(1)) == current {
-                    0.0
-                } else {
-                    1.0
-                },
-            );
         };
         for t in self.tabs() {
             update(t.page.upcast_ref(), &t.header);
@@ -789,7 +804,6 @@ impl EditorPanel {
         for t in self.view_tabs() {
             update(&t.page, &t.header);
         }
-        self.size_tabs();
     }
     pub fn add_view_tab(
         &self,
@@ -821,7 +835,7 @@ impl EditorPanel {
             return false;
         }
         let header = TabHeader::new("Close tab", icon_name);
-        header.label.set_text(title);
+        header.set_title(title);
         header.widget.set_tooltip_text(tooltip);
         let tab = Rc::new(ViewTab {
             key: key.into(),
@@ -872,7 +886,7 @@ impl EditorPanel {
     pub fn set_view_tab_title(&self, key: &str, title: &str, tooltip: Option<&str>) {
         let tab = self.imp().views.borrow().get(key).cloned();
         if let Some(t) = tab {
-            t.header.label.set_text(title);
+            t.header.set_title(title);
             t.header.widget.set_tooltip_text(tooltip);
         }
     }

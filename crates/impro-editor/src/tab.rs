@@ -45,6 +45,7 @@ pub struct EditorTab {
     pub(crate) loading: Cell<bool>,
     max_load_slice: Cell<std::time::Duration>,
     paint_source: Rc<RefCell<Option<glib::SourceId>>>,
+    preview: Cell<bool>,
 }
 impl EditorTab {
     pub(crate) fn new(
@@ -145,6 +146,7 @@ impl EditorTab {
             loading: Cell::new(true),
             max_load_slice: Cell::new(initial_apply),
             paint_source: Rc::new(RefCell::new(None)),
+            preview: Cell::new(false),
         });
         let weak = Rc::downgrade(&tab);
         tab.header.close.connect_clicked(move |_| {
@@ -166,6 +168,12 @@ impl EditorTab {
                     }
                     return glib::Propagation::Stop;
                 }
+                // A double click keeps a preview tab.
+                if event.button() == 1 && event.event_type() == gdk::EventType::DoubleButtonPress {
+                    if let Some(t) = weak.upgrade() {
+                        t.set_preview(false);
+                    }
+                }
                 glib::Propagation::Proceed
             });
         let weak = Rc::downgrade(&tab);
@@ -175,6 +183,10 @@ impl EditorTab {
                     return;
                 }
                 t.revision.set(t.revision.get() + 1);
+                // Editing keeps a preview tab.
+                if t.preview.get() {
+                    t.set_preview(false);
+                }
                 t.flush_edit();
                 if !t.history.restoring() {
                     t.sync_dirty();
@@ -443,19 +455,26 @@ impl EditorTab {
     }
     pub fn update_title(&self) {
         let path = self.path();
-        self.header.label.set_text(&format!(
-            "{}{}{}",
-            if self.buffer.is_modified() {
-                "● "
-            } else {
-                ""
-            },
+        self.header.set_title(&format!(
+            "{}{}",
             path.file_name().unwrap_or_default().to_string_lossy(),
             if self.deleted.get() { " (deleted)" } else { "" }
         ));
+        // Unsaved changes show as a dot before the title, as in Zed.
+        self.header.set_dirty(self.buffer.is_modified());
+        self.header.set_conflict(self.deleted.get());
         self.header
             .widget
             .set_tooltip_text(Some(&path.to_string_lossy()));
+    }
+    /// Opened by a single click in the explorer: the next such open replaces this tab, until
+    /// it is edited, its tab is double-clicked or the file is opened for editing.
+    pub fn is_preview(&self) -> bool {
+        self.preview.get()
+    }
+    pub(crate) fn set_preview(&self, preview: bool) {
+        self.preview.set(preview);
+        self.header.set_preview(preview);
     }
     pub(crate) fn sync_dirty(&self) {
         let unchanged = self.history.at_saved()
@@ -595,18 +614,19 @@ impl EditorTab {
         toggle.set_margin_bottom(5);
         toggle.set_margin_end(12);
         let mut buttons = Vec::new();
-        for (mode, label, icon) in [
-            ("preview", "Preview", "view-reveal-symbolic"),
-            ("source", "Code", "text-x-generic-symbolic"),
+        // Icon-only segments (an eye and `</>`), drawn as vector glyphs so they need no theme.
+        for (mode, label, glyph, tooltip) in [
+            ("preview", "Preview", "eye", "Preview (Ctrl+Shift+M)"),
+            ("source", "Code", "code", "Code (Ctrl+Shift+M)"),
         ] {
             let button = gtk::ToggleButton::new();
             button.set_relief(gtk::ReliefStyle::None);
-            let content = gtk::Box::new(gtk::Orientation::Horizontal, 5);
-            let image = gtk::Image::from_icon_name(Some(icon), gtk::IconSize::Menu);
-            image.set_pixel_size(14);
-            content.pack_start(&image, false, false, 0);
-            content.pack_start(&gtk::Label::new(Some(label)), false, false, 0);
-            button.add(&content);
+            button.set_focus_on_click(false);
+            button.set_tooltip_text(Some(tooltip));
+            if let Some(accessible) = button.accessible() {
+                gtk::atk::prelude::AtkObjectExt::set_name(&accessible, label);
+            }
+            button.add(&impro_ui::glyphs::image(glyph, 16));
             let weak = Rc::downgrade(self);
             button.connect_clicked(move |_| {
                 if let Some(t) = weak.upgrade() {
@@ -753,13 +773,18 @@ pub(crate) fn is_markdown(path: &Path) -> bool {
     path.extension()
         .is_some_and(|s| s.eq_ignore_ascii_case("md") || s.eq_ignore_ascii_case("markdown"))
 }
-/// Shared tab-strip widgets for file and arbitrary view tabs.
+/// Shared tab-strip widgets for file and arbitrary view tabs, laid out like Zed's editor tabs:
+/// a 12 px slot holding a dot while the file has unsaved changes, an optional icon, the
+/// title and a 14 px close button shown while the pointer is over the tab. The strip sets the
+/// borders ([`TabHeader::set_strip_position`]): tabs left of the active one draw a left edge,
+/// tabs right of it a right edge, and the active tab both, with no line under it.
 pub struct TabHeader {
     pub widget: gtk::EventBox,
     pub inner: gtk::Box,
+    /// Unsaved-changes dot (painted while the tab has the `dirty` or `conflict` class).
+    pub indicator: gtk::DrawingArea,
     pub label: gtk::Label,
     pub close: gtk::Button,
-    pub divider: gtk::Separator,
 }
 impl TabHeader {
     pub(crate) fn new(tooltip: &str, icon: Option<&str>) -> Self {
@@ -767,14 +792,40 @@ impl TabHeader {
         label.set_xalign(0.0);
         label.set_ellipsize(pango::EllipsizeMode::End);
         label.set_max_width_chars(32);
+        label.style_context().add_class("impro-tab-label");
         let widget = gtk::EventBox::new();
         widget.set_visible_window(false);
         widget.add_events(gdk::EventMask::ENTER_NOTIFY_MASK | gdk::EventMask::LEAVE_NOTIFY_MASK);
-        let inner = gtk::Box::new(gtk::Orientation::Horizontal, 2);
+        let inner = gtk::Box::new(gtk::Orientation::Horizontal, impro_ui::scale::px(4));
         inner.style_context().add_class("impro-tab-inner");
-        inner.set_margin_top(3);
-        inner.set_margin_bottom(3);
         widget.add(&inner);
+        let indicator = gtk::DrawingArea::new();
+        indicator.style_context().add_class("impro-tab-indicator");
+        let slot = impro_ui::scale::px(12);
+        indicator.set_size_request(slot, slot);
+        indicator.set_valign(gtk::Align::Center);
+        indicator.connect_draw(|area, cr| {
+            let context = area.style_context();
+            if context.has_class("dirty") || context.has_class("conflict") {
+                let color = context.color(area.state_flags());
+                let (w, h) = (
+                    f64::from(area.allocated_width()),
+                    f64::from(area.allocated_height()),
+                );
+                cr.set_source_rgba(color.red(), color.green(), color.blue(), color.alpha());
+                cr.arc(
+                    w / 2.0,
+                    h / 2.0,
+                    f64::from(impro_ui::scale::px(6)) / 2.0,
+                    0.0,
+                    std::f64::consts::TAU,
+                );
+                let _ = cr.fill();
+            }
+            glib::Propagation::Proceed
+        });
+        indicator.connect_style_updated(|area| area.queue_draw());
+        inner.pack_start(&indicator, false, false, 0);
         if let Some(icon) = icon {
             if gtk::IconTheme::default().is_some_and(|t| t.has_icon(icon)) {
                 let image = gtk::Image::from_icon_name(Some(icon), gtk::IconSize::Menu);
@@ -784,32 +835,12 @@ impl TabHeader {
         }
         inner.pack_start(&label, true, true, 0);
         let close = gtk::Button::new();
-        let image = gtk::Image::new();
-        image.set_size_request(14, 14);
-        let icon_pending = Rc::new(Cell::new(true));
-        let weak_image = image.downgrade();
-        image.connect_draw(move |_, _| {
-            if icon_pending.replace(false) {
-                let weak_image = weak_image.clone();
-                glib::idle_add_local_once(move || {
-                    if let Some(image) = weak_image.upgrade() {
-                        image
-                            .set_from_icon_name(Some("window-close-symbolic"), gtk::IconSize::Menu);
-                    }
-                });
-            }
-            glib::Propagation::Proceed
-        });
-        image.set_pixel_size(14);
-        close.add(&image);
+        close.add(&impro_ui::glyphs::image("close", 14));
         close.style_context().add_class("impro-tab-close");
         close.set_relief(gtk::ReliefStyle::None);
+        close.set_focus_on_click(false);
         close.set_tooltip_text(Some(tooltip));
         inner.pack_start(&close, false, false, 0);
-        let divider = gtk::Separator::new(gtk::Orientation::Vertical);
-        divider.style_context().add_class("impro-tab-divider");
-        divider.set_valign(gtk::Align::Center);
-        inner.pack_end(&divider, false, false, 0);
         let weak = inner.downgrade();
         widget.connect_enter_notify_event(move |_, _| {
             if let Some(w) = weak.upgrade() {
@@ -818,9 +849,12 @@ impl TabHeader {
             glib::Propagation::Proceed
         });
         let weak = inner.downgrade();
-        widget.connect_leave_notify_event(move |_, _| {
-            if let Some(w) = weak.upgrade() {
-                w.style_context().remove_class("hover");
+        widget.connect_leave_notify_event(move |_, event| {
+            // Moving onto the close button is still inside the tab.
+            if event.detail() != gdk::NotifyType::Inferior {
+                if let Some(w) = weak.upgrade() {
+                    w.style_context().remove_class("hover");
+                }
             }
             glib::Propagation::Proceed
         });
@@ -828,9 +862,83 @@ impl TabHeader {
         Self {
             widget,
             inner,
+            indicator,
             label,
             close,
-            divider,
         }
+    }
+    /// Show `title`. The notebook gives tabs their minimum width, which for an ellipsizing
+    /// label is just "…": titles up to 32 characters are shown whole, longer ones are cut to
+    /// about that width.
+    pub fn set_title(&self, title: &str) {
+        if self.label.text() != title {
+            self.label.set_text(title);
+        }
+        let long = title.chars().count() > 32;
+        let (ellipsize, chars) = if long {
+            (pango::EllipsizeMode::End, 32)
+        } else {
+            (pango::EllipsizeMode::None, -1)
+        };
+        if self.label.ellipsize() != ellipsize {
+            self.label.set_ellipsize(ellipsize);
+        }
+        if self.label.width_chars() != chars {
+            self.label.set_width_chars(chars);
+        }
+    }
+    fn set_class(widget: &impl IsA<gtk::Widget>, class: &str, on: bool) {
+        let context = widget.style_context();
+        if context.has_class(class) != on {
+            if on {
+                context.add_class(class);
+            } else {
+                context.remove_class(class);
+            }
+        }
+    }
+    /// Show the unsaved-changes dot.
+    pub fn set_dirty(&self, dirty: bool) {
+        Self::set_class(&self.indicator, "dirty", dirty);
+        self.indicator.queue_draw();
+    }
+    pub fn is_dirty(&self) -> bool {
+        self.indicator.style_context().has_class("dirty")
+    }
+    /// The file is gone from disk: the dot turns to the warning colour.
+    pub fn set_conflict(&self, conflict: bool) {
+        Self::set_class(&self.indicator, "conflict", conflict);
+        self.indicator.queue_draw();
+    }
+    /// A preview tab (opened by a single click, replaced by the next one) has an italic title.
+    pub fn set_preview(&self, preview: bool) {
+        Self::set_class(&self.label, "preview", preview);
+    }
+    pub fn is_preview(&self) -> bool {
+        self.label.style_context().has_class("preview")
+    }
+    /// Borders and state for the tab at `index` of `count`, with `current` the active page,
+    /// as Zed draws them: the active tab has edges on both sides and no line under it, tabs to
+    /// its left a left edge and tabs to its right a right edge. The first tab has no left
+    /// edge and the last inactive one a right edge; a one-pixel padding stands in for a
+    /// missing edge so titles do not shift when the active tab changes.
+    pub fn set_strip_position(&self, index: u32, current: Option<u32>, count: u32) {
+        use std::cmp::Ordering;
+        let active = Some(index) == current;
+        let (left, right) = if index == 0 {
+            (false, active)
+        } else if index + 1 == count {
+            (active, true)
+        } else {
+            match current.map(|c| index.cmp(&c)) {
+                Some(Ordering::Equal) => (true, true),
+                Some(Ordering::Less) => (true, false),
+                _ => (false, true),
+            }
+        };
+        let inner = &self.inner;
+        Self::set_class(inner, "active", active);
+        Self::set_class(inner, "edge-left", left);
+        Self::set_class(inner, "edge-right", right);
     }
 }

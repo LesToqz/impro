@@ -44,7 +44,8 @@ fn test_append_duplicate_title_and_icon() {
             tab.header.widget.tooltip_text().as_deref(),
             Some("new tooltip")
         );
-        assert_eq!(tab.header.label.ellipsize(), pango::EllipsizeMode::End);
+        // Titles up to 32 characters are shown whole (the strip scrolls instead).
+        assert_eq!(tab.header.label.ellipsize(), pango::EllipsizeMode::None);
         assert_eq!(tab.header.inner.children().len(), 4);
         assert_eq!(
             tabs.iter()
@@ -182,7 +183,7 @@ fn test_adaptive_width_and_shared_hover() {
         }
         pump(40);
         for t in h.panel.view_tabs() {
-            assert_eq!(t.header.widget.width_request(), 112);
+            assert_eq!(t.header.widget.width_request(), -1);
             assert!(h.panel.notebook().tab_is_reorderable(&t.page));
         }
     });

@@ -184,12 +184,12 @@ fn test_modified_stays_false_and_find_works() {
     });
 }
 #[test]
-fn test_header_tab_sizes_and_rounded_corner_pixels() {
+fn test_header_tab_strip_geometry_and_pixels() {
     run(|| {
         let h = Harness::new();
         h.window.resize(900, 600);
         let first = h.open("a.txt", "a");
-        h.open("b.txt", "b");
+        let second = h.open("b.txt", "b");
         h.panel.notebook().set_current_page(Some(0));
         for id in ["impro-dark", "impro-light"] {
             let theme = impro_core::themes::get_theme(Some(id));
@@ -201,25 +201,44 @@ fn test_header_tab_sizes_and_rounded_corner_pixels() {
                 .widget
                 .translate_coordinates(&h.window, 0, 0)
                 .unwrap();
-            assert_eq!(first.header.widget.allocated_height() + 2, 34);
-            assert_eq!(first.header.widget.allocated_width() + 8, 200);
+            // A 32 px bar; tabs as wide as their title.
+            assert_eq!(first.header.widget.allocated_height(), 32);
+            assert_eq!(first.header.widget.width_request(), -1);
+            assert!(first.header.widget.allocated_width() < 200);
             assert_eq!(
                 first
                     .page
                     .translate_coordinates(&h.panel.notebook(), 0, 0)
                     .unwrap()
                     .1,
-                40
+                32
             );
+            let (sx, _) = second
+                .header
+                .widget
+                .translate_coordinates(&h.window, 0, 0)
+                .unwrap();
             let image = pixels(&h.window);
-            assert_eq!(pixel(&image, hx - 4, hy - 1), rgb(&theme.ui["sidebar_bg"]));
-            assert_eq!(pixel(&image, hx + 80, hy - 1), rgb(&theme.ui["border"]));
-            assert_eq!(pixel(&image, hx + 80, hy + 1), rgb(&theme.ui["bg"]));
+            let width = second.header.widget.allocated_width();
+            // The active tab is in the editor colour down to the editor: no line under it.
+            assert_eq!(pixel(&image, hx + 8, hy + 31), rgb(&theme.ui["bg"]));
+            // An inactive tab shows the bar's colour over the bar's bottom line.
+            assert_eq!(pixel(&image, sx + 8, hy + 2), rgb(&theme.ui["sidebar_bg"]));
+            assert_eq!(pixel(&image, sx + 8, hy + 31), rgb(&theme.ui["border"]));
+            // The bar continues past the last tab, line included.
+            assert_eq!(
+                pixel(&image, sx + width + 20, hy + 2),
+                rgb(&theme.ui["sidebar_bg"])
+            );
+            assert_eq!(
+                pixel(&image, sx + width + 20, hy + 31),
+                rgb(&theme.ui["border"])
+            );
         }
     });
 }
 #[test]
-fn test_close_and_dividers_hover_instant_and_dirty_stays_visible() {
+fn test_close_on_hover_edges_follow_the_active_tab_and_dirty_dot() {
     run(|| {
         let h = Harness::new();
         let first = h.open("a.txt", "a");
@@ -234,8 +253,10 @@ fn test_close_and_dividers_hover_instant_and_dirty_stays_visible() {
                 .get::<f64>()
                 .unwrap()
         };
+        // As in Zed, the close button shows only while the pointer is over a tab, the
+        // active one included.
         assert_eq!(opacity(&first), 0.0);
-        assert_eq!(opacity(&third), 1.0);
+        assert_eq!(opacity(&third), 0.0);
         first.header.widget.emit_by_name::<bool>(
             "enter-notify-event",
             &[&gdk::Event::new(gdk::EventType::EnterNotify)],
@@ -246,32 +267,56 @@ fn test_close_and_dividers_hover_instant_and_dirty_stays_visible() {
             &[&gdk::Event::new(gdk::EventType::LeaveNotify)],
         );
         assert_eq!(opacity(&first), 0.0);
+        let edges = |t: &impro_editor::EditorTab| {
+            let context = t.header.inner.style_context();
+            (
+                context.has_class("edge-left"),
+                context.has_class("edge-right"),
+                context.has_class("active"),
+            )
+        };
+        // The third (last) tab is active: edges on both sides; tabs left of it edged left,
+        // the first tab without a left edge.
+        assert_eq!(edges(&third), (true, true, true));
+        assert_eq!(edges(&second), (true, false, false));
+        assert_eq!(edges(&first), (false, false, false));
+        h.panel.notebook().set_current_page(Some(1));
+        pump(20);
+        assert_eq!(edges(&first), (false, false, false));
+        assert_eq!(edges(&second), (true, true, true));
+        assert_eq!(edges(&third), (false, true, false));
+        h.panel.notebook().set_current_page(Some(0));
+        pump(20);
+        assert_eq!(edges(&first), (false, true, true));
+        assert_eq!(edges(&second), (false, true, false));
+        // Unsaved changes: a dot before the title, which itself stays the file name.
+        assert!(!first.header.is_dirty());
         replace(&first, "changed");
-        assert!(first.header.label.text().starts_with("● "));
-        assert_eq!(first.header.divider.opacity(), 1.0);
-        assert_eq!(second.header.divider.opacity(), 0.0);
-        assert_eq!(third.header.divider.opacity(), 0.0);
-        assert_eq!(first.header.divider.allocated_width(), 1);
-        assert_eq!(first.header.divider.allocated_height(), 13);
+        assert!(first.header.is_dirty());
+        assert_eq!(first.header.label.text(), "a.txt");
     });
 }
 #[test]
-fn test_tab_widths_shrink_ellipsis_and_reorder_middle_close() {
+fn test_tab_titles_stay_whole_and_reorder_middle_close() {
     run(|| {
         let h = Harness::new();
         let mut tabs = Vec::new();
         for i in 0..8 {
             tabs.push(h.open(&format!("long-file-{i}.txt"), "x"));
         }
+        let long = h.open(&format!("{}.txt", "x".repeat(40)), "x");
         pump(50);
         for t in &tabs {
-            assert_eq!(t.header.label.ellipsize(), pango::EllipsizeMode::End);
-            assert_eq!(t.header.widget.width_request(), 112);
+            assert_eq!(t.header.label.ellipsize(), pango::EllipsizeMode::None);
+            assert_eq!(t.header.widget.width_request(), -1);
         }
+        // Only titles longer than 32 characters are cut.
+        assert_eq!(long.header.label.ellipsize(), pango::EllipsizeMode::End);
+        assert_eq!(long.header.label.width_chars(), 32);
         h.panel.notebook().reorder_child(&tabs[7].page, Some(0));
         h.answer(Response::Discard);
         assert!(h.close(&tabs[0]));
-        assert_eq!(h.panel.notebook().n_pages(), 7);
+        assert_eq!(h.panel.notebook().n_pages(), 8);
     });
 }
 #[test]
