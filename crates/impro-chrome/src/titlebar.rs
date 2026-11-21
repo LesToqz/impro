@@ -11,6 +11,8 @@ pub const HEADER_HEIGHT: i32 = 40;
 pub const WINDOW_BUTTON_WIDTH: i32 = 40;
 pub const WINDOW_ICON_SIZE: i32 = 32;
 pub const GLYPH_OPACITY: f64 = 0.85;
+/// Edge of the dock toggle and settings glyphs in logical pixels (before display scaling).
+pub const GLYPH_SIZE: i32 = 16;
 mod imp {
     use super::*;
     #[derive(Default)]
@@ -87,21 +89,16 @@ pub struct Controls {
     docked: bool,
 }
 glib::wrapper! {pub struct TitleBar(ObjectSubclass<imp::TitleBar>) @extends gtk::HeaderBar,gtk::Container,gtk::Widget, @implements gtk::Buildable;}
-fn glyph(button: &impl IsA<gtk::Button>, names: &[&str], fallback: &str) {
+/// Flat clickable icon showing a vector glyph (see `impro_ui::glyphs`), so the toggles look the
+/// same whatever icon theme the platform ships. The Windows bundle has no
+/// `panel-bottom-symbolic`, which used to leave a text fallback in place of the bottom-dock icon.
+fn glyph(button: &impl IsA<gtk::Button>, name: &str) {
     let button = button.as_ref();
     button.set_relief(gtk::ReliefStyle::None);
     button.set_valign(gtk::Align::Center);
     button.style_context().add_class("flat");
     button.style_context().add_class("impro-settings-button");
-    if let Some(name) =
-        gtk::IconTheme::default().and_then(|t| choose_icon(names, |name| t.has_icon(name)))
-    {
-        let image = gtk::Image::from_icon_name(Some(name), gtk::IconSize::Menu);
-        impro_ui::icons::prepare_image(&image);
-        button.add(&image);
-    } else {
-        button.add(&gtk::Label::new(Some(fallback)));
-    }
+    button.add(&impro_ui::glyphs::image(name, GLYPH_SIZE));
     if let Some(child) = button.child() {
         child.set_opacity(GLYPH_OPACITY);
         let value = std::rc::Rc::new(std::cell::Cell::new(0.));
@@ -175,9 +172,9 @@ impl TitleBar {
         }
         menu_bar.set_valign(gtk::Align::Center);
         this.pack_start(menu_bar);
-        let make = |names: &[&str], fallback, tooltip, accessible, signal: &'static str| {
+        let make = |name: &str, tooltip, accessible, signal: &'static str| {
             let b = gtk::ToggleButton::new();
-            glyph(&b, names, fallback);
+            glyph(&b, name);
             b.set_tooltip_text(Some(tooltip));
             if let Some(a) = b.accessible() {
                 a.set_name(accessible);
@@ -191,8 +188,7 @@ impl TitleBar {
             (b, h)
         };
         let (explorer, eh) = make(
-            &["sidebar-show-symbolic", "panel-left-symbolic"],
-            "▯",
+            "panel-left",
             "Toggle file explorer (Ctrl+B)",
             "Toggle file explorer",
             "explorer-toggle-requested",
@@ -205,15 +201,7 @@ impl TitleBar {
             this.set_custom_title(Some(&title));
         }
         let settings = gtk::Button::new();
-        glyph(
-            &settings,
-            &[
-                "preferences-system-symbolic",
-                "emblem-system-symbolic",
-                "preferences-other-symbolic",
-            ],
-            "⚙",
-        );
+        glyph(&settings, "settings");
         settings.set_margin_end(6);
         settings.set_tooltip_text(Some("Settings (Ctrl+,)"));
         if let Some(a) = settings.accessible() {
@@ -227,8 +215,7 @@ impl TitleBar {
         });
         this.pack_end(&settings);
         let (dock, dh) = make(
-            &["sidebar-show-right-symbolic", "panel-right-symbolic"],
-            "▯",
+            "panel-right",
             "Toggle right terminal / graph dock (Ctrl+Alt+`)",
             "Toggle right dock",
             "dock-toggle-requested",
@@ -236,8 +223,7 @@ impl TitleBar {
         dock.set_margin_end(6);
         this.pack_end(&dock);
         let (bottom, bh) = make(
-            &["panel-bottom-symbolic", "sidebar-show-bottom-symbolic"],
-            "▭",
+            "panel-bottom",
             "Toggle terminal below (Ctrl+`)",
             "Toggle terminal below",
             "bottom-dock-toggle-requested",
@@ -314,33 +300,12 @@ pub fn css(ui: &impro_core::themes::UiColors) -> String {
     impro_ui::render_css(include_str!("titlebar.css"), &ui)
 }
 
-fn choose_icon<'a>(names: &[&'a str], available: impl Fn(&str) -> bool) -> Option<&'a str> {
-    names.iter().find(|name| available(name)).copied()
-}
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[test]
-    fn test_settings_icon_fallback_chain_and_glyph() {
-        let names = [
-            "preferences-system-symbolic",
-            "emblem-system-symbolic",
-            "preferences-other-symbolic",
-        ];
-        for wanted in names {
-            assert_eq!(choose_icon(&names, |name| name == wanted), Some(wanted));
-        }
-        assert_eq!(choose_icon(&names, |_| false), None);
-    }
-    #[test]
-    fn test_titlebar_toggle_fallback_glyphs() {
-        for names in [
-            ["sidebar-show-symbolic", "panel-left-symbolic"],
-            ["sidebar-show-right-symbolic", "panel-right-symbolic"],
-            ["panel-bottom-symbolic", "sidebar-show-bottom-symbolic"],
-        ] {
-            assert_eq!(choose_icon(&names, |name| name == names[1]), Some(names[1]));
-            assert_eq!(choose_icon(&names, |_| false), None);
+    fn test_toggle_and_settings_glyphs_need_no_icon_theme() {
+        for name in ["panel-left", "panel-right", "panel-bottom", "settings"] {
+            assert!(impro_ui::glyphs::exists(name), "{name}");
         }
     }
 }

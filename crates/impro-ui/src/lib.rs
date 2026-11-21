@@ -1,4 +1,5 @@
 //! Shared GTK infrastructure. Call init before applying the application's theme.
+pub mod glyphs;
 pub mod icons;
 pub mod motion;
 pub mod notes;
