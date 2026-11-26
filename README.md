@@ -2,8 +2,6 @@
 
 # impro
 
-[![CI](https://github.com/LesToqz/impro/actions/workflows/ci.yml/badge.svg)](https://github.com/LesToqz/impro/actions/workflows/ci.yml)
-
 A small IDE for Linux and Windows built in Rust with GTK 3, gtk-rs, syntect, and VTE 2.91 (Linux) or a ConPTY terminal (Windows).
 It combines a project explorer and search, tabbed editor and live Markdown notes,
 terminal docks, a native project graph, read-only Git history, palettes and settings.
